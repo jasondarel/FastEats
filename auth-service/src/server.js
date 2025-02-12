@@ -44,8 +44,8 @@ app.post("/register", async (req, res) => {
 
   try {
     await pool.query(
-      "INSERT INTO auth_users (email, password_hash, role) VALUES ($1, $2, $3)",
-      [email, hashedPassword, "user"]
+      "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
+      [name, email, hashedPassword, "user"]
     );
     res.json({ message: "User registered" });
   } catch (err) {
@@ -61,7 +61,7 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Missing fields" });
 
   try {
-    const user = await pool.query("SELECT * FROM auth_users WHERE email = $1", [
+    const user = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
 
@@ -85,8 +85,19 @@ app.post("/login", async (req, res) => {
 });
 
 // Get user profile (protected route)
-app.get("/profile", authenticateToken, (req, res) => {
-  res.json({ message: "Welcome!", user: req.user });
+app.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await pool.query(
+      "SELECT id, name, email, role, address FROM users WHERE id = $1",
+      [req.user.userId]
+    );
+    if (user.rows.length === 0)
+      return res.status(404).json({ error: "User not found" });
+    res.json({ user: user.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Upgrade user to seller role (protected route)
@@ -96,7 +107,7 @@ app.post("/become-seller", authenticateToken, async (req, res) => {
   }
 
   try {
-    await pool.query("UPDATE auth_users SET role = $1 WHERE id = $2", [
+    await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       "seller",
       req.user.userId,
     ]);
