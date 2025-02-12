@@ -1,9 +1,12 @@
-const express = require("express");
-const cors = require("cors");
-const crypto = require("crypto");
-const jwt = require("jsonwebtoken");
-const pool = require("./db");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import pool from "./config/dbinit.js"; // Change from require to import
+import createTables from "./config/tablesinit.js"; // Change from require to import
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -13,10 +16,11 @@ app.use(cors());
 app.use(express.json());
 
 console.log(
-  `🚀 ${
-    process.env.SERVICE_NAME || "User/Auth Service"
-  } running on port ${PORT}`
+  `${process.env.SERVICE_NAME || "User/Auth Service"} running on port ${PORT}`
 );
+
+// Call createTables to ensure the tables are created if they don't exist
+createTables();
 
 // 🔹 Hash Password
 function hashPassword(password) {
@@ -138,5 +142,5 @@ app.get("/users", async (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
