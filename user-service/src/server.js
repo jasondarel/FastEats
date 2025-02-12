@@ -9,7 +9,13 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send(`User Service is running on port ${PORT}`);
+  res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
+});
+
+app.listen(PORT, () => {
+  console.log(
+    `${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`
+  );
 });
 
 // Get all users
@@ -23,6 +29,15 @@ app.get("/users", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`User Service running on port ${PORT}`);
+// Middleware to verify token
+app.use((req, res, next) => {
+  if (req.path === "/") return next(); // Allow health check
+
+  const token = req.headers.authorization?.split(" ")[1];
+  const user = token ? verifyToken(token) : null;
+
+  if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+  req.user = user;
+  next();
 });

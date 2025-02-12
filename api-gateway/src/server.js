@@ -37,6 +37,16 @@ app.use(
   })
 );
 
+// Proxy requests to auth-service
+app.use(
+  "/api/auth",
+  createProxyMiddleware({
+    target: "http://localhost:5001", // Auth Service URL
+    changeOrigin: true,
+    pathRewrite: { "^/api/auth": "" },
+  })
+);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);

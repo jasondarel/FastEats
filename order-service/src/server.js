@@ -17,3 +17,16 @@ app.listen(PORT, () => {
     `${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`
   );
 });
+
+// Middleware to verify token
+app.use((req, res, next) => {
+  if (req.path === "/") return next(); // Allow health check
+
+  const token = req.headers.authorization?.split(" ")[1];
+  const user = token ? verifyToken(token) : null;
+
+  if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+  req.user = user;
+  next();
+});

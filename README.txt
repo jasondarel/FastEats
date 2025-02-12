@@ -53,8 +53,8 @@ CREATE TABLE auth_users (
 Di api-gateway expressnya :
 npm install express http-proxy-middleware cors dotenv
 
-opsional :
-npm install -g concurrently -> di folder project
-npx concurrently "cd api-gateway && npm run dev" "cd auth-service && npm run dev" "cd user-service && npm run dev" "cd restaurant-service && npm run dev" "cd order-service && npm run dev"
+1. Ganti .env
+2. npm install -g concurrently -> di folder project
+3. npx concurrently "cd api-gateway && npm run dev" "cd auth-service && npm run dev" "cd user-service && npm run dev" "cd restaurant-service && npm run dev" "cd order-service && npm run dev"
 // run semua sekaligus
 
