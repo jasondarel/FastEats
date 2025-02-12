@@ -64,4 +64,5 @@ npm install express http-proxy-middleware cors dotenv
 folder frontend :
 npm install axios react-router-dom
 npm install -D tailwindcss postcss autoprefixer
-
+npm install react-icons
+    
