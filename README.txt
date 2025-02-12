@@ -49,3 +49,12 @@ CREATE TABLE auth_users (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL -- 'user', 'restaurant', 'admin'
 );
+
+Di api-gateway expressnya :
+npm install express http-proxy-middleware cors dotenv
+
+opsional :
+npm install -g concurrently -> di folder project
+npx concurrently "cd api-gateway && npm run dev" "cd auth-service && npm run dev" "cd user-service && npm run dev" "cd restaurant-service && npm run dev" "cd order-service && npm run dev"
+// run semua sekaligus
+
