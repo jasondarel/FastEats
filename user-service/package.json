@@ -1,11 +1,15 @@
 {
-  "name": "fast-eats",
+  "name": "user-service",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"cd api-gateway && npm run dev\" \"cd auth-service && npm run dev\" \"cd user-service && npm run dev\" \"cd restaurant-service && npm run dev\" \"cd order-service && npm run dev\""
+    "dev": "nodemon src/server.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -13,7 +17,6 @@
     "pg": "^8.13.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9",
-    "concurrently": "^8.2.2"
+    "nodemon": "^3.1.9"
   }
 }
