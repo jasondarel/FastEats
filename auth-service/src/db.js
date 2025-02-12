@@ -18,4 +18,5 @@ console.log("DB Config: ", {
   password: process.env.DB_PASSWORD ? "********" : "NOT SET",
   port: process.env.DB_PORT,
 });
+
 module.exports = pool;
