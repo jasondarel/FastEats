@@ -11,7 +11,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5001/register", {
+      await axios.post("http://localhost:5002/register", {
         name,
         email,
         password,
