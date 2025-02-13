@@ -4,6 +4,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import pool from "./config/dbInit.js";
 import createTables from "./config/tablesinit.js";
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -239,6 +240,17 @@ app.get("/users/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/restaurants", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://8703-61-5-30-124.ngrok-free.app/restaurants"
+    );
+    return res.status(200).json(response.data);
+  } catch (err) {
+    console.error(err);
   }
 });
 
