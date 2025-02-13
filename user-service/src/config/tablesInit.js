@@ -5,6 +5,7 @@ const createTables = async () => {
   try {
     console.log("Creating tables...");
 
+    // 🔹 Users Table (Remove address field)
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -12,8 +13,18 @@ const createTables = async () => {
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL, -- Renamed from 'password' for consistency
         role TEXT NOT NULL DEFAULT 'user', -- Role field from auth_users
-        address TEXT,
         created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // 🔹 User Details Table (Includes address now)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_details (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        profile_photo TEXT,
+        address TEXT, -- Moved address here
+        phone_number TEXT,
+        updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
 

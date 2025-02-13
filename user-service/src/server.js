@@ -13,7 +13,8 @@ const PORT = process.env.PORT || 5002;
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // Increase JSON request limit
+app.use(express.urlencoded({ limit: "10mb", extended: true })); // Increase form data limit
 
 console.log(
   `${process.env.SERVICE_NAME || "User/Auth Service"} running on port ${PORT}`
@@ -95,16 +96,49 @@ app.post("/login", async (req, res) => {
 });
 
 // 🔹 Get User Profile (Protected)
+// 🔹 Get User Profile (Protected) - Now includes user_details
 app.get("/profile", authenticateToken, async (req, res) => {
   try {
-    const user = await pool.query(
+    const userQuery = await pool.query(
       "SELECT id, name, email, role FROM users WHERE id = $1",
       [req.user.userId]
     );
-    if (user.rows.length === 0)
+
+    if (userQuery.rows.length === 0)
       return res.status(404).json({ error: "User not found" });
 
-    res.json({ user: user.rows[0] });
+    const userDetailsQuery = await pool.query(
+      "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
+      [req.user.userId]
+    );
+
+    const user = userQuery.rows[0];
+    const userDetails = userDetailsQuery.rows[0] || {}; // If no details yet, return empty object
+
+    res.json({ user: { ...user, ...userDetails } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 🔹 Update User Profile (Protected)
+app.put("/profile", authenticateToken, async (req, res) => {
+  const { profile_photo, address, phone_number } = req.body;
+
+  try {
+    await pool.query(
+      `INSERT INTO user_details (user_id, profile_photo, address, phone_number, updated_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (user_id) DO UPDATE 
+       SET profile_photo = EXCLUDED.profile_photo, 
+           address = EXCLUDED.address, 
+           phone_number = EXCLUDED.phone_number, 
+           updated_at = NOW();`,
+      [req.user.userId, profile_photo, address, phone_number]
+    );
+
+    res.json({ message: "Profile updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
