@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axios from "axios";
 
 const Profile = () => {
@@ -9,6 +10,7 @@ const Profile = () => {
   });
 
   const [preview, setPreview] = useState(null);
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,7 +59,15 @@ const Profile = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-6 bg-gray-100">
+      <button
+        onClick={() => navigate("/home")}
+        className="absolute top-4 left-30 p-2 bg-white text-yellow-500 rounded-lg hover:text-yellow-600 transition text-5xl hover:cursor-pointer"
+      >
+        ←
+      </button>
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
+        {/* 🔹 Back to Home Button */}
+
         <h2 className="text-2xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
