@@ -3,17 +3,19 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/dbInit.js";
 import { restaurantRoutes } from "./route/restaurantRoutes.js";
-// import createTables from "./config/tablesInit.js";
+import createTables from "./config/tablesInit.js";
+import { menuRoutes } from "./route/menuRoutes.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
-// createTables();
+createTables();
 
 app.use(cors());
 app.use(express.json());
-app.use("/restaurant", restaurantRoutes);
+app.use("/", restaurantRoutes);
+app.use("/", menuRoutes);
 
 
 app.listen(PORT, () => {

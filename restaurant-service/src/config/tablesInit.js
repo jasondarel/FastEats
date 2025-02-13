@@ -5,14 +5,29 @@ const createTables = async () => {
   try {
     console.log("Creating tables...");
 
+    // Membuat tabel restaurants jika belum ada
     await client.query(`
       CREATE TABLE IF NOT EXISTS restaurants (
         restaurant_id SERIAL PRIMARY KEY,
         restaurant_name VARCHAR(255) NOT NULL,
         restaurant_address TEXT NOT NULL,
-        owner_id int not null UNIQUE,
+        owner_id INT NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS menu_item (
+        menu_id SERIAL PRIMARY KEY,
+        menu_name VARCHAR(255) NOT NULL,
+        menu_description TEXT,
+        restaurant_id INT NOT NULL,
+        menu_category VARCHAR(255) NOT NULL,
+        menu_price DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id) ON DELETE CASCADE
       );
     `);
 
