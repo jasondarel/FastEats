@@ -1,4 +1,4 @@
-import { isRestaurantAvailable, isOwnerAvailable } from "../service/restaurantService.js";
+import { isOwnerAvailable, isRestaurantAvailableByName } from "../service/restaurantService.js";
 
 const validateCreateRestaurantRequest = async(restaurantReq) => {
     const errors = {};
@@ -6,7 +6,7 @@ const validateCreateRestaurantRequest = async(restaurantReq) => {
     if (!restaurantReq.restaurantName || restaurantReq.restaurantName.trim() === '') {
         errors.restaurantName = 'Restaurant name is required';
     } else {
-        const isAvailableRestaurant = await isRestaurantAvailable(restaurantReq.restaurantName);
+        const isAvailableRestaurant = await isRestaurantAvailableByName(restaurantReq.restaurantName);
         if(isAvailableRestaurant) {
             errors.restaurantName = "Restaurant name already exist"
         }

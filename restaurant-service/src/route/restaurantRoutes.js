@@ -20,9 +20,7 @@ router.get("/protected", (req, res) => {
   router.post("/restaurant", createRestaurantController);
   router.put("/restaurant/:restaurantId", updateRestaurantController)
   router.delete("/restaurant/:restaurantId", deleteRestaurantController)
-
   router.get("/restaurants", getRestaurantsController);
-
   router.get("/restaurant/:restaurantId", getRestaurantController)
   router.get("/restaurant-owner/:ownerId", getRestaurantByOwnerIdController)
 

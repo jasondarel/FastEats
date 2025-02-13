@@ -1,10 +1,18 @@
 import axios from "axios";
 import pool from "../config/dbInit.js";
 
-const isRestaurantAvailable = async (restaurantName) => {
+const isRestaurantAvailableByName = async (restaurantName) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_name = $1`,
         [restaurantName]
+    );
+    return result.rowCount > 0;
+};
+
+const isRestaurantAvailableById = async (restaurantId) => {
+    const result = await pool.query(
+        `SELECT 1 FROM restaurants WHERE restaurant_id = $1`,
+        [restaurantId]
     );
     return result.rowCount > 0;
 };
@@ -51,8 +59,16 @@ const deleteRestaurantService = async (id) => {
 
 
 const isOwnerAvailable = async(ownerId) => {
-    // const users = await axios.get("http://localhost:5002/users");
-    return ownerId === 1;
+    try {
+        const users = await axios.get(`https://fcf3-61-5-30-124.ngrok-free.app/users/${ownerId}`);
+        if(!users.data.error) {
+            return true;
+        }
+    } catch(err) {
+        if(err.response && err.response.status === 404) {
+            return false;
+        }
+    }
 }
 
 const getRestaurantsService = async () => {
@@ -84,9 +100,9 @@ const getRestaurantService = async (Id) => {
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
             [Id]
         );
+
         return result.rows[0] || null;
     } catch (error) {
-        console.error("❌ Error fetching restaurant by restaurant_id:", error);
         throw error;
     }
 };
@@ -94,7 +110,8 @@ const getRestaurantService = async (Id) => {
 
 
 export {
-    isRestaurantAvailable,
+    isRestaurantAvailableByName,
+    isRestaurantAvailableById,
     getRestaurantsService,
     getRestaurantService,
     getRestaurantByOwnerIdService,
