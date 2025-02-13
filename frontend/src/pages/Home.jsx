@@ -55,7 +55,7 @@ const Home = () => {
         <h1 className="text-2xl font-bold">
           Welcome {username ? username : "Guest"}!
         </h1>
-        <p className="mt-2 text-gray-700">This is the home page content.</p>
+        <p className="mt-2 text-gray-700">What would you like to eat?</p>
 
         {/* 🔹 Display restaurant list */}
         <h2 className="mt-5 text-xl font-bold">Restaurants:</h2>
