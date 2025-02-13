@@ -28,7 +28,7 @@ const Register = () => {
       {/* Background Image */}
       <div
         className="absolute inset-0 w-full h-full bg-gray-900 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/loginregisterbg.jpg')" }} // Make sure the image is inside public/
+        style={{ backgroundImage: "url('/foodbg.jpg')" }} // Make sure the image is inside public/
       >
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gray-900/75"></div>
