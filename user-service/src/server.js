@@ -178,3 +178,35 @@ app.get("/users", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// 🔹 Get User by ID (Public or Protected)
+app.get("/users/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch user basic details
+    const userQuery = await pool.query(
+      "SELECT id, name, email, role FROM users WHERE id = $1",
+      [id]
+    );
+
+    if (userQuery.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Fetch user additional details
+    const userDetailsQuery = await pool.query(
+      "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
+      [id]
+    );
+
+    // Merge user data
+    const user = userQuery.rows[0];
+    const userDetails = userDetailsQuery.rows[0] || {}; // If no details, return empty object
+
+    res.json({ user: { ...user, ...userDetails } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
