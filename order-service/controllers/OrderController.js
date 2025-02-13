@@ -1,4 +1,4 @@
-import pool from "../database/db.js";
+import pool from "../config/db.js";
 import axios from "axios";
 
 //create Order
@@ -17,7 +17,7 @@ export const createOrder = async (req, res) => {
 
     //cek id restaurant
     const restaurantResponse = await axios.get(
-      `http://restaurant-service/api/restaurants/${restaurant_id}`
+      `http://localhost:5003/get-restaurant/${restaurant_id}`
     );
     if (!restaurantResponse.data) {
       return res.status(400).json({ error: "Restaurant not found" });
@@ -48,10 +48,11 @@ export const getOrder = async (req, res) => {
 //Get Order by ID
 export const getOrderById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM orders WHERE  id = $1", [
-      id,
-    ]);
+    const { order_id } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM orders WHERE  order_id = $1",
+      [order_id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Order Not Found" });
@@ -66,7 +67,7 @@ export const getOrderById = async (req, res) => {
 //Update Order
 export const updateOrder = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { order_id } = req.params;
     const { status } = req.body;
     const validStatuses = ["pending", "preparing", "delivered"];
 
@@ -75,8 +76,8 @@ export const updateOrder = async (req, res) => {
     }
 
     const result = await pool.query(
-      "UPDATE orders SET status = $1 WHERE id = $2 RETURNING *",
-      [status, id]
+      "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
+      [status, order_id]
     );
 
     if (result.rows.length === 0) {
@@ -92,10 +93,10 @@ export const updateOrder = async (req, res) => {
 
 export const deleteOrder = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { order_id } = req.params;
     const result = await pool.query(
-      "DELETE FROM orders WHERE id = $1 RETURNING *",
-      [id]
+      "DELETE FROM orders WHERE order_id = $1 RETURNING *",
+      [order_id]
     );
 
     if (result.rows.length === 0) {

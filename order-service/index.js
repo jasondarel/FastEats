@@ -1,9 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import createTable from "./config/tableinit.js";
 
 // Routes
-import OrderRoutes from "./routes/OrderRoutes.js"
+import OrderRoutes from "./routes/OrderRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +14,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use(OrderRoutes);
+
+createTable();
 
 // app.get("/", (req, res) => {
 //   res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
