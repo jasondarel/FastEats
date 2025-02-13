@@ -61,3 +61,8 @@ npm install express http-proxy-middleware cors dotenv
 4. npx concurrently "cd api-gateway && npm run dev" "cd auth-service && npm run dev" "cd user-service && npm run dev" "cd restaurant-service && npm run dev" "cd order-service && npm run dev"
 // run semua sekaligus
 
+folder frontend :
+npm install axios react-router-dom
+npm install -D tailwindcss postcss autoprefixer
+npm install react-icons
+    
