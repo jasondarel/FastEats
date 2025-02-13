@@ -1,0 +1,31 @@
+const validateOrder = (req, res, next) => {
+  const { user_id, restaurant_id, total_price } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "Missing user_id fields" });
+  }
+
+  if (!restaurant_id) {
+    return res.status(400).json({ error: "Missing restaurant_id fields" });
+  }
+
+  if (typeof total_price !== "number") {
+    return res.status(400).json({ error: "Missing total_price fields" });
+  }
+
+  if (isNaN(total_price)) {
+    return res
+      .status(400)
+      .json({ error: "total_price must be a valid number" });
+  }
+
+  if (total_price <= 0) {
+    return res
+      .status(400)
+      .json({ error: "total_price must be greater than 0" });
+  }
+
+  next(); // Lanjut ke controller kalau valid
+};
+
+export default validateOrder;
