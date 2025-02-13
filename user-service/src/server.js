@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import pool from "./config/dbinit.js"; // Change from require to import
-import createTables from "./config/tablesinit.js"; // Change from require to import
+import pool from "./config/dbInit.js";
+import createTables from "./config/tablesinit.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -13,14 +13,13 @@ const PORT = process.env.PORT || 5002;
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 app.use(cors());
-app.use(express.json({ limit: "10mb" })); // Increase JSON request limit
-app.use(express.urlencoded({ limit: "10mb", extended: true })); // Increase form data limit
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 console.log(
   `${process.env.SERVICE_NAME || "User/Auth Service"} running on port ${PORT}`
 );
 
-// Call createTables to ensure the tables are created if they don't exist
 createTables();
 
 // 🔹 Hash Password
@@ -45,11 +44,38 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// 🔹 Register User
+// 🔹 Validation Functions
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  return passwordRegex.test(password);
+}
+
+function validatePhoneNumber(phone) {
+  const phoneRegex = /^\d{12}$/; // Exactly 12 digits
+  return phoneRegex.test(phone);
+}
+
+// 🔹 Register User with Validation
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password)
     return res.status(400).json({ error: "Missing fields" });
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
+
+  if (!validatePassword(password)) {
+    return res.status(400).json({
+      error:
+        "Password must be at least 8 characters long and include letters and numbers",
+    });
+  }
 
   const hashedPassword = hashPassword(password);
 
@@ -70,6 +96,10 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ error: "Missing fields" });
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
 
   try {
     const user = await pool.query("SELECT * FROM users WHERE email = $1", [
@@ -96,7 +126,6 @@ app.post("/login", async (req, res) => {
 });
 
 // 🔹 Get User Profile (Protected)
-// 🔹 Get User Profile (Protected) - Now includes user_details
 app.get("/profile", authenticateToken, async (req, res) => {
   try {
     const userQuery = await pool.query(
@@ -113,7 +142,7 @@ app.get("/profile", authenticateToken, async (req, res) => {
     );
 
     const user = userQuery.rows[0];
-    const userDetails = userDetailsQuery.rows[0] || {}; // If no details yet, return empty object
+    const userDetails = userDetailsQuery.rows[0] || {};
 
     res.json({ user: { ...user, ...userDetails } });
   } catch (err) {
@@ -125,6 +154,12 @@ app.get("/profile", authenticateToken, async (req, res) => {
 // 🔹 Update User Profile (Protected)
 app.put("/profile", authenticateToken, async (req, res) => {
   const { profile_photo, address, phone_number } = req.body;
+
+  if (phone_number && !validatePhoneNumber(phone_number)) {
+    return res
+      .status(400)
+      .json({ error: "Phone number must be exactly 12 digits" });
+  }
 
   try {
     await pool.query(
@@ -174,17 +209,15 @@ app.get("/users", async (req, res) => {
   }
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// 🔹 Get User by ID (Public or Protected)
+// 🔹 Get User by ID with Validation
 app.get("/users/:id", async (req, res) => {
   const { id } = req.params;
 
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "User ID must be a number" });
+  }
+
   try {
-    // Fetch user basic details
     const userQuery = await pool.query(
       "SELECT id, name, email, role FROM users WHERE id = $1",
       [id]
@@ -194,19 +227,22 @@ app.get("/users/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Fetch user additional details
     const userDetailsQuery = await pool.query(
       "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
       [id]
     );
 
-    // Merge user data
     const user = userQuery.rows[0];
-    const userDetails = userDetailsQuery.rows[0] || {}; // If no details, return empty object
+    const userDetails = userDetailsQuery.rows[0] || {};
 
     res.json({ user: { ...user, ...userDetails } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
