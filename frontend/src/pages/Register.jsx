@@ -6,10 +6,13 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setErrors({}); // Reset errors before validation
+
     try {
       await axios.post("http://localhost:5002/register", {
         name,
@@ -19,7 +22,24 @@ const Register = () => {
       alert("Registration successful! Please login.");
       navigate("/login");
     } catch (error) {
-      alert("Registration failed: " + error.response?.data?.error);
+      const errMsg = error.response?.data?.error || "An error occurred";
+
+      if (errMsg.toLowerCase().includes("name")) {
+        setErrors((prev) => ({ ...prev, name: errMsg }));
+      }
+      if (errMsg.toLowerCase().includes("email")) {
+        setErrors((prev) => ({ ...prev, email: errMsg }));
+      }
+      if (errMsg.toLowerCase().includes("password")) {
+        setErrors((prev) => ({ ...prev, password: errMsg }));
+      }
+      if (
+        !errMsg.toLowerCase().includes("name") &&
+        !errMsg.toLowerCase().includes("email") &&
+        !errMsg.toLowerCase().includes("password")
+      ) {
+        setErrors((prev) => ({ ...prev, general: errMsg }));
+      }
     }
   };
 
@@ -30,7 +50,6 @@ const Register = () => {
         className="absolute inset-0 w-full h-full bg-gray-900 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/foodbg.jpg')" }}
       >
-        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gray-900/75"></div>
       </div>
 
@@ -44,36 +63,56 @@ const Register = () => {
           />
           <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
           <form onSubmit={handleRegister} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
+            <div>
+              <input
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              )}
+            </div>
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>
             <button
               type="submit"
               className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
             >
               Register
             </button>
+            {errors.general && (
+              <p className="text-red-500 text-sm mt-2 text-center">
+                {errors.general}
+              </p>
+            )}
           </form>
           <p className="mt-4 text-center">
             Already have an account?{" "}

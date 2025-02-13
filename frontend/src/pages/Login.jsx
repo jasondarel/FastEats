@@ -5,19 +5,30 @@ import { useNavigate, Link } from "react-router-dom";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({}); // Store field-specific errors
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrors({}); // Clear previous errors
+
     try {
       const res = await axios.post("http://localhost:5002/login", {
         email,
         password,
       });
+
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (error) {
-      alert("Login failed: " + error.response?.data?.error);
+      const errMsg = error.response?.data?.error || "An error occurred";
+      if (errMsg.includes("email")) {
+        setErrors({ email: errMsg });
+      } else if (errMsg.includes("password")) {
+        setErrors({ password: errMsg });
+      } else {
+        setErrors({ general: errMsg });
+      }
     }
   };
 
@@ -42,22 +53,32 @@ const Login = () => {
           />
           <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>
             <button
               type="submit"
               className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
@@ -65,6 +86,11 @@ const Login = () => {
               Login
             </button>
           </form>
+          {errors.general && (
+            <p className="text-red-500 text-sm mt-2 text-center">
+              {errors.general}
+            </p>
+          )}
           <p className="mt-4 text-center">
             Don't have an account?{" "}
             <Link

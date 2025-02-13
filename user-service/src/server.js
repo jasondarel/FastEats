@@ -73,7 +73,7 @@ app.post("/register", async (req, res) => {
   if (!validatePassword(password)) {
     return res.status(400).json({
       error:
-        "Password must be at least 8 characters long and include letters and numbers",
+        "Password must be at least 8 characters long, also must include letters and numbers",
     });
   }
 
@@ -110,7 +110,7 @@ app.post("/login", async (req, res) => {
       user.rows.length === 0 ||
       user.rows[0].password_hash !== hashPassword(password)
     ) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Wrong email or password." });
     }
 
     const token = generateToken({
