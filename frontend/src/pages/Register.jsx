@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -28,7 +28,7 @@ const Register = () => {
       {/* Background Image */}
       <div
         className="absolute inset-0 w-full h-full bg-gray-900 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/foodbg.jpg')" }} // Make sure the image is inside public/
+        style={{ backgroundImage: "url('/foodbg.jpg')" }}
       >
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gray-900/75"></div>
@@ -38,7 +38,7 @@ const Register = () => {
       <div className="relative z-10 flex items-center justify-center w-full h-full">
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
           <img
-            src="/logo_FastEats.png" //logo
+            src="/logo_FastEats.png"
             alt="Logo"
             className="w-32 mx-auto mb-4"
           />
@@ -75,6 +75,15 @@ const Register = () => {
               Register
             </button>
           </form>
+          <p className="mt-4 text-center">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-yellow-500 underline hover:text-yellow-600"
+            >
+              Login here
+            </Link>
+          </p>
         </div>
       </div>
     </div>
