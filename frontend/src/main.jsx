@@ -5,6 +5,7 @@ import App from "./App";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Home from "./pages/Home";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/home" element={<Home />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
