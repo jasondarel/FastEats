@@ -1,5 +1,3 @@
-import Sidebar from "../components/Sidebar";
-
 // Ensure Sidebar component exists and is correctly implemented
 // Example Sidebar component
 // const Sidebar = () => (
