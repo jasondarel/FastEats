@@ -17,7 +17,7 @@ const Home = () => {
       }
 
       try {
-        const response = await fetch("http://localhost:5002/profile", {
+        const response = await fetch("http://localhost:5000/user/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -36,8 +36,8 @@ const Home = () => {
         const data = await response.json();
         console.log("Fetched user data:", data); // Debugging
 
-        if (data.user && data.user.name) {
-          setUsername(data.user.name);
+        if (data.success && data.data.user && data.data.user.name) {
+          setUsername(data.data.user.name);
         } else {
           setError("User data is missing.");
         }
