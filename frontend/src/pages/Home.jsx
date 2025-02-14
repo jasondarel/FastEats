@@ -49,14 +49,37 @@ const Home = () => {
 
     const fetchRestaurants = async () => {
       try {
-        const response = await fetch("http://localhost:5000/restaurants");
+        const token = localStorage.getItem("token"); // Retrieve token
+        console.log("Token in localStorage:", token); // Debugging
+
+        if (!token) {
+          throw new Error("No token found. Please log in.");
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/restaurant/restaurants",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`, // Add token here
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch restaurants.");
         }
 
         const data = await response.json();
-        setRestaurants(data.data.restaurants);
+        console.log("Fetched restaurant data:", data); // Debugging
+
+        // FIX: Access the correct nested structure
+        if (data.success && data.data && data.data.restaurants) {
+          setRestaurants(data.data.restaurants);
+        } else {
+          throw new Error("Invalid restaurant data format.");
+        }
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       }
