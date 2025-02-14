@@ -154,7 +154,11 @@ app.get("/profile", authenticateToken, async (req, res) => {
 
 // 🔹 Update User Profile (Protected)
 app.put("/profile", authenticateToken, async (req, res) => {
-  const { profile_photo, address, phone_number } = req.body;
+  const { name, profile_photo, address, phone_number } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: "Name is required" });
+  }
 
   if (phone_number && !validatePhoneNumber(phone_number)) {
     return res
@@ -163,6 +167,13 @@ app.put("/profile", authenticateToken, async (req, res) => {
   }
 
   try {
+    // Update the `users` table (for name)
+    await pool.query("UPDATE users SET name = $1 WHERE id = $2", [
+      name,
+      req.user.userId,
+    ]);
+
+    // Update the `user_details` table
     await pool.query(
       `INSERT INTO user_details (user_id, profile_photo, address, phone_number, updated_at)
        VALUES ($1, $2, $3, $4, NOW())
@@ -175,6 +186,38 @@ app.put("/profile", authenticateToken, async (req, res) => {
     );
 
     res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.put("/change-password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    const user = await pool.query(
+      "SELECT password_hash FROM users WHERE id = $1",
+      [req.user.userId]
+    );
+    if (
+      user.rows.length === 0 ||
+      user.rows[0].password_hash !== hashPassword(currentPassword)
+    ) {
+      return res.status(401).json({ error: "Incorrect current password" });
+    }
+
+    const hashedNewPassword = hashPassword(newPassword);
+    await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+      hashedNewPassword,
+      req.user.userId,
+    ]);
+
+    res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

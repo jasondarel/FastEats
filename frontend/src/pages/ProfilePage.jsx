@@ -1,16 +1,23 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
+    name: "",
     profile_photo: "",
     address: "",
     phone_number: "",
   });
 
   const [preview, setPreview] = useState(null);
-  const navigate = useNavigate(); // Initialize navigate
+  const [changePassword, setChangePassword] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -33,6 +40,10 @@ const Profile = () => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
+  const handlePasswordChange = (e) => {
+    setChangePassword({ ...changePassword, [e.target.name]: e.target.value });
+  };
+
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -42,7 +53,7 @@ const Profile = () => {
     }
   };
 
-  const handleSave = async (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
@@ -57,6 +68,28 @@ const Profile = () => {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (changePassword.newPassword !== changePassword.confirmPassword) {
+      alert("New passwords do not match!");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put("http://localhost:5002/change-password", changePassword, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("Password updated successfully!");
+      setChangePassword({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to update password");
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-6 bg-gray-100">
       <button
@@ -66,8 +99,6 @@ const Profile = () => {
         ←
       </button>
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-        {/* 🔹 Back to Home Button */}
-
         <h2 className="text-2xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
@@ -89,7 +120,16 @@ const Profile = () => {
           />
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={profile.name}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
           <input
             type="text"
             name="address"
@@ -110,9 +150,46 @@ const Profile = () => {
           />
           <button
             type="submit"
-            className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
+            className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
           >
-            Save
+            Save Profile
+          </button>
+        </form>
+
+        <h2 className="text-lg font-semibold mt-6">Change Password</h2>
+        <form onSubmit={handleChangePassword} className="space-y-3">
+          <input
+            type="password"
+            name="currentPassword"
+            placeholder="Current Password"
+            value={changePassword.currentPassword}
+            onChange={handlePasswordChange}
+            required
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="password"
+            name="newPassword"
+            placeholder="New Password"
+            value={changePassword.newPassword}
+            onChange={handlePasswordChange}
+            required
+            className="w-full p-3 border rounded-lg"
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm New Password"
+            value={changePassword.confirmPassword}
+            onChange={handlePasswordChange}
+            required
+            className="w-full p-3 border rounded-lg"
+          />
+          <button
+            type="submit"
+            className="w-full p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          >
+            Change Password
           </button>
         </form>
       </div>
