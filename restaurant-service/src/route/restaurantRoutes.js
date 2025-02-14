@@ -1,5 +1,6 @@
 import express from 'express';
 const router = express.Router();
+import authMiddleware from '../middleware/authMiddleware.js';
 import { 
     createRestaurantController,
     getRestaurantController,
@@ -9,19 +10,15 @@ import {
     deleteRestaurantController
 } from '../controller/restaurantControllers.js';
 
-router.get("/", (req, res) => {
-    res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
-  });
+  router.get("/", (req, res) => {
+      res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
+    });
 
-router.get("/protected", (req, res) => {
-    res.json({ message: "You accessed a protected route!", user: req.user });
-  });
-
-  router.post("/restaurant", createRestaurantController);
-  router.put("/restaurant/:restaurantId", updateRestaurantController)
-  router.delete("/restaurant/:restaurantId", deleteRestaurantController)
-  router.get("/restaurants", getRestaurantsController);
-  router.get("/restaurant/:restaurantId", getRestaurantController)
-  router.get("/restaurant-owner/:ownerId", getRestaurantByOwnerIdController)
+  router.post("/restaurant", authMiddleware,  createRestaurantController);
+  router.put("/restaurant/:restaurantId", authMiddleware, updateRestaurantController)
+  router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
+  router.get("/restaurants", authMiddleware, getRestaurantsController);
+  router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantController)
+  router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
 
 export {router as restaurantRoutes};

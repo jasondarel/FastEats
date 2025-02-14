@@ -1,4 +1,5 @@
 import express from 'express';
+import authMiddleware from '../middleware/authMiddleware.js';
 const router = express.Router();
 import { 
     createMenuController,
@@ -8,10 +9,10 @@ import {
     deleteMenuController
 } from '../controller/menuController.js';
 
-router.post("/menu", createMenuController);
-router.get("/menus", getMenusController);
-router.get("/menu/:menuId", getMenuController);
-router.put("/menu", updateMenuController);
-router.delete("/menu/:menuId", deleteMenuController);
+router.post("/menu", authMiddleware, createMenuController);
+router.get("/menus", authMiddleware, getMenusController);
+router.get("/menu/:menuId", authMiddleware, getMenuController);
+router.put("/menu", authMiddleware, updateMenuController);
+router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
 export {router as menuRoutes};
