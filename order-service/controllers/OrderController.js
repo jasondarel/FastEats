@@ -10,7 +10,7 @@ export const createOrder = async (req, res) => {
     let user;
     try {
       const userResponse = await axios.get(
-        `https://d86b-61-5-30-124.ngrok-free.app/users/${user_id}`
+        `https://fcf3-61-5-30-124.ngrok-free.app/users/${user_id}`
       );
       user = userResponse.data.user;
     } catch (error) {
@@ -32,7 +32,7 @@ export const createOrder = async (req, res) => {
     let restaurant;
     try {
       const restaurantResponse = await axios.get(
-        `https://4a97-61-5-30-124.ngrok-free.app/restaurant/${restaurant_id}`
+        `https://e442-61-5-30-124.ngrok-free.app/restaurant/${restaurant_id}`
       );
       restaurant = restaurantResponse.data.restaurant;
     } catch (error) {
