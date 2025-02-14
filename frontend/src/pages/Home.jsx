@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar";
 
 const Home = () => {
   const [username, setUsername] = useState("");
-  const [restaurants, setRestaurants] = useState([]); // 🔹 State to store restaurants
+  const [restaurants, setRestaurants] = useState([]); // 🔹 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -11,7 +11,7 @@ const Home = () => {
       if (!token) return;
 
       try {
-        const response = await fetch("http://localhost:5002/profile", {
+        const response = await fetch("https://9bb6-61-5-30-124.ngrok-free.app/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -31,11 +31,21 @@ const Home = () => {
     };
 
     const fetchRestaurants = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+    
       try {
-        const response = await fetch("http://localhost:5002/restaurants");
+        const response = await fetch("http://localhost:5000/restaurants", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+    
         if (response.ok) {
           const data = await response.json();
-          setRestaurants(data.restaurants); // 🔹 Store restaurants in state
+          setRestaurants(data.data.restaurants);
         } else {
           console.error("Failed to fetch restaurants");
         }
@@ -45,7 +55,7 @@ const Home = () => {
     };
 
     fetchUser();
-    fetchRestaurants(); // 🔹 Fetch restaurants
+    fetchRestaurants();
   }, []);
 
   return (

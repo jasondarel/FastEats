@@ -23,7 +23,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5002/profile", {
+        const res = await axios.get("https://9bb6-61-5-30-124.ngrok-free.app/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data.user);
@@ -76,7 +76,7 @@ const Profile = () => {
     }
     try {
       const token = localStorage.getItem("token");
-      await axios.put("http://localhost:5002/change-password", changePassword, {
+      await axios.put("https://9bb6-61-5-30-124.ngrok-free.app/change-password", changePassword, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Password updated successfully!");
