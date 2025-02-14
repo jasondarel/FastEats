@@ -20,11 +20,11 @@ console.log(
   `${process.env.SERVICE_NAME || "User/Auth Service"} running on port ${PORT}`
 );
 
-app.get("/restaurants", async (req, res) => {
+app.get("/restaurant/restaurants", async (req, res) => {
     try {
         const token = req.headers.authorization;
       const response = await axios.get(
-        "https://b111-61-5-30-124.ngrok-free.app/restaurants",
+        `${process.env.RESTAURANT_SERVICE_URL}/restaurants`,
         {
           headers: {
             'Authorization': token,
@@ -60,6 +60,27 @@ app.get("/restaurants", async (req, res) => {
       });
     }
   });  
+
+  app.post("/user/login", async (req, res) => {
+    const userReq = req.body;
+
+    if (!userReq || !userReq.email || !userReq.password) {
+        return res.status(400).json({ error: "email and password are required!" });
+    }
+
+    try {
+        const response = await axios.post(`${process.env.USER_SERVICE_URL}/login`, userReq);
+        
+        if (response.data && response.data.token) {
+            return res.status(200).json({ token: response.data.token });
+        } else {
+            return res.status(500).json({ error: "Invalid response from authentication server" });
+        }
+    } catch (err) {
+        console.error("Login error:", err.message);
+        return res.status(500).json({ error: "Login failed. Please try again later." });
+    }
+});
 
 
 app.listen(PORT, () => {

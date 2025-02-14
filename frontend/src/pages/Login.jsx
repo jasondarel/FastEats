@@ -13,7 +13,7 @@ const Login = () => {
     setErrors({}); // Clear previous errors
 
     try {
-      const res = await axios.post("https://9bb6-61-5-30-124.ngrok-free.app/login", {
+      const res = await axios.post("https://d349-61-5-30-124.ngrok-free.app/login", {
         email,
         password,
       });
