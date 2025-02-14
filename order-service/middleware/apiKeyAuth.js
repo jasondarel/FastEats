@@ -1,13 +1,28 @@
-import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 
-dotenv.config();
+const authMiddleware = (req, res, next) => {
+  const token = req.header("Authorization");
 
-const apiKeyAuth = (req, res, next) => {
-  const apiKey = req.headers["x-api-key"]; // Ambil API Key dari request header
-  if (!apiKey || apiKey !== process.env.API_KEY) {
-    return res.status(403).json({ error: "Forbidden: Invalid API Key" });
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "Access Unauthorized",
+    });
   }
-  next(); // Lanjut ke endpoint
+
+  try {
+    const decoded = jwt.verify(
+      token.replace("Bearer ", ""),
+      process.env.JWT_SECRET
+    );
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: "Invalid Token",
+    });
+  }
 };
 
-export default apiKeyAuth;
+export default authMiddleware;
