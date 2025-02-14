@@ -13,28 +13,13 @@ function App() {
         <Routes>
           {/* Redirect "/" to "/home" */}
           <Route path="/" element={<Navigate to="/home" />} />
-
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
           {/* Protected Routes (Require Login) */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/home" element={<Home />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </div>
