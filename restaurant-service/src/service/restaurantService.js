@@ -60,7 +60,7 @@ const deleteRestaurantService = async (id) => {
 
 const isOwnerAvailable = async(ownerId) => {
     try {
-        const users = await axios.get(`https://fcf3-61-5-30-124.ngrok-free.app/users/${ownerId}`);
+        const users = await axios.get(`${RESTAURANT_SERVICE_URL}/users/${ownerId}`);
         if(!users.data.error) {
             return true;
         }

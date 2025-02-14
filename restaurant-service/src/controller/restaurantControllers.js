@@ -7,6 +7,7 @@ import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from
 
 const createRestaurantController = async(req, res) => {
     const restaurantReq = req.body;
+    console.log(restaurantReq)
     try {
         const errors = await validateCreateRestaurantRequest(restaurantReq);
         const errorLen = Object.keys(errors).length;

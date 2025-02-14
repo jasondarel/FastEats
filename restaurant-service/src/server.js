@@ -9,13 +9,15 @@ import { menuRoutes } from "./route/menuRoutes.js";
 dotenv.config();
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT;
 createTables();
 
 app.use(cors({
   origin: [], 
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
 
 app.use(express.json());
