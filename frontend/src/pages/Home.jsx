@@ -9,7 +9,7 @@ const Home = () => {
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
-      console.log("Token in localStorage:", token); // Debugging
+      console.log("Token in localStorage:", token);
 
       if (!token) {
         setError("No token found. Please log in.");
@@ -61,7 +61,7 @@ const Home = () => {
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`, // Add token here
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }

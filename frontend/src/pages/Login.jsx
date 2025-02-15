@@ -21,7 +21,8 @@ const Login = () => {
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (error) {
-      const errMsg = error.response?.data?.error || "An error occurred";
+      const errMsg = error.response.data.message || "An error occurred";
+      console.log(errMsg)
       if (errMsg.includes("email")) {
         setErrors({ email: errMsg });
       } else if (errMsg.includes("password")) {

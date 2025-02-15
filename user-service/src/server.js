@@ -95,13 +95,15 @@ app.post("/register", async (req, res) => {
 // 🔹 Login User
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
+  console.log(email,password)
   if (!email || !password)
     return res.status(400).json({ error: "Missing fields" });
 
   if (!validateEmail(email)) {
     return res.status(400).json({ error: "Invalid email format" });
   }
-
+  console.log("Mencoba query")
   try {
     const user = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
@@ -111,7 +113,11 @@ app.post("/login", async (req, res) => {
       user.rows.length === 0 ||
       user.rows[0].password_hash !== hashPassword(password)
     ) {
-      return res.status(401).json({ error: "Wrong email or password." });
+      console.log("Salah 2")
+      return res.status(401).json({ 
+        success: false,
+        message: "Wrong email or password." 
+      });
     }
 
     const token = generateToken({
@@ -121,6 +127,7 @@ app.post("/login", async (req, res) => {
     });
     res.json({ token });
   } catch (err) {
+    console.log("kena error")
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
