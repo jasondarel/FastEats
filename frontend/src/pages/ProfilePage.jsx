@@ -29,6 +29,7 @@ const Profile = () => {
         setProfile(res.data.user);
         setPreview(res.data.user.profile_photo || null);
       } catch (error) {
+        console.error(error);
         alert("Failed to load profile");
       }
     };
@@ -64,6 +65,7 @@ const Profile = () => {
       );
       alert("Profile updated successfully!");
     } catch (error) {
+      console.error(error);
       alert("Update failed");
     }
   };

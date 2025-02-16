@@ -5,6 +5,7 @@ import {
     validatePassword, 
     validatePhoneNumber } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
+import axios from "axios";
 
 const registerController = async(req, res) => {
     const { name, email, password } = req.body;
@@ -211,22 +212,65 @@ const changePasswordController = async(req, res) => {
   }
 }
 
-const becomeSelerController = async(req, res) => {
-    if (req.user.role !== "user") {
-        return res.status(400).json({ error: "Only users can become sellers" });
-      }
-    
-      try {
-        await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
+const becomeSellerController = async (req, res) => {
+  if (req.user.role !== "user") {
+      return res.status(400).json({ error: "Only users can become sellers" });
+  }
+
+  const restaurantData = req.body;
+  const token = req.headers.authorization?.split(" ")[1];
+  restaurantData.ownerId = req.user.userId
+  try {
+      const response = await axios.post(
+          "http://localhost:5000/restaurant/restaurant",
+          restaurantData,
+          {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+              },
+          }
+      );
+
+      await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
           "seller",
           req.user.userId,
-        ]);
-        res.json({ message: "User upgraded to seller" });
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
+      ]);
+
+      res.json({ message: "User upgraded to seller" });
+  } catch (err) {
+      if (err.response && err.response.status === 401) {
+          return res.status(401).json(err.response.data);
+      } else if(err.response.status === 400) {
+          return res.status(400).json(err.response.data);
       }
+      res.status(500).json({ error: "Server error" });
+  }
+};
+
+const checkUserExistController = async(req, res) => {
+  const id = req.params.id; 
+  try {
+      const user = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+      if (user.rows.length === 0) {
+          return res.status(404).json({ 
+            success: false,
+            error: "User not found" 
+          });
+      }
+      res.json({ 
+        success: true,
+        message: "User found" 
+      });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ 
+        success: false,
+        error: "Server error" 
+      });
+  }
 }
+
 
 export {
     registerController,
@@ -236,5 +280,6 @@ export {
     getUserController,
     getUsersController,
     changePasswordController,
-    becomeSelerController
+    becomeSellerController,
+    checkUserExistController
 };
