@@ -49,6 +49,14 @@ const Sidebar = () => {
             </li>
             <li>
               <Link
+                to="/become-seller"
+                className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
+              >
+                My Restaurant
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/settings"
                 className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
               >

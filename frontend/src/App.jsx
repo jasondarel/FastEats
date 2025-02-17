@@ -6,6 +6,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import MenuPage from "./pages/MenuPage";
+import BecomeSeller from "./pages/BecomeSeller";
 
 function App() {
   return (
@@ -14,11 +15,9 @@ function App() {
         <Routes>
           {/* Redirect "/" to "/home" */}
           <Route path="/" element={<Navigate to="/home" />} />
-
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
           {/* Protected Routes (Require Login) */}
           <Route
             path="/home"
@@ -40,7 +39,16 @@ function App() {
             path="/menu/:restaurantId"
             element={
               <ProtectedRoute>
-                <MenuPage/>
+                <MenuPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/become-seller"
+            element={
+              <ProtectedRoute>
+                <BecomeSeller />
               </ProtectedRoute>
             }
           />
