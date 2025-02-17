@@ -14,7 +14,7 @@ const Register = () => {
     setErrors({}); // Reset errors before validation
 
     try {
-      await axios.post("http://localhost:5002/register", {
+      await axios.post("http://localhost:5000/user/register", {
         name,
         email,
         password,
