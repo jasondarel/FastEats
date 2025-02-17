@@ -1,23 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";  // Import useNavigate
 
 const BecomeSeller = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();  // Initialize navigate
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      // If the user is already a seller, redirect to the manage-restaurant page
+      if (decodedToken.role === "seller") {
+        navigate("/manage-restaurant");  // Redirect to manage-restaurant
+      }
+    }
+  }, [navigate]);
 
   const handleBecomeSeller = async (e) => {
     e.preventDefault();
     setErrors({}); // Clear previous errors
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be logged in to become a seller");
-        return;
-      }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to become a seller");
+      return;
+    }
 
+    // Decode the token to check the role
+    const decodedToken = jwtDecode(token);
+    if (decodedToken.role !== "user") {
+      alert("Only users can become sellers");
+      return;
+    }
+
+    try {
       const payload = {
         restaurantName,
         restaurantAddress,
@@ -49,9 +70,7 @@ const BecomeSeller = () => {
       <Sidebar />
       <main className="flex-1 p-5 bg-yellow-100 min-h-screen flex items-center justify-center">
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-          <h2 className="text-2xl font-semibold text-center mb-6">
-            Become Seller
-          </h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">Become Seller</h2>
           <form onSubmit={handleBecomeSeller} className="space-y-4">
             <div>
               <input
