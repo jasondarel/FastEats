@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";  // Import useNavigate once
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";  // Import useNavigate
 
 const BecomeSeller = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -19,11 +19,11 @@ const BecomeSeller = () => {
         navigate("/manage-restaurant");  // Redirect to manage-restaurant
       }
     }
-  }, [navigate]);
+  }, [navigate]);  // Added the navigate dependency here
 
   const handleBecomeSeller = async (e) => {
     e.preventDefault();
-    setErrors({}); // Clear previous errors
+    setErrors({});  // Clear previous errors
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -56,6 +56,7 @@ const BecomeSeller = () => {
       );
 
       alert(response.data.message || "Successfully became a seller!");
+      navigate("/manage-restaurant"); // Redirect to manage-restaurant after becoming a seller
     } catch (error) {
       console.error(error);
       const errMsg =
