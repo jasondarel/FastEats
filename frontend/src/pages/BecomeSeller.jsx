@@ -1,15 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Add this for navigation
 import Sidebar from "../components/Sidebar";
 
 const BecomeSeller = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
   const [errors, setErrors] = useState({});
+  const [isSeller, setIsSeller] = useState(false); // Track if user is already a seller
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkIfSeller = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/user/check-seller-status",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (response.data.isSeller) {
+          setIsSeller(true);
+          navigate("/manage-restaurant"); // Redirect to manage restaurant if already a seller
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    checkIfSeller();
+  }, [navigate]);
 
   const handleBecomeSeller = async (e) => {
     e.preventDefault();
-    setErrors({}); // Clear previous errors
+    setErrors({});
 
     try {
       const token = localStorage.getItem("token");
@@ -35,6 +61,7 @@ const BecomeSeller = () => {
       );
 
       alert(response.data.message || "Successfully became a seller!");
+      navigate("/manage-restaurant"); // Redirect to manage restaurant after becoming a seller
     } catch (error) {
       console.error(error);
       const errMsg =
