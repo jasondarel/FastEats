@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import MenuPage from "./pages/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
+import ManageRestaurant from "./pages/ManageRestaurant";
 
 function App() {
   return (
@@ -49,6 +50,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <BecomeSeller />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/manage-restaurant"
+            element={
+              <ProtectedRoute>
+                <ManageRestaurant />
               </ProtectedRoute>
             }
           />
