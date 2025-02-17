@@ -15,10 +15,10 @@ import {
     });
 
   router.post("/restaurant", authMiddleware,  createRestaurantController);
-  router.put("/restaurant/:restaurantId", authMiddleware, updateRestaurantController)
+  router.put("/restaurant", authMiddleware, updateRestaurantController)
   router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
   router.get("/restaurants", authMiddleware, getRestaurantsController);
-  router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantController)
+  router.get("/restaurant", authMiddleware, getRestaurantController)
   router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
 
 export {router as restaurantRoutes};

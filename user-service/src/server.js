@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import createTables from "./config/tablesinit.js";
 import dotenv from "dotenv";
-import userRoutes from "./route/userController.js";
+import userRoutes from "./route/userRoute.js";
 
 dotenv.config();
 
