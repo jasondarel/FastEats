@@ -1,49 +1,44 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Add this for navigation
+import { useNavigate } from "react-router-dom";  // Import useNavigate once
 import Sidebar from "../components/Sidebar";
+import { jwtDecode } from "jwt-decode";
 
 const BecomeSeller = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
   const [errors, setErrors] = useState({});
-  const [isSeller, setIsSeller] = useState(false); // Track if user is already a seller
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // Initialize navigate
 
   useEffect(() => {
-    const checkIfSeller = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/user/check-seller-status",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (response.data.isSeller) {
-          setIsSeller(true);
-          navigate("/manage-restaurant"); // Redirect to manage restaurant if already a seller
-        }
-      } catch (error) {
-        console.error(error);
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      // If the user is already a seller, redirect to the manage-restaurant page
+      if (decodedToken.role === "seller") {
+        navigate("/manage-restaurant");  // Redirect to manage-restaurant
       }
-    };
-    checkIfSeller();
-  }, [navigate]);
+    }
+  }, [navigate]);  // Added the navigate dependency here
 
   const handleBecomeSeller = async (e) => {
     e.preventDefault();
-    setErrors({});
+    setErrors({});  // Clear previous errors
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to become a seller");
+      return;
+    }
+
+    // Decode the token to check the role
+    const decodedToken = jwtDecode(token);
+    if (decodedToken.role !== "user") {
+      alert("Only users can become sellers");
+      return;
+    }
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be logged in to become a seller");
-        return;
-      }
-
       const payload = {
         restaurantName,
         restaurantAddress,
@@ -61,7 +56,7 @@ const BecomeSeller = () => {
       );
 
       alert(response.data.message || "Successfully became a seller!");
-      navigate("/manage-restaurant"); // Redirect to manage restaurant after becoming a seller
+      navigate("/manage-restaurant"); // Redirect to manage-restaurant after becoming a seller
     } catch (error) {
       console.error(error);
       const errMsg =
@@ -76,9 +71,7 @@ const BecomeSeller = () => {
       <Sidebar />
       <main className="flex-1 p-5 bg-yellow-100 min-h-screen flex items-center justify-center">
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-          <h2 className="text-2xl font-semibold text-center mb-6">
-            Become Seller
-          </h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">Become Seller</h2>
           <form onSubmit={handleBecomeSeller} className="space-y-4">
             <div>
               <input
