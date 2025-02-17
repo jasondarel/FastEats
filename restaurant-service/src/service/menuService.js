@@ -20,6 +20,20 @@ const getMenusService = async() => {
     }
 }
 
+const getMenuByRestaurantIdService = async (restaurantId) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM menu_item WHERE restaurant_id = $1",
+            [restaurantId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("❌ Error fetching menus:", error);
+        throw error;
+    }
+};
+
+
 const getMenuService = async(menuId) => {
 
 }
@@ -46,5 +60,6 @@ export {
     getMenuService,
     updateMenuService,
     deleteMenuService,
-    isMenuAvailable
+    isMenuAvailable,
+    getMenuByRestaurantIdService
 };

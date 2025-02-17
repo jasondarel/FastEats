@@ -3,7 +3,8 @@ import {
     getMenusService,
     getMenuService,
     updateMenuService,
-    deleteMenuService 
+    deleteMenuService, 
+    getMenuByRestaurantIdService
 } from "../service/menuService.js"
 import { 
     validateCreateMenuRequest 
@@ -61,6 +62,23 @@ const getMenusController = async(req, res) => {
     }
 }
 
+const getMenuByRestoIdController = async(req, res) => {
+    const restaurantId = req.params.restaurantId;
+    try {
+        const result = await getMenuByRestaurantIdService(restaurantId);
+
+        return res.status(200).json({
+            success: true,
+            menus: result
+        })
+    } catch(err) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}
+
 const getMenuController = async(req, res) => {
 
 }
@@ -78,5 +96,6 @@ export {
     getMenusController,
     getMenuController,
     updateMenuController,
-    deleteMenuController
+    deleteMenuController,
+    getMenuByRestoIdController
 };
