@@ -4,6 +4,7 @@ import {
     updateRestaurantService
 } from "../service/restaurantService.js";
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
+import jwt from 'jsonwebtoken';
 
 const createRestaurantController = async(req, res) => {
     const restaurantReq = req.body;
@@ -43,10 +44,37 @@ const createRestaurantController = async(req, res) => {
 }
 
 const updateRestaurantController = async (req, res) => {
-    const { restaurantId } = req.params;
-    const restaurantReq = req.body;
+    const token = req.headers.authorization?.split(' ')[1]; 
+
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: "Authorization token is required"
+        });
+    }
 
     try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if(decoded.role !== 'seller') {
+            return res.status(403).json({
+                success: false,
+                message: "Only seller can update restaurant"
+            });
+        }
+
+        const restaurant = await getRestaurantByOwnerIdService(decoded.userId);
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found for this owner"
+            });
+        }
+
+        const restaurantId = restaurant.restaurant_id;
+        const restaurantReq = req.body;
+
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
             return res.status(400).json({
@@ -61,17 +89,25 @@ const updateRestaurantController = async (req, res) => {
         if (!updatedRestaurant) {
             return res.status(404).json({
                 success: false,
-                message: "Restaurant not found"
+                message: "Restaurant update failed"
             });
         }
 
         return res.status(200).json({
             success: true,
-            message: "Update restaurant success",
+            message: "Restaurant updated successfully",
             dataRestaurant: updatedRestaurant
         });
+
     } catch (err) {
         console.error("❌ Error updating restaurant:", err);
+
+        if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired token"
+            });
+        }
 
         return res.status(500).json({
             success: false,
@@ -150,23 +186,41 @@ const getRestaurantByOwnerIdController = async (req, res) => {
     }
 };
 const getRestaurantController = async (req, res) => {
-    try {
-        const { restaurantId } = req.params;
-        const result = await getRestaurantService(restaurantId);
+    const token = req.headers.authorization?.split(' ')[1]; 
 
-        if (!result) {
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: "Authorization token is required"
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const restaurant = await getRestaurantByOwnerIdService(decoded.userId);
+
+        if (!restaurant) {
             return res.status(404).json({
                 success: false,
-                message: "Restaurant not found"
+                message: "Restaurant not found for this owner"
             });
         }
 
         return res.status(200).json({
             success: true,
-            restaurant: result
+            restaurant: restaurant
         });
+
     } catch (err) {
         console.error("❌ Error in getRestaurantController:", err);
+
+        if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired token"
+            });
+        }
+
         return res.status(500).json({
             success: false,
             message: "Internal server error"
