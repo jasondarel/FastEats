@@ -6,13 +6,15 @@ import {
     getMenusController,
     getMenuController,
     updateMenuController,
-    deleteMenuController
+    deleteMenuController,
+    getMenuByRestoIdController
 } from '../controller/menuController.js';
 
 router.post("/menu", authMiddleware, createMenuController);
 router.get("/menus", authMiddleware, getMenusController);
+router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
 router.get("/menu/:menuId", authMiddleware, getMenuController);
-router.put("/menu", authMiddleware, updateMenuController);
+router.put("/menu/:menuId", authMiddleware, updateMenuController);
 router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
 export {router as menuRoutes};

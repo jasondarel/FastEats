@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Sidebar from "../components/Sidebar";
 
 const Home = () => {
@@ -6,11 +7,13 @@ const Home = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         setError("No token found. Please log in.");
         setIsLoading(false);
@@ -31,7 +34,7 @@ const Home = () => {
         }
 
         const data = await response.json();
-        
+
         if (data.user && data.user.name) {
           setUsername(data.user.name);
         } else {
@@ -69,7 +72,7 @@ const Home = () => {
         }
 
         const data = await response.json();
-        
+
         setRestaurants(data.restaurants);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -104,7 +107,7 @@ const Home = () => {
             {error}
           </div>
         )}
-        
+
         <div className="mb-6">
           <p className="text-gray-700 text-lg">What would you like to eat?</p>
         </div>
@@ -114,9 +117,10 @@ const Home = () => {
           {restaurants.length > 0 ? (
             <div className="grid gap-4">
               {restaurants.map((restaurant) => (
-                <div 
-                  key={restaurant.restaurant_id} 
-                  className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                <div
+                  key={restaurant.restaurant_id}
+                  className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/menu/${restaurant.restaurant_id}`)} // Navigate to MenuPage
                 >
                   <h3 className="text-lg font-semibold text-gray-800">
                     {restaurant.restaurant_name}

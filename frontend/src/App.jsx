@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
+import MenuPage from "./pages/MenuPage";
 
 function App() {
   return (
@@ -32,6 +33,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/menu/:restaurantId"
+            element={
+              <ProtectedRoute>
+                <MenuPage/>
               </ProtectedRoute>
             }
           />
