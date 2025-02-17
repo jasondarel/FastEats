@@ -60,14 +60,13 @@ const deleteRestaurantService = async (id) => {
 
 const isOwnerAvailable = async(ownerId) => {
     try {
-        const users = await axios.get(`${RESTAURANT_SERVICE_URL}/users/${ownerId}`);
-        if(!users.data.error) {
+        const response = await axios.get(`http://localhost:5000/user/is-user-exist/${ownerId}`);
+        if(response.data.success) {
             return true;
         }
+        return false;
     } catch(err) {
-        if(err.response && err.response.status === 404) {
-            return false;
-        }
+        return false;
     }
 }
 
