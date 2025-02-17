@@ -1,5 +1,6 @@
 import { 
     createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService, getRestaurantService, 
+    getRestaurantByRestaurantIdService,
     getRestaurantsService,
     updateRestaurantService
 } from "../service/restaurantService.js";
@@ -138,8 +139,9 @@ const deleteRestaurantController = async (req, res) => {
 };
 
 const getRestaurantsController = async(req, res) => {
+    const userId = req.user.userId;
     try {
-        const result = await getRestaurantsService();
+        const result = await getRestaurantsService(userId);
 
         return res.status(200).json({
             success: true,
@@ -178,6 +180,41 @@ const getRestaurantByOwnerIdController = async (req, res) => {
         });
     }
 };
+
+const getRestaurantByRestaurantIdController = async (req, res) => {
+    try {
+        const { restaurantId } = req.params;
+
+        // Cek apakah restaurantId valid (harus angka)
+        if (!restaurantId || isNaN(restaurantId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid restaurantId"
+            });
+        }
+
+        const result = await getRestaurantByRestaurantIdService(restaurantId);
+        console.log(result)
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            restaurant: result
+        });
+    } catch (err) {
+        console.error("❌ Error in getRestaurantByRestaurantIdController:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+
 
 const getRestaurantController = async (req, res) => {
     try {
@@ -218,6 +255,7 @@ export {
     createRestaurantController,
     getRestaurantsController,
     getRestaurantByOwnerIdController,
+    getRestaurantByRestaurantIdController,
     getRestaurantController,
     updateRestaurantController,
     deleteRestaurantController

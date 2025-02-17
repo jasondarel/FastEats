@@ -6,11 +6,11 @@ import {
   updateOrder,
   deleteOrder,
 } from "../controllers/OrderController.js";
-import validateOrder from "../middleware/verifyOrder";
+import authMiddleware from "../middleware/apiKeyAuth.js";
 
 const router = express.Router();
 
-router.post("/orders", validateOrder, createOrder);
+router.post("/order", authMiddleware, createOrder);
 router.get("/orders", getOrder);
 router.get("/orders/:order_id", getOrderById);
 router.put("/orders/:order_id", updateOrder);

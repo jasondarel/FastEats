@@ -70,15 +70,19 @@ const isOwnerAvailable = async(ownerId) => {
     }
 }
 
-const getRestaurantsService = async () => {
+const getRestaurantsService = async (ownerId) => {
     try {
-        const result = await pool.query("SELECT * FROM restaurants");
+        const result = await pool.query(
+            "SELECT * FROM restaurants WHERE owner_id != $1",
+            [ownerId]
+        );
         return result.rows;
     } catch (error) {
         console.error("❌ Error fetching restaurants:", error);
         throw error;
     }
 };
+
 
 const getRestaurantByOwnerIdService = async (ownerId) => {
     try {
@@ -92,6 +96,26 @@ const getRestaurantByOwnerIdService = async (ownerId) => {
         throw error;
     }
 };
+
+const getRestaurantByRestaurantIdService = async (restaurantId) => {
+    try {
+        // Validasi sebelum query
+        if (!restaurantId || isNaN(restaurantId)) {
+            throw new Error(`Invalid restaurantId: ${restaurantId}`);
+        }
+
+        const result = await pool.query(
+            "SELECT * FROM restaurants WHERE restaurant_id = $1",
+            [parseInt(restaurantId, 10)]
+        );
+
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error("❌ Error fetching restaurant by restaurant_id:", error);
+        throw error;
+    }
+};
+
 
 const getRestaurantService = async (Id) => {
     try {
@@ -114,6 +138,7 @@ export {
     getRestaurantsService,
     getRestaurantService,
     getRestaurantByOwnerIdService,
+    getRestaurantByRestaurantIdService,
     isOwnerAvailable,
     createRestaurantService,
     updateRestaurantService,

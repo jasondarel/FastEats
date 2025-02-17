@@ -4,7 +4,7 @@ const router = express.Router();
 import { 
     createMenuController,
     getMenusController,
-    getMenuController,
+    getMenuByMenuIdController,
     updateMenuController,
     deleteMenuController,
     getMenuByRestoIdController
@@ -13,7 +13,7 @@ import {
 router.post("/menu", authMiddleware, createMenuController);
 router.get("/menus", authMiddleware, getMenusController);
 router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
-router.get("/menu/:menuId", authMiddleware, getMenuController);
+router.get("/menu-menuId/:menuId", authMiddleware, getMenuByMenuIdController);
 router.put("/menu/:menuId", authMiddleware, updateMenuController);
 router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
