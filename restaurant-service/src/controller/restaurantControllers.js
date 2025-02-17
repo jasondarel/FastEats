@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 
 const createRestaurantController = async(req, res) => {
     const restaurantReq = req.body;
+    restaurantReq.ownerId = req.user.userId;
     try {
         const errors = await validateCreateRestaurantRequest(restaurantReq);
         const errorLen = Object.keys(errors).length;
@@ -44,26 +45,17 @@ const createRestaurantController = async(req, res) => {
 }
 
 const updateRestaurantController = async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; 
-
-    if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "Authorization token is required"
-        });
-    }
-
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { role, userId } = req.user;
 
-        if(decoded.role !== 'seller') {
+        if (role !== 'seller') {
             return res.status(403).json({
                 success: false,
                 message: "Only seller can update restaurant"
             });
         }
 
-        const restaurant = await getRestaurantByOwnerIdService(decoded.userId);
+        const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
             return res.status(404).json({
@@ -115,6 +107,7 @@ const updateRestaurantController = async (req, res) => {
         });
     }
 };
+
 
 const deleteRestaurantController = async (req, res) => {
     const { restaurantId } = req.params;
@@ -185,19 +178,12 @@ const getRestaurantByOwnerIdController = async (req, res) => {
         });
     }
 };
+
 const getRestaurantController = async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; 
-
-    if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "Authorization token is required"
-        });
-    }
-
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const restaurant = await getRestaurantByOwnerIdService(decoded.userId);
+        const userId = req.user.userId;
+
+        const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
             return res.status(404).json({

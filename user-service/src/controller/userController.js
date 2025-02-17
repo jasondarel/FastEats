@@ -213,40 +213,55 @@ const changePasswordController = async(req, res) => {
 }
 
 const becomeSellerController = async (req, res) => {
-  if (req.user.role !== "user") {
-      return res.status(400).json({ error: "Only users can become sellers" });
-  }
-
-  const restaurantData = req.body;
-  const token = req.headers.authorization?.split(" ")[1];
-  restaurantData.ownerId = req.user.userId
   try {
+      if (req.user.role !== "user") {
+          return res.status(400).json({
+              success: false,
+              message: "Only users can become sellers"
+          });
+      }
+
+      const restaurantData = req.body;
+      restaurantData.ownerId = req.user.userId;
+
       const response = await axios.post(
           "http://localhost:5000/restaurant/restaurant",
           restaurantData,
           {
               headers: {
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${req.headers.authorization.split(" ")[1]}`,
                   "Content-Type": "application/json",
               },
           }
       );
 
-      await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
-          "seller",
-          req.user.userId,
-      ]);
+      await pool.query(
+          "UPDATE users SET role = $1 WHERE id = $2",
+          ["seller", req.user.userId]
+      );
 
-      res.json({ message: "User upgraded to seller" });
+      return res.status(200).json({
+          success: true,
+          message: "User upgraded to seller",
+          restaurant: response.data,
+      });
   } catch (err) {
-      if (err.response && err.response.status === 401) {
-          return res.status(401).json(err.response.data);
-      } else if(err.response.status === 400) {
-          return res.status(400).json(err.response.data);
+      if (err.response) {
+          if (err.response.status === 401) {
+              return res.status(401).json(err.response.data);
+          } else if (err.response.status === 400) {
+              return res.status(400).json(err.response.data);
+          }
       }
-      res.status(500).json({ error: "Server error" });
+
+      console.error("❌ Error in becomeSellerController:", err);
+      return res.status(500).json({
+          success: false,
+          message: "Server error",
+      });
   }
 };
+
 
 const checkUserExistController = async(req, res) => {
   const id = req.params.id; 
