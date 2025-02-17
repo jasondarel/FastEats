@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import MenuPage from "./pages/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
+import CreateMenuForm from "./pages/CreateMenuForm";
 import ManageRestaurant from "./pages/ManageRestaurant";
 
 function App() {
@@ -55,6 +56,15 @@ function App() {
           />
 
           <Route
+            path="/create-menu-form"
+            element={
+              <ProtectedRoute>
+                <CreateMenuForm/>
+              </ProtectedRoute>
+            }
+              />
+              
+            <Route
             path="/manage-restaurant"
             element={
               <ProtectedRoute>
