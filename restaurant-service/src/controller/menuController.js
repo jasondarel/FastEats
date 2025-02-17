@@ -6,36 +6,56 @@ import {
     deleteMenuService, 
     getMenuByRestaurantIdService
 } from "../service/menuService.js"
+import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import { 
     validateCreateMenuRequest 
 } from "../validator/menuValidator.js";
 
-const createMenuController = async(req, res) => {
+const createMenuController = async (req, res) => {
     const menuReq = req.body;
+    const userId = req.user.userId;
+    const role = req.user.role;
+
+    if (role !== 'seller') {
+        return res.status(403).json({
+            success: false,
+            message: "Only sellers can create a menu"
+        });
+    }
+
     try {
+        const restaurant = await getRestaurantByOwnerIdService(userId);
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found for this owner"
+            });
+        }
+
+        menuReq.restaurantId = restaurant.id;
+
         const errors = await validateCreateMenuRequest(menuReq);
-        const errorLen = Object.keys(errors).length;
-        if(errorLen > 0) {
+        if (Object.keys(errors).length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Validation failed',
+                message: "Validation failed",
                 errors
-            })
+            });
         }
 
         const newMenu = await createMenuService(menuReq);
         return res.status(201).json({
             success: true,
-            message: "Create Menu success",
+            message: "Menu created successfully",
             dataMenu: newMenu
-        })
-    } catch(err) {
-        console.error("❌ Error creating Menu:", err);
+        });
+    } catch (err) {
+        console.error("❌ Error creating menu:", err);
 
-        if (err.code === "23505") { 
+        if (err.code === "23505") {
             return res.status(400).json({
                 success: false,
-                message: "Menu name or owner already exists"
+                message: "Menu name already exists"
             });
         }
 
@@ -44,7 +64,8 @@ const createMenuController = async(req, res) => {
             message: "Internal Server Error"
         });
     }
-}
+};
+
 
 const getMenusController = async(req, res) => {
     try {

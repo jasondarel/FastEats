@@ -28,15 +28,6 @@ const validateCreateMenuRequest = async(menuReq) => {
         errors.menuPrice = 'Menu price must be a positive number';
     }
 
-    if(!menuReq.restaurantId) {
-        errors.restaurantId = 'Restaurant ID is required';
-    } else {
-        const isExist = await isRestaurantAvailableById(menuReq.restaurantId);
-        if(!isExist) {
-            errors.restaurantId = 'Restaurant not found';
-        }
-    }
-
     return errors
 }
 
