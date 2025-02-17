@@ -17,15 +17,6 @@ const validateCreateRestaurantRequest = async(restaurantReq) => {
     } else if(restaurantReq.restaurantAddress.length < 10) {
         errors.restaurantAddress = "Restaurant address too short (10 characters minimum)";
     }
-    
-    if(!restaurantReq.ownerId) {
-        errors.ownerId = 'Owner ID is required';
-    } else {
-        const isExist = await isOwnerAvailable(restaurantReq.ownerId);
-        if(!isExist) {
-            errors.ownerId = 'Owner ID not found';
-        }
-    }
 
     return errors
 }
