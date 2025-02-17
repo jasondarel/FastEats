@@ -3,8 +3,8 @@ import { useState } from "react";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Controls sidebar visibility
-  const [showHamburger, setShowHamburger] = useState(true); // Controls when the hamburger is rendered
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showHamburger, setShowHamburger] = useState(true);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -13,47 +13,43 @@ const Sidebar = () => {
 
   const toggleSidebar = () => {
     if (isSidebarOpen) {
-      // Closing sidebar: start slide-out and delay showing hamburger
       setIsSidebarOpen(false);
-      setTimeout(() => {
-        setShowHamburger(true);
-      }, 300); // This should match the sidebar's transition duration (300ms)
+      setTimeout(() => setShowHamburger(true), 300); // Delay to match transition
     } else {
-      // Opening sidebar: hide hamburger immediately and show sidebar
       setShowHamburger(false);
       setIsSidebarOpen(true);
     }
   };
 
   return (
-    <div>
-      {/* Hamburger Button (Visible only when showHamburger is true) */}
+    <>
+      {/* Fixed Hamburger Button */}
       {showHamburger && (
         <button
           onClick={toggleSidebar}
-          className="absolute top-5 left-5 z-20 text-yellow-500 text-3xl hover:cursor-pointer p-2 rounded-full shadow-lg bg-white border border-white"
+          className="fixed top-5 left-5 z-50 text-yellow-500 text-3xl p-2 rounded-full shadow-lg bg-white border border-white hover:cursor-pointer"
         >
-          &#9776; {/* Hamburger icon */}
+          &#9776;
         </button>
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 h-screen text-yellow-500 p-5 flex flex-col shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Close Button (Visible only when sidebar is open) */}
+        {/* Close Button */}
         {isSidebarOpen && (
           <button
             onClick={toggleSidebar}
-            className="absolute top-5 right-5 text-yellow-500 text-2xl hover:cursor-pointer z-30"
+            className="absolute top-5 right-5 text-yellow-500 text-2xl z-50 hover:cursor-pointer"
           >
-            &times; {/* Close icon */}
+            &times;
           </button>
         )}
 
-        {/* Background Image with Darker Overlay */}
+        {/* Background Image */}
         <div
           className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat grayscale opacity-80 -z-10 pointer-events-none"
           style={{ backgroundImage: "url('/foodbg.jpg')" }}
@@ -61,7 +57,7 @@ const Sidebar = () => {
           <div className="absolute inset-0 bg-black opacity-70"></div>
         </div>
 
-        {/* Content */}
+        {/* Sidebar Content */}
         <div className="relative z-10 flex flex-col flex-grow">
           {/* Logo */}
           <img
@@ -108,16 +104,16 @@ const Sidebar = () => {
             </ul>
           </nav>
 
-          {/* Logout Button - Sticks to Bottom */}
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer"
+            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600"
           >
             Logout
           </button>
         </div>
       </aside>
-    </div>
+    </>
   );
 };
 
