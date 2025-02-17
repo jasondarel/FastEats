@@ -70,12 +70,25 @@ const Profile = () => {
     }
   };
 
+  const isValidPassword = (password) => {
+    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
+  };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
+
+    if (!isValidPassword(changePassword.newPassword)) {
+      alert(
+        "Password harus minimal 8 karakter dengan kombinasi huruf dan angka!"
+      );
+      return;
+    }
+
     if (changePassword.newPassword !== changePassword.confirmPassword) {
       alert("New passwords do not match!");
       return;
     }
+
     try {
       const token = localStorage.getItem("token");
       await axios.put("http://localhost:5002/change-password", changePassword, {
