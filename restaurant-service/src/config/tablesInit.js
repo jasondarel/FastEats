@@ -16,6 +16,7 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS menu_item (
