@@ -7,7 +7,7 @@ const Home = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
@@ -30,7 +30,9 @@ const Home = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch user profile. Status: ${response.status}`);
+          throw new Error(
+            `Failed to fetch user profile. Status: ${response.status}`
+          );
         }
 
         const data = await response.json();
@@ -115,13 +117,16 @@ const Home = () => {
         <section className="mt-8">
           <h2 className="text-xl font-bold mb-4">Available Restaurants</h2>
           {restaurants.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {restaurants.map((restaurant) => (
                 <div
                   key={restaurant.restaurant_id}
-                  className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  className="w-100 p-4 border rounded-lg shadow-lg hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => navigate(`/menu/${restaurant.restaurant_id}`)} // Navigate to MenuPage
                 >
+                  {/* Add a placeholder image for now, can replace with actual images later */}
+                  <div className="h-40 bg-gray-300 rounded-t-lg mb-4"></div>
+
                   <h3 className="text-lg font-semibold text-gray-800">
                     {restaurant.restaurant_name}
                   </h3>
