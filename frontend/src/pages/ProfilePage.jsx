@@ -130,7 +130,15 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-yellow-100">
+    <div
+      className="flex w-screen min-h-screen bg-yellow-100"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/profilepage.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <button
         onClick={() => navigate("/home")}
         className="absolute top-4 left-4 flex items-center justify-center w-16 h-16 bg-white text-yellow-500 text-3xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
