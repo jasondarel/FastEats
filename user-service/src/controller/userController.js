@@ -1,14 +1,15 @@
-import { 
-    generateToken, 
-    hashPassword, 
-    validateEmail, 
-    validatePassword, 
-    validatePhoneNumber } from "../util/userUtil.js";
+import {
+  generateToken,
+  hashPassword,
+  validateEmail,
+  validatePassword,
+  validatePhoneNumber,
+} from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
 
-const registerController = async(req, res) => {
-    const { name, email, password } = req.body;
+const registerController = async (req, res) => {
+  const { name, email, password } = req.body;
   if (!name || !email || !password)
     return res.status(400).json({ error: "Missing fields" });
 
@@ -34,11 +35,11 @@ const registerController = async(req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
-    }
-}
+  }
+};
 
-const loginController = async(req, res) => {
-    const { email, password } = req.body;
+const loginController = async (req, res) => {
+  const { email, password } = req.body;
 
   if (!email || !password)
     return res.status(400).json({ error: "Missing fields" });
@@ -55,9 +56,9 @@ const loginController = async(req, res) => {
       user.rows.length === 0 ||
       user.rows[0].password_hash !== hashPassword(password)
     ) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Wrong email or password." 
+        message: "Wrong email or password.",
       });
     }
 
@@ -68,24 +69,24 @@ const loginController = async(req, res) => {
     });
     res.json({ token });
   } catch (err) {
-    console.log("kena error")
+    console.log("kena error");
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
-}
+};
 
-const getUsersController = async(req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM users");
-        res.json(result.rows);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
-      }
-}
+const getUsersController = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM users");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
 
-const getUserController = async(req, res) => {
-    const { id } = req.params;
+const getUserController = async (req, res) => {
+  const { id } = req.params;
 
   if (isNaN(id)) {
     return res.status(400).json({ error: "User ID must be a number" });
@@ -114,35 +115,35 @@ const getUserController = async(req, res) => {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
-}
+};
 
-const getProfileController = async(req, res) => {
-    try {
-        const userQuery = await pool.query(
-          "SELECT id, name, email, role FROM users WHERE id = $1",
-          [req.user.userId]
-        );
-    
-        if (userQuery.rows.length === 0)
-          return res.status(404).json({ error: "User not found" });
-    
-        const userDetailsQuery = await pool.query(
-          "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
-          [req.user.userId]
-        );
-    
-        const user = userQuery.rows[0];
-        const userDetails = userDetailsQuery.rows[0] || {};
-    
-        res.json({ user: { ...user, ...userDetails } });
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
-      }
-}
+const getProfileController = async (req, res) => {
+  try {
+    const userQuery = await pool.query(
+      "SELECT id, name, email, role FROM users WHERE id = $1",
+      [req.user.userId]
+    );
 
-const updateProfileController = async(req, res) => {
-    const { name, profile_photo, address, phone_number } = req.body;
+    if (userQuery.rows.length === 0)
+      return res.status(404).json({ error: "User not found" });
+
+    const userDetailsQuery = await pool.query(
+      "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
+      [req.user.userId]
+    );
+
+    const user = userQuery.rows[0];
+    const userDetails = userDetailsQuery.rows[0] || {};
+
+    res.json({ user: { ...user, ...userDetails } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const updateProfileController = async (req, res) => {
+  const { name, profile_photo, address, phone_number } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: "Name is required" });
@@ -178,10 +179,10 @@ const updateProfileController = async(req, res) => {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
-}
+};
 
-const changePasswordController = async(req, res) => {
-    const { currentPassword, newPassword } = req.body;
+const changePasswordController = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: "All fields are required" });
@@ -199,6 +200,13 @@ const changePasswordController = async(req, res) => {
       return res.status(401).json({ error: "Incorrect current password" });
     }
 
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({
+        error:
+          "Password must be at least 8 characters long, and include both letters and numbers",
+      });
+    }
+
     const hashedNewPassword = hashPassword(newPassword);
     await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
       hashedNewPassword,
@@ -210,91 +218,89 @@ const changePasswordController = async(req, res) => {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
-}
+};
 
 const becomeSellerController = async (req, res) => {
   try {
-      if (req.user.role !== "user") {
-          return res.status(400).json({
-              success: false,
-              message: "Only users can become sellers"
-          });
-      }
-
-      const restaurantData = req.body;
-      restaurantData.ownerId = req.user.userId;
-
-      const response = await axios.post(
-          "http://localhost:5000/restaurant/restaurant",
-          restaurantData,
-          {
-              headers: {
-                  Authorization: `Bearer ${req.headers.authorization.split(" ")[1]}`,
-                  "Content-Type": "application/json",
-              },
-          }
-      );
-
-      await pool.query(
-          "UPDATE users SET role = $1 WHERE id = $2",
-          ["seller", req.user.userId]
-      );
-
-      return res.status(200).json({
-          success: true,
-          message: "User upgraded to seller",
-          restaurant: response.data,
+    if (req.user.role !== "user") {
+      return res.status(400).json({
+        success: false,
+        message: "Only users can become sellers",
       });
+    }
+
+    const restaurantData = req.body;
+    restaurantData.ownerId = req.user.userId;
+
+    const response = await axios.post(
+      "http://localhost:5000/restaurant/restaurant",
+      restaurantData,
+      {
+        headers: {
+          Authorization: `Bearer ${req.headers.authorization.split(" ")[1]}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
+      "seller",
+      req.user.userId,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "User upgraded to seller",
+      restaurant: response.data,
+    });
   } catch (err) {
-      if (err.response) {
-          if (err.response.status === 401) {
-              return res.status(401).json(err.response.data);
-          } else if (err.response.status === 400) {
-              return res.status(400).json(err.response.data);
-          }
+    if (err.response) {
+      if (err.response.status === 401) {
+        return res.status(401).json(err.response.data);
+      } else if (err.response.status === 400) {
+        return res.status(400).json(err.response.data);
       }
+    }
 
-      console.error("❌ Error in becomeSellerController:", err);
-      return res.status(500).json({
-          success: false,
-          message: "Server error",
-      });
+    console.error("❌ Error in becomeSellerController:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-
-const checkUserExistController = async(req, res) => {
-  const id = req.params.id; 
+const checkUserExistController = async (req, res) => {
+  const id = req.params.id;
   try {
-      const user = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-      if (user.rows.length === 0) {
-          return res.status(404).json({ 
-            success: false,
-            error: "User not found" 
-          });
-      }
-      res.json({ 
-        success: true,
-        message: "User found" 
-      });
-  } catch (err) {
-      console.error(err);
-      res.status(500).json({ 
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    if (user.rows.length === 0) {
+      return res.status(404).json({
         success: false,
-        error: "Server error" 
+        error: "User not found",
       });
+    }
+    res.json({
+      success: true,
+      message: "User found",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
   }
-}
-
+};
 
 export {
-    registerController,
-    loginController,
-    getProfileController,
-    updateProfileController,
-    getUserController,
-    getUsersController,
-    changePasswordController,
-    becomeSellerController,
-    checkUserExistController
+  registerController,
+  loginController,
+  getProfileController,
+  updateProfileController,
+  getUserController,
+  getUsersController,
+  changePasswordController,
+  becomeSellerController,
+  checkUserExistController,
 };

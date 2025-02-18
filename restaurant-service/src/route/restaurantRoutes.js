@@ -6,6 +6,7 @@ import {
     getRestaurantController,
     getRestaurantsController,
     getRestaurantByOwnerIdController,
+    getRestaurantByRestaurantIdController,
     updateRestaurantController,
     deleteRestaurantController
 } from '../controller/restaurantControllers.js';
@@ -19,6 +20,7 @@ import {
   router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
   router.get("/restaurants", authMiddleware, getRestaurantsController);
   router.get("/restaurant", authMiddleware, getRestaurantController)
+  router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantByRestaurantIdController)
   router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
 
 export {router as restaurantRoutes};

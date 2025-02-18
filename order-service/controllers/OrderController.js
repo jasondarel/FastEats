@@ -4,66 +4,86 @@ import axios from "axios";
 //create Order
 export const createOrder = async (req, res) => {
   try {
-    const { user_id, restaurant_id, total_price } = req.body;
+    const userId = req.user?.userId; // Pastikan req.user tidak undefined
+    const { restaurantId, menuId, totalPrice } = req.body;
 
-    //validasi user id
-    let user;
-    try {
-      const userResponse = await axios.get(
-        `https://fcf3-61-5-30-124.ngrok-free.app/users/${user_id}`
-      );
-      user = userResponse.data.user;
-    } catch (error) {
-      // Tangani jika API restoran mengembalikan 404
-      if (error.response && error.response.status === 404) {
-        return res.status(404).json({
-          status: "error",
-          message: "User not Found",
-        });
-      }
-      console.error("❌ Error calling restaurant API:", error.message);
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to fetch User data",
+    // Validasi input
+    if (!restaurantId || !menuId || !totalPrice) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields",
       });
     }
 
-    // Validasi restaurant_id ada di database restoran
-    let restaurant;
-    try {
-      const restaurantResponse = await axios.get(
-        `https://e442-61-5-30-124.ngrok-free.app/restaurant/${restaurant_id}`
-      );
-      restaurant = restaurantResponse.data.restaurant;
-    } catch (error) {
-      // Tangani jika API restoran mengembalikan 404
-      if (error.response && error.response.status === 404) {
-        return res.status(404).json({
-          status: "error",
-          message: "Restaurant not Found",
-        });
-      }
-      console.error("❌ Error calling restaurant API:", error.message);
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to fetch restaurant data",
+    // Validasi ID harus berupa angka
+    if (isNaN(restaurantId) || isNaN(menuId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurantId or menuId",
       });
     }
 
-    // Insert ke database hanya jika restoran ditemukan
-    const result = await pool.query(
-      "INSERT INTO orders (user_id, restaurant_id, total_price) VALUES ($1, $2, $3) RETURNING *",
-      [user_id, restaurant_id, total_price]
+    // Pastikan Authorization header tersedia
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing or invalid token",
+      });
+    }
+    const token = authHeader.split(" ")[1];
+
+    // Fetch data dari restaurant service
+    console.log("Fetching restaurant data...");
+    const restaurantResponse = await axios.get(
+      `http://localhost:5000/restaurant/restaurant/${restaurantId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
 
-    res.status(201).json(result.rows[0]);
+    console.log("Fetching menu data...");
+    const menuResponse = await axios.get(
+      `http://localhost:5000/restaurant/menu-menuId/${menuId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Simpan order ke database
+    console.log("Inserting order into database...");
+    const result = await pool.query(
+      "INSERT INTO orders (user_id, menu_id, restaurant_id, total_price) VALUES ($1, $2, $3, $4) RETURNING *",
+      [userId, menuId, restaurantResponse.data.restaurant.restaurant_id, totalPrice]
+    );
+
+    res.status(201).json({
+      success: true,
+      order: result.rows[0],
+      message: "Order created successfully",
+    });
   } catch (error) {
     console.error("❌ Internal Server Error:", error.message);
+
+    // Tangani error dari API eksternal
+    if (error.response) {
+      return res.status(error.response.status).json(error.response.data);
+    }
+
+    // Tangani error umum
     res.status(500).json({
-      error: "Internal Server Error",
+      success: false,
+      message: "Internal server error",
     });
   }
 };
+
 
 //getall
 export const getOrder = async (req, res) => {

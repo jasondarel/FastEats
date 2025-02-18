@@ -5,23 +5,25 @@ const createTables = async () => {
   try {
     console.log("Creating tables...");
 
-    // Membuat tabel restaurants jika belum ada
     await client.query(`
       CREATE TABLE IF NOT EXISTS restaurants (
         restaurant_id SERIAL PRIMARY KEY,
         restaurant_name VARCHAR(255) NOT NULL,
         restaurant_address TEXT NOT NULL,
+        restaurant_image VARCHAR(500),
         owner_id INT NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS menu_item (
         menu_id SERIAL PRIMARY KEY,
         menu_name VARCHAR(255) NOT NULL,
         menu_description TEXT,
+        menu_image VARCHAR(500),
         restaurant_id INT NOT NULL,
         menu_category VARCHAR(255) NOT NULL,
         menu_price DECIMAL(10, 2) NOT NULL,
