@@ -171,6 +171,7 @@ const ManageRestaurant = () => {
                   ? "bg-yellow-500 text-white hover:bg-yellow-600"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               }`}
+              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 hover:cursor-pointer transition"
             >
               Update Restaurant
             </button>
