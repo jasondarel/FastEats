@@ -14,7 +14,7 @@ import MyMenuPage from "./pages/MyMenu";
 function App() {
   return (
     <div className="flex">
-      <div className="flex-1 p-4">
+      <div className="flex-1">
         <Routes>
           {/* Redirect "/" to "/home" */}
           <Route path="/" element={<Navigate to="/home" />} />

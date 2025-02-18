@@ -143,7 +143,7 @@ const Profile = () => {
             value={profile.name}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -152,7 +152,7 @@ const Profile = () => {
             value={profile.address}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -161,7 +161,7 @@ const Profile = () => {
             value={profile.phone_number}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"
@@ -180,7 +180,7 @@ const Profile = () => {
             value={changePassword.currentPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -189,7 +189,7 @@ const Profile = () => {
             value={changePassword.newPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -198,7 +198,7 @@ const Profile = () => {
             value={changePassword.confirmPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"
