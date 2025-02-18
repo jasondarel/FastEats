@@ -131,7 +131,7 @@ const Profile = () => {
 
   return (
     <div
-      className="flex w-screen min-h-screen bg-yellow-100"
+      className="flex w-screen min-h-screen bg-yellow-200"
       style={{
         backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/profilepage.jpg')`,
         backgroundSize: "cover",
@@ -139,7 +139,7 @@ const Profile = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto lg:ml-0">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto scale-95 lg:min-w-2xl lg:scale-90">
         <button
           onClick={() => navigate("/home")}
           className="top-4 left-4 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
@@ -159,7 +159,7 @@ const Profile = () => {
             />
           </svg>
         </button>
-        <h2 className="text-2xl font-semibold text-center mb-6">
+        <h2 className="text-2xl lg:text-4xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
 
@@ -171,7 +171,7 @@ const Profile = () => {
                 "https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png"
               }
               alt="Profile"
-              className="w-24 h-24 object-cover rounded-full border"
+              className="w-24 h-24 object-cover rounded-full mb-4"
             />
           </label>
           <input
@@ -224,7 +224,7 @@ const Profile = () => {
           <button
             type="submit"
             disabled={!isProfileChanged}
-            className={`w-full p-3 rounded-lg transition ${
+            className={`w-full p-3 rounded-lg transition font-semibold lg:font-bold lg:text-xl ${
               isProfileChanged
                 ? "bg-yellow-500 text-white hover:bg-yellow-600"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
