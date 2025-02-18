@@ -7,6 +7,15 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const [showHamburger, setShowHamburger] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Cek awal ukuran layar
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setShowHamburger(false);
+    } else if (isMobile && !isTaskbarOpen) {
+      setShowHamburger(true);
+    }
+  }, [isSidebarOpen, isMobile, isTaskbarOpen]);
+  
+
   // Effect untuk update ukuran layar & sembunyikan hamburger saat taskbar aktif
   useEffect(() => {
     const updateSidebarState = () => {
@@ -42,6 +51,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const toggleSidebar = () => {
     if (isMobile) {
       setIsSidebarOpen(!isSidebarOpen);
+      setShowHamburger(isSidebarOpen);
     }
   };
 
@@ -126,7 +136,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </li>
             </ul>
           </nav>
-
           {/* Logout Button */}
           <button
             onClick={handleLogout}
