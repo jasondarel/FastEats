@@ -55,14 +55,22 @@ const BecomeSeller = () => {
         }
       );
 
-      alert(response.data.message || "Successfully became a seller!");
-      navigate("/manage-restaurant"); // Redirect to manage-restaurant after becoming a seller
+      alert(response.data.message + " ..Please login again" || "Successfully became a seller!");
+      localStorage.removeItem("token");
+      navigate("/login");
     } catch (error) {
-      console.error(error);
-      const errMsg =
-        error.response?.data?.error ||
-        "An error occurred while processing your request.";
-      alert(errMsg);
+      if (error.response && error.response.data) {
+        const errMsg = error.response.data.errors || {};
+        setErrors(errMsg);
+        if (errMsg.restaurantName) {
+          alert(errMsg.restaurantName);
+        }
+        if (errMsg.restaurantAddress) {
+          alert(errMsg.restaurantAddress);
+        }
+      } else {
+        alert("An unexpected error occurred. Please try again later.");
+      }
     }
   };
 

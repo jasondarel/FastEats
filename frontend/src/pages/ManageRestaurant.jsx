@@ -19,6 +19,7 @@ const ManageRestaurant = () => {
     }
 
     const decodedToken = jwtDecode(token);
+    console.log(decodedToken)
     // If the user is not a seller, redirect to the home page
     if (decodedToken.role !== "seller") {
       alert("Only sellers can manage a restaurant");
