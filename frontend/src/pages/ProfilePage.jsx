@@ -143,7 +143,22 @@ const Profile = () => {
         onClick={() => navigate("/home")}
         className="absolute top-4 left-4 flex items-center justify-center w-16 h-16 bg-white text-yellow-500 text-3xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
       >
-        <span className="leading-none">←</span>
+        <span className="leading-none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+            />
+          </svg>
+        </span>
       </button>
 
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
