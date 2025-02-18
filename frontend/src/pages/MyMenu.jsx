@@ -7,6 +7,7 @@ import foodIcon from "../assets/foods-icon.png";
 import drinkIcon from "../assets/drinks-icon.png";
 import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
+import axios from "axios";
 
 const MyMenuPage = () => {
   const { restaurantId } = useParams();
@@ -15,9 +16,15 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
+  //attribute
+  const [menuName, setMenuName] = useState("");
+  const [menuDesc, setMenuDesc] = useState("");
+  const [menuCategory, setMenuCategory] = useState("");
+  const [menuPrice, setMenuPrice] = useState("");
+
   // State untuk menyimpan kategori yang dipilih
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [image, setImage] = useState(null);
+  const [menuImage, setMenuImage] = useState(null);
 
   // Fungsi untuk menangani klik pada kategori
   const handleClick = (category) => {
@@ -28,7 +35,7 @@ const MyMenuPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0]; // Ambil file yang dipilih
     if (file) {
-      setImage(URL.createObjectURL(file)); // Membuat URL untuk pratinjau gambar
+      setMenuImage(URL.createObjectURL(file)); // Membuat URL untuk pratinjau gambar
     }
   };
 
@@ -69,6 +76,46 @@ const MyMenuPage = () => {
   if (isLoading) {
     return <div className="text-center p-5">Loading menu...</div>;
   }
+
+  const handleCreateNewMenu = async (e) => {
+    e.preventDefault();
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found. Please log in.");
+
+      const formData = new FormData();
+      formData.append("menuImage", menuImage); // Use the state for the image
+      formData.append("menuName", menuName);
+      formData.append("menuDesc", menuDesc);
+      formData.append("menuCategory", selectedCategory);
+      formData.append("menuPrice", menuPrice);
+      formData.append("restaurantId", restaurantId); // Ensure restaurantId is included
+
+      const response = await axios.post(
+        "http://localhost:5000/restaurant/menu",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Update state to display the new menu item without reloading
+      setMenuItems((prevItems) => [...prevItems, response.data.dataMenu]);
+
+      // Close the form after successful submission
+      setShowCreateMenuForm(false);
+    } catch (error) {
+      console.error(
+        "Error creating menu:",
+        error.response?.data?.message || error.message
+      );
+      setError(error.response?.data?.message || "An error occurred");
+    }
+  };
 
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
@@ -125,7 +172,7 @@ const MyMenuPage = () => {
 
         {/* Modal Create Menu Form */}
         {showCreateMenuForm && (
-          <div className="flex items-center justify-center backdrop-blur-sm fixed top-0 right-0 bottom-0 left-0 z-50">
+          <div className="flex items-center justify-center fixed top-0 right-0 bottom-0 left-0 z-50">
             <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
               <div className="flex items-center justify-center relative">
                 <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
@@ -141,7 +188,7 @@ const MyMenuPage = () => {
                 </h2>
               </div>
               <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
-                <form className="text-start">
+                <form className="text-start" onSubmit={handleCreateNewMenu}>
                   <h2 className="font-bold text-xl">Create New Menu</h2>
                   <hr className="my-2 border-slate-400" />
                   {/* Upload menu image */}
@@ -167,10 +214,10 @@ const MyMenuPage = () => {
                         Choose File
                       </label>
                       {/* Display image preview if available */}
-                      {image && (
+                      {menuImage && (
                         <div className="mt-2 flex justify-center w-full">
                           <img
-                            src={image}
+                            src={menuImage}
                             alt="Preview"
                             className="max-w-full max-h-80 object-contain rounded-md"
                             style={{ minWidth: "100%" }}
@@ -189,6 +236,8 @@ const MyMenuPage = () => {
                       type="text"
                       className="input border mt-1 border-slate-400 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
                       placeholder="Your Menu's Name"
+                      value={menuName}
+                      onChange={(e) => setMenuName(e.target.value)}
                     />
                   </div>
 
@@ -200,6 +249,22 @@ const MyMenuPage = () => {
                     <textarea
                       className="input mt-1 border border-slate-400 rounded-md p-2 w-full h-32 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
                       placeholder="Your Menu's Description"
+                      value={menuDesc}
+                      onChange={(e) => setMenuDesc(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Input price */}
+                  <div className="my-4">
+                    <label className="font-semibold text-sm">
+                      Price<span className="text-pink-600">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      className="input border mt-1 border-slate-400 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
+                      placeholder="Your Menu's Price"
+                      value={menuPrice}
+                      onChange={(e) => setMenuPrice(e.target.value)}
                     />
                   </div>
 
