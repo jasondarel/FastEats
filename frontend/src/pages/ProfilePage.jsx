@@ -106,7 +106,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500">
+    <div className="flex items-center justify-center min-h-screen p-6 bg-yellow-100">
       <button
         onClick={() => navigate("/home")}
         className="absolute top-4 left-4 flex items-center justify-center w-16 h-16 bg-white text-yellow-500 text-3xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"

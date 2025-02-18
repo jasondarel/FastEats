@@ -125,14 +125,14 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   My Restaurant
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   to="/settings"
                   className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
                 >
                   Settings
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </nav>
           {/* Logout Button */}
