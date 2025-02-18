@@ -142,6 +142,8 @@ const ManageRestaurant = () => {
             </button>
           </form>
         </div>
+      <a href="../my-menu"
+      className="bg-sky-500 text-white p-5 rounded-2xl fixed bottom-30 left-120">My Menu</a>
       </main>
     </div>
   );

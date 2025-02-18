@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
-const MenuPage = () => {
+const MyMenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ const MenuPage = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu/${restaurantId}`,
+          `http://localhost:5000/restaurant/menus`,
           {
             method: "GET",
             headers: {
@@ -53,7 +53,7 @@ const MenuPage = () => {
     <div className="flex ml-64 bg-white min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5 relative">
-        <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
+        <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -81,9 +81,16 @@ const MenuPage = () => {
         ) : (
           <div className="text-gray-500 text-center py-8">No menu available.</div>
         )}
+
+        {/* Floating Add Menu Button */}
+        <button
+          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105"
+        >
+          + Add Menu
+        </button>
       </main>
     </div>
   );
 };
 
-export default MenuPage;
+export default MyMenuPage;

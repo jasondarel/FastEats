@@ -9,6 +9,7 @@ import MenuPage from "./pages/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
 import CreateMenuForm from "./pages/CreateMenuForm";
 import ManageRestaurant from "./pages/ManageRestaurant";
+import MyMenuPage from "./pages/MyMenu";
 
 function App() {
   return (
@@ -42,6 +43,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <MenuPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-menu"
+            element={
+              <ProtectedRoute>
+                <MyMenuPage />
               </ProtectedRoute>
             }
           />
