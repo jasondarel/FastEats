@@ -5,7 +5,7 @@ import Sidebar from "../components/Sidebar";
 const MenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ const MenuPage = () => {
             {menuItems.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group"
+                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer"
               >
                 <img
                   src={

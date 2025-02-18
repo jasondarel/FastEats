@@ -63,18 +63,29 @@ const BecomeSeller = () => {
       localStorage.removeItem("token");
       navigate("/login");
     } catch (error) {
-      if (error.response && error.response.data) {
-        const errMsg = error.response.data.errors || {};
-        setErrors(errMsg);
-        if (errMsg.restaurantName) {
-          alert(errMsg.restaurantName);
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+            if (data.errors) {
+                const validationErrors = Object.values(data.errors)
+                    .map((msg) => `• ${msg}`)
+                    .join("\n");
+                alert(`Validation Error:\n${validationErrors}`);
+            } else if (data.message) {
+                alert(`Error: ${data.message}`);
+            } else {
+                alert("Invalid request. Please check your input.");
+            }
+        } else if (status === 401) {
+            alert("Unauthorized! Please log in again.");
+            localStorage.removeItem("token");
+            navigate("/login");
+        } else {
+            alert(data.message || "An unexpected error occurred. Please try again later.");
         }
-        if (errMsg.restaurantAddress) {
-          alert(errMsg.restaurantAddress);
-        }
-      } else {
-        alert("An unexpected error occurred. Please try again later.");
-      }
+    } 
+    window.location.reload();
     }
   };
 
