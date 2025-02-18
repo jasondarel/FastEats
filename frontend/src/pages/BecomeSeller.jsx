@@ -59,10 +59,10 @@ const BecomeSeller = () => {
         }
       );
 
-      alert(response.data.message || "Successfully became a seller!");
-      navigate("/manage-restaurant");
+      alert(response.data.message + " ..Please login again" || "Successfully became a seller!");
+      localStorage.removeItem("token");
+      navigate("/login");
     } catch (error) {
-      console.error("Error response:", error.response);
       if (error.response && error.response.data) {
         const errMsg = error.response.data.errors || {};
         setErrors(errMsg);
