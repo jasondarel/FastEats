@@ -78,7 +78,11 @@ const updateMenuService = async (menuReq, menuId) => {
 
 
 const deleteMenuService = async(menuId) => {
-
+    const result = await pool.query(
+        `DELETE FROM menu_item WHERE menu_id = $1 RETURNING *`,
+        [menuId]
+    )
+    return result.rows[0];
 }
 
 const isMenuAvailable = async (menuName, restaurantId) => {

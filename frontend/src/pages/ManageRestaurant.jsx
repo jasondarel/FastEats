@@ -3,14 +3,18 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { FaUtensils, FaMapMarkerAlt, FaSave } from "react-icons/fa";
+import { FaUtensils, FaMapMarkerAlt, FaSave, FaCamera, FaImage } from "react-icons/fa";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
+  const [restaurantImage, setRestaurantImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [currentImage, setCurrentImage] = useState(null);
   const [initialRestaurantName, setInitialRestaurantName] = useState("");
   const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
   const [isChanged, setIsChanged] = useState(false);
+  const [isImageChanged, setIsImageChanged] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,13 +43,18 @@ const ManageRestaurant = () => {
             },
           }
         );
-
+    
         const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
+          
+          // Use the image URL returned from the server
+          const imageUrl = `http://localhost:5000/uploads/${restaurant.restaurant_image}`;
+          setCurrentImage(restaurant.restaurant_image);
+          setImagePreview(imageUrl); // Set the preview URL for the image
         } else {
           alert("Restaurant data not found.");
         }
@@ -58,17 +67,40 @@ const ManageRestaurant = () => {
     fetchRestaurantData();
   }, [navigate]);
 
-  // Check if the form values have changed
   useEffect(() => {
     if (
       restaurantName !== initialRestaurantName ||
-      restaurantAddress !== initialRestaurantAddress
+      restaurantAddress !== initialRestaurantAddress ||
+      isImageChanged
     ) {
       setIsChanged(true);
     } else {
       setIsChanged(false);
     }
-  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress]);
+  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress, isImageChanged]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        alert("Please upload an image file");
+        return;
+      }
+
+      setRestaurantImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setIsImageChanged(true);
+    }
+  };
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -81,13 +113,20 @@ const ManageRestaurant = () => {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("restaurantName", restaurantName);
+      formData.append("restaurantAddress", restaurantAddress);
+      if (restaurantImage) {
+        formData.append("restaurantImage", restaurantImage);
+      }
+
       const response = await axios.put(
         "http://localhost:5000/restaurant/restaurant",
-        { restaurantName, restaurantAddress },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -96,6 +135,7 @@ const ManageRestaurant = () => {
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setIsChanged(false);
+      setIsImageChanged(false);
       window.location.reload();
     } catch (error) {
       if (error.response) {
@@ -139,10 +179,57 @@ const ManageRestaurant = () => {
     >
       <Sidebar />
       <main className="flex-1 flex justify-center items-center p-5">
-        <div className="w-full max-w-lg p-8 bg-white shadow-xl rounded-xl">
+        <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaUtensils className="mr-2" /> Manage Your Restaurant
           </h2>
+
+          {/* Image Section */}
+          <div className="mb-8">
+            <label className="block text-gray-700 font-medium mb-3">
+              Restaurant Image
+            </label>
+            <div className="relative group">
+              <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                {imagePreview ? (
+                  <>
+                    <img
+                      src={imagePreview}
+                      alt="Restaurant"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
+                        <FaCamera className="mr-2" />
+                        Change Image
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                    </div>
+                  </>
+                ) : (
+                  <label className="cursor-pointer text-gray-500 flex flex-col items-center">
+                    <FaImage className="w-12 h-12 mb-2" />
+                    <span>Click to upload image</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                Recommended: 1200x800px, Max size: 5MB
+              </p>
+            </div>
+          </div>
+
           <form onSubmit={handleUpdateRestaurant} className="space-y-5">
             <div>
               <label className="block text-gray-700 font-medium mb-1">
@@ -178,7 +265,7 @@ const ManageRestaurant = () => {
             </div>
             <button
               type="submit"
-              disabled={!isChanged} // Disable button if no changes
+              disabled={!isChanged}
               className={`w-full p-3 text-white text-lg font-semibold rounded-lg transition flex items-center justify-center ${
                 isChanged
                   ? "bg-yellow-500 hover:bg-yellow-600"

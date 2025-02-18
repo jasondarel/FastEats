@@ -25,13 +25,19 @@ const isRestaurantAvailableById = async (restaurantId) => {
 
 const createRestaurantService = async (restaurantReq) => {
     const result = await pool.query(
-        `INSERT INTO restaurants (restaurant_name, restaurant_address, owner_id) 
-        VALUES ($1, $2, $3) RETURNING *`,
-        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.ownerId]
+        `INSERT INTO restaurants (restaurant_name, restaurant_address, owner_id, restaurant_image) 
+        VALUES ($1, $2, $3, $4) RETURNING *`,
+        [
+            restaurantReq.restaurantName,
+            restaurantReq.restaurantAddress,
+            restaurantReq.ownerId,
+            restaurantReq.restaurantImage,
+        ]
     );
     
     return result.rows[0];
 };
+
 
 const updateRestaurantService = async (restaurantReq, id) => {
     const result = await pool.query(
