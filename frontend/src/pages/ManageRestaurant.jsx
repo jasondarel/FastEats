@@ -96,7 +96,7 @@ const ManageRestaurant = () => {
   };
 
   return (
-    <div className="flex ml-64">
+    <div className="flex ml-0 md:ml-64">
       <Sidebar />
       <main className="flex-1 p-5 bg-yellow-100 min-h-screen flex items-center justify-center">
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
@@ -142,8 +142,12 @@ const ManageRestaurant = () => {
             </button>
           </form>
         </div>
-      <a href="../my-menu"
-      className="bg-sky-500 text-white p-5 rounded-2xl fixed bottom-30 left-120">My Menu</a>
+        <a
+          href="../my-menu"
+          className="bg-sky-500 text-white p-5 rounded-2xl fixed bottom-30 left-120"
+        >
+          My Menu
+        </a>
       </main>
     </div>
   );

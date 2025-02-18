@@ -17,16 +17,13 @@ const MyMenuPage = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await fetch(
-          `http://localhost:5000/restaurant/menus`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`http://localhost:5000/restaurant/menus`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch menu.");
@@ -50,7 +47,7 @@ const MyMenuPage = () => {
   }
 
   return (
-    <div className="flex ml-64 bg-white min-h-screen">
+    <div className="flex  ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5 relative">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
@@ -68,24 +65,34 @@ const MyMenuPage = () => {
                 className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group"
               >
                 <img
-                  src={item.menu_image ? item.menu_image : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"}
+                  src={
+                    item.menu_image
+                      ? item.menu_image
+                      : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
+                  }
                   alt={item.menu_name}
                   className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
                 />
-                <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">{item.menu_name}</h3>
-                <p className="text-sm text-gray-500 italic group-hover:text-white">{item.menu_category}</p>
-                <p className="text-gray-700 mt-2 group-hover:text-white">Rp {item.menu_price}</p>
+                <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
+                  {item.menu_name}
+                </h3>
+                <p className="text-sm text-gray-500 italic group-hover:text-white">
+                  {item.menu_category}
+                </p>
+                <p className="text-gray-700 mt-2 group-hover:text-white">
+                  Rp {item.menu_price}
+                </p>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-gray-500 text-center py-8">No menu available.</div>
+          <div className="text-gray-500 text-center py-8">
+            No menu available.
+          </div>
         )}
 
         {/* Floating Add Menu Button */}
-        <button
-          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105"
-        >
+        <button className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105">
           + Add Menu
         </button>
       </main>

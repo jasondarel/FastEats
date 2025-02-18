@@ -99,7 +99,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex ml-64 bg-yellow-50 min-h-screen">
+    <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
         <h1 className="text-3xl font-bold text-yellow-700 mb-4">
