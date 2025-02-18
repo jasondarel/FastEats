@@ -7,6 +7,8 @@ import { jwtDecode } from "jwt-decode";
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
+  const [initialData, setInitialData] = useState({ name: "", address: "" });
+  const [isUpdated, setIsUpdated] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
@@ -41,6 +43,10 @@ const ManageRestaurant = () => {
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
+          setInitialData({
+            name: restaurant.restaurant_name,
+            address: restaurant.restaurant_address,
+          });
         } else {
           alert("Restaurant data not found.");
         }
@@ -52,6 +58,12 @@ const ManageRestaurant = () => {
 
     fetchRestaurantData();
   }, [navigate]);
+
+  useEffect(() => {
+    setIsUpdated(
+      restaurantName !== initialData.name || restaurantAddress !== initialData.address
+    );
+  }, [restaurantName, restaurantAddress, initialData]);
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -76,13 +88,33 @@ const ManageRestaurant = () => {
       );
 
       alert(response.data.message || "Successfully updated the restaurant!");
-      navigate("/");
+      window.location.reload();
     } catch (error) {
-      console.error(error);
-      const errMsg =
-        error.response?.data?.error ||
-        "An error occurred while updating the restaurant.";
-      alert(errMsg);
+      console.error("❌ Error in becomeSellerController:", error);
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          if (data.errors) {
+            const validationErrors = Object.values(data.errors)
+              .map((msg) => `• ${msg}`)
+              .join("\n");
+            alert(`Validation Error:\n${validationErrors}`);
+          } else if (data.message) {
+            alert(`Error: ${data.message}`);
+          } else {
+            alert("Invalid request. Please check your input.");
+          }
+        } else if (status === 401) {
+          alert("Unauthorized! Please log in again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          alert(data.message || "An unexpected error occurred. Please try again later.");
+        }
+      }
+      window.location.reload();
     }
   };
 
@@ -133,6 +165,12 @@ const ManageRestaurant = () => {
             </div>
             <button
               type="submit"
+              disabled={!isUpdated}
+              className={`w-full p-3 text-lg font-semibold rounded-lg transition ${
+                isUpdated
+                  ? "bg-yellow-500 text-white hover:bg-yellow-600"
+                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              }`}
               className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 hover:cursor-pointer transition"
             >
               Update Restaurant
