@@ -3,12 +3,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
+import { FaUtensils, FaMapMarkerAlt, FaSave } from "react-icons/fa"; // Import icons
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
-  const [initialData, setInitialData] = useState({ name: "", address: "" });
-  const [isUpdated, setIsUpdated] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
@@ -43,10 +42,6 @@ const ManageRestaurant = () => {
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
-          setInitialData({
-            name: restaurant.restaurant_name,
-            address: restaurant.restaurant_address,
-          });
         } else {
           alert("Restaurant data not found.");
         }
@@ -58,12 +53,6 @@ const ManageRestaurant = () => {
 
     fetchRestaurantData();
   }, [navigate]);
-
-  useEffect(() => {
-    setIsUpdated(
-      restaurantName !== initialData.name || restaurantAddress !== initialData.address
-    );
-  }, [restaurantName, restaurantAddress, initialData]);
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -88,92 +77,70 @@ const ManageRestaurant = () => {
       );
 
       alert(response.data.message || "Successfully updated the restaurant!");
-      window.location.reload();
+      navigate("/");
     } catch (error) {
-      console.error("❌ Error in becomeSellerController:", error);
-
-      if (error.response) {
-        const { status, data } = error.response;
-
-        if (status === 400) {
-          if (data.errors) {
-            const validationErrors = Object.values(data.errors)
-              .map((msg) => `• ${msg}`)
-              .join("\n");
-            alert(`Validation Error:\n${validationErrors}`);
-          } else if (data.message) {
-            alert(`Error: ${data.message}`);
-          } else {
-            alert("Invalid request. Please check your input.");
-          }
-        } else if (status === 401) {
-          alert("Unauthorized! Please log in again.");
-          localStorage.removeItem("token");
-          navigate("/login");
-        } else {
-          alert(data.message || "An unexpected error occurred. Please try again later.");
-        }
-      }
-      window.location.reload();
+      console.error(error);
+      const errMsg =
+        error.response?.data?.error ||
+        "An error occurred while updating the restaurant.";
+      alert(errMsg);
     }
   };
 
   return (
-    <div className="flex ml-0 md:ml-64">
+    <div
+      className="flex w-screen min-h-screen bg-yellow-100"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <Sidebar />
-      <main className="flex-1 p-5 bg-yellow-100 min-h-screen flex flex-col items-center justify-center">
+      <main className="flex-1 flex justify-center items-center p-5">
         <div className="w-full max-w-lg p-8 bg-white shadow-xl rounded-xl">
-          <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6">
-            Manage Your Restaurant
+          <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
+            <FaUtensils className="mr-2" /> Manage Your Restaurant
           </h2>
           <form onSubmit={handleUpdateRestaurant} className="space-y-5">
             <div>
               <label className="block text-gray-700 font-medium mb-1">
                 Restaurant Name
               </label>
-              <input
-                type="text"
-                placeholder="Enter your restaurant name"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              />
-              {errors.restaurantName && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.restaurantName}
-                </p>
-              )}
+              <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
+                <FaUtensils className="ml-3 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Enter your restaurant name"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  required
+                  className="w-full p-3 focus:outline-none"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-1">
                 Restaurant Address
               </label>
-              <input
-                type="text"
-                placeholder="Enter your restaurant address"
-                value={restaurantAddress}
-                onChange={(e) => setRestaurantAddress(e.target.value)}
-                required
-                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              />
-              {errors.restaurantAddress && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.restaurantAddress}
-                </p>
-              )}
+              <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
+                <FaMapMarkerAlt className="ml-3 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Enter your restaurant address"
+                  value={restaurantAddress}
+                  onChange={(e) => setRestaurantAddress(e.target.value)}
+                  required
+                  className="w-full p-3 focus:outline-none"
+                />
+              </div>
             </div>
             <button
               type="submit"
-              disabled={!isUpdated}
-              className={`w-full p-3 text-lg font-semibold rounded-lg transition ${
-                isUpdated
-                  ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
-              }`}
-              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 hover:cursor-pointer transition"
+              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 transition flex items-center justify-center"
             >
-              Update Restaurant
+              <FaSave className="mr-2" /> Update Restaurant
             </button>
           </form>
         </div>
@@ -181,9 +148,9 @@ const ManageRestaurant = () => {
         {/* Floating My Menu Button */}
         <a
           href="../my-menu"
-          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition"
+          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
         >
-          My Menu
+          <FaUtensils className="mr-2" /> My Menu
         </a>
       </main>
     </div>
