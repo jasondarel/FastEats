@@ -139,7 +139,7 @@ const Profile = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto md:ml-10 lg:ml-0">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto lg:ml-0">
         <button
           onClick={() => navigate("/home")}
           className="top-4 left-4 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
