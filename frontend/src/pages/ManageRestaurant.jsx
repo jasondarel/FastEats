@@ -3,12 +3,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { FaUtensils, FaMapMarkerAlt, FaSave } from "react-icons/fa"; // Import icons
+import { FaUtensils, FaMapMarkerAlt, FaSave } from "react-icons/fa";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
-  const [errors, setErrors] = useState({});
+  const [initialRestaurantName, setInitialRestaurantName] = useState("");
+  const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
+  const [isChanged, setIsChanged] = useState(false); // Track 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +44,8 @@ const ManageRestaurant = () => {
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
+          setInitialRestaurantName(restaurant.restaurant_name);
+          setInitialRestaurantAddress(restaurant.restaurant_address);
         } else {
           alert("Restaurant data not found.");
         }
@@ -54,9 +58,21 @@ const ManageRestaurant = () => {
     fetchRestaurantData();
   }, [navigate]);
 
+  // Check if the form values have changed
+  useEffect(() => {
+    if (
+      restaurantName !== initialRestaurantName ||
+      restaurantAddress !== initialRestaurantAddress
+    ) {
+      setIsChanged(true);
+    } else {
+      setIsChanged(false);
+    }
+  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress]);
+
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
-    setErrors({});
+    if (!isChanged) return;
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -77,13 +93,13 @@ const ManageRestaurant = () => {
       );
 
       alert(response.data.message || "Successfully updated the restaurant!");
+      setInitialRestaurantName(restaurantName);
+      setInitialRestaurantAddress(restaurantAddress);
+      setIsChanged(false);
       navigate("/");
     } catch (error) {
       console.error(error);
-      const errMsg =
-        error.response?.data?.error ||
-        "An error occurred while updating the restaurant.";
-      alert(errMsg);
+      alert(error.response?.data?.error || "An error occurred while updating the restaurant.");
     }
   };
 
@@ -138,7 +154,12 @@ const ManageRestaurant = () => {
             </div>
             <button
               type="submit"
-              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 transition flex items-center justify-center"
+              disabled={!isChanged} // Disable button if no changes
+              className={`w-full p-3 text-white text-lg font-semibold rounded-lg transition flex items-center justify-center ${
+                isChanged
+                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
             >
               <FaSave className="mr-2" /> Update Restaurant
             </button>
