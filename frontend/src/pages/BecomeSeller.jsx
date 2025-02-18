@@ -59,7 +59,10 @@ const BecomeSeller = () => {
         }
       );
 
-      alert(response.data.message + " ..Please login again" || "Successfully became a seller!");
+      alert(
+        response.data.message + " ..Please login again" ||
+          "Successfully became a seller!"
+      );
       localStorage.removeItem("token");
       navigate("/login");
     } catch (error) {
@@ -67,32 +70,43 @@ const BecomeSeller = () => {
         const { status, data } = error.response;
 
         if (status === 400) {
-            if (data.errors) {
-                const validationErrors = Object.values(data.errors)
-                    .map((msg) => `• ${msg}`)
-                    .join("\n");
-                alert(`Validation Error:\n${validationErrors}`);
-            } else if (data.message) {
-                alert(`Error: ${data.message}`);
-            } else {
-                alert("Invalid request. Please check your input.");
-            }
+          if (data.errors) {
+            const validationErrors = Object.values(data.errors)
+              .map((msg) => `• ${msg}`)
+              .join("\n");
+            alert(`Validation Error:\n${validationErrors}`);
+          } else if (data.message) {
+            alert(`Error: ${data.message}`);
+          } else {
+            alert("Invalid request. Please check your input.");
+          }
         } else if (status === 401) {
-            alert("Unauthorized! Please log in again.");
-            localStorage.removeItem("token");
-            navigate("/login");
+          alert("Unauthorized! Please log in again.");
+          localStorage.removeItem("token");
+          navigate("/login");
         } else {
-            alert(data.message || "An unexpected error occurred. Please try again later.");
+          alert(
+            data.message ||
+              "An unexpected error occurred. Please try again later."
+          );
         }
-    } 
-    window.location.reload();
+      }
+      window.location.reload();
     }
   };
 
   return (
     <div className="flex ml-64">
       <Sidebar />
-      <main className="flex-1 p-5 bg-yellow-100 min-h-screen flex items-center justify-center">
+      <main
+        className="flex-1 p-5 min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.6)), url('/manageresto.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
           <h2 className="text-2xl font-semibold text-center mb-6">
             Become Seller

@@ -88,7 +88,15 @@ const ManageRestaurant = () => {
   };
 
   return (
-    <div className="flex w-screen min-h-screen bg-yellow-100">
+    <div
+      className="flex w-screen min-h-screen bg-yellow-100"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <Sidebar />
       <main className="flex-1 flex justify-center items-center p-5">
         <div className="w-full max-w-lg p-8 bg-white shadow-xl rounded-xl">
