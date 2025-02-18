@@ -32,7 +32,7 @@ const CreateMenuForm = () => {
       <div className="flex items-center justify-center min-h-screen min-w-full">
         <div className="rounded-md bg-linear-to-br from-yellow-300 to-yellow-800 via-yellow-500 p-10">
           <div className="relative flex items-center justify-center">
-            <h2 className="font-bold text-4xl my-5 -mt-2 text-center text-white">
+            <h2 className="font-extrabold text-4xl my-5 -mt-2 text-center text-yellow-900">
               Create Menu Form
             </h2>
             <div className="absolute -top-4 -right-5 text-4xl">
@@ -43,7 +43,7 @@ const CreateMenuForm = () => {
           </div>
           <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
             <form className="text-start">
-              <h2 className="font-semibold text-xl">Create New Menu</h2>
+              <h2 className="font-bold text-xl">Create New Menu</h2>
               <hr className="my-2 border-slate-400"></hr>
 
               {/* upload menu image*/}
@@ -64,7 +64,7 @@ const CreateMenuForm = () => {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="bg-yellow-500 text-white p-2 cursor-pointer hover:bg-yellow-600"
+                    className="bg-yellow-500 text-white p-2 cursor-pointer hover:bg-yellow-600 rounded-sm font-semibold"
                   >
                     Choose File
                   </label>
@@ -188,8 +188,8 @@ const CreateMenuForm = () => {
                 </div>
               </div>
 
-              <div className="mt-10 flex items-end justify-end">
-                <button className="bg-yellow-600 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer">
+              <div className="mt-10 flex items-center min-w-full w-full">
+                <button className="bg-gradient-to-br from-yellow-400  via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer w-full">
                   Submit
                 </button>
               </div>
