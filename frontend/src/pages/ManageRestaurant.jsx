@@ -3,21 +3,19 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { FaUtensils, FaMapMarkerAlt, FaSave, FaCamera, FaImage } from "react-icons/fa";
+import { FaUtensils, FaMapMarkerAlt, FaSave, FaImage, FaCamera } from "react-icons/fa";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
-  const [restaurantImage, setRestaurantImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [currentImage, setCurrentImage] = useState(null);
   const [initialRestaurantName, setInitialRestaurantName] = useState("");
   const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
   const [isChanged, setIsChanged] = useState(false);
-  const [isImageChanged, setIsImageChanged] = useState(false);
   const navigate = useNavigate();
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
+    setImagePreview("https://e7.pngegg.com/pngimages/716/758/png-clipart-graphics-restaurant-logo-restaurant-thumbnail.png")
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to manage a restaurant");
@@ -43,18 +41,13 @@ const ManageRestaurant = () => {
             },
           }
         );
-    
+
         const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
-          
-          // Use the image URL returned from the server
-          const imageUrl = `http://localhost:5000/uploads/${restaurant.restaurant_image}`;
-          setCurrentImage(restaurant.restaurant_image);
-          setImagePreview(imageUrl); // Set the preview URL for the image
         } else {
           alert("Restaurant data not found.");
         }
@@ -67,40 +60,17 @@ const ManageRestaurant = () => {
     fetchRestaurantData();
   }, [navigate]);
 
+  // Check if the form values have changed
   useEffect(() => {
     if (
       restaurantName !== initialRestaurantName ||
-      restaurantAddress !== initialRestaurantAddress ||
-      isImageChanged
+      restaurantAddress !== initialRestaurantAddress
     ) {
       setIsChanged(true);
     } else {
       setIsChanged(false);
     }
-  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress, isImageChanged]);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
-        return;
-      }
-
-      if (!file.type.startsWith('image/')) {
-        alert("Please upload an image file");
-        return;
-      }
-
-      setRestaurantImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-      setIsImageChanged(true);
-    }
-  };
+  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress]);
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -113,20 +83,13 @@ const ManageRestaurant = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("restaurantName", restaurantName);
-      formData.append("restaurantAddress", restaurantAddress);
-      if (restaurantImage) {
-        formData.append("restaurantImage", restaurantImage);
-      }
-
       const response = await axios.put(
         "http://localhost:5000/restaurant/restaurant",
-        formData,
+        { restaurantName, restaurantAddress },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
         }
       );
@@ -135,7 +98,6 @@ const ManageRestaurant = () => {
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setIsChanged(false);
-      setIsImageChanged(false);
       window.location.reload();
     } catch (error) {
       if (error.response) {
@@ -206,7 +168,6 @@ const ManageRestaurant = () => {
                           type="file"
                           className="hidden"
                           accept="image/*"
-                          onChange={handleImageChange}
                         />
                       </label>
                     </div>
@@ -219,7 +180,6 @@ const ManageRestaurant = () => {
                       type="file"
                       className="hidden"
                       accept="image/*"
-                      onChange={handleImageChange}
                     />
                   </label>
                 )}
@@ -286,6 +246,7 @@ const ManageRestaurant = () => {
         </a>
       </main>
     </div>
+
   );
 };
 
