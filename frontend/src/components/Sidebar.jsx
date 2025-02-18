@@ -14,7 +14,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
       setShowHamburger(true);
     }
   }, [isSidebarOpen, isMobile, isTaskbarOpen]);
-  
 
   // Effect untuk update ukuran layar & sembunyikan hamburger saat taskbar aktif
   useEffect(() => {
@@ -105,7 +104,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
                 >
                   Home
                 </Link>
@@ -113,7 +112,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/profile"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
                 >
                   Profile
                 </Link>
@@ -121,25 +120,25 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
                 >
                   My Restaurant
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   to="/settings"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
                 >
                   Settings
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </nav>
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600"
+            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer transition"
           >
             Logout
           </button>

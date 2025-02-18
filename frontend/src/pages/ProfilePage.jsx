@@ -106,13 +106,14 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen p-6 bg-yellow-100">
       <button
         onClick={() => navigate("/home")}
-        className="absolute top-4 left-30 p-2 bg-white text-yellow-500 rounded-lg hover:text-yellow-600 transition text-5xl hover:cursor-pointer"
+        className="absolute top-4 left-4 flex items-center justify-center w-16 h-16 bg-white text-yellow-500 text-3xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
       >
-        ←
+        <span className="leading-none">←</span>
       </button>
+
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
         <h2 className="text-2xl font-semibold text-center mb-6">
           Edit Profile
@@ -143,7 +144,7 @@ const Profile = () => {
             value={profile.name}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -152,7 +153,7 @@ const Profile = () => {
             value={profile.address}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -161,7 +162,7 @@ const Profile = () => {
             value={profile.phone_number}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"
@@ -180,7 +181,7 @@ const Profile = () => {
             value={changePassword.currentPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -189,7 +190,7 @@ const Profile = () => {
             value={changePassword.newPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -198,7 +199,7 @@ const Profile = () => {
             value={changePassword.confirmPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"

@@ -231,6 +231,7 @@ const becomeSellerController = async (req, res) => {
 
     const restaurantData = req.body;
     restaurantData.ownerId = req.user.userId;
+    console.log(restaurantData)
 
     const response = await axios.post(
       "http://localhost:5000/restaurant/restaurant",
@@ -242,6 +243,8 @@ const becomeSellerController = async (req, res) => {
         },
       }
     );
+
+    console.log(response)
 
     await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       "seller",
@@ -258,6 +261,7 @@ const becomeSellerController = async (req, res) => {
       if (err.response.status === 401) {
         return res.status(401).json(err.response.data);
       } else if (err.response.status === 400) {
+        console.log(err.response.data)
         return res.status(400).json(err.response.data);
       }
     }
