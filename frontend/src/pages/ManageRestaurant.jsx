@@ -133,7 +133,7 @@ const ManageRestaurant = () => {
             </div>
             <button
               type="submit"
-              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 transition"
+              className="w-full p-3 bg-yellow-500 text-white text-lg font-semibold rounded-lg hover:bg-yellow-600 hover:cursor-pointer transition"
             >
               Update Restaurant
             </button>

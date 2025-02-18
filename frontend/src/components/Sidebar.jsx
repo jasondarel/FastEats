@@ -104,7 +104,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold transition"
                 >
                   Home
                 </Link>
@@ -112,7 +112,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/profile"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold transition"
                 >
                   Profile
                 </Link>
@@ -120,7 +120,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold transition"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold transition"
                 >
                   My Restaurant
                 </Link>
