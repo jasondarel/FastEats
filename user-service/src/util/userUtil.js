@@ -1,5 +1,5 @@
-import crypto from "crypto"
-import jwt from "jsonwebtoken"
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -12,24 +12,24 @@ function generateToken(payload) {
 }
 
 function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-  
-  function validatePassword(password) {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    return passwordRegex.test(password);
-  }
-  
-  function validatePhoneNumber(phone) {
-    const phoneRegex = /^\d{12}$/; // Exactly 12 digits
-    return phoneRegex.test(phone);
-  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  return passwordRegex.test(password);
+}
+
+function validatePhoneNumber(phone) {
+  const phoneRegex = /^\d{12}$/; // Exactly 12 digits
+  return phoneRegex.test(phone);
+}
 
 export {
-    hashPassword,
-    generateToken,
-    validateEmail,
-    validatePhoneNumber,
-    validatePassword
-}
+  hashPassword,
+  generateToken,
+  validateEmail,
+  validatePhoneNumber,
+  validatePassword,
+};
