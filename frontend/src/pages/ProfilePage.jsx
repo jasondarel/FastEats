@@ -10,12 +10,16 @@ const Profile = () => {
     phone_number: "",
   });
 
+  const [originalProfile, setOriginalProfile] = useState({});
   const [preview, setPreview] = useState(null);
   const [changePassword, setChangePassword] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [isProfileChanged, setIsProfileChanged] = useState(false);
+  const [isPasswordChanged, setIsPasswordChanged] = useState(false);
 
   const navigate = useNavigate();
 
@@ -27,6 +31,7 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data.user);
+        setOriginalProfile(res.data.user); // Simpan data asli
         setPreview(res.data.user.profile_photo || null);
       } catch (error) {
         console.error(error);
@@ -36,6 +41,18 @@ const Profile = () => {
 
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    setIsProfileChanged(JSON.stringify(profile) !== JSON.stringify(originalProfile) || preview !== originalProfile.profile_photo);
+  }, [profile, preview, originalProfile]);
+
+  useEffect(() => {
+    setIsPasswordChanged(
+      changePassword.currentPassword !== "" ||
+      changePassword.newPassword !== "" ||
+      changePassword.confirmPassword !== ""
+    );
+  }, [changePassword]);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -64,6 +81,8 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert("Profile updated successfully!");
+      setOriginalProfile(profile); // Update state original
+      setIsProfileChanged(false);
     } catch (error) {
       console.error(error);
       alert("Update failed");
@@ -78,9 +97,7 @@ const Profile = () => {
     e.preventDefault();
 
     if (!isValidPassword(changePassword.newPassword)) {
-      alert(
-        "Password harus minimal 8 karakter dengan kombinasi huruf dan angka!"
-      );
+      alert("Password harus minimal 8 karakter dengan kombinasi huruf dan angka!");
       return;
     }
 
@@ -100,6 +117,7 @@ const Profile = () => {
         newPassword: "",
         confirmPassword: "",
       });
+      setIsPasswordChanged(false);
     } catch (error) {
       alert(error.response?.data?.error || "Failed to update password");
     }
@@ -115,14 +133,12 @@ const Profile = () => {
       </button>
 
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-        <h2 className="text-2xl font-semibold text-center mb-6">
-          Edit Profile
-        </h2>
+        <h2 className="text-2xl font-semibold text-center mb-6">Edit Profile</h2>
 
         <div className="flex flex-col items-center mb-4">
           <label htmlFor="photoUpload" className="cursor-pointer">
             <img
-              src={preview || "/default-avatar.png"}
+              src={preview || "https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png"}
               alt="Profile"
               className="w-24 h-24 object-cover rounded-full border"
             />
@@ -144,7 +160,7 @@ const Profile = () => {
             value={profile.name}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -153,7 +169,7 @@ const Profile = () => {
             value={profile.address}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -162,11 +178,12 @@ const Profile = () => {
             value={profile.phone_number}
             onChange={handleChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"
-            className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+            disabled={!isProfileChanged}
+            className={`w-full p-3 rounded-lg transition ${isProfileChanged ? "bg-yellow-500 text-white hover:bg-yellow-600" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
           >
             Save Profile
           </button>
@@ -181,7 +198,7 @@ const Profile = () => {
             value={changePassword.currentPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -190,7 +207,7 @@ const Profile = () => {
             value={changePassword.newPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
@@ -199,11 +216,12 @@ const Profile = () => {
             value={changePassword.confirmPassword}
             onChange={handlePasswordChange}
             required
-            className="w-full p-3 border rounded-lg focus:outline-none focus:border-0 focus:ring-2 focus:ring-yellow-500"
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <button
             type="submit"
-            className="w-full p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            disabled={!isPasswordChanged}
+            className={`w-full p-3 rounded-lg transition ${isPasswordChanged ? "bg-red-500 text-white hover:bg-red-600" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
           >
             Change Password
           </button>

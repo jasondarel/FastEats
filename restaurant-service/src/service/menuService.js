@@ -52,21 +52,43 @@ const getMenuService = async(menuId) => {
 
 }
 
-const updateMenuService = async(menuReq, menuId) => {
+const updateMenuService = async (menuReq, menuId) => {
+    const result = await pool.query(
+        `UPDATE menu_item 
+         SET menu_name = $1, 
+             menu_description = $2, 
+             menu_price = $3, 
+             menu_category = $4, 
+             menu_image = $5,
+             updated_at = NOW()
+         WHERE menu_id = $6 
+         RETURNING *`,
+        [
+            menuReq.menuName, 
+            menuReq.menuDescription, 
+            menuReq.menuPrice, 
+            menuReq.menuCategory, 
+            menuReq.menuImage,
+            menuId
+        ]
+    );
 
-}
+    return result.rows[0];
+};
+
 
 const deleteMenuService = async(menuId) => {
 
 }
 
-const isMenuAvailable = async(menuName) => {
+const isMenuAvailable = async (menuName, restaurantId) => {
     const result = await pool.query(
-        `SELECT 1 FROM menu_item WHERE menu_name = $1`,
-        [menuName]
+        "SELECT * FROM menu_item WHERE menu_name ILIKE $1 AND restaurant_id = $2",
+        [menuName, restaurantId]
     );
     return result.rowCount > 0;
-}
+};
+
 
 export {
     createMenuService,
