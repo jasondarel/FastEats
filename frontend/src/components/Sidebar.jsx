@@ -130,7 +130,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600"
+            className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer"
           >
             Logout
           </button>
