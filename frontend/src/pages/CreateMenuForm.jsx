@@ -52,7 +52,7 @@ const CreateMenuForm = () => {
                   Upload Image<span className="text-pink-600">*</span>
                 </label>
                 <div className="border border-slate-400 rounded-md border-dashed mt-1 w-150 min-h-50 flex flex-col items-center justify-center">
-                  <p className="font-semibold text-slate-600 text-center">
+                  <p className="font-semibold text-slate-600 text-center my-2">
                     JPG, PNG, GIF, WEBP, Max 100mb.
                   </p>
                   <input
@@ -64,7 +64,7 @@ const CreateMenuForm = () => {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="bg-yellow-500 text-white p-2 cursor-pointer"
+                    className="bg-yellow-500 text-white p-2 cursor-pointer hover:bg-yellow-600"
                   >
                     Choose File
                   </label>
@@ -112,7 +112,7 @@ const CreateMenuForm = () => {
                 <div className="grid grid-cols-4 gap-0 mt-1">
                   {/* Kategori Foods */}
                   <div
-                    className={`border border-yellow-400 rounded-l-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group ${
+                    className={`border border-yellow-400 rounded-l-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition ${
                       selectedCategory === "Foods"
                         ? "bg-yellow-500"
                         : "hover:bg-yellow-400"
@@ -131,7 +131,7 @@ const CreateMenuForm = () => {
 
                   {/* Kategori Drinks */}
                   <div
-                    className={`border border-l-0 border-r-0 border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group ${
+                    className={`border border-l-0 border-r-0 border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition ${
                       selectedCategory === "Drinks"
                         ? "bg-yellow-500"
                         : "hover:bg-yellow-400"
@@ -150,7 +150,7 @@ const CreateMenuForm = () => {
 
                   {/* Kategori Dessert */}
                   <div
-                    className={`border border-r-0 border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group pl-5 ${
+                    className={`border border-r-0 border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group pl-5 transition ${
                       selectedCategory === "Dessert"
                         ? "bg-yellow-500"
                         : "hover:bg-yellow-400"
@@ -169,7 +169,7 @@ const CreateMenuForm = () => {
 
                   {/* Kategori Other */}
                   <div
-                    className={`border border-yellow-400 rounded-r-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group ${
+                    className={`border border-yellow-400 rounded-r-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition ${
                       selectedCategory === "Other"
                         ? "bg-yellow-500"
                         : "hover:bg-yellow-400"
@@ -189,7 +189,7 @@ const CreateMenuForm = () => {
               </div>
 
               <div className="mt-10 flex items-end justify-end">
-                <button className="bg-yellow-600 text-white p-2.5 rounded-xl text-xl font-semibold">
+                <button className="bg-yellow-600 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer">
                   Submit
                 </button>
               </div>
