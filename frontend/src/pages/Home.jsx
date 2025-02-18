@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 const Home = () => {
@@ -8,7 +8,7 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -122,26 +122,29 @@ const Home = () => {
             🍕 Available Restaurants
           </h2>
           {restaurants.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {restaurants.map((restaurant) => (
                 <div
                   key={restaurant.restaurant_id}
-                  className="w-100 p-4 border border-yellow-300 rounded-lg bg-white shadow-lg hover:shadow-xl hover:bg-yellow-100 transition-all cursor-pointer"
+                  className="w-full border border-yellow-300 rounded-lg bg-white shadow-lg hover:shadow-xl hover:bg-yellow-100 transition-all cursor-pointer"
                   onClick={() => navigate(`/menu/${restaurant.restaurant_id}`)}
                 >
-                  {/* Placeholder for restaurant image */}
-                  <div className="h-40 bg-yellow-200 rounded-t-lg mb-4 flex items-center justify-center">
+                  {/* FIXED IMAGE CONTAINER */}
+                  <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center">
                     <span className="text-gray-600 text-lg font-semibold">
                       🍽️ Image
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {restaurant.restaurant_name}
-                  </h3>
-                  <p className="text-gray-600 mt-1">
-                    {restaurant.restaurant_address}
-                  </p>
+                  {/* Added padding here instead of the entire card */}
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {restaurant.restaurant_name}
+                    </h3>
+                    <p className="text-gray-600 mt-1">
+                      {restaurant.restaurant_address}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
