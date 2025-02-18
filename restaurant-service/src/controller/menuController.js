@@ -9,7 +9,8 @@ import {
 } from "../service/menuService.js"
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import { 
-    validateCreateMenuRequest 
+    validateCreateMenuRequest, 
+    validateUpdateMenuRequest
 } from "../validator/menuValidator.js";
 
 const createMenuController = async (req, res) => {
@@ -131,7 +132,7 @@ const getMenuByMenuIdController = async(req, res) => {
         }
 
         const result = await getMenuByMenuIdService(menuId);
-        console.log(result)
+
         if (!result) {
             return res.status(404).json({
                 success: false,
@@ -153,7 +154,66 @@ const getMenuByMenuIdController = async(req, res) => {
 }
 
 const updateMenuController = async(req, res) => {
+    const { role, userId } = req.user;
+    if (role !== 'seller') {
+        return res.status(403).json({
+            success: false,
+            message: "Only seller can update restaurant"
+        });
+    }
+    const menuId = req.params.menuId;
+    const menuReq = req.body;
+    try {
+        const menu = await getMenuByMenuIdService(req.params.menuId);
 
+        const restaurant = await getRestaurantByOwnerIdService(userId);
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found for this owner"
+            });
+        }
+
+        const restaurantId = restaurant.restaurant_id;
+
+        if (menu.restaurant_id !== restaurantId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not allowed to update this menu"
+            });
+        }
+
+        const errors = await validateUpdateMenuRequest(menuReq, restaurantId);
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Validation failed",
+                errors
+            });
+        }
+        
+        const updatedMenu = await updateMenuService(menuReq, menuId);
+        if(!updatedMenu) {
+            return res.status(404).json({
+                success: false,
+                message: "Menu update failed"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Menu updated successfully",
+            dataMenu: updatedMenu
+        });
+
+    } catch(err) {
+        console.error("❌ Error updating menu:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
 }
 
 const deleteMenuController = async(req, res) => {
