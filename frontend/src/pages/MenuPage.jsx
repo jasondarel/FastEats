@@ -50,8 +50,8 @@ const MenuPage = () => {
   }
 
   return (
-    <div className="flex  ml-0 md:ml-64 bg-white min-h-screen">
-      <Sidebar />
+    <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
+      <Sidebar/>
       <main className="flex-1 p-5 relative">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
         {error && (
@@ -61,12 +61,13 @@ const MenuPage = () => {
         )}
 
         {menuItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {menuItems.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer"
-              >
+                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer
+                "
+             >
                 <img
                   src={
                     item.menu_image

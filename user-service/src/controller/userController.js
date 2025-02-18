@@ -222,6 +222,7 @@ const changePasswordController = async (req, res) => {
 
 const becomeSellerController = async (req, res) => {
   try {
+    // Ensure the user is not already a seller
     if (req.user.role !== "user") {
       return res.status(400).json({
         success: false,
@@ -229,10 +230,24 @@ const becomeSellerController = async (req, res) => {
       });
     }
 
-    const restaurantData = req.body;
-    restaurantData.ownerId = req.user.userId;
-    console.log(restaurantData)
+    // Make sure the file exists (restaurantImage is being uploaded)
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant image is required",
+      });
+    }
 
+    const restaurantData = req.body;
+
+    // Add file details (e.g., file path, filename) to restaurant data
+    restaurantData.ownerId = req.user.userId;
+    restaurantData.restaurantImage = req.file.path.replace("\\", "/");  // Normalize the path
+  // Assuming you're saving the file path
+
+    console.log("Restaurant data: ", restaurantData);
+
+    // Sending restaurant data to another API or processing the data
     const response = await axios.post(
       "http://localhost:5000/restaurant/restaurant",
       restaurantData,
@@ -244,8 +259,9 @@ const becomeSellerController = async (req, res) => {
       }
     );
 
-    console.log(response)
+    console.log("Restaurant creation response:", response);
 
+    // Update user role to seller in the database
     await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       "seller",
       req.user.userId,
@@ -261,7 +277,7 @@ const becomeSellerController = async (req, res) => {
       if (err.response.status === 401) {
         return res.status(401).json(err.response.data);
       } else if (err.response.status === 400) {
-        console.log(err.response.data)
+        console.log(err.response.data);
         return res.status(400).json(err.response.data);
       }
     }
@@ -273,6 +289,7 @@ const becomeSellerController = async (req, res) => {
     });
   }
 };
+
 
 const checkUserExistController = async (req, res) => {
   const id = req.params.id;

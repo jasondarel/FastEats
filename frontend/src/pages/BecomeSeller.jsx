@@ -3,10 +3,13 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
+import { Camera } from "lucide-react";
 
 const BecomeSeller = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
+  const [restaurantImage, setRestaurantImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
@@ -26,13 +29,49 @@ const BecomeSeller = () => {
     }
   }, [navigate]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setErrors(prev => ({
+          ...prev,
+          image: "Image size should be less than 5MB"
+        }));
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({
+          ...prev,
+          image: "Please upload an image file"
+        }));
+        return;
+      }
+
+      setRestaurantImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setErrors(prev => ({ ...prev, image: null }));
+    }
+  };
+
   const handleBecomeSeller = async (e) => {
     e.preventDefault();
     setErrors({});
-
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to become a seller");
+      return;
+    }
+
+    if (!restaurantImage) {
+      setErrors(prev => ({
+        ...prev,
+        image: "Please upload a restaurant image"
+      }));
       return;
     }
 
@@ -43,18 +82,24 @@ const BecomeSeller = () => {
         return;
       }
 
-      const payload = {
-        restaurantName,
-        restaurantAddress,
-      };
+      const formData = new FormData();
+      console.log(restaurantName, restaurantAddress, restaurantImage);
+      formData.append("restaurantName", restaurantName);
+      formData.append("restaurantAddress", restaurantAddress);
+      formData.append("restaurantImage", restaurantImage);
 
+      formData.forEach((value, key) => {
+        console.log(key, value);
+      });
+
+    console.log("form Data: ", formData);
       const response = await axios.post(
         "http://localhost:5000/user/become-seller",
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -91,7 +136,7 @@ const BecomeSeller = () => {
           );
         }
       }
-      window.location.reload();
+      // window.location.reload();
     }
   };
 
@@ -109,13 +154,16 @@ const BecomeSeller = () => {
       >
         <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
           <h2 className="text-2xl font-semibold text-center mb-6">
-            Become Seller
+            Become a Seller
           </h2>
-          <form onSubmit={handleBecomeSeller} className="space-y-4">
+          <form onSubmit={handleBecomeSeller} className="space-y-6">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Restaurant Name
+              </label>
               <input
                 type="text"
-                placeholder="Restaurant Name"
+                placeholder="Enter your restaurant name"
                 value={restaurantName}
                 onChange={(e) => setRestaurantName(e.target.value)}
                 required
@@ -127,10 +175,14 @@ const BecomeSeller = () => {
                 </p>
               )}
             </div>
+            
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Restaurant Address
+              </label>
               <input
                 type="text"
-                placeholder="Restaurant Address"
+                placeholder="Enter your restaurant address"
                 value={restaurantAddress}
                 onChange={(e) => setRestaurantAddress(e.target.value)}
                 required
@@ -142,11 +194,68 @@ const BecomeSeller = () => {
                 </p>
               )}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Restaurant Image
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-yellow-500 transition-colors">
+                <div className="space-y-1 text-center">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Restaurant preview"
+                        className="mx-auto h-32 w-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview(null);
+                          setRestaurantImage(null);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="restaurant-image"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-yellow-600 hover:text-yellow-500 focus-within:outline-none"
+                        >
+                          <span>Upload a photo</span>
+                          <input
+                            id="restaurant-image"
+                            name="restaurant-image"
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+              {errors.image && (
+                <p className="text-red-500 text-sm mt-1">{errors.image}</p>
+              )}
+            </div>
+
             <button
               type="submit"
-              className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
+              className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer font-medium"
             >
-              Become Seller
+              Register as Seller
             </button>
           </form>
         </div>

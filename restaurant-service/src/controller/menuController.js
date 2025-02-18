@@ -165,6 +165,12 @@ const updateMenuController = async(req, res) => {
     const menuReq = req.body;
     try {
         const menu = await getMenuByMenuIdService(req.params.menuId);
+        if (!menu) {
+            return res.status(404).json({
+                success: false,
+                message: "Menu not found"
+            });
+        }
 
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
@@ -217,7 +223,62 @@ const updateMenuController = async(req, res) => {
 }
 
 const deleteMenuController = async(req, res) => {
+    const { role, userId } = req.user;
+    const menuId = req.params.menuId;
+    if (role !== 'seller') {
+        return res.status(403).json({
+            success: false,
+            message: "Only seller can delete menu"
+        });
+    }
 
+    try {
+        const menu = await getMenuByMenuIdService(req.params.menuId);
+        if (!menu) {
+            return res.status(404).json({
+                success: false,
+                message: "Menu not found"
+            });
+        }
+
+        const restaurant = await getRestaurantByOwnerIdService(userId);
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found for this owner"
+            });
+        }
+
+        const restaurantId = restaurant.restaurant_id;
+
+        if (menu.restaurant_id !== restaurantId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not allowed to update this menu"
+            });
+        }
+
+        const deletedMenu = await deleteMenuService(menuId);
+        if(!deletedMenu) {
+            return res.status(404).json({
+                success: false,
+                message: "Menu delete failed"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Menu deleted successfully",
+            dataMenu: deletedMenu
+        });
+    } catch(err) {
+        console.error("❌ Error deleting menu:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
 }
 
 export {

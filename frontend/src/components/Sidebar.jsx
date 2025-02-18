@@ -55,7 +55,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
   };
 
   return (
-    <>
+    <div className="z-10">
       {/* Tombol Hamburger (Hanya di Mobile & Taskbar tidak aktif) */}
       {showHamburger && (
         <button
@@ -81,7 +81,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg bg-white transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg bg-white transform transition-transform duration-300 ease-in-out z-index-10 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
         style={{
@@ -157,7 +157,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
           </button>
         </div>
       </aside>
-    </>
+    </div>
   );
 };
 
