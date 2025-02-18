@@ -62,7 +62,20 @@ const Sidebar = ({ isTaskbarOpen }) => {
           onClick={toggleSidebar}
           className="fixed left-5 z-40 text-yellow-500 text-3xl p-2 rounded-full shadow-lg bg-white border transition-all duration-300 cursor-pointer top-16"
         >
-          &#9776;
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            />
+          </svg>
         </button>
       )}
 
@@ -81,7 +94,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
         {isSidebarOpen && isMobile && (
           <button
             onClick={toggleSidebar}
-            className="absolute top-5 right-5 text-yellow-500 text-2xl z-50 md:hidden"
+            className="absolute top-5 right-5 text-yellow-500 text-2xl z-50 md:hidden hover:cursor-pointer"
           >
             &times;
           </button>
