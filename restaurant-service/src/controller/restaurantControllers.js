@@ -67,6 +67,7 @@ const updateRestaurantController = async (req, res) => {
 
         const restaurantId = restaurant.restaurant_id;
         const restaurantReq = req.body;
+        restaurantReq.restaurantId = restaurantId;
 
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
