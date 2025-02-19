@@ -15,7 +15,6 @@ const ManageRestaurant = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
-    setImagePreview("https://e7.pngegg.com/pngimages/716/758/png-clipart-graphics-restaurant-logo-restaurant-thumbnail.png")
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to manage a restaurant");
@@ -48,6 +47,7 @@ const ManageRestaurant = () => {
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
+          setImagePreview(restaurant.restaurant_image);
         } else {
           alert("Restaurant data not found.");
         }
@@ -156,7 +156,7 @@ const ManageRestaurant = () => {
                 {imagePreview ? (
                   <>
                     <img
-                      src={imagePreview}
+                      src={`http://localhost:5000/restaurant/uploads/${imagePreview}`}
                       alt="Restaurant"
                       className="w-full h-full object-cover"
                     />

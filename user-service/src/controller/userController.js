@@ -7,6 +7,13 @@ import {
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads");
 
 const registerController = async (req, res) => {
   const { name, email, password } = req.body;
@@ -222,7 +229,6 @@ const changePasswordController = async (req, res) => {
 
 const becomeSellerController = async (req, res) => {
   try {
-    // Ensure the user is not already a seller
     if (req.user.role !== "user") {
       return res.status(400).json({
         success: false,
@@ -230,24 +236,33 @@ const becomeSellerController = async (req, res) => {
       });
     }
 
-    // Make sure the file exists (restaurantImage is being uploaded)
-    if (!req.file) {
+    if (!req.files || !req.files.restaurantImage) {
       return res.status(400).json({
         success: false,
         message: "Restaurant image is required",
       });
     }
 
-    const restaurantData = req.body;
+    const uploadedFile = req.files.restaurantImage;
 
-    // Add file details (e.g., file path, filename) to restaurant data
-    restaurantData.ownerId = req.user.userId;
-    restaurantData.restaurantImage = req.file.path.replace("\\", "/");  // Normalize the path
-  // Assuming you're saving the file path
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
-    console.log("Restaurant data: ", restaurantData);
+    const fileExt = path.extname(uploadedFile.name);
+    const safeFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+    const filePath = path.join(uploadDir, safeFileName);
 
-    // Sending restaurant data to another API or processing the data
+    await uploadedFile.mv(filePath);
+
+    const restaurantData = {
+      ...req.body,
+      ownerId: req.user.userId,
+      restaurantImage: safeFileName,
+    };
+
+    console.log("Restaurant Data:", restaurantData);
+
     const response = await axios.post(
       "http://localhost:5000/restaurant/restaurant",
       restaurantData,
@@ -259,9 +274,6 @@ const becomeSellerController = async (req, res) => {
       }
     );
 
-    console.log("Restaurant creation response:", response);
-
-    // Update user role to seller in the database
     await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       "seller",
       req.user.userId,
@@ -270,8 +282,9 @@ const becomeSellerController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User upgraded to seller",
-      restaurant: response.data,
+      restaurant: restaurantData,
     });
+
   } catch (err) {
     if (err.response) {
       if (err.response.status === 401) {
@@ -289,6 +302,7 @@ const becomeSellerController = async (req, res) => {
     });
   }
 };
+
 
 
 const checkUserExistController = async (req, res) => {
