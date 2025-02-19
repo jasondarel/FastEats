@@ -123,7 +123,7 @@ const MyMenuPage = () => {
       <Sidebar />
       <button
         onClick={() => navigate("/manage-restaurant")}
-        className="ml-10 mt-10 top-4 left-4 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
+        className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -136,11 +136,11 @@ const MyMenuPage = () => {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+            d="M6 18 18 6M6 6l12 12"
           />
         </svg>
       </button>
-      <main className="flex-1 p-5 relative mt-20">
+      <main className="flex-1 p-5 relative mt-20 ml-10">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
