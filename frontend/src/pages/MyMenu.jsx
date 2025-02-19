@@ -129,11 +129,13 @@ const MyMenuPage = () => {
         )}
 
         {menuItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {menuItems.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer"
+                className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
+                         transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
+                         hover:border-yellow-800 cursor-pointer"
               >
                 <img
                   src={
