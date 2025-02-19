@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 //icon
@@ -20,6 +20,7 @@ const MyMenuPage = () => {
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
   const [menuCategory, setMenuCategory] = useState("");
+  const navigate = useNavigate();
   const [menuPrice, setMenuPrice] = useState("");
 
   // State untuk menyimpan kategori yang dipilih
@@ -120,7 +121,26 @@ const MyMenuPage = () => {
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-5 relative">
+      <button
+        onClick={() => navigate("/manage-restaurant")}
+        className="ml-10 mt-10 top-4 left-4 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+          />
+        </svg>
+      </button>
+      <main className="flex-1 p-5 relative mt-20">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -129,11 +149,13 @@ const MyMenuPage = () => {
         )}
 
         {menuItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {menuItems.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer"
+                className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
+                         transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
+                         hover:border-yellow-800 cursor-pointer"
               >
                 <img
                   src={

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { Link } from "react-router-dom";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const MenuPage = () => {
   }
 
   return (
-    <div className="flex  ml-0 md:ml-64 bg-white min-h-screen">
+    <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5 relative">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
@@ -61,31 +62,34 @@ const MenuPage = () => {
         )}
 
         {menuItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {menuItems.map((item) => (
-              <div
-                key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border hover:bg-yellow-600 hover:border-yellow-800 border-yellow-300 group cursor-pointer"
-              >
-                <img
-                  src={
-                    item.menu_image
-                      ? item.menu_image
-                      : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
-                  }
-                  alt={item.menu_name}
-                  className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
-                />
-                <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
-                  {item.menu_name}
-                </h3>
-                <p className="text-sm text-gray-500 italic group-hover:text-white">
-                  {item.menu_category}
-                </p>
-                <p className="text-gray-700 mt-2 group-hover:text-white">
-                  Rp {item.menu_price}
-                </p>
-              </div>
+              <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
+                <div
+                  className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
+                         transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
+                         hover:border-yellow-800 cursor-pointer"
+                >
+                  <img
+                    src={
+                      item.menu_image
+                        ? item.menu_image
+                        : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
+                    }
+                    alt={item.menu_name}
+                    className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
+                  />
+                  <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
+                    {item.menu_name}
+                  </h3>
+                  <p className="text-sm text-gray-500 italic group-hover:text-white">
+                    {item.menu_category}
+                  </p>
+                  <p className="text-gray-700 mt-2 group-hover:text-white">
+                    Rp {item.menu_price}
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         ) : (

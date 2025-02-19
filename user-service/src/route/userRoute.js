@@ -23,7 +23,6 @@ userRoutes.get("/user/:id", authenticateToken, getUserController);
 userRoutes.get("/is-user-exist/:id", checkUserExistController);
 userRoutes.put("/change-password", authenticateToken, changePasswordController);
 userRoutes.post("/become-seller", authenticateToken, becomeSellerController)
-userRoutes.get
 
 
 export default userRoutes;

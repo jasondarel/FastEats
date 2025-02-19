@@ -7,6 +7,13 @@ import {
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads");
 
 const registerController = async (req, res) => {
   const { name, email, password } = req.body;
@@ -229,9 +236,32 @@ const becomeSellerController = async (req, res) => {
       });
     }
 
-    const restaurantData = req.body;
-    restaurantData.ownerId = req.user.userId;
-    console.log(restaurantData)
+    if (!req.files || !req.files.restaurantImage) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant image is required",
+      });
+    }
+
+    const uploadedFile = req.files.restaurantImage;
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const fileExt = path.extname(uploadedFile.name);
+    const safeFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+    const filePath = path.join(uploadDir, safeFileName);
+
+    await uploadedFile.mv(filePath);
+
+    const restaurantData = {
+      ...req.body,
+      ownerId: req.user.userId,
+      restaurantImage: safeFileName,
+    };
+
+    console.log("Restaurant Data:", restaurantData);
 
     const response = await axios.post(
       "http://localhost:5000/restaurant/restaurant",
@@ -244,8 +274,6 @@ const becomeSellerController = async (req, res) => {
       }
     );
 
-    console.log(response)
-
     await pool.query("UPDATE users SET role = $1 WHERE id = $2", [
       "seller",
       req.user.userId,
@@ -254,14 +282,15 @@ const becomeSellerController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User upgraded to seller",
-      restaurant: response.data,
+      restaurant: restaurantData,
     });
+
   } catch (err) {
     if (err.response) {
       if (err.response.status === 401) {
         return res.status(401).json(err.response.data);
       } else if (err.response.status === 400) {
-        console.log(err.response.data)
+        console.log(err.response.data);
         return res.status(400).json(err.response.data);
       }
     }
@@ -273,6 +302,8 @@ const becomeSellerController = async (req, res) => {
     });
   }
 };
+
+
 
 const checkUserExistController = async (req, res) => {
   const id = req.params.id;

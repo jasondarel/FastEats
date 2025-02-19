@@ -10,6 +10,7 @@ import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
+import MenuDetails from "./pages/MenuDetails";
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
             }
           />
           <Route
-            path="/menu/:restaurantId"
+            path="/restaurant/:restaurantId/menu"
             element={
               <ProtectedRoute>
                 <MenuPage />
@@ -79,6 +80,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Cart />
+              </ProtectedRoute>
+            }
+          />
+              
+          <Route
+            path="/menu-details/:menuId"
+            element={
+              <ProtectedRoute>
+                <MenuDetails />
               </ProtectedRoute>
             }
           />
