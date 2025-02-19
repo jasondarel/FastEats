@@ -9,6 +9,7 @@ import MenuPage from "./pages/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
+import Cart from "./pages/Cart";
 
 function App() {
   return (
@@ -69,6 +70,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <ManageRestaurant />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
               </ProtectedRoute>
             }
           />
