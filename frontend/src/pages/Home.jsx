@@ -137,16 +137,22 @@ const Home = () => {
                 <div
                   key={restaurant.restaurant_id}
                   className="w-full border border-yellow-300 rounded-lg bg-white shadow-lg hover:shadow-xl hover:bg-yellow-100 transition-all cursor-pointer"
-                  onClick={() => navigate(`/menu/${restaurant.restaurant_id}`)}
+                  onClick={() =>
+                    navigate(`/restaurant/${restaurant.restaurant_id}/menu`)
+                  }
                 >
                   <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center">
-                    {restaurant.restaurant_image ?  
-                      < img className="text-gray-600 text-lg font-semibold"
-                      src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}/>
-                    : <span className="text-gray-600 text-lg font-semibold">Image</span>}
-                    
+                    {restaurant.restaurant_image ? (
+                      <img
+                        className="text-gray-600 text-lg font-semibold"
+                        src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
+                      />
+                    ) : (
+                      <span className="text-gray-600 text-lg font-semibold">
+                        Image
+                      </span>
+                    )}
                   </div>
-
                   <div className="p-4">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {restaurant.restaurant_name}
