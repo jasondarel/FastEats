@@ -88,7 +88,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
           backgroundImage: "url('/foodbg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          zIndex: "10",
+          zIndex:"10",
         }}
       >
         {/* Tombol Close (Hanya di Mobile) */}

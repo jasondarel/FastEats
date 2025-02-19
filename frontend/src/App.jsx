@@ -9,6 +9,7 @@ import MenuPage from "./pages/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
+import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
 
 function App() {
@@ -74,6 +75,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
+              
           <Route
             path="/menu-details/:menuId"
             element={
