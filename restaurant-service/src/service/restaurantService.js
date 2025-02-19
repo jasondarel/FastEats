@@ -42,10 +42,10 @@ const createRestaurantService = async (restaurantReq) => {
 const updateRestaurantService = async (restaurantReq, id) => {
     const result = await pool.query(
         `UPDATE restaurants 
-        SET restaurant_name = $1, restaurant_address = $2, updated_at = NOW()
-        WHERE restaurant_id = $3 
+        SET restaurant_name = $1, restaurant_address = $2, restaurant_image = $3, updated_at = NOW()
+        WHERE restaurant_id = $4 
         RETURNING *`,
-        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, id]
+        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.restaurantImage, id]
     );
 
     if (result.rows.length === 0) {
