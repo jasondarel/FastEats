@@ -13,7 +13,7 @@ import {
 router.post("/menu", authMiddleware, createMenuController);
 router.get("/menus", authMiddleware, getMenusController);
 router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
-router.get("/menu/:menuId", authMiddleware, getMenuByMenuIdController);
+router.get("/menu-by-id/:menuId", authMiddleware, getMenuByMenuIdController);
 router.put("/menu/:menuId", authMiddleware, updateMenuController);
 router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
