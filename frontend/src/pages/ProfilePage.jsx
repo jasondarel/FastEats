@@ -139,10 +139,10 @@ const Profile = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto scale-95 lg:min-w-2xl lg:scale-90">
+      <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto scale-95 lg:min-w-2xl lg:scale-90 relative">
         <button
           onClick={() => navigate("/home")}
-          className="top-4 left-4 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
+          className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -155,11 +155,11 @@ const Profile = () => {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+              d="M6 18 18 6M6 6l12 12"
             />
           </svg>
         </button>
-        <h2 className="text-2xl lg:text-4xl font-semibold text-center mb-6">
+        <h2 className="mt-10 text-2xl lg:text-4xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
 
