@@ -50,6 +50,7 @@ const getMenuByMenuIdService = async (menuId) => {
       "SELECT * FROM menu_item WHERE menu_id = $1",
       [menuId]
     );
+    console.log(result)
     return result.rows[0];
   } catch (error) {
     console.error("❌ Error fetching menu:", error);

@@ -8,10 +8,11 @@ const MenuDetails = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
     const fetchMenuDetails = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu/${menuId}`, // ✅ Fixed API endpoint
+          `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
           {
             method: "GET",
             headers: {
@@ -26,14 +27,12 @@ const MenuDetails = () => {
         }
 
         const data = await response.json();
-
-        // Check the API response structure
-        if (!data || !data.menu_name) {
+        if (!data.menu) {
           throw new Error("Invalid menu data received");
         }
-
-        setMenu(data);
+        setMenu(data.menu);
       } catch (error) {
+        console.log("Error: ", error);
         setError(error.message);
       } finally {
         setLoading(false);

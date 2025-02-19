@@ -47,67 +47,79 @@ const createRestaurantController = async(req, res) => {
 
 const updateRestaurantController = async (req, res) => {
     try {
+        console.log("🔍 Incoming Request Body:", req.body);
+        console.log("🔍 Uploaded File:", req.file); // Cek apakah file berhasil diterima
+
         const { role, userId } = req.user;
 
-        if (role !== 'seller') {
+        if (role !== "seller") {
             return res.status(403).json({
                 success: false,
-                message: "Only seller can update restaurant"
+                message: "Only sellers can update a restaurant",
             });
         }
 
         const restaurant = await getRestaurantByOwnerIdService(userId);
-
         if (!restaurant) {
             return res.status(404).json({
                 success: false,
-                message: "Restaurant not found for this owner"
+                message: "Restaurant not found for this owner",
             });
         }
 
         const restaurantId = restaurant.restaurant_id;
         const restaurantReq = req.body;
-        restaurantReq.restaurantId = restaurantId;
+
+        // Jika ada file yang diupload, tambahkan ke request
+        if (req.file) {
+            restaurantReq.restaurantImage = req.file.filename; // Sesuaikan jika pakai storage lain
+        }
+
+
+        // Tambahkan validasi input
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Validation failed',
-                errors
+                message: "Validation failed",
+                errors,
             });
         }
 
-        const updatedRestaurant = await updateRestaurantService(restaurantReq, restaurantId);
-
+        // Update restoran
+        const updatedRestaurant = await updateRestaurantService(
+            restaurantReq,
+            restaurantId
+        );
         if (!updatedRestaurant) {
-            return res.status(404).json({
+            return res.status(500).json({
                 success: false,
-                message: "Restaurant update failed"
+                message: "Restaurant update failed",
             });
         }
 
         return res.status(200).json({
             success: true,
             message: "Restaurant updated successfully",
-            dataRestaurant: updatedRestaurant
+            dataRestaurant: updatedRestaurant,
         });
-
     } catch (err) {
         console.error("❌ Error updating restaurant:", err);
 
         if (err instanceof jwt.JsonWebTokenError) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid or expired token"
+                message: "Invalid or expired token",
             });
         }
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: "Internal Server Error",
         });
     }
 };
+
 
 
 const deleteRestaurantController = async (req, res) => {

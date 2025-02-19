@@ -122,6 +122,7 @@ const getMenuByMenuIdController = async (req, res) => {
   try {
     const { menuId } = req.params;
     console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
+    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
 
     if (!menuId || isNaN(menuId)) {
       return res.status(400).json({
