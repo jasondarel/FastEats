@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 const MenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -47,6 +48,12 @@ const MenuPage = () => {
     fetchMenu();
   }, [restaurantId]);
 
+  const handleSearch = (e) => setSearchQuery(e.target.value);
+
+  const filteredMenu = menuItems.filter((item) =>
+    item.menu_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (isLoading) {
     return <div className="text-center p-5">Loading menu...</div>;
   }
@@ -84,9 +91,20 @@ const MenuPage = () => {
           </div>
         )}
 
-        {menuItems.length > 0 ? (
+        {/* Search Bar */}
+        <div className="mb-4 flex justify-center">
+          <input
+            type="text"
+            placeholder="Search menu..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="w-72 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+        </div>
+
+        {filteredMenu.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {menuItems.map((item) => (
+            {filteredMenu.map((item) => (
               <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
                 <div
                   className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
