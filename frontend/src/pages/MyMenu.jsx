@@ -310,10 +310,9 @@ const MyMenuPage = () => {
                       Menu Category<span className="text-pink-600">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-0 mt-1 md:grid-cols-4">
-                      {/* Kategori Foods */}
                       <div
                         className={`border border-yellow-400 rounded-tl-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-l ${
-                          selectedCategory === "Foods"
+                          selectedCategory === "Food"
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
@@ -330,7 +329,7 @@ const MyMenuPage = () => {
                       {/* Kategori Drinks */}
                       <div
                         className={`border rounded-tr-md border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-none ${
-                          selectedCategory === "Drinks"
+                          selectedCategory === "Drink"
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
@@ -364,7 +363,7 @@ const MyMenuPage = () => {
                       {/* Kategori Other */}
                       <div
                         className={`border border-yellow-400 rounded-br-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-r ${
-                          selectedCategory === "Other"
+                          selectedCategory === "Others"
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
