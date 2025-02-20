@@ -6,6 +6,8 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 const Home = () => {
   const [username, setUsername] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]); // New state for filtered results
+  const [searchQuery, setSearchQuery] = useState(""); // Search state
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,12 +39,7 @@ const Home = () => {
         }
 
         const data = await response.json();
-
-        if (data.user && data.user.name) {
-          setUsername(data.user.name);
-        } else {
-          setError("User data is missing.");
-        }
+        setUsername(data.user?.name || "Guest");
       } catch (error) {
         console.error("Error fetching user:", error);
         setError(error.message);
@@ -76,6 +73,7 @@ const Home = () => {
 
         const data = await response.json();
         setRestaurants(data.restaurants);
+        setFilteredRestaurants(data.restaurants); // Initialize filtered list
       } catch (error) {
         console.error("Error fetching restaurants:", error);
         setError(error.message);
@@ -85,6 +83,18 @@ const Home = () => {
     fetchUser();
     fetchRestaurants();
   }, []);
+
+  // Handle search
+  const handleSearch = (event) => {
+    const query = event.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    const filtered = restaurants.filter((restaurant) =>
+      restaurant.restaurant_name.toLowerCase().includes(query)
+    );
+
+    setFilteredRestaurants(filtered);
+  };
 
   if (isLoading) {
     return (
@@ -113,8 +123,9 @@ const Home = () => {
           </div>
         </div>
         <h1 className="text-3xl font-bold text-yellow-700 mb-4">
-          Welcome, {username ? username : "Guest"}! 🍽️
+          Welcome, {username}! 🍽️
         </h1>
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shadow-md">
             {error}
@@ -127,13 +138,24 @@ const Home = () => {
           </p>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-4 flex items-center justify-center">
+          <input
+            type="text"
+            placeholder="Search restaurants..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="w-72 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+        </div>
+
         <section className="mt-8">
           <h2 className="text-xl font-bold text-yellow-800 mb-4">
             🍕 Available Restaurants
           </h2>
-          {restaurants.length > 0 ? (
+          {filteredRestaurants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {restaurants.map((restaurant) => (
+              {filteredRestaurants.map((restaurant) => (
                 <div
                   key={restaurant.restaurant_id}
                   className="w-full border border-yellow-300 rounded-lg bg-white shadow-lg hover:shadow-xl hover:bg-yellow-100 transition-all cursor-pointer"
@@ -141,21 +163,13 @@ const Home = () => {
                     navigate(`/restaurant/${restaurant.restaurant_id}/menu`)
                   }
                 >
-                  <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center">
+                  <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
                     {restaurant.restaurant_image ? (
-                      <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
-                        {restaurant.restaurant_image ? (
-                          <img
-                            className="w-full h-full object-cover rounded-t-lg"
-                            src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
-                            alt={restaurant.restaurant_name}
-                          />
-                        ) : (
-                          <span className="text-gray-600 text-lg font-semibold">
-                            Image
-                          </span>
-                        )}
-                      </div>
+                      <img
+                        className="w-full h-full object-cover rounded-t-lg"
+                        src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
+                        alt={restaurant.restaurant_name}
+                      />
                     ) : (
                       <span className="text-gray-600 text-lg font-semibold">
                         Image
@@ -175,7 +189,7 @@ const Home = () => {
             </div>
           ) : (
             <div className="text-gray-600 text-center py-8">
-              No restaurants available at the moment. 🍽️
+              No restaurants match your search. 🍽️
             </div>
           )}
         </section>
