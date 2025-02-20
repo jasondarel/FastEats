@@ -3,10 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 
+const validCategories = ["Food", "Drink", "Dessert", "Others"];
+
 const MenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -48,11 +53,32 @@ const MenuPage = () => {
     fetchMenu();
   }, [restaurantId]);
 
+  // Handle search input
   const handleSearch = (e) => setSearchQuery(e.target.value);
 
-  const filteredMenu = menuItems.filter((item) =>
-    item.menu_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Handle category filter
+  const handleCategoryChange = (e) => setSelectedCategory(e.target.value);
+
+  // Handle price range input
+  const handleMinPriceChange = (e) => setMinPrice(e.target.value);
+  const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
+
+  // Filter logic
+  const filteredMenu = menuItems.filter((item) => {
+    const matchesSearch = item.menu_name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory
+      ? item.menu_category === selectedCategory
+      : true;
+
+    const price = parseInt(item.menu_price);
+    let matchesPrice = true;
+    if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
+    if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
+
+    return matchesSearch && matchesCategory && matchesPrice;
+  });
 
   if (isLoading) {
     return <div className="text-center p-5">Loading menu...</div>;
@@ -91,8 +117,9 @@ const MenuPage = () => {
           </div>
         )}
 
-        {/* Search Bar */}
-        <div className="mb-4 flex justify-center">
+        {/* Filters Section */}
+        <div className="mb-4 flex flex-wrap gap-4 items-center justify-center">
+          {/* Search Bar */}
           <input
             type="text"
             placeholder="Search menu..."
@@ -100,8 +127,42 @@ const MenuPage = () => {
             onChange={handleSearch}
             className="w-72 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
+
+          {/* Combined Filter (Category & Price) */}
+          <div className="flex gap-2">
+            {/* Category Dropdown */}
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="p-2 border border-yellow-400 rounded-md shadow-sm focus:ring-2 focus:ring-yellow-500"
+            >
+              <option value="">All Categories</option>
+              {validCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            {/* Price Range Inputs */}
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={minPrice}
+              onChange={handleMinPriceChange}
+              className="w-24 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={maxPrice}
+              onChange={handleMaxPriceChange}
+              className="w-24 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+          </div>
         </div>
 
+        {/* Menu Items */}
         {filteredMenu.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredMenu.map((item) => (
