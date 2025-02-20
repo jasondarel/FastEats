@@ -9,6 +9,8 @@ import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 
+const validCategories = ["Food", "Drink", "Dessert", "Others"];
+
 const MyMenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
@@ -16,15 +18,22 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
+  // Form state
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
   const [menuCategory, setMenuCategory] = useState("");
-  const navigate = useNavigate();
   const [menuPrice, setMenuPrice] = useState("");
-
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuImage, setMenuImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
+  const navigate = useNavigate();
 
   const handleClick = (category) => {
     setSelectedCategory(category);
@@ -86,9 +95,32 @@ const MyMenuPage = () => {
     fetchMenu();
   }, [restaurantId]);
 
-  if (isLoading) {
-    return <div className="text-center p-5">Loading menu...</div>;
-  }
+  // Handle search input
+  const handleSearch = (e) => setSearchQuery(e.target.value);
+
+  // Handle category filter
+  const handleCategoryFilter = (e) => setFilterCategory(e.target.value);
+
+  // Handle price range input
+  const handleMinPriceChange = (e) => setMinPrice(e.target.value);
+  const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
+
+  // Filter logic
+  const filteredMenu = menuItems.filter((item) => {
+    const matchesSearch = item.menu_name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory
+      ? item.menu_category === filterCategory
+      : true;
+
+    const price = parseInt(item.menu_price);
+    let matchesPrice = true;
+    if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
+    if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
+
+    return matchesSearch && matchesCategory && matchesPrice;
+  });
 
   const handleCreateNewMenu = async (e) => {
     e.preventDefault();
@@ -103,7 +135,7 @@ const MyMenuPage = () => {
       formData.append("menuCategory", selectedCategory);
       formData.append("menuPrice", menuPrice);
       formData.append("restaurantId", restaurantId);
-      if(menuImage) {
+      if (menuImage) {
         formData.append("menuImage", menuImage);
       }
 
@@ -136,6 +168,10 @@ const MyMenuPage = () => {
     }
   };
 
+  if (isLoading) {
+    return <div className="text-center p-5">Loading menu...</div>;
+  }
+
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
@@ -166,9 +202,54 @@ const MyMenuPage = () => {
           </div>
         )}
 
-        {menuItems.length > 0 ? (
+        {/* Search and Filter Section */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center justify-center">
+          {/* Search Bar */}
+          <input
+            type="text"
+            placeholder="Search menu..."
+            value={searchQuery}
+            onChange={handleSearch}
+            className="w-72 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+
+          {/* Combined Filter (Category & Price) */}
+          <div className="flex gap-2">
+            {/* Category Dropdown */}
+            <select
+              value={filterCategory}
+              onChange={handleCategoryFilter}
+              className="p-2 border border-yellow-400 rounded-md shadow-sm focus:ring-2 focus:ring-yellow-500"
+            >
+              <option value="">All Categories</option>
+              {validCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            {/* Price Range Inputs */}
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={minPrice}
+              onChange={handleMinPriceChange}
+              className="w-24 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={maxPrice}
+              onChange={handleMaxPriceChange}
+              className="w-24 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+          </div>
+        </div>
+
+        {filteredMenu.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {menuItems.map((item) => (
+            {filteredMenu.map((item) => (
               <div
                 key={item.menu_id}
                 className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
@@ -198,7 +279,9 @@ const MyMenuPage = () => {
           </div>
         ) : (
           <div className="text-gray-500 text-center py-8">
-            No menu available.
+            {searchQuery || filterCategory || minPrice || maxPrice
+              ? "No menu items match your search criteria."
+              : "No menu available."}
           </div>
         )}
 
@@ -216,12 +299,12 @@ const MyMenuPage = () => {
                 <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
                   Create Menu Form
                   <div className="absolute -top-1.5 -right-4">
-                    <a
-                      href="http://localhost:5173/my-menu"
+                    <button
+                      onClick={() => setShowCreateMenuForm(false)}
                       className="text-2xl cursor-pointer"
                     >
                       ❌
-                    </a>
+                    </button>
                   </div>
                 </h2>
               </div>
