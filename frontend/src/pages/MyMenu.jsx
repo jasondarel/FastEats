@@ -16,27 +16,39 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
-  //attribute
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
   const [menuCategory, setMenuCategory] = useState("");
   const navigate = useNavigate();
   const [menuPrice, setMenuPrice] = useState("");
 
-  // State untuk menyimpan kategori yang dipilih
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuImage, setMenuImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
-  // Fungsi untuk menangani klik pada kategori
   const handleClick = (category) => {
-    setSelectedCategory(category); // Set kategori yang dipilih
+    setSelectedCategory(category);
   };
 
-  // Fungsi untuk menangani perubahan file gambar
   const handleImageChange = (e) => {
-    const file = e.target.files[0]; // Ambil file yang dipilih
+    const file = e.target.files[0];
     if (file) {
-      setMenuImage(URL.createObjectURL(file)); // Membuat URL untuk pratinjau gambar
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file");
+        return;
+      }
+
+      setMenuImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -86,12 +98,14 @@ const MyMenuPage = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       const formData = new FormData();
-      formData.append("menuImage", menuImage); // Use the state for the image
       formData.append("menuName", menuName);
       formData.append("menuDesc", menuDesc);
       formData.append("menuCategory", selectedCategory);
       formData.append("menuPrice", menuPrice);
-      formData.append("restaurantId", restaurantId); // Ensure restaurantId is included
+      formData.append("restaurantId", restaurantId);
+      if(menuImage) {
+        formData.append("menuImage", menuImage);
+      }
 
       const response = await axios.post(
         "http://localhost:5000/restaurant/menu",
@@ -104,11 +118,15 @@ const MyMenuPage = () => {
         }
       );
 
-      // Update state to display the new menu item without reloading
       setMenuItems((prevItems) => [...prevItems, response.data.dataMenu]);
-
-      // Close the form after successful submission
       setShowCreateMenuForm(false);
+      setMenuName("");
+      setMenuDesc("");
+      setMenuPrice("");
+      setMenuCategory("");
+      setPreviewImage(null);
+      setMenuImage(null);
+      alert("Menu created successfully");
     } catch (error) {
       console.error(
         "Error creating menu:",
@@ -160,7 +178,7 @@ const MyMenuPage = () => {
                 <img
                   src={
                     item.menu_image
-                      ? item.menu_image
+                      ? `http://localhost:5000/restaurant/uploads/${item.menu_image}`
                       : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                   }
                   alt={item.menu_name}
@@ -184,7 +202,6 @@ const MyMenuPage = () => {
           </div>
         )}
 
-        {/* Floating Add Menu Button */}
         <button
           onClick={() => setShowCreateMenuForm(true)}
           className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105"
@@ -192,7 +209,6 @@ const MyMenuPage = () => {
           + Add Menu
         </button>
 
-        {/* Modal Create Menu Form */}
         {showCreateMenuForm && (
           <div className="flex items-center justify-center backdrop-blur-xs fixed top-0 right-0 bottom-0 left-0 z-50">
             <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
@@ -213,7 +229,6 @@ const MyMenuPage = () => {
                 <form className="text-start" onSubmit={handleCreateNewMenu}>
                   <h2 className="font-bold text-xl">Create New Menu</h2>
                   <hr className="my-2 border-slate-400" />
-                  {/* Upload menu image */}
                   <div className="my-4">
                     <label className="font-semibold text-sm">
                       Upload Image<span className="text-pink-600">*</span>
@@ -235,11 +250,10 @@ const MyMenuPage = () => {
                       >
                         Choose File
                       </label>
-                      {/* Display image preview if available */}
-                      {menuImage && (
+                      {previewImage && (
                         <div className="mt-2 flex justify-center w-full">
                           <img
-                            src={menuImage}
+                            src={previewImage}
                             alt="Preview"
                             className="max-w-full max-h-80 object-contain rounded-md"
                             style={{ minWidth: "100%" }}
@@ -303,7 +317,7 @@ const MyMenuPage = () => {
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
-                        onClick={() => handleClick("Foods")}
+                        onClick={() => handleClick("Food")}
                       >
                         <img
                           src={foodIcon}
@@ -320,7 +334,7 @@ const MyMenuPage = () => {
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
-                        onClick={() => handleClick("Drinks")}
+                        onClick={() => handleClick("Drink")}
                       >
                         <img
                           src={drinkIcon}
@@ -354,7 +368,7 @@ const MyMenuPage = () => {
                             ? "bg-yellow-500"
                             : "hover:bg-yellow-400"
                         }`}
-                        onClick={() => handleClick("Other")}
+                        onClick={() => handleClick("Others")}
                       >
                         <img
                           src={otherIcon}

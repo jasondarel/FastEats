@@ -35,6 +35,9 @@ const createMenuController = async (req, res) => {
     }
 
     menuReq.restaurantId = restaurant.restaurant_id;
+    if(req.file) {
+      menuReq.menuImage = req.file.filename;
+    }
 
     const errors = await validateCreateMenuRequest(menuReq);
     if (Object.keys(errors).length > 0) {

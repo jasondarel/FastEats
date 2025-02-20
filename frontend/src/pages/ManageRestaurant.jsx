@@ -25,7 +25,6 @@ const ManageRestaurant = () => {
             "Content-Type": "application/json",
           },
         });
-        console.log("Response:", response.data);
         const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
@@ -33,7 +32,6 @@ const ManageRestaurant = () => {
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
   
-          // Pastikan URL gambar sudah benar
           const imageUrl = restaurant.restaurant_image
             ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
             : null;
@@ -50,24 +48,20 @@ const ManageRestaurant = () => {
     fetchRestaurantData();
   }, [navigate]);
 
-  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         alert("Image size must be less than 5MB");
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         alert("Please upload an image file");
         return;
       }
 
       setImageFile(file);
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -77,7 +71,6 @@ const ManageRestaurant = () => {
     }
   };
 
-  // Check if the form values have changed
   useEffect(() => {
     if (
       restaurantName !== initialRestaurantName ||
@@ -101,7 +94,6 @@ const ManageRestaurant = () => {
     }
 
     try {
-      // Create FormData object to handle file upload
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
