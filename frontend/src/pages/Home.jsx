@@ -145,7 +145,7 @@ const Home = () => {
             placeholder="Search restaurants..."
             value={searchQuery}
             onChange={handleSearch}
-            className="w-72 p-2 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-72 p-2 border bg-white border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         </div>
 
