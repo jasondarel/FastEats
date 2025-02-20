@@ -11,6 +11,7 @@ import trash from "../assets/trash.png";
 const Cart = () => {
   const initialQuantities = Array(5).fill(1); // Initial quantity for each item
   const [quantities, setQuantities] = useState(initialQuantities);
+  const [price, setprice] = useState("$2.99");
 
   const increaseQuantity = (index) => {
     const newQuantities = [...quantities];
@@ -79,7 +80,7 @@ const Cart = () => {
               </button>
             </div>
             <div className="pl-10 flex flex-col justify-end">
-              <h2 className="font-extrabold text-xl text-right">$2.99</h2>
+              <h2 className="font-extrabold text-xl text-right">{price}</h2>
               <div className="flex justify-end items-end mt-10">
                 <img
                   src={trash}
@@ -97,10 +98,17 @@ const Cart = () => {
         <div className="flex justify-end gap-10 m-3">
           <div>
             <h2 className="font-bold text-lg">Sub-total</h2>
-            <p className="text-gray-600">{quantities.reduce((acc, curr) => acc + curr, 0)} items</p>
+            <p className="text-gray-600">
+              {quantities.reduce((acc, curr) => acc + curr, 0)} items
+            </p>
           </div>
           <div className="font-extrabold text-3xl">
-            <h3>${(quantities.reduce((acc, curr) => acc + curr, 0) * 2.99).toFixed(2)}</h3>
+            <h3>
+              $
+              {(quantities.reduce((acc, curr) => acc + curr, 0) * 2.99).toFixed(
+                2
+              )}
+            </h3>
           </div>
         </div>
 
@@ -108,7 +116,7 @@ const Cart = () => {
           <button className="bg-red-500 text-white rounded-2xl w-24 md:w-30 py-1 cursor-pointer lg:text-xl lg:font-semibold">
             Cancel
           </button>
-          <button className="bg-green-700 text-white rounded-2xl w-32 md:w-40 py-1 cursor-pointer lg:text-xl lg:font-semibold">
+          <button className="bg-green-700 text-white rounded-2xl w-32 md:w-40 py-1 cursor-pointer lg:text-xl lg:font-semibold ">
             Checkout
           </button>
         </div>
