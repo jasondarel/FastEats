@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 
-//backgroun
+//background
 import bg from "../assets/cart-background.jpg";
 
 //dummy image
@@ -9,15 +9,21 @@ import image from "../assets/cart1.png";
 import trash from "../assets/trash.png";
 
 const Cart = () => {
-  const [quantity, setQuantity] = useState(1);
+  const initialQuantities = Array(5).fill(1); // Initial quantity for each item
+  const [quantities, setQuantities] = useState(initialQuantities);
+  const [price, setprice] = useState("$2.99");
 
-  const increaseQuantity = () => {
-    setQuantity(quantity + 1);
+  const increaseQuantity = (index) => {
+    const newQuantities = [...quantities];
+    newQuantities[index] += 1;
+    setQuantities(newQuantities);
   };
 
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
+  const decreaseQuantity = (index) => {
+    const newQuantities = [...quantities];
+    if (newQuantities[index] > 1) {
+      newQuantities[index] -= 1;
+      setQuantities(newQuantities);
     }
   };
 
@@ -25,7 +31,7 @@ const Cart = () => {
     <div
       className="flex flex-col md:flex-row items-center justify-center min-h-screen overflow-y-auto"
       style={{
-        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)),url(${bg})`,
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url(${bg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -58,23 +64,23 @@ const Cart = () => {
             </div>
             <div className="flex justify-center items-center mx-3">
               <button
-                onClick={decreaseQuantity}
+                onClick={() => decreaseQuantity(index)}
                 className="bg-gray-400 text-black px-2 py-1 rounded-full cursor-pointer h-7 w-7 flex items-center justify-center"
               >
                 -
               </button>
               <span className="px-2 bg-white text-lg font-semibold min-w-10 flex justify-center">
-                {quantity}
+                {quantities[index]}
               </span>
               <button
-                onClick={increaseQuantity}
+                onClick={() => increaseQuantity(index)}
                 className="bg-gray-400 text-black px-2 py-1 rounded-full cursor-pointer h-7 w-7 flex items-center justify-center"
               >
                 +
               </button>
             </div>
             <div className="pl-10 flex flex-col justify-end">
-              <h2 className="font-extrabold text-xl text-right">$2.99</h2>
+              <h2 className="font-extrabold text-xl text-right">{price}</h2>
               <div className="flex justify-end items-end mt-10">
                 <img
                   src={trash}
@@ -92,10 +98,17 @@ const Cart = () => {
         <div className="flex justify-end gap-10 m-3">
           <div>
             <h2 className="font-bold text-lg">Sub-total</h2>
-            <p className="text-gray-600">2 items</p>
+            <p className="text-gray-600">
+              {quantities.reduce((acc, curr) => acc + curr, 0)} items
+            </p>
           </div>
           <div className="font-extrabold text-3xl">
-            <h3>$321</h3>
+            <h3>
+              $
+              {(quantities.reduce((acc, curr) => acc + curr, 0) * 2.99).toFixed(
+                2
+              )}
+            </h3>
           </div>
         </div>
 
@@ -103,7 +116,7 @@ const Cart = () => {
           <button className="bg-red-500 text-white rounded-2xl w-24 md:w-30 py-1 cursor-pointer lg:text-xl lg:font-semibold">
             Cancel
           </button>
-          <button className="bg-green-700 text-white rounded-2xl w-32 md:w-40 py-1 cursor-pointer lg:text-xl lg:font-semibold">
+          <button className="bg-green-700 text-white rounded-2xl w-32 md:w-40 py-1 cursor-pointer lg:text-xl lg:font-semibold ">
             Checkout
           </button>
         </div>
