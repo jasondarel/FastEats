@@ -143,10 +143,19 @@ const Home = () => {
                 >
                   <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center">
                     {restaurant.restaurant_image ? (
-                      <img
-                        className="text-gray-600 text-lg font-semibold"
-                        src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
-                      />
+                      <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
+                        {restaurant.restaurant_image ? (
+                          <img
+                            className="w-full h-full object-cover rounded-t-lg"
+                            src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
+                            alt={restaurant.restaurant_name}
+                          />
+                        ) : (
+                          <span className="text-gray-600 text-lg font-semibold">
+                            Image
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-gray-600 text-lg font-semibold">
                         Image
