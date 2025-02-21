@@ -137,9 +137,33 @@ const MyMenuDetails = () => {
       setMenu(updateData.menu);
       setShowEditForm(false);
       alert("Menu updated successfully");
+      window.location.reload();
     } catch (error) {
-      console.error("Error updating menu:", error);
-      setError(error.message);
+      if (error.response) {
+        const { status, data } = error.response;
+        console.log("Data: ", data);
+        if (status === 400) {
+          if (data.errors) {
+            const validationErrors = Object.values(data.errors)
+              .map((msg) => `• ${msg}`)
+              .join("\n");
+            alert(`Validation Error:\n${validationErrors}`);
+          } else if (data.message) {
+            alert(`Error: ${data.message}`);
+          } else {
+            alert("Invalid request. Please check your input.");
+          }
+        } else if (status === 401) {
+          alert("Unauthorized! Please log in again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          alert(
+            data.message ||
+              "An unexpected error occurred. Please try again later."
+          );
+        }
+      }
     }
   };
 

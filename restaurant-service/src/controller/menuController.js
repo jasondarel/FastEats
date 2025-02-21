@@ -166,6 +166,11 @@ const updateMenuController = async (req, res) => {
   }
   const menuId = req.params.menuId;
   const menuReq = req.body;
+
+  if(req.file) {
+    menuReq.menuImage = req.file.filename;
+  }
+
   try {
     const menu = await getMenuByMenuIdService(req.params.menuId);
     if (!menu) {
@@ -197,7 +202,8 @@ const updateMenuController = async (req, res) => {
       menuReq.menuImage = req.file.filename;
     }
 
-    const errors = await validateUpdateMenuRequest(menuReq, restaurantId);
+    menuReq.restaurantId = restaurantId;
+    const errors = await validateUpdateMenuRequest(menuReq);
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({
         success: false,
