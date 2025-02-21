@@ -18,9 +18,20 @@ const createTables = async () => {
     `);
 
     await client.query(`
-      ALTER TABLE menu_item 
-      ADD COLUMN is_available BOOLEAN DEFAULT FALSE;
-    `);
+      CREATE TABLE IF NOT EXISTS menu_item (
+        menu_id SERIAL PRIMARY KEY,
+        menu_name VARCHAR(255) NOT NULL,
+        menu_description TEXT,
+        menu_image VARCHAR(500),
+        restaurant_id INT NOT NULL,
+        menu_category VARCHAR(255) NOT NULL,
+        is_available BOOLEAN DEFAULT FALSE,
+        menu_price DECIMAL(10, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id) ON DELETE CASCADE
+      );
+    `);    
 
     console.log("✅ Tables created successfully!");
   } catch (error) {
@@ -30,4 +41,4 @@ const createTables = async () => {
   }
 };
 
-export default createTables;  
+export default createTables;
