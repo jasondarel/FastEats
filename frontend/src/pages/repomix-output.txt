@@ -56,6 +56,7 @@ MyMenu.jsx
 MyMenuDetails.jsx
 ProfilePage.jsx
 Register.jsx
+UpdateMenu.jsx
 
 ================================================================
 Files
@@ -676,11 +677,16 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+//alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({}); // Store field-specific errors
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -791,7 +797,16 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { FaUtensils, FaMapMarkerAlt, FaSave, FaImage, FaCamera } from "react-icons/fa";
+import {
+  FaUtensils,
+  FaMapMarkerAlt,
+  FaSave,
+  FaImage,
+  FaCamera,
+} from "react-icons/fa";
+
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -802,24 +817,28 @@ const ManageRestaurant = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const fetchRestaurantData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/restaurant/restaurant", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/restaurant/restaurant",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
-  
+
           const imageUrl = restaurant.restaurant_image
             ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
             : null;
@@ -832,7 +851,7 @@ const ManageRestaurant = () => {
         alert("An error occurred while fetching the restaurant details.");
       }
     };
-  
+
     fetchRestaurantData();
   }, [navigate]);
 
@@ -869,7 +888,13 @@ const ManageRestaurant = () => {
     } else {
       setIsChanged(false);
     }
-  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress, imageFile]);
+  }, [
+    restaurantName,
+    restaurantAddress,
+    initialRestaurantName,
+    initialRestaurantAddress,
+    imageFile,
+  ]);
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -899,13 +924,24 @@ const ManageRestaurant = () => {
           },
         }
       );
-      
-      alert(response.data.message || "Successfully updated the restaurant!");
+
+      // alert(response.data.message || "Successfully updated the restaurant!");
+      Swal.fire({
+        title: "Success!",
+        text: "Successfully updated the restaurant",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setImageFile(null);
       setIsChanged(false);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
@@ -961,24 +997,24 @@ const ManageRestaurant = () => {
               <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
                 {imagePreview ? (
                   <>
-                  <img
-                src={imagePreview}
-                alt="Restaurant"
-                className="w-full h-full object-contain"
-              />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
-                      <FaCamera className="mr-2" />
-                      Change Image
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                    </label>
-                  </div>
-                </>
+                    <img
+                      src={imagePreview}
+                      alt="Restaurant"
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
+                        <FaCamera className="mr-2" />
+                        Change Image
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                    </div>
+                  </>
                 ) : (
                   <label className="cursor-pointer text-gray-500 flex flex-col items-center">
                     <FaImage className="w-12 h-12 mb-2" />
@@ -1512,6 +1548,10 @@ import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 
+//sweet alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const validCategories = ["Food", "Drink", "Dessert", "Others"];
 
 const MyMenuPage = () => {
@@ -1539,6 +1579,8 @@ const MyMenuPage = () => {
   const [maxPrice, setMaxPrice] = useState("");
 
   const navigate = useNavigate();
+
+  const MySwal = withReactContent(Swal);
 
   const handleClick = (category) => {
     setSelectedCategory(category);
@@ -1697,7 +1739,14 @@ const MyMenuPage = () => {
       setMenuCategory("");
       setPreviewImage(null);
       setMenuImage(null);
-      alert("Menu created successfully");
+      // alert("Menu created successfully");
+      Swal.fire({
+        title: "Sucess!",
+        text: "Menu created successfully",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
+      });
     } catch (error) {
       console.error(
         "Error creating menu:",
@@ -1915,7 +1964,7 @@ const MyMenuPage = () => {
 
         {showCreateMenuForm && (
           <div className="flex items-center justify-center backdrop-blur-xs fixed top-0 right-0 bottom-0 left-0 z-50">
-            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
+            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md overflow-y-auto relative max-h-screen sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
               <div className="flex items-center justify-center relative">
                 <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
                   Create Menu Form
@@ -1929,11 +1978,9 @@ const MyMenuPage = () => {
                   </div>
                 </h2>
               </div>
-              <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
+              <div className="border border-yellow-200 p-4 bg-white rounded-md">
                 <form className="text-start" onSubmit={handleCreateNewMenu}>
-                  <h2 className="font-bold text-xl">Create New Menu</h2>
-                  <hr className="my-2 border-slate-400" />
-                  <div className="my-4">
+                  <div className="mb-4">
                     <label className="font-semibold text-sm">
                       Upload Image<span className="text-pink-600">*</span>
                     </label>
@@ -2085,7 +2132,7 @@ const MyMenuPage = () => {
 
                   {/* Submit Button */}
                   <div className="mt-10 flex items-center justify-center w-full">
-                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer w-full">
+                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-bold cursor-pointer w-full">
                       Submit
                     </button>
                   </div>
@@ -2129,14 +2176,13 @@ const MyMenuDetails = () => {
     const fetchMenuDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
 
-        // First try to get the menu by ID
+        // Use menu-by-id endpoint instead of menu
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu/${menuId}`,
+          `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
           {
             method: "GET",
             headers: {
@@ -2154,25 +2200,8 @@ const MyMenuDetails = () => {
         const data = await response.json();
         console.log("Fetched menu data:", data);
 
-        // Handle the case where we get a menus array
-        if (data.menus) {
-          // Find the specific menu in the array
-          const foundMenu = data.menus.find(
-            (m) => m.menu_id.toString() === menuId.toString()
-          );
-          if (!foundMenu) {
-            throw new Error(`Menu with ID ${menuId} not found`);
-          }
-          setMenu(foundMenu);
-          setFormData({
-            menuName: foundMenu.menu_name || "",
-            menuDesc: foundMenu.menu_description || "",
-            menuPrice: foundMenu.menu_price || "",
-            menuCategory: foundMenu.menu_category || "",
-          });
-        }
-        // Handle the case where we get a single menu object
-        else if (data.menu) {
+        // Expect a single menu object in the response
+        if (data.menu) {
           setMenu(data.menu);
           setFormData({
             menuName: data.menu.menu_name || "",
@@ -2181,7 +2210,7 @@ const MyMenuDetails = () => {
             menuCategory: data.menu.menu_category || "",
           });
         } else {
-          throw new Error("Invalid response format from server");
+          throw new Error(`Menu with ID ${menuId} not found`);
         }
       } catch (error) {
         console.error("Error details:", error);
@@ -2870,12 +2899,17 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+//sweet alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -2887,8 +2921,18 @@ const Register = () => {
         email,
         password,
       });
-      alert("Registration successful! Please login.");
-      navigate("/login");
+      // alert("Registration successful! Please login.");
+      Swal.fire({
+        title: "Sucessfully Registered",
+        text: "Registration successful! Please login.",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
     } catch (error) {
       const errMsg = error.response?.data?.error || "An error occurred";
 
@@ -2998,6 +3042,314 @@ const Register = () => {
 };
 
 export default Register;
+
+================
+File: UpdateMenu.jsx
+================
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+
+//icon
+import foodIcon from "../assets/foods-icon.png";
+import drinkIcon from "../assets/drinks-icon.png";
+import dessertIcon from "../assets/dessert-icon.png";
+import otherIcon from "../assets/other-icon.png";
+import axios from "axios";
+
+const UpdateMenu = () => {
+  const { restaurantId } = useParams();
+  const [menuItems, setMenuItems] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
+
+  const [menuName, setMenuName] = useState("");
+  const [menuDesc, setMenuDesc] = useState("");
+  const [menuCategory, setMenuCategory] = useState("");
+  const navigate = useNavigate();
+  const [menuPrice, setMenuPrice] = useState("");
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [menuImage, setMenuImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const handleClick = (category) => {
+    setSelectedCategory(category);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file");
+        return;
+      }
+
+      setMenuImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdateMenu = async (e) => {
+    e.preventDefault();
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found. Please log in.");
+
+      const formData = new FormData();
+      formData.append("menuName", menuName);
+      formData.append("menuDesc", menuDesc);
+      formData.append("menuCategory", selectedCategory);
+      formData.append("menuPrice", menuPrice);
+      formData.append("restaurantId", restaurantId);
+      if (menuImage) {
+        formData.append("menuImage", menuImage);
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/restaurant/menu/${menuId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      alert("Menu updated successfully");
+      navigate("/my-menu");
+    } catch (error) {
+      console.error(
+        "Error updating menu:",
+        error.response?.data?.message || error.message
+      );
+      setError(error.response?.data?.message || "An error occurred");
+    }
+  };
+
+  const handleDeleteMenu = async () => {
+    if (window.confirm("Are you sure you want to delete this menu item?")) {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found. Please log in.");
+
+        await axios.delete(`http://localhost:5000/restaurant/menu/${menuId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        alert("Menu deleted successfully");
+        navigate("/my-menu");
+      } catch (error) {
+        console.error(
+          "Error deleting menu:",
+          error.response?.data?.message || error.message
+        );
+        setError(error.response?.data?.message || "An error occurred");
+      }
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-center fixed top-0 right-0 bottom-0 left-0 z-50">
+        <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
+          <div className="flex items-center justify-center relative">
+            <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
+              Update Menu Form
+              <div className="absolute -top-1.5 -right-4">
+                <a
+                  href="http://localhost:5173/my-menu"
+                  className="text-2xl cursor-pointer"
+                >
+                  ❌
+                </a>
+              </div>
+            </h2>
+          </div>
+          <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
+            <form className="text-start" onSubmit={handleUpdateMenu}>
+              <div className="mb-4">
+                <label className="font-semibold text-sm">
+                  Update Image<span className="text-pink-600">*</span>
+                </label>
+                <div className="border border-slate-400 rounded-md border-dashed mt-1 w-full min-h-50 flex flex-col items-center justify-center">
+                  <p className="font-semibold text-slate-600 text-center my-2">
+                    JPG, PNG, GIF, WEBP, Max 100mb.
+                  </p>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="bg-yellow-500 text-white p-2 cursor-pointer hover:bg-yellow-600 rounded-sm font-semibold"
+                  >
+                    Choose File
+                  </label>
+                  {previewImage && (
+                    <div className="mt-2 flex justify-center w-full">
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="max-w-full max-h-80 object-contain rounded-md"
+                        style={{ minWidth: "100%" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Input Name */}
+              <div className="my-4">
+                <label className="font-semibold text-sm">
+                  Update Name<span className="text-pink-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="input border mt-1 border-slate-400 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
+                  placeholder="Your Menu's Name"
+                  value={menuName}
+                  onChange={(e) => setMenuName(e.target.value)}
+                />
+              </div>
+
+              {/* Input Description */}
+              <div className="my-4">
+                <label className="font-semibold text-sm">
+                  Update Description<span className="text-pink-600">*</span>
+                </label>
+                <textarea
+                  className="input mt-1 border border-slate-400 rounded-md p-2 w-full h-32 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
+                  placeholder="Your Menu's Description"
+                  value={menuDesc}
+                  onChange={(e) => setMenuDesc(e.target.value)}
+                />
+              </div>
+
+              {/* Input price */}
+              <div className="my-4">
+                <label className="font-semibold text-sm">
+                  Update Price<span className="text-pink-600">*</span>
+                </label>
+                <input
+                  type="number"
+                  className="input border mt-1 border-slate-400 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-0"
+                  placeholder="Your Menu's Price"
+                  value={menuPrice}
+                  onChange={(e) => setMenuPrice(e.target.value)}
+                />
+              </div>
+
+              {/* Menu Category */}
+              <div className="my-4">
+                <label className="font-semibold text-sm">
+                  Change Category<span className="text-pink-600">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-0 mt-1 md:grid-cols-4">
+                  <div
+                    className={`border border-yellow-400 rounded-tl-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-l ${
+                      selectedCategory === "Food"
+                        ? "bg-yellow-500"
+                        : "hover:bg-yellow-400"
+                    }`}
+                    onClick={() => handleClick("Food")}
+                  >
+                    <img
+                      src={foodIcon}
+                      alt="Foods"
+                      className="mb-2 h-10 w-10 object-contain"
+                    />
+                    Foods
+                  </div>
+
+                  {/* Kategori Drinks */}
+                  <div
+                    className={`border rounded-tr-md border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-none ${
+                      selectedCategory === "Drink"
+                        ? "bg-yellow-500"
+                        : "hover:bg-yellow-400"
+                    }`}
+                    onClick={() => handleClick("Drink")}
+                  >
+                    <img
+                      src={drinkIcon}
+                      alt="Drinks"
+                      className="mb-2 h-10 w-10 object-contain"
+                    />
+                    Drinks
+                  </div>
+
+                  {/* Kategori Dessert */}
+                  <div
+                    className={`border rounded-bl-md border-yellow-400 p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-none ${
+                      selectedCategory === "Dessert"
+                        ? "bg-yellow-500"
+                        : "hover:bg-yellow-400"
+                    }`}
+                    onClick={() => handleClick("Dessert")}
+                  >
+                    <img
+                      src={dessertIcon}
+                      alt="Dessert"
+                      className="mb-2 h-10 w-10 object-contain"
+                    />
+                    Dessert
+                  </div>
+
+                  {/* Kategori Other */}
+                  <div
+                    className={`border border-yellow-400 rounded-br-md p-4 text-center cursor-pointer flex flex-col items-center justify-center h-full group transition md:rounded-r ${
+                      selectedCategory === "Others"
+                        ? "bg-yellow-500"
+                        : "hover:bg-yellow-400"
+                    }`}
+                    onClick={() => handleClick("Others")}
+                  >
+                    <img
+                      src={otherIcon}
+                      alt="Other"
+                      className="mb-2 h-10 w-10 object-contain"
+                    />
+                    Other
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Buttons - Modified to have Update and Delete */}
+              <div className="mt-10 flex items-center justify-center w-full gap-4">
+                <button
+                  type="submit"
+                  className="bg-gradient-to-tl from-green-400 via-green-500 to-green-700 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer w-full"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UpdateMenu;
 
 
 
