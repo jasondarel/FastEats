@@ -25,6 +25,7 @@ const createTables = async () => {
         menu_image VARCHAR(500),
         restaurant_id INT NOT NULL,
         menu_category VARCHAR(255) NOT NULL,
+        is_available BOOLEAN DEFAULT FALSE,
         menu_price DECIMAL(10, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

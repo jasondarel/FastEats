@@ -27,7 +27,6 @@ const MyMenuDetails = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        // Use menu-by-id endpoint instead of menu
         const response = await fetch(
           `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
           {
@@ -47,7 +46,6 @@ const MyMenuDetails = () => {
         const data = await response.json();
         console.log("Fetched menu data:", data);
 
-        // Expect a single menu object in the response
         if (data.menu) {
           setMenu(data.menu);
           setFormData({
@@ -71,6 +69,7 @@ const MyMenuDetails = () => {
 
     fetchMenuDetails();
   }, [menuId]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -98,6 +97,39 @@ const MyMenuDetails = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleToggleAvailability = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found. Please log in.");
+
+      const response = await fetch(
+        `http://localhost:5000/restaurant/menu/${menuId}/toggle-availability`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update menu availability");
+      }
+
+      const data = await response.json();
+      setMenu((prevMenu) => ({
+        ...prevMenu,
+        is_available: !prevMenu.is_available,
+      }));
+
+      alert(data.message || "Menu availability updated successfully");
+    } catch (error) {
+      console.error("Error updating menu availability:", error);
+      setError(error.message);
     }
   };
 
@@ -221,10 +253,33 @@ const MyMenuDetails = () => {
           </Link>
 
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-4xl font-bold text-gray-900">
-              {menu.menu_name || "Unnamed Dish"}
-            </h1>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                {menu.menu_name || "Unnamed Dish"}
+              </h1>
+              <div className="mt-2">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    menu.is_available
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {menu.is_available ? "Available" : "Unavailable"}
+                </span>
+              </div>
+            </div>
             <div className="flex space-x-2">
+              <button
+                onClick={handleToggleAvailability}
+                className={`px-4 py-2 rounded-md text-white transition-colors ${
+                  menu.is_available
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
+              >
+                Make {menu.is_available ? "Unavailable" : "Available"}
+              </button>
               <button
                 onClick={() => setShowEditForm(true)}
                 className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
