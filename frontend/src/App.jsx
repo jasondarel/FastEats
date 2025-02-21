@@ -13,6 +13,7 @@ import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
+import OrderHistory from "./pages/OrderHistory";
 
 function App() {
   return (
@@ -109,6 +110,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <UpdateMenu />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-history"
+            element={
+              <ProtectedRoute>
+                <OrderHistory />
               </ProtectedRoute>
             }
           />
