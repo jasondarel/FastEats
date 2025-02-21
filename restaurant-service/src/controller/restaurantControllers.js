@@ -47,8 +47,6 @@ const createRestaurantController = async(req, res) => {
 
 const updateRestaurantController = async (req, res) => {
     try {
-        console.log("🔍 Incoming Request Body:", req.body);
-        console.log("🔍 Uploaded File:", req.file); // Cek apakah file berhasil diterima
 
         const { role, userId } = req.user;
 
