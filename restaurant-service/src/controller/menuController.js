@@ -6,6 +6,7 @@ import {
   deleteMenuService,
   getMenuByRestaurantIdService,
   getMenuByMenuIdService,
+  updateAvailableMenuService,
 } from "../service/menuService.js";
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import {
@@ -307,6 +308,13 @@ const updateAvailableMenuController = async(req, res) => {
       const menuId = req.params.menuId;
       const { isAvailable } = req.body;
 
+      if(isAvailable === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: "isAvailable field is required",
+        });
+      }
+
       const menu = await getMenuByMenuIdService(menuId);
       if (!menu) {
         return res.status(404).json({
@@ -323,7 +331,7 @@ const updateAvailableMenuController = async(req, res) => {
         });
       }
 
-      const response = await updateAvailableMenuService({isAvailable}, menuId);
+      const response = await updateAvailableMenuService(menuId, isAvailable);
       if(!response) {
         return res.status(404).json({
           success: false,
