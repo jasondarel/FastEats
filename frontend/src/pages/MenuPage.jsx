@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
@@ -11,6 +11,7 @@ const MenuPage = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef(null);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +20,20 @@ const MenuPage = () => {
   const [maxPrice, setMaxPrice] = useState("");
 
   const navigate = useNavigate();
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -163,8 +178,8 @@ const MenuPage = () => {
             </div>
           </div>
 
-          {/* Filter Button */}
-          <div className="relative">
+          {/* Filter Button and Dropdown */}
+          <div className="relative" ref={filterRef}>
             <button
               onClick={toggleFilters}
               className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
@@ -264,9 +279,9 @@ const MenuPage = () => {
             {filteredMenu.map((item) => (
               <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
                 <div
-                  className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
-                         transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
-                         hover:border-yellow-800 cursor-pointer"
+                  className="bg-yellow-100 rounded-xl shadow-md border border-yellow-300 
+                           transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
+                           hover:border-yellow-800 cursor-pointer overflow-hidden"
                 >
                   <img
                     src={
@@ -275,17 +290,19 @@ const MenuPage = () => {
                         : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                     }
                     alt={item.menu_name}
-                    className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
+                    className="w-full h-50 object-cover rounded-t-xl"
                   />
-                  <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white">
-                    {item.menu_name}
-                  </h3>
-                  <p className="text-sm text-gray-500 italic group-hover:text-white">
-                    {item.menu_category}
-                  </p>
-                  <p className="text-gray-700 mt-2 group-hover:text-white">
-                    Rp {item.menu_price}
-                  </p>
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white">
+                      {item.menu_name}
+                    </h3>
+                    <p className="text-sm text-gray-500 italic group-hover:text-white">
+                      {item.menu_category}
+                    </p>
+                    <p className="text-gray-700 mt-2 group-hover:text-white">
+                      Rp {item.menu_price}
+                    </p>
+                  </div>
                 </div>
               </Link>
             ))}

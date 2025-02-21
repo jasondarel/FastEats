@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
@@ -9,6 +9,10 @@ import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 
+//sweet alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const validCategories = ["Food", "Drink", "Dessert", "Others"];
 
 const MyMenuPage = () => {
@@ -18,6 +22,7 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef(null);
 
   // Form state
   const [menuName, setMenuName] = useState("");
@@ -36,8 +41,15 @@ const MyMenuPage = () => {
 
   const navigate = useNavigate();
 
+  const MySwal = withReactContent(Swal);
+
   const handleClick = (category) => {
     setSelectedCategory(category);
+  };
+
+  // Handle navigation to menu details page
+  const handleMenuItemClick = (menuId) => {
+    navigate(`/my-menu/${menuId}/details`);
   };
 
   const toggleFilters = () => {
@@ -105,6 +117,19 @@ const MyMenuPage = () => {
 
     fetchMenu();
   }, [restaurantId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Handle search input
   const handleSearch = (e) => setSearchQuery(e.target.value);
@@ -175,7 +200,14 @@ const MyMenuPage = () => {
       setMenuCategory("");
       setPreviewImage(null);
       setMenuImage(null);
-      alert("Menu created successfully");
+      // alert("Menu created successfully");
+      Swal.fire({
+        title: "Sucess!",
+        text: "Menu created successfully",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
+      });
     } catch (error) {
       console.error(
         "Error creating menu:",
@@ -249,7 +281,7 @@ const MyMenuPage = () => {
           </div>
 
           {/* Filter Button */}
-          <div className="relative">
+          <div className="relative" ref={filterRef}>
             <button
               onClick={toggleFilters}
               className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
@@ -348,9 +380,10 @@ const MyMenuPage = () => {
             {filteredMenu.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
+                className="bg-yellow-100 rounded-xl shadow-md border border-yellow-300 
                          transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
                          hover:border-yellow-800 cursor-pointer"
+                onClick={() => handleMenuItemClick(item.menu_id)}
               >
                 <img
                   src={
@@ -359,17 +392,19 @@ const MyMenuPage = () => {
                       : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                   }
                   alt={item.menu_name}
-                  className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
+                  className="w-full h-50 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
                 />
-                <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
-                  {item.menu_name}
-                </h3>
-                <p className="text-sm text-gray-500 italic group-hover:text-white">
-                  {item.menu_category}
-                </p>
-                <p className="text-gray-700 mt-2 group-hover:text-white">
-                  Rp {item.menu_price}
-                </p>
+                <div className="p-4">
+                  <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
+                    {item.menu_name}
+                  </h3>
+                  <p className="text-sm text-gray-500 italic group-hover:text-white">
+                    {item.menu_category}
+                  </p>
+                  <p className="text-gray-700 mt-2 group-hover:text-white">
+                    Rp {item.menu_price}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -390,7 +425,7 @@ const MyMenuPage = () => {
 
         {showCreateMenuForm && (
           <div className="flex items-center justify-center backdrop-blur-xs fixed top-0 right-0 bottom-0 left-0 z-50">
-            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
+            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md overflow-y-auto relative max-h-screen sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
               <div className="flex items-center justify-center relative">
                 <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
                   Create Menu Form
@@ -404,11 +439,9 @@ const MyMenuPage = () => {
                   </div>
                 </h2>
               </div>
-              <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
+              <div className="border border-yellow-200 p-4 bg-white rounded-md">
                 <form className="text-start" onSubmit={handleCreateNewMenu}>
-                  <h2 className="font-bold text-xl">Create New Menu</h2>
-                  <hr className="my-2 border-slate-400" />
-                  <div className="my-4">
+                  <div className="mb-4">
                     <label className="font-semibold text-sm">
                       Upload Image<span className="text-pink-600">*</span>
                     </label>
@@ -560,7 +593,7 @@ const MyMenuPage = () => {
 
                   {/* Submit Button */}
                   <div className="mt-10 flex items-center justify-center w-full">
-                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer w-full">
+                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-bold cursor-pointer w-full">
                       Submit
                     </button>
                   </div>
