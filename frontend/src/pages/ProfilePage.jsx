@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUser, FaMapMarkerAlt, FaPhone, FaLock } from "react-icons/fa";
 
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Profile = () => {
   const [profile, setProfile] = useState({
     name: "",
@@ -23,6 +26,7 @@ const Profile = () => {
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
 
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -84,9 +88,19 @@ const Profile = () => {
         { ...profile, profile_photo: preview },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Profile updated successfully!");
-      setOriginalProfile(profile); // Update state original
-      setIsProfileChanged(false);
+      // alert("Profile updated successfully!");
+      Swal.fire({
+        title: "Success!",
+        text: "Successfully updated profile",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setOriginalProfile(profile); // Update state original
+          setIsProfileChanged(false);
+        }
+      });
     } catch (error) {
       console.error(error);
       alert("Update failed");
