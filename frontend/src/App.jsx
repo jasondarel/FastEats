@@ -11,6 +11,7 @@ import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
+import MyMenuDetails from "./pages/MyMenuDetails";
 
 function App() {
   return (
@@ -83,12 +84,21 @@ function App() {
               </ProtectedRoute>
             }
           />
-              
+
           <Route
             path="/menu-details/:menuId"
             element={
               <ProtectedRoute>
                 <MenuDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-menu/:menuId/details"
+            element={
+              <ProtectedRoute>
+                <MyMenuDetails />
               </ProtectedRoute>
             }
           />
