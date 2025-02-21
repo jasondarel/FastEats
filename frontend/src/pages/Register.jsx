@@ -2,12 +2,17 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+//sweet alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -19,8 +24,18 @@ const Register = () => {
         email,
         password,
       });
-      alert("Registration successful! Please login.");
-      navigate("/login");
+      // alert("Registration successful! Please login.");
+      Swal.fire({
+        title: "Sucessfully Registered",
+        text: "Registration successful! Please login.",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
     } catch (error) {
       const errMsg = error.response?.data?.error || "An error occurred";
 

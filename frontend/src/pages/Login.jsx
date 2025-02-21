@@ -2,11 +2,16 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+//alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({}); // Store field-specific errors
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   const handleLogin = async (e) => {
     e.preventDefault();

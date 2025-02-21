@@ -201,6 +201,7 @@ const MyMenuPage = () => {
         text: "Menu created successfully",
         icon: "success",
         confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
       });
     } catch (error) {
       console.error(
