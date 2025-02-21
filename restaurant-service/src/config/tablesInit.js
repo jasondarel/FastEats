@@ -25,22 +25,11 @@ const createTables = async () => {
         menu_image VARCHAR(500),
         restaurant_id INT NOT NULL,
         menu_category VARCHAR(255) NOT NULL,
+        is_available BOOLEAN DEFAULT FALSE,
         menu_price DECIMAL(10, 2) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id) ON DELETE CASCADE
-      );
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS detail_menu (
-        detail_id SERIAL PRIMARY KEY,
-        menu_id INT NOT NULL,
-        menu_size VARCHAR(255) DEFAULT 'Regular',
-        menu_stock INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (menu_id) REFERENCES menu_item(menu_id) ON DELETE CASCADE
       );
     `);    
 

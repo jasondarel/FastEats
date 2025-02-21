@@ -10,6 +10,7 @@ import {
     updateMenuController,
     deleteMenuController,
     getMenuByRestoIdController,
+    updateAvailableMenuController
 } from "../controller/menuController.js";
 import { fileURLToPath } from "url";
 
@@ -29,11 +30,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post("/menu", authMiddleware, upload.single("menuImage"), createMenuController);
-router.put("/menu-detail", authMiddleware, updateMenuController);
 router.get("/menus", authMiddleware, getMenusController);
 router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
 router.get("/menu-by-id/:menuId", authMiddleware, getMenuByMenuIdController);
 router.put("/menu/:menuId", authMiddleware, updateMenuController);
+router.put("/update-available/:menuId", authMiddleware, updateAvailableMenuController);
 router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
 export { router as menuRoutes };
