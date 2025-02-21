@@ -6,9 +6,13 @@ import {
   deleteMenuService,
   getMenuByRestaurantIdService,
   getMenuByMenuIdService,
+  updateMenuDetailService,
+  createMenuDetailService,
+  getMenuDetailService
 } from "../service/menuService.js";
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import {
+  validateUpdateMenuDetailRequest,
   validateCreateMenuRequest,
   validateUpdateMenuRequest,
 } from "../validator/menuValidator.js";
@@ -48,7 +52,11 @@ const createMenuController = async (req, res) => {
       });
     }
 
+
     const newMenu = await createMenuService(menuReq);
+
+    const newMenuDetail = await createMenuDetailService(newMenu.menu_id);
+
     return res.status(201).json({
       success: true,
       message: "Menu created successfully",
@@ -70,6 +78,90 @@ const createMenuController = async (req, res) => {
     });
   }
 };
+
+const updateMenuDetailController = async (req, res) => {
+  const menuReq = req.body;
+  const userId = req.user.userId;
+  const role = req.user.role;
+
+  if (role !== "seller") {
+    return res.status(403).json({
+      success: false,
+      message: "Only sellers can create a menu",
+    });
+  }
+
+  if(!menuReq.menuId || isNaN(menuReq.menuId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid menuId",
+    });
+  }
+
+  try {
+    const menu = await getMenuByMenuIdService(menuReq.menuId);
+    if (!menu) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu not found",
+      });
+    }
+
+    const restaurant = await getRestaurantByOwnerIdService(userId);
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found for this owner",
+      });
+    }
+
+    if(menu.restaurant_id !== restaurant.restaurant_id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to create detail for this menu",
+      });
+    }
+
+    menuReq.menuId = menu.menu_id;
+
+    const menuDetail = await getMenuDetailService(menuReq.menuId);
+    if(!menuDetail) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu detail not found",
+      });
+    }
+
+    const errors = await validateUpdateMenuDetailRequest(menuReq);
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    const newMenu = await updateMenuDetailService(menuReq);
+    return res.status(201).json({
+      success: true,
+      message: "Detail menu created successfully",
+    })
+  } catch(err) {
+    console.error("❌ Error creating detail menu:", err);
+
+    if (err.code === "23505") {
+      return res.status(400).json({
+        success: false,
+        message: "Detail menu already exists",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
 
 const getMenusController = async (req, res) => {
   const userId = req.user.userId;
@@ -124,8 +216,6 @@ const getMenuByRestoIdController = async (req, res) => {
 const getMenuByMenuIdController = async (req, res) => {
   try {
     const { menuId } = req.params;
-    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
-    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
 
     if (!menuId || isNaN(menuId)) {
       return res.status(400).json({
@@ -135,7 +225,6 @@ const getMenuByMenuIdController = async (req, res) => {
     }
 
     const result = await getMenuByMenuIdService(menuId);
-    console.log("🔍 Query result:", result); // ✅ Debugging step
 
     if (!result) {
       return res.status(404).json({
@@ -192,6 +281,10 @@ const updateMenuController = async (req, res) => {
         success: false,
         message: "You are not allowed to update this menu",
       });
+    }
+
+    if(req.file) {
+      menuReq.menuImage = req.file.filename;
     }
 
     const errors = await validateUpdateMenuRequest(menuReq, restaurantId);
@@ -291,4 +384,5 @@ export {
   updateMenuController,
   deleteMenuController,
   getMenuByRestoIdController,
+  updateMenuDetailController
 };

@@ -4,12 +4,12 @@ const router = express.Router();
 import multer from 'multer';
 import path from 'path';
 import {
-  createMenuController,
-  getMenusController,
-  getMenuByMenuIdController,
-  updateMenuController,
-  deleteMenuController,
-  getMenuByRestoIdController,
+    createMenuController,
+    getMenusController,
+    getMenuByMenuIdController,
+    updateMenuController,
+    deleteMenuController,
+    getMenuByRestoIdController,
 } from "../controller/menuController.js";
 import { fileURLToPath } from "url";
 
@@ -29,6 +29,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post("/menu", authMiddleware, upload.single("menuImage"), createMenuController);
+router.put("/menu-detail", authMiddleware, updateMenuController);
 router.get("/menus", authMiddleware, getMenusController);
 router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
 router.get("/menu-by-id/:menuId", authMiddleware, getMenuByMenuIdController);

@@ -33,6 +33,18 @@ const createTables = async () => {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS detail_menu (
+        detail_id SERIAL PRIMARY KEY,
+        menu_id INT NOT NULL,
+        menu_size VARCHAR(255) DEFAULT 'Regular',
+        menu_stock INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (menu_id) REFERENCES menu_item(menu_id) ON DELETE CASCADE
+      );
+    `);    
+
     console.log("✅ Tables created successfully!");
   } catch (error) {
     console.error("❌ Error creating tables:", error);
