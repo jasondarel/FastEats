@@ -101,11 +101,13 @@ const deleteMenuService = async (menuId) => {
 
 const isMenuAvailable = async (menuName, restaurantId) => {
   const result = await pool.query(
-    "SELECT * FROM menu_item WHERE menu_name ILIKE $1 AND restaurant_id = $2",
+    "SELECT 1 FROM menu_item WHERE menu_name ILIKE $1 AND restaurant_id = $2",
     [menuName, restaurantId]
   );
   return result.rowCount > 0;
 };
+
+
 
 export {
   createMenuService,

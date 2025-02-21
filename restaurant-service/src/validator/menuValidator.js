@@ -37,7 +37,7 @@ const validateUpdateMenuRequest = async(menuReq, restaurantId) => {
     if (!menuReq.menuName || menuReq.menuName.trim() === '') {
         errors.menuName = 'Menu name is required';
     } else {
-        const isAvailableMenu = await isMenuAvailable(menuReq.menuName, restaurantId);
+        const isAvailableMenu = await isMenuAvailable(menuReq.menuName, menuReq.menuId);
         if(isAvailableMenu) {
             errors.menuName = "Menu name already exist"
         }
