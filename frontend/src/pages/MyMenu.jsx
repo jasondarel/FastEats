@@ -362,7 +362,7 @@ const MyMenuPage = () => {
             {filteredMenu.map((item) => (
               <div
                 key={item.menu_id}
-                className="bg-yellow-100 rounded-xl p-5 shadow-md border border-yellow-300 
+                className="bg-yellow-100 rounded-xl shadow-md border border-yellow-300 
                          transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
                          hover:border-yellow-800 cursor-pointer"
               >
@@ -373,7 +373,7 @@ const MyMenuPage = () => {
                       : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                   }
                   alt={item.menu_name}
-                  className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
+                  className="w-full h-50 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform"
                 />
                 <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white ">
                   {item.menu_name}
