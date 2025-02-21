@@ -18,6 +18,7 @@ const MenuPage = () => {
   const [filterCategory, setFilterCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [showUnavailable, setShowUnavailable] = useState(false); // New state for toggling unavailable items
 
   const navigate = useNavigate();
 
@@ -43,6 +44,7 @@ const MenuPage = () => {
     setFilterCategory("");
     setMinPrice("");
     setMaxPrice("");
+    setShowUnavailable(false);
   };
 
   useEffect(() => {
@@ -92,6 +94,9 @@ const MenuPage = () => {
   const handleMinPriceChange = (e) => setMinPrice(e.target.value);
   const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
 
+  // Handle availability toggle
+  const handleAvailabilityToggle = (e) => setShowUnavailable(e.target.checked);
+
   // Filter logic
   const filteredMenu = menuItems.filter((item) => {
     const matchesSearch = item.menu_name
@@ -106,13 +111,21 @@ const MenuPage = () => {
     if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
     if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-    return matchesSearch && matchesCategory && matchesPrice;
+    // Only show available items unless showUnavailable is toggled on
+    const matchesAvailability = showUnavailable
+      ? true
+      : item.is_available === true;
+
+    return (
+      matchesSearch && matchesCategory && matchesPrice && matchesAvailability
+    );
   });
 
   // Get number of active filters
   const activeFilterCount = [
     filterCategory ? 1 : 0,
     minPrice || maxPrice ? 1 : 0,
+    showUnavailable ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   if (isLoading) {
@@ -246,7 +259,7 @@ const MenuPage = () => {
                   </div>
 
                   {/* Price Range Filter */}
-                  <div>
+                  <div className="mb-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Price Range
                     </label>
@@ -267,6 +280,19 @@ const MenuPage = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Availability Toggle */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={showUnavailable}
+                        onChange={handleAvailabilityToggle}
+                        className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                      />
+                      Show unavailable items
+                    </label>
+                  </div>
                 </div>
               </div>
             )}
@@ -279,27 +305,48 @@ const MenuPage = () => {
             {filteredMenu.map((item) => (
               <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
                 <div
-                  className="bg-yellow-100 rounded-xl shadow-md border border-yellow-300 
-                           transition-all duration-300 hover:shadow-lg hover:bg-yellow-400 
-                           hover:border-yellow-800 cursor-pointer overflow-hidden"
+                  className={`rounded-xl shadow-md border transition-all duration-300 
+                            hover:shadow-lg cursor-pointer overflow-hidden
+                            ${
+                              item.is_available
+                                ? "bg-yellow-100 border-yellow-300 hover:bg-yellow-400 hover:border-yellow-800"
+                                : "bg-gray-100 border-gray-300 hover:bg-gray-200 hover:border-gray-400"
+                            }`}
                 >
-                  <img
-                    src={
-                      item.menu_image
-                        ? item.menu_image
-                        : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
-                    }
-                    alt={item.menu_name}
-                    className="w-full h-50 object-cover rounded-t-xl"
-                  />
+                  <div className="relative">
+                    <img
+                      src={
+                        item.menu_image
+                          ? item.menu_image
+                          : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
+                      }
+                      alt={item.menu_name}
+                      className={`w-full h-50 object-cover rounded-t-xl ${
+                        !item.is_available && "opacity-50"
+                      }`}
+                    />
+                    {!item.is_available && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+                        Unavailable
+                      </div>
+                    )}
+                  </div>
                   <div className="p-5">
-                    <h3 className="text-xl font-bold text-yellow-800 group-hover:text-white">
+                    <h3
+                      className={`text-xl font-bold ${
+                        item.is_available ? "text-yellow-800" : "text-gray-500"
+                      }`}
+                    >
                       {item.menu_name}
                     </h3>
-                    <p className="text-sm text-gray-500 italic group-hover:text-white">
+                    <p className="text-sm text-gray-500 italic">
                       {item.menu_category}
                     </p>
-                    <p className="text-gray-700 mt-2 group-hover:text-white">
+                    <p
+                      className={`mt-2 ${
+                        item.is_available ? "text-gray-700" : "text-gray-500"
+                      }`}
+                    >
                       Rp {item.menu_price}
                     </p>
                   </div>

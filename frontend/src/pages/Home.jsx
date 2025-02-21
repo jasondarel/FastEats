@@ -72,8 +72,14 @@ const Home = () => {
         }
 
         const data = await response.json();
-        setRestaurants(data.restaurants);
-        setFilteredRestaurants(data.restaurants); // Initialize filtered list
+
+        // 🔥 Filter out closed restaurants before updating state
+        const openRestaurants = data.restaurants.filter(
+          (restaurant) => restaurant.is_open
+        );
+
+        setRestaurants(openRestaurants);
+        setFilteredRestaurants(openRestaurants); // Only store open restaurants
       } catch (error) {
         console.error("Error fetching restaurants:", error);
         setError(error.message);
@@ -89,9 +95,11 @@ const Home = () => {
     const query = event.target.value.toLowerCase();
     setSearchQuery(query);
 
-    const filtered = restaurants.filter((restaurant) =>
-      restaurant.restaurant_name.toLowerCase().includes(query)
-    );
+    const filtered = restaurants
+      .filter((restaurant) => restaurant.is_open) // 🔥 Ensure only open restaurants
+      .filter((restaurant) =>
+        restaurant.restaurant_name.toLowerCase().includes(query)
+      );
 
     setFilteredRestaurants(filtered);
   };
@@ -207,7 +215,7 @@ const Home = () => {
             </div>
           ) : (
             <div className="text-gray-600 text-center py-8">
-              No restaurants match your search. 🍽️
+              No open restaurants match your search. 🍽️
             </div>
           )}
         </section>

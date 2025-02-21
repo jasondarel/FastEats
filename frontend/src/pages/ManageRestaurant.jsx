@@ -9,6 +9,8 @@ import {
   FaSave,
   FaImage,
   FaCamera,
+  FaDoorOpen,
+  FaDoorClosed,
 } from "react-icons/fa";
 
 import Swal from "sweetalert2";
@@ -19,6 +21,8 @@ const ManageRestaurant = () => {
   const [restaurantAddress, setRestaurantAddress] = useState("");
   const [initialRestaurantName, setInitialRestaurantName] = useState("");
   const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [initialIsOpen, setInitialIsOpen] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -44,6 +48,8 @@ const ManageRestaurant = () => {
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
+          setIsOpen(restaurant.is_open || false);
+          setInitialIsOpen(restaurant.is_open || false);
 
           const imageUrl = restaurant.restaurant_image
             ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
@@ -88,6 +94,7 @@ const ManageRestaurant = () => {
     if (
       restaurantName !== initialRestaurantName ||
       restaurantAddress !== initialRestaurantAddress ||
+      isOpen !== initialIsOpen ||
       imageFile
     ) {
       setIsChanged(true);
@@ -99,8 +106,14 @@ const ManageRestaurant = () => {
     restaurantAddress,
     initialRestaurantName,
     initialRestaurantAddress,
+    isOpen,
+    initialIsOpen,
     imageFile,
   ]);
+
+  const handleToggleOpenStatus = () => {
+    setIsOpen(!isOpen);
+  };
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -116,6 +129,7 @@ const ManageRestaurant = () => {
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
+      formData.append("isOpen", isOpen);
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
       }
@@ -131,13 +145,12 @@ const ManageRestaurant = () => {
         }
       );
 
-      // alert(response.data.message || "Successfully updated the restaurant!");
       Swal.fire({
         title: "Success!",
         text: "Successfully updated the restaurant",
         icon: "success",
         confirmButtonText: "Ok",
-        confirmButtonColor:"#efb100"
+        confirmButtonColor: "#efb100",
       }).then((result) => {
         if (result.isConfirmed) {
           window.location.reload();
@@ -145,9 +158,9 @@ const ManageRestaurant = () => {
       });
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
+      setInitialIsOpen(isOpen);
       setImageFile(null);
       setIsChanged(false);
-      // window.location.reload();
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
@@ -177,6 +190,67 @@ const ManageRestaurant = () => {
     }
   };
 
+  const handleToggleRestaurantStatus = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to update your restaurant status");
+      return;
+    }
+
+    // Confirmation dialog
+    const statusAction = isOpen ? "close" : "open";
+
+    const result = await Swal.fire({
+      title: `${isOpen ? "Close" : "Open"} Restaurant?`,
+      text: `Are you sure you want to ${statusAction} your restaurant?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: `Yes, ${statusAction} it!`,
+      cancelButtonText: "Cancel",
+      confirmButtonColor: isOpen ? "#d33" : "#3fc46d",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const newStatus = !isOpen;
+
+        const response = await axios.patch(
+          "http://localhost:5000/restaurant/status",
+          { isOpen: newStatus },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        setIsOpen(newStatus);
+        setInitialIsOpen(newStatus);
+
+        Swal.fire({
+          title: "Status Updated!",
+          text: `Your restaurant is now ${
+            newStatus ? "open" : "closed"
+          } for orders`,
+          icon: "success",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#efb100",
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to update restaurant status",
+          icon: "error",
+          confirmButtonText: "Try Again",
+          confirmButtonColor: "#efb100",
+        });
+      }
+    }
+  };
+
   return (
     <div
       className="flex w-screen min-h-screen bg-yellow-100"
@@ -193,6 +267,39 @@ const ManageRestaurant = () => {
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaUtensils className="mr-2" /> Manage Your Restaurant
           </h2>
+
+          {/* Restaurant Status Toggle */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center">
+                {isOpen ? (
+                  <FaDoorOpen className="text-green-500 text-xl mr-3" />
+                ) : (
+                  <FaDoorClosed className="text-red-500 text-xl mr-3" />
+                )}
+                <div>
+                  <h3 className="font-medium">Restaurant Status</h3>
+                  <p
+                    className={`text-sm ${
+                      isOpen ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {isOpen ? "Currently Open" : "Currently Closed"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleRestaurantStatus}
+                className={`px-4 py-2 rounded-lg text-white font-medium transition ${
+                  isOpen
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
+              >
+                {isOpen ? "Close Restaurant" : "Open Restaurant"}
+              </button>
+            </div>
+          </div>
 
           {/* Image Section */}
           <div className="mb-8">
