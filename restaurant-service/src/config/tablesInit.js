@@ -12,6 +12,7 @@ const createTables = async () => {
         restaurant_address TEXT NOT NULL,
         restaurant_image VARCHAR(500),
         owner_id INT NOT NULL UNIQUE,
+        is_open BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -31,7 +32,7 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id) ON DELETE CASCADE
       );
-    `);    
+    `);
 
     console.log("✅ Tables created successfully!");
   } catch (error) {
