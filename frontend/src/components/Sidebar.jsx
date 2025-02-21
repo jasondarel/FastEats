@@ -55,7 +55,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
       text: "Sucessfully Logged Out!",
       icon: "info",
       confirmButtonText: "Ok",
-      confirmButtonColor:"#efb100"
+      confirmButtonColor: "#efb100",
     }).then((result) => {
       if (result.isConfirmed) {
         navigate("/login");
@@ -134,7 +134,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
                 >
                   Home
                 </Link>
@@ -142,7 +142,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/profile"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
                 >
                   Profile
                 </Link>
@@ -150,7 +150,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
                 >
                   My Restaurant
                 </Link>
@@ -158,7 +158,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               <li>
                 <Link
                   to="/order-history"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl"
+                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
                 >
                   Order History
                 </Link>
