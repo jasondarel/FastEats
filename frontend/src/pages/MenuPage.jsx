@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
@@ -11,6 +11,7 @@ const MenuPage = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef(null);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +20,20 @@ const MenuPage = () => {
   const [maxPrice, setMaxPrice] = useState("");
 
   const navigate = useNavigate();
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -163,8 +178,8 @@ const MenuPage = () => {
             </div>
           </div>
 
-          {/* Filter Button */}
-          <div className="relative">
+          {/* Filter Button and Dropdown */}
+          <div className="relative" ref={filterRef}>
             <button
               onClick={toggleFilters}
               className={`flex items-center gap-2 px-4 py-2 rounded-md border ${

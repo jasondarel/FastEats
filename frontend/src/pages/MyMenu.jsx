@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
@@ -18,6 +18,7 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const filterRef = useRef(null);
 
   // Form state
   const [menuName, setMenuName] = useState("");
@@ -105,6 +106,19 @@ const MyMenuPage = () => {
 
     fetchMenu();
   }, [restaurantId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Handle search input
   const handleSearch = (e) => setSearchQuery(e.target.value);
@@ -249,7 +263,7 @@ const MyMenuPage = () => {
           </div>
 
           {/* Filter Button */}
-          <div className="relative">
+          <div className="relative" ref={filterRef}>
             <button
               onClick={toggleFilters}
               className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
