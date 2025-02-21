@@ -4,7 +4,7 @@ const createTables = async () => {
   const client = await pool.connect();
   try {
     console.log("Creating tables...");
-
+    
     await client.query(`
       CREATE TABLE IF NOT EXISTS restaurants (
         restaurant_id SERIAL PRIMARY KEY,
@@ -12,6 +12,7 @@ const createTables = async () => {
         restaurant_address TEXT NOT NULL,
         restaurant_image VARCHAR(500),
         owner_id INT NOT NULL UNIQUE,
+        is_open BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
