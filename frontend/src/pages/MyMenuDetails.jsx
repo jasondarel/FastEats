@@ -231,9 +231,9 @@ const MyMenuDetails = () => {
       <Sidebar />
       <main className="flex-1 p-5 relative">
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-16">
-          <Link
-            to="/my-menu"
-            className="text-yellow-600 hover:text-yellow-700 hover:underline flex items-center mb-4"
+          <button
+            onClick={() => navigate("/my-menu")}
+            className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -246,11 +246,10 @@ const MyMenuDetails = () => {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z"
+                d="M6 18 18 6M6 6l12 12"
               />
             </svg>
-            <span className="ml-2">Back to My Menu</span>
-          </Link>
+          </button>
 
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -365,10 +364,6 @@ const MyMenuDetails = () => {
                 <p className="font-medium">
                   {new Date(menu.updated_at).toLocaleDateString()}
                 </p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-500">Menu ID</p>
-                <p className="font-medium">{menu.menu_id}</p>
               </div>
             </div>
           </div>
