@@ -139,14 +139,32 @@ const Home = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-4 flex items-center justify-center">
-          <input
-            type="text"
-            placeholder="Search restaurants..."
-            value={searchQuery}
-            onChange={handleSearch}
-            className="w-72 p-2 border bg-white border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
+        <div className="flex justify-center items-center">
+          <div className="relative flex-grow max-w-lg w-full">
+            <input
+              type="text"
+              placeholder="Search Restaurant..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="w-full p-2 pl-10 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 text-yellow-500"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <section className="mt-8">
