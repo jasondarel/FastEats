@@ -3,7 +3,16 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
-import { FaUtensils, FaMapMarkerAlt, FaSave, FaImage, FaCamera } from "react-icons/fa";
+import {
+  FaUtensils,
+  FaMapMarkerAlt,
+  FaSave,
+  FaImage,
+  FaCamera,
+} from "react-icons/fa";
+
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -14,24 +23,28 @@ const ManageRestaurant = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const fetchRestaurantData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/restaurant/restaurant", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/restaurant/restaurant",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
           setInitialRestaurantAddress(restaurant.restaurant_address);
-  
+
           const imageUrl = restaurant.restaurant_image
             ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
             : null;
@@ -44,7 +57,7 @@ const ManageRestaurant = () => {
         alert("An error occurred while fetching the restaurant details.");
       }
     };
-  
+
     fetchRestaurantData();
   }, [navigate]);
 
@@ -81,7 +94,13 @@ const ManageRestaurant = () => {
     } else {
       setIsChanged(false);
     }
-  }, [restaurantName, restaurantAddress, initialRestaurantName, initialRestaurantAddress, imageFile]);
+  }, [
+    restaurantName,
+    restaurantAddress,
+    initialRestaurantName,
+    initialRestaurantAddress,
+    imageFile,
+  ]);
 
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
@@ -111,13 +130,24 @@ const ManageRestaurant = () => {
           },
         }
       );
-      
-      alert(response.data.message || "Successfully updated the restaurant!");
+
+      // alert(response.data.message || "Successfully updated the restaurant!");
+      Swal.fire({
+        title: "Success!",
+        text: "Successfully updated the restaurant",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setImageFile(null);
       setIsChanged(false);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
@@ -173,24 +203,24 @@ const ManageRestaurant = () => {
               <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
                 {imagePreview ? (
                   <>
-                  <img
-                src={imagePreview}
-                alt="Restaurant"
-                className="w-full h-full object-contain"
-              />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
-                      <FaCamera className="mr-2" />
-                      Change Image
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                    </label>
-                  </div>
-                </>
+                    <img
+                      src={imagePreview}
+                      alt="Restaurant"
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
+                        <FaCamera className="mr-2" />
+                        Change Image
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                    </div>
+                  </>
                 ) : (
                   <label className="cursor-pointer text-gray-500 flex flex-col items-center">
                     <FaImage className="w-12 h-12 mb-2" />

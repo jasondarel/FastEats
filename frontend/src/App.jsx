@@ -12,6 +12,7 @@ import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
+import UpdateMenu from "./pages/UpdateMenu";
 
 function App() {
   return (
@@ -99,6 +100,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyMenuDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            // path="/menu-detils/:menuId/update-menu"
+            path="/update-menu"
+            element={
+              <ProtectedRoute>
+                <UpdateMenu />
               </ProtectedRoute>
             }
           />

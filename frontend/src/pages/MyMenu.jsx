@@ -9,6 +9,10 @@ import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 
+//sweet alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const validCategories = ["Food", "Drink", "Dessert", "Others"];
 
 const MyMenuPage = () => {
@@ -36,6 +40,8 @@ const MyMenuPage = () => {
   const [maxPrice, setMaxPrice] = useState("");
 
   const navigate = useNavigate();
+
+  const MySwal = withReactContent(Swal);
 
   const handleClick = (category) => {
     setSelectedCategory(category);
@@ -194,7 +200,14 @@ const MyMenuPage = () => {
       setMenuCategory("");
       setPreviewImage(null);
       setMenuImage(null);
-      alert("Menu created successfully");
+      // alert("Menu created successfully");
+      Swal.fire({
+        title: "Sucess!",
+        text: "Menu created successfully",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
+      });
     } catch (error) {
       console.error(
         "Error creating menu:",
@@ -412,7 +425,7 @@ const MyMenuPage = () => {
 
         {showCreateMenuForm && (
           <div className="flex items-center justify-center backdrop-blur-xs fixed top-0 right-0 bottom-0 left-0 z-50">
-            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
+            <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md overflow-y-auto relative max-h-screen sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
               <div className="flex items-center justify-center relative">
                 <h2 className="font-extrabold text-2xl my-5 -mt-2 text-center text-yellow-900 sm:text-4xl">
                   Create Menu Form
@@ -426,11 +439,9 @@ const MyMenuPage = () => {
                   </div>
                 </h2>
               </div>
-              <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">
+              <div className="border border-yellow-200 p-4 bg-white rounded-md">
                 <form className="text-start" onSubmit={handleCreateNewMenu}>
-                  <h2 className="font-bold text-xl">Create New Menu</h2>
-                  <hr className="my-2 border-slate-400" />
-                  <div className="my-4">
+                  <div className="mb-4">
                     <label className="font-semibold text-sm">
                       Upload Image<span className="text-pink-600">*</span>
                     </label>
@@ -582,7 +593,7 @@ const MyMenuPage = () => {
 
                   {/* Submit Button */}
                   <div className="mt-10 flex items-center justify-center w-full">
-                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-semibold cursor-pointer w-full">
+                    <button className="bg-gradient-to-br from-yellow-400 via-yellow-600 to-yellow-800 text-white p-2.5 rounded-xl text-xl font-bold cursor-pointer w-full">
                       Submit
                     </button>
                   </div>
