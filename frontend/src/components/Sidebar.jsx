@@ -1,11 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+// alert
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Cek awal ukuran layar
+
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -44,7 +50,17 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    MySwal.fire({
+      title: "Logged Out",
+      text: "Sucessfully Logged Out!",
+      icon: "info",
+      confirmButtonText: "Ok",
+      confirmButtonColor:"#efb100"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate("/login");
+      }
+    });
   };
 
   const toggleSidebar = () => {
@@ -88,7 +104,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
           backgroundImage: "url('/foodbg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          zIndex:"10",
+          zIndex: "10",
         }}
       >
         {/* Tombol Close (Hanya di Mobile) */}

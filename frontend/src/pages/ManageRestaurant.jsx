@@ -137,6 +137,7 @@ const ManageRestaurant = () => {
         text: "Successfully updated the restaurant",
         icon: "success",
         confirmButtonText: "Ok",
+        confirmButtonColor:"#efb100"
       }).then((result) => {
         if (result.isConfirmed) {
           window.location.reload();
