@@ -13,6 +13,7 @@ const MyMenuDetails = () => {
     menuDesc: "",
     menuPrice: "",
     menuCategory: "",
+    menuImage: null,
   });
   const [menuImage, setMenuImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -48,10 +49,12 @@ const MyMenuDetails = () => {
 
         if (data.menu) {
           setMenu(data.menu);
+          console.log("Menu data:", data.menu);
           setFormData({
             menuName: data.menu.menu_name || "",
             menuDesc: data.menu.menu_description || "",
             menuPrice: data.menu.menu_price || "",
+            menuImage: data.menu.menu_image || "",
             menuCategory: data.menu.menu_category || "",
           });
         } else {
@@ -100,19 +103,22 @@ const MyMenuDetails = () => {
     }
   };
 
-  const handleToggleAvailability = async () => {
+  const handleToggleAvailability = async (available) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/menu/${menuId}/toggle-availability`,
+        `http://localhost:5000/restaurant/update-available/${menuId}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            isAvailable: !available,
+          }),
         }
       );
 
@@ -135,19 +141,23 @@ const MyMenuDetails = () => {
 
   const handleUpdateMenu = async (e) => {
     e.preventDefault();
-
+    console.log("Updating menu with data:", formData);
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
       const formDataObj = new FormData();
       formDataObj.append("menuName", formData.menuName);
-      formDataObj.append("menuDesc", formData.menuDesc);
+      formDataObj.append("menuDescription", formData.menuDesc);
       formDataObj.append("menuCategory", formData.menuCategory);
       formDataObj.append("menuPrice", formData.menuPrice);
 
       if (menuImage) {
         formDataObj.append("menuImage", menuImage);
+      } else {
+        formDataObj.append("menuImage", formData.menuImage
+          ? formData.menuImage
+          : null);
       }
 
       const response = await fetch(
@@ -294,7 +304,7 @@ const MyMenuDetails = () => {
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={handleToggleAvailability}
+                onClick={() => handleToggleAvailability(menu.is_available)}
                 className={`px-4 py-2 rounded-md text-white transition-colors hover:cursor-pointer ${
                   menu.is_available
                     ? "bg-red-500 hover:bg-red-600"
