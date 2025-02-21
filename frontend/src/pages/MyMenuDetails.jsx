@@ -327,7 +327,7 @@ const MyMenuDetails = () => {
                 : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
             }
             alt={menu.menu_name || "Menu item"}
-            className="w-full h-64 object-cover rounded-lg shadow-md mb-4"
+            className="w-full h-64 object-contain rounded-lg shadow-md mb-4"
           />
 
           <div className="bg-yellow-50 p-4 rounded-md mb-4">
