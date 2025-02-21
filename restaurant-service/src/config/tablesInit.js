@@ -31,7 +31,7 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (restaurant_id) REFERENCES restaurants(restaurant_id) ON DELETE CASCADE
       );
-    `);
+    `);    
 
     console.log("✅ Tables created successfully!");
   } catch (error) {

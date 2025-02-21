@@ -49,6 +49,7 @@ const createMenuController = async (req, res) => {
     }
 
     const newMenu = await createMenuService(menuReq);
+
     return res.status(201).json({
       success: true,
       message: "Menu created successfully",
@@ -124,8 +125,6 @@ const getMenuByRestoIdController = async (req, res) => {
 const getMenuByMenuIdController = async (req, res) => {
   try {
     const { menuId } = req.params;
-    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
-    console.log("🔍 Received menuId:", menuId); // ✅ Debugging step
 
     if (!menuId || isNaN(menuId)) {
       return res.status(400).json({
@@ -135,7 +134,6 @@ const getMenuByMenuIdController = async (req, res) => {
     }
 
     const result = await getMenuByMenuIdService(menuId);
-    console.log("🔍 Query result:", result); // ✅ Debugging step
 
     if (!result) {
       return res.status(404).json({
@@ -192,6 +190,10 @@ const updateMenuController = async (req, res) => {
         success: false,
         message: "You are not allowed to update this menu",
       });
+    }
+
+    if(req.file) {
+      menuReq.menuImage = req.file.filename;
     }
 
     const errors = await validateUpdateMenuRequest(menuReq, restaurantId);
@@ -284,6 +286,66 @@ const deleteMenuController = async (req, res) => {
   }
 };
 
+const updateAvailableMenuController = async(req, res) => {
+  const { role, userId } = req.user;
+  if(role !== "seller") {
+    return res.status(403).json({
+      success: false,
+      message: "Only seller can update menu availability"
+    })
+  }
+  try {
+    const restaurant = await getRestaurantByOwnerIdService(userId);
+  
+      if (!restaurant) {
+        return res.status(404).json({
+          success: false,
+          message: "Restaurant not found for this owner",
+        });
+      }
+
+      const menuId = req.params.menuId;
+      const { isAvailable } = req.body;
+
+      const menu = await getMenuByMenuIdService(menuId);
+      if (!menu) {
+        return res.status(404).json({
+          success: false,
+          message: "Menu not found",
+        });
+      }
+
+      const restaurantId = restaurant.restaurant_id;
+      if(menu.restaurant_id !== restaurantId) {
+        return res.status(403).json({
+          success: false,
+          message: "You are not allowed to update this menu",
+        });
+      }
+
+      const response = await updateAvailableMenuService({isAvailable}, menuId);
+      if(!response) {
+        return res.status(404).json({
+          success: false,
+          message: "Menu update failed",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Menu availability updated successfully",
+        dataMenu: response
+      });
+  } catch(err) {
+    console.error("❌ Error updating menu availability:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+  
+}
+
 export {
   createMenuController,
   getMenusController,
@@ -291,4 +353,5 @@ export {
   updateMenuController,
   deleteMenuController,
   getMenuByRestoIdController,
+  updateAvailableMenuController
 };

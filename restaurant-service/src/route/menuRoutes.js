@@ -4,12 +4,13 @@ const router = express.Router();
 import multer from 'multer';
 import path from 'path';
 import {
-  createMenuController,
-  getMenusController,
-  getMenuByMenuIdController,
-  updateMenuController,
-  deleteMenuController,
-  getMenuByRestoIdController,
+    createMenuController,
+    getMenusController,
+    getMenuByMenuIdController,
+    updateMenuController,
+    deleteMenuController,
+    getMenuByRestoIdController,
+    updateAvailableMenuController
 } from "../controller/menuController.js";
 import { fileURLToPath } from "url";
 
@@ -33,6 +34,7 @@ router.get("/menus", authMiddleware, getMenusController);
 router.get("/menu/:restaurantId", authMiddleware, getMenuByRestoIdController);
 router.get("/menu-by-id/:menuId", authMiddleware, getMenuByMenuIdController);
 router.put("/menu/:menuId", authMiddleware, updateMenuController);
+router.put("/update-available/:menuId", authMiddleware, updateAvailableMenuController);
 router.delete("/menu/:menuId", authMiddleware, deleteMenuController);
 
 export { router as menuRoutes };

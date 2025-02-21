@@ -59,7 +59,24 @@ const validateUpdateMenuRequest = async(menuReq, restaurantId) => {
     return errors
 }
 
+const validateUpdateMenuDetailRequest = async(detailMenuReq) => {
+    const errors = {};
+    const menuSizes = ["Regular", "Medium", "Large"];
+    if (!menuSizes.includes(detailMenuReq.menuSize)) {
+        errors.menuSize = "Menu size must be one of (Regular, Medium, Large)";
+    }
+
+    if (detailMenuReq.menuStock === undefined || detailMenuReq.menuStock === null) {
+        errors.menuStock = 'Menu stock is required';
+    } else if (isNaN(detailMenuReq.menuStock) || detailMenuReq.menuStock < 0) {
+        errors.menuStock = 'Menu stock must be a positive number';
+    }
+
+    return errors
+}
+
 export {
     validateCreateMenuRequest,
-    validateUpdateMenuRequest
+    validateUpdateMenuRequest,
+    validateUpdateMenuDetailRequest
 };

@@ -17,8 +17,16 @@ const createMenuService = async (menuReq) => {
   return result.rows[0];
 };
 
+const updateAvailableMenuService = async (menuId, isAvailable) => {
+  const result = await pool.query(
+    `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
+    [isAvailable, menuId]
+  );
+
+  return result.rows[0];
+}
+
 const getMenusService = async (restaurantId) => {
-  console.log(restaurantId);
   try {
     const result = await pool.query(
       "SELECT * FROM menu_item  WHERE restaurant_id = $1",
@@ -50,7 +58,6 @@ const getMenuByMenuIdService = async (menuId) => {
       "SELECT * FROM menu_item WHERE menu_id = $1",
       [menuId]
     );
-    console.log(result)
     return result.rows[0];
   } catch (error) {
     console.error("❌ Error fetching menu:", error);
@@ -109,4 +116,5 @@ export {
   isMenuAvailable,
   getMenuByRestaurantIdService,
   getMenuByMenuIdService,
+  updateAvailableMenuService
 };

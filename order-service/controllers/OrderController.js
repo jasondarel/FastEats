@@ -1,39 +1,25 @@
 import pool from "../config/db.js";
 import axios from "axios";
 
-//create Order
 export const createOrder = async (req, res) => {
   try {
-    const userId = req.user?.userId; // Pastikan req.user tidak undefined
-    const { restaurantId, menuId, totalPrice } = req.body;
+    const userId = req.user?.userId;
+    const { menuId, quantity } = req.body;
 
-    // Validasi input
-    if (!restaurantId || !menuId || !totalPrice) {
+    if (!menuId || !quantity) {
       return res.status(400).json({
         success: false,
         message: "Missing fields",
       });
     }
 
-    // Validasi ID harus berupa angka
-    if (isNaN(restaurantId) || isNaN(menuId)) {
+    if (isNaN(menuId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid restaurantId or menuId",
       });
     }
 
-    // Pastikan Authorization header tersedia
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Missing or invalid token",
-      });
-    }
-    const token = authHeader.split(" ")[1];
-
-    // Fetch data dari restaurant service
     console.log("Fetching restaurant data...");
     const restaurantResponse = await axios.get(
       `http://localhost:5000/restaurant/restaurant/${restaurantId}`,
@@ -45,9 +31,18 @@ export const createOrder = async (req, res) => {
       }
     );
 
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Missing or invalid token",
+      });
+    }
+    const token = authHeader.split(" ")[1];
+
     console.log("Fetching menu data...");
     const menuResponse = await axios.get(
-      `http://localhost:5000/restaurant/menu-menuId/${menuId}`,
+      `http://localhost:5000/restaurant/menu-by-Id/${menuId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,7 +55,7 @@ export const createOrder = async (req, res) => {
     console.log("Inserting order into database...");
     const result = await pool.query(
       "INSERT INTO orders (user_id, menu_id, restaurant_id, total_price) VALUES ($1, $2, $3, $4) RETURNING *",
-      [userId, menuId, restaurantResponse.data.restaurant.restaurant_id, totalPrice]
+      [userId, menuId, restaurantResponse.data.restaurant.restaurant_id, quantity]
     );
 
     res.status(201).json({
@@ -71,7 +66,6 @@ export const createOrder = async (req, res) => {
   } catch (error) {
     console.error("❌ Internal Server Error:", error.message);
 
-    // Tangani error dari API eksternal
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
