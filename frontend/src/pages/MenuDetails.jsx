@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import {
+  MinusCircle,
+  PlusCircle,
+  ShoppingCart,
+  CreditCard,
+  RotateCcw,
+} from "lucide-react";
 
 const MenuDetails = () => {
   const { menuId } = useParams();
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     console.log("🔍 Received menuId:", menuId);
@@ -41,6 +49,24 @@ const MenuDetails = () => {
 
     fetchMenuDetails();
   }, [menuId]);
+
+  const handleQuantityChange = (change) => {
+    setQuantity((prev) => Math.max(1, prev + change));
+  };
+
+  const handleAddToCart = () => {
+    // Implement your cart logic here
+    console.log(`Adding ${quantity} ${menu.menu_name} to cart`);
+  };
+
+  const handleOrderNow = () => {
+    // Implement your immediate order logic here
+    console.log(`Ordering ${quantity} ${menu.menu_name} now`);
+  };
+
+  const resetQuantity = () => {
+    setQuantity(1);
+  };
 
   if (loading)
     return (
@@ -82,7 +108,7 @@ const MenuDetails = () => {
           />
         </svg>
       </Link>
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4 mt-24">
         {menu.menu_name || "Unnamed Dish"}
       </h1>
       <img
@@ -99,9 +125,65 @@ const MenuDetails = () => {
       <p className="text-2xl font-bold text-yellow-700">
         Rp {menu.menu_price ? menu.menu_price.toLocaleString() : "N/A"}
       </p>
-      <p className="mt-3 text-gray-700 leading-relaxed">
+      <p className="mt-3 text-gray-700 leading-relaxed mb-6">
         {menu.menu_description || "No description available."}
       </p>
+
+      {/* Quantity Selector and Order Buttons */}
+      <div className="space-y-4">
+        {/* Centered Quantity Controls */}
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg">
+            <button
+              onClick={() => handleQuantityChange(-1)}
+              className="text-yellow-600 hover:text-yellow-700 transition-colors"
+            >
+              <MinusCircle className="w-6 h-6" />
+            </button>
+            <span className="text-xl font-semibold min-w-[3ch] text-center">
+              {quantity}
+            </span>
+            <button
+              onClick={() => handleQuantityChange(1)}
+              className="text-yellow-600 hover:text-yellow-700 transition-colors"
+            >
+              <PlusCircle className="w-6 h-6" />
+            </button>
+          </div>
+
+          <button
+            onClick={resetQuantity}
+            className="text-gray-500 hover:text-yellow-600 transition-colors flex items-center gap-2 text-sm"
+            title="Reset quantity to 1"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset quantity
+          </button>
+        </div>
+
+        {/* Order Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mt-6">
+          <button
+            onClick={handleAddToCart}
+            className="flex-1 bg-white border-2 border-yellow-500 text-yellow-500 px-6 py-3 rounded-lg font-semibold 
+                     flex items-center justify-center gap-2 hover:bg-yellow-50
+                     transition-colors duration-200 ease-in-out"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            Add to Cart
+          </button>
+
+          <button
+            onClick={handleOrderNow}
+            className="flex-1 bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold 
+                     flex items-center justify-center gap-2 hover:bg-yellow-600
+                     transition-colors duration-200 ease-in-out"
+          >
+            <CreditCard className="w-5 h-5" />
+            Order Now - Rp {(menu.menu_price * quantity).toLocaleString()}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
