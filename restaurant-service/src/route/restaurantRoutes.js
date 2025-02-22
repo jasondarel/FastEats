@@ -26,20 +26,22 @@ import {
     getRestaurantByOwnerIdController,
     getRestaurantByRestaurantIdController,
     updateRestaurantController,
-    deleteRestaurantController
+    deleteRestaurantController,
+    updateOpenRestaurantController
 } from '../controller/restaurantControllers.js';
 import { fileURLToPath } from 'url';
 
-  router.get("/", (req, res) => {
-      res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
+    router.get("/", (req, res) => {
+        res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
     });
 
-  router.post("/restaurant", authMiddleware,  createRestaurantController);
-  router.put("/restaurant", authMiddleware, upload.single("restaurantImage"), updateRestaurantController)
-  router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
-  router.get("/restaurants", authMiddleware, getRestaurantsController);
-  router.get("/restaurant", authMiddleware, getRestaurantController)
-  router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantByRestaurantIdController)
-  router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
+    router.post("/restaurant", authMiddleware,  createRestaurantController);
+    router.put("/restaurant", authMiddleware, upload.single("restaurantImage"), updateRestaurantController)
+    router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
+    router.get("/restaurants", authMiddleware, getRestaurantsController);
+    router.get("/restaurant", authMiddleware, getRestaurantController)
+    router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantByRestaurantIdController)
+    router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
+    router.patch("/is-open", authMiddleware, updateOpenRestaurantController)
 
 export {router as restaurantRoutes};

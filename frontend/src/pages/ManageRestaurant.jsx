@@ -216,7 +216,7 @@ const ManageRestaurant = () => {
         const newStatus = !isOpen;
 
         const response = await axios.patch(
-          "http://localhost:5000/restaurant/status",
+          "http://localhost:5000/restaurant/is-open",
           { isOpen: newStatus },
           {
             headers: {

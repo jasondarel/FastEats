@@ -2,7 +2,8 @@ import {
     createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService, getRestaurantService, 
     getRestaurantByRestaurantIdService,
     getRestaurantsService,
-    updateRestaurantService
+    updateRestaurantService,
+    updateOpenRestaurantService
 } from "../service/restaurantService.js";
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
@@ -263,6 +264,60 @@ const getRestaurantController = async (req, res) => {
     }
 };
 
+const updateOpenRestaurantController = async (req, res) => {
+    try {
+        const {userId, role} = req.user;
+        const isOpen = req.body.isOpen;
+
+        if (role !== "seller") {
+            return res.status(403).json({
+                success: false,
+                message: "Only sellers can open a restaurant"
+            });
+        }
+
+        if(isOpen === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "isOpen field is required"
+            });
+        }
+
+        const restaurant = await getRestaurantByOwnerIdService(userId);
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Restaurant not found for this owner"
+            });
+        }
+
+        const restaurantId = restaurant.restaurant_id;
+
+        if(restaurant.owner_id !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to open this restaurant"
+            });
+        }
+
+        const updatedRestaurant = await updateOpenRestaurantService(restaurantId, isOpen);
+
+        return res.status(200).json({
+            success: true,
+            message: "Restaurant is now open",
+            dataRestaurant: updatedRestaurant
+        });
+    } catch (err) {
+        console.error("❌ Error in updateOpenRestaurantController:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}
+
 export {
     createRestaurantController,
     getRestaurantsController,
@@ -270,5 +325,6 @@ export {
     getRestaurantByRestaurantIdController,
     getRestaurantController,
     updateRestaurantController,
-    deleteRestaurantController
+    deleteRestaurantController,
+    updateOpenRestaurantController
 };
