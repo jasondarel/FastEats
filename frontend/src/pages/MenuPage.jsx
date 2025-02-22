@@ -18,7 +18,7 @@ const MenuPage = () => {
   const [filterCategory, setFilterCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [showUnavailable, setShowUnavailable] = useState(false); // New state for toggling unavailable items
+  const [showUnavailable, setShowUnavailable] = useState(false);
 
   const navigate = useNavigate();
 
@@ -316,9 +316,8 @@ const MenuPage = () => {
                   <div className="relative">
                     <img
                       src={
-                        item.menu_image
-                          ? item.menu_image
-                          : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
+                        item.menu_image ? `http://localhost:5000/restaurant/uploads/menu/${item.menu_image}` :
+                        "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                       }
                       alt={item.menu_name}
                       className={`w-full h-50 object-cover rounded-t-xl ${

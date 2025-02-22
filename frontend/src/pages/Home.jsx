@@ -193,7 +193,7 @@ const Home = () => {
                     {restaurant.restaurant_image ? (
                       <img
                         className="w-full h-full object-cover rounded-t-lg"
-                        src={`http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`}
+                        src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`}
                         alt={restaurant.restaurant_name}
                       />
                     ) : (

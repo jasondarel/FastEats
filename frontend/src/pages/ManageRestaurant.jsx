@@ -52,7 +52,7 @@ const ManageRestaurant = () => {
           setInitialIsOpen(restaurant.is_open || false);
 
           const imageUrl = restaurant.restaurant_image
-            ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
+            ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
         } else {
@@ -130,6 +130,7 @@ const ManageRestaurant = () => {
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("isOpen", isOpen);
+      console.log(imageFile)
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
       }
@@ -216,7 +217,7 @@ const ManageRestaurant = () => {
         const newStatus = !isOpen;
 
         const response = await axios.patch(
-          "http://localhost:5000/restaurant/status",
+          "http://localhost:5000/restaurant/is-open",
           { isOpen: newStatus },
           {
             headers: {

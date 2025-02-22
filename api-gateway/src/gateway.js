@@ -10,6 +10,7 @@ console.log("Loaded Environment Variables:");
 console.log(`PORT: ${process.env.PORT}`);
 console.log(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
 console.log(`USER_SERVICE_URL: ${process.env.USER_SERVICE_URL}`);
+console.log(`ORDER_SERVICE_URL: ${process.env.ORDER_SERVICE_URL}`);
 
 // Restaurant service proxy
 const restaurantProxy = createProxyMiddleware({
@@ -43,9 +44,26 @@ const userProxy = createProxyMiddleware({
   },
 });
 
+// Order service proxy
+const orderProxy = createProxyMiddleware({
+  target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
+  changeOrigin: true,
+  onProxyReq: (proxyReq, req) => {
+    console.log(`Order Service - Proxying request: ${req.method} ${req.originalUrl}`);
+  },
+  onProxyRes: (proxyRes, req) => {
+    console.log(`Order Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    console.error(`Order Service - Proxy error: ${err.message}`);
+    res.status(500).json({ error: "Order Service Proxy error", details: err.message });
+  },
+})
+
 // Apply proxy middleware for each service
 app.use('/restaurant', restaurantProxy);
 app.use('/user', userProxy);
+app.use('/order', orderProxy);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -65,5 +83,6 @@ app.listen(PORT, () => {
   console.log('Available routes:');
   console.log('- /restaurant/* -> Restaurant Service');
   console.log('- /user/* -> User Service');
+  console.log('- /order/* -> Order Service');
   console.log('- /health -> Gateway Health Check');
 });
