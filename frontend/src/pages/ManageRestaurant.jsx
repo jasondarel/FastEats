@@ -52,7 +52,7 @@ const ManageRestaurant = () => {
           setInitialIsOpen(restaurant.is_open || false);
 
           const imageUrl = restaurant.restaurant_image
-            ? `http://localhost:5000/restaurant/uploads/${restaurant.restaurant_image}`
+            ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
         } else {
@@ -130,6 +130,7 @@ const ManageRestaurant = () => {
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("isOpen", isOpen);
+      console.log(imageFile)
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
       }

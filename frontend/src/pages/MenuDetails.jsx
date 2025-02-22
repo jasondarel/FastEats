@@ -113,7 +113,7 @@ const MenuDetails = () => {
       </h1>
       <img
         src={
-          menu.menu_image ||
+          menu.menu_image ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}` :
           "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
         }
         alt={menu.menu_name || "Menu item"}

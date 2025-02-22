@@ -14,6 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT;
 createTables();
@@ -25,10 +27,12 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use("/uploads/menu", express.static(path.join(__dirname, "uploads", "menu")));
+app.use("/uploads/restaurant", express.static(path.join(__dirname, "uploads", "restaurant")));
+
+
 app.use("/", restaurantRoutes);
 app.use("/", menuRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.listen(PORT, () => {

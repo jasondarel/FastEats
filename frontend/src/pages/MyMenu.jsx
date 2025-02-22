@@ -1,15 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-
-//icon
 import foodIcon from "../assets/foods-icon.png";
 import drinkIcon from "../assets/drinks-icon.png";
 import dessertIcon from "../assets/dessert-icon.png";
 import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
-
-//sweet alert
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
@@ -158,7 +154,6 @@ const MyMenuPage = () => {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
-  // Get number of active filters
   const activeFilterCount = [
     filterCategory ? 1 : 0,
     minPrice || maxPrice ? 1 : 0,
@@ -200,7 +195,6 @@ const MyMenuPage = () => {
       setMenuCategory("");
       setPreviewImage(null);
       setMenuImage(null);
-      // alert("Menu created successfully");
       Swal.fire({
         title: "Sucess!",
         text: "Menu created successfully",
@@ -251,9 +245,7 @@ const MyMenuPage = () => {
           </div>
         )}
 
-        {/* Search and Filter Section */}
         <div className="mb-6 flex flex-wrap gap-4 items-center justify-center">
-          {/* Search Bar */}
           <div className="relative flex-grow max-w-lg">
             <input
               type="text"
@@ -347,7 +339,6 @@ const MyMenuPage = () => {
                     </select>
                   </div>
 
-                  {/* Price Range Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Price Range
@@ -388,7 +379,7 @@ const MyMenuPage = () => {
                 <img
                   src={
                     item.menu_image
-                      ? `http://localhost:5000/restaurant/uploads/${item.menu_image}`
+                      ? `http://localhost:5000/restaurant/uploads/menu/${item.menu_image}`
                       : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
                   }
                   alt={item.menu_name}
