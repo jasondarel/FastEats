@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 import axios from "axios";
 import { createOrderService } from "../service/orderService.js";
 
-export const createOrder = async (req, res) => {
+export const createOrderController = async (req, res) => {
   try {
     const userId = req.user.userId;
     const authHeader = req.headers.authorization;

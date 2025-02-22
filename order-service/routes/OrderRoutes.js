@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createOrder,
+  createOrderController,
   getOrder,
   getOrderById,
   updateOrder,
@@ -10,7 +10,7 @@ import authMiddleware from "../middleware/apiKeyAuth.js";
 
 const router = express.Router();
 
-router.post("/order", authMiddleware, createOrder);
+router.post("/order", authMiddleware, createOrderController);
 router.get("/orders", getOrder);
 router.get("/orders/:order_id", getOrderById);
 router.put("/orders/:order_id", updateOrder);
