@@ -148,6 +148,7 @@ const Home = () => {
                 "привет",
                 "こんにちは",
                 "안녕하세요",
+                "สวัสดีครับ",
               ]}
               mainClassName="flex items-end px-2 sm:px-2 md:px-3 text-yellow-300 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg"
               staggerFrom={"last"}
