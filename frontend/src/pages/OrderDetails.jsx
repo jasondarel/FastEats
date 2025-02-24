@@ -9,6 +9,25 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const token  = localStorage.getItem("token");
+
+  const handleCancel = async(orderId) => {
+    try {
+      const response = await axios.patch(`http://localhost:5000/order/cancel-order/${orderId}`, {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      alert(response.data.message);
+      navigate("/order-history");
+    } catch(err) {
+      console.error("Error cancelling order:", err);
+      setError(err.message || "Failed to cancel order");
+    }
+  }
 
   useEffect(() => {
     console.log("Fetching details for order ID:", orderId);
@@ -250,7 +269,7 @@ const OrderDetails = () => {
             </div>
 
             <div className="mt-8 flex justify-between gap-4">
-              <button className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition">
+              <button className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition" onClick={() => handleCancel(order.order_id)}>
                 Cancel
               </button>
               <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
