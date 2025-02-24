@@ -24,8 +24,17 @@ const OrderCompletedPage = () => {
             Your order has been delivered successfully. Enjoy your meal!
           </p>
 
-          <div className="text-sm text-yellow-600">
+          <div className="text-sm text-yellow-600 mb-4">
             Thank you for choosing our service
+          </div>
+
+          {/* Progress Bar */}
+          <div className="flex mb-6 h-2 rounded-full bg-gray-200 overflow-hidden">
+            <div className="w-1/3 bg-yellow-400" />
+            <div className="w-[2px] bg-white" />
+            <div className="w-1/3 bg-yellow-400" />
+            <div className="w-[2px] bg-white" />
+            <div className="w-1/3 bg-yellow-400" />
           </div>
         </div>
       </div>

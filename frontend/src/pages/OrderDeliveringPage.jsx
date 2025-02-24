@@ -25,8 +25,17 @@ const OrderDeliveringPage = () => {
             your doorstep!
           </p>
 
-          <div className="text-sm text-yellow-600">
+          <div className="text-sm text-yellow-600 mb-4">
             Estimated delivery time: 15-20 minutes
+          </div>
+
+          {/* Progress Bar */}
+          <div className="flex mb-6 h-2 rounded-full bg-gray-200 overflow-hidden">
+            <div className="w-1/3 bg-yellow-400" />
+            <div className="w-[2px] bg-white" />
+            <div className="w-1/3 bg-yellow-400" />
+            <div className="w-[2px] bg-white" />
+            <div className="w-1/3 bg-gray-200" />
           </div>
         </div>
       </div>
