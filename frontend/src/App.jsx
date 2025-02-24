@@ -14,6 +14,9 @@ import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import OrderHistory from "./pages/OrderHistory";
+import OrderPreparingPage from "./pages/OrderPreparingPage";
+import OrderDeliveringPage from "./pages/OrderDeliveringPage";
+import OrderCompletedPage from "./pages/OrderCompletedPage";
 
 function App() {
   return (
@@ -119,6 +122,33 @@ function App() {
             element={
               <ProtectedRoute>
                 <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-status/preparing-order"
+            element={
+              <ProtectedRoute>
+                <OrderPreparingPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-status/delivering-order"
+            element={
+              <ProtectedRoute>
+                <OrderDeliveringPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-status/completed-order"
+            element={
+              <ProtectedRoute>
+                <OrderCompletedPage />
               </ProtectedRoute>
             }
           />
