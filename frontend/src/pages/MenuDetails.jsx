@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   MinusCircle,
   PlusCircle,
@@ -7,6 +7,7 @@ import {
   CreditCard,
   RotateCcw,
 } from "lucide-react";
+import axios from "axios";
 
 const MenuDetails = () => {
   const { menuId } = useParams();
@@ -14,6 +15,7 @@ const MenuDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("🔍 Received menuId:", menuId);
@@ -59,9 +61,52 @@ const MenuDetails = () => {
     console.log(`Adding ${quantity} ${menu.menu_name} to cart`);
   };
 
-  const handleOrderNow = () => {
-    // Implement your immediate order logic here
-    console.log(`Ordering ${quantity} ${menu.menu_name} now`);
+  const handleOrderNow = async() => {
+    const token = localStorage.getItem("token");
+
+    console.log(menuId, quantity)
+    try {
+      const response = await axios.post("http://localhost:5000/order/order", 
+        {
+          menuId: menuId,
+          quantity: quantity
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      alert("Order placed successfully!");
+      window.location.reload();
+    } catch(error) {
+      if (error.response) {
+        const { status, data } = error.response;
+        console.error("Error response:", data);
+        if (status === 400) {
+          if (data.errors) {
+            const validationErrors = Object.values(data.errors)
+              .map((msg) => `• ${msg}`)
+              .join("\n");
+            alert(`Validation Error:\n${validationErrors}`);
+          } else if (data.message) {
+            alert(`Error: ${data.message}`);
+          } else {
+            alert("Invalid request. Please check your input.");
+          }
+        } else if (status === 401) {
+          alert("Unauthorized! Please log in again.");
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          alert(
+            data.message ||
+              "An unexpected error occurred. Please try again later."
+          );
+        }
+      }
+    }
   };
 
   const resetQuantity = () => {
