@@ -264,7 +264,7 @@ const MyMenuDetails = () => {
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5 relative">
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-16">
+        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl mt-16">
           <button
             onClick={() => navigate("/my-menu")}
             className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
