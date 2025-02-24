@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Carousel } from "flowbite-react";
-import imageDummy from "../assets/cart1.png";
+import bannerMain from "../assets/bannerMain.png";
+import banner1 from "../assets/banner1.png";
+import banner2 from "../assets/banner2.png";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -123,28 +125,15 @@ const Home = () => {
     <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
-        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96">
+        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96 xl:px-50">
           <Carousel>
             <img
-              src="https://flowbite.com/docs/images/carousel/carousel-1.svg"
+              className="scale-x-100 scale-y-[0.7] bg-amber-900"
+              src={bannerMain}
               alt="..."
             />
-            <img
-              src="https://flowbite.com/docs/images/carousel/carousel-2.svg"
-              alt="..."
-            />
-            <img
-              src="https://flowbite.com/docs/images/carousel/carousel-3.svg"
-              alt="..."
-            />
-            <img
-              src="https://flowbite.com/docs/images/carousel/carousel-4.svg"
-              alt="..."
-            />
-            <img
-              src="https://flowbite.com/docs/images/carousel/carousel-5.svg"
-              alt="..."
-            />
+            <img className="scale-x-100 scale-y-65" src={banner1} alt="..." />
+            <img className="scale-y-[0.65]" src={banner2} alt="..." />
           </Carousel>
         </div>
 
