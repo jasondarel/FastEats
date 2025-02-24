@@ -3,8 +3,23 @@ import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import image from "../assets/orderHistory-dummy.jpg";
 
-// Extract OrderItem into a separate component to reduce repetition
 const OrderItem = ({ order }) => {
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const jakartaDate = date.toLocaleString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
+    return jakartaDate;
+  };
+
   return (
     <div className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300">
       <div className="flex justify-between gap-x-2 md:gap-x-6 lg:gap-x-60">
@@ -27,7 +42,7 @@ const OrderItem = ({ order }) => {
           </div>
           <div>
             <h4 className="font-bold leading-3 text-sm">Order</h4>
-            <p className="text-sm text-slate-700">{order.created_at || "13 Nov 2025"}</p>
+            <p className="text-sm text-slate-700">{formatDate(order.created_at) || "13 Nov 2025"}</p>
           </div>
         </div>
         <div className="flex items-center justify-center">

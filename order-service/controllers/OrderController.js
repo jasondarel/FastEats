@@ -1,7 +1,7 @@
 import { getMenuByRestaurantIdService } from "../../restaurant-service/src/service/menuService.js";
 import pool from "../config/db.js";
 import axios from "axios";
-import { createOrderService, getUserOrdersService } from "../service/orderService.js";
+import { cancelOrderService, createOrderService, getOrderByIdService, getUserOrdersService } from "../service/orderService.js";
 
 export const createOrderController = async (req, res) => {
   try {
@@ -134,27 +134,69 @@ export const getOrdersController = async (req, res) => {
   }
 };
 
+export const cancelOrderController = async(req, res) => {
+  const {userId} = req.user;
+  const order_id = req.params.order_id;
 
-//Get Order by ID
-export const getOrderById = async (req, res) => {
+  const result = await cancelOrderService(order_id);
+  if(!result) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found"
+    });
+  }
+
+  const order = await getOrderByIdService(order_id);
+  if(order.user_id !== userId) {
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to cancel this order"
+    });
+  }
+
+  if(order.status !== "Waiting") {
+    return res.status(400).json({
+      success: false,
+      message: "Order cannot be cancelled"
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Order cancelled successfully"
+  });
+}
+
+export const getOrderByIdController = async (req, res) => {
+  const { userId } = req.user;
+  const { order_id } = req.params;
   try {
-    const { order_id } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM orders WHERE  order_id = $1",
-      [order_id]
-    );
+    const result = await getOrderByIdService(order_id);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Order Not Found" });
+    if (!result) {
+      return res.status(404).json({ 
+        error: "Order Not Found" 
+      });
     }
 
-    res.json(result.rows[0]);
+    if(result.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view this order"
+      })
+    }
+
+    return res.status(200).json({
+        success: true,
+        order
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message 
+    });
   }
 };
 
-//Update Order
 export const updateOrder = async (req, res) => {
   try {
     const { order_id } = req.params;

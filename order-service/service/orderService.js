@@ -16,7 +16,25 @@ const getUserOrdersService = async(userId) => {
     return result.rows;
 }
 
+const getOrderByIdService = async(orderId) => {
+    const result = await pool.query(
+        "SELECT * FROM orders WHERE order_id = $1",
+        [orderId]
+    );
+    return result.rows[0];
+}
+
+const cancelOrderService = async(orderId) => {
+    const result = await pool.query(
+        "update orders set status = 'Cancelled' where order_id = $1 RETURNING *",
+        [orderId]
+    )
+    return result.rows[0];
+}
+
 export {
     createOrderService,
-    getUserOrdersService
+    getUserOrdersService,
+    getOrderByIdService,
+    cancelOrderService
 }
