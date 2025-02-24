@@ -8,6 +8,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const MenuDetails = () => {
   const { menuId } = useParams();
@@ -16,6 +18,7 @@ const MenuDetails = () => {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     console.log("🔍 Received menuId:", menuId);
@@ -61,26 +64,37 @@ const MenuDetails = () => {
     console.log(`Adding ${quantity} ${menu.menu_name} to cart`);
   };
 
-  const handleOrderNow = async() => {
+  const handleOrderNow = async () => {
     const token = localStorage.getItem("token");
 
-    console.log(menuId, quantity)
+    console.log(menuId, quantity);
     try {
-      const response = await axios.post("http://localhost:5000/order/order", 
+      const response = await axios.post(
+        "http://localhost:5000/order/order",
         {
           menuId: menuId,
-          quantity: quantity
+          quantity: quantity,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
-      )
-      alert("Order placed successfully!");
-      window.location.reload();
-    } catch(error) {
+      );
+      // alert("Order placed successfully!");
+      Swal.fire({
+        title: "Success!",
+        text: "Order placed successfully!",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });
+    } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
         console.error("Error response:", data);
@@ -133,7 +147,7 @@ const MenuDetails = () => {
     );
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-xl">
+    <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg shadow-slate-300 inset-shadow-lg inset-shadow-slate-300 rounded-xl">
       <Link
         to={`/restaurant/${menu.restaurant_id}/menu`}
         className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
@@ -158,8 +172,9 @@ const MenuDetails = () => {
       </h1>
       <img
         src={
-          menu.menu_image ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}` :
-          "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
+          menu.menu_image
+            ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`
+            : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
         }
         alt={menu.menu_name || "Menu item"}
         className="w-full h-64 object-cover rounded-lg shadow-md mb-4"
