@@ -248,6 +248,15 @@ const OrderDetails = () => {
                 </span>
               </div>
             </div>
+
+            <div className="mt-8 flex justify-between gap-4">
+              <button className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition">
+                Cancel
+              </button>
+              <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+                Pay
+              </button>
+            </div>
           </div>
         )}
       </div>
