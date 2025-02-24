@@ -17,6 +17,7 @@ import OrderHistory from "./pages/OrderHistory";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
 import OrderCompletedPage from "./pages/OrderCompletedPage";
+import Payment from "./pages/Payment";
 
 function App() {
   return (
@@ -149,6 +150,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <OrderCompletedPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute>
+                <Payment />
               </ProtectedRoute>
             }
           />
