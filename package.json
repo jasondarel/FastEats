@@ -3,6 +3,7 @@
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "flowbite-react": "^0.10.2",
     "sweetalert2": "^11.17.2",
     "sweetalert2-react-content": "^5.1.0"
   }

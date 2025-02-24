@@ -14,6 +14,7 @@ import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import OrderHistory from "./pages/OrderHistory";
+import "flowbite";
 
 function App() {
   return (

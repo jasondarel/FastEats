@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Carousel } from "flowbite-react";
+import imageDummy from "../assets/cart1.png";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -121,15 +123,31 @@ const Home = () => {
     <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
-        <div className="flex center justify-center mb-10">
-          <div className="w-80 h-40">
-            <DotLottieReact
-              src="https://lottie.host/6d42c3d8-1480-4f75-81d8-fe093ce5650c/KwFjMHFmhK.lottie"
-              loop
-              autoplay
+        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96">
+          <Carousel>
+            <img
+              src="https://flowbite.com/docs/images/carousel/carousel-1.svg"
+              alt="..."
             />
-          </div>
+            <img
+              src="https://flowbite.com/docs/images/carousel/carousel-2.svg"
+              alt="..."
+            />
+            <img
+              src="https://flowbite.com/docs/images/carousel/carousel-3.svg"
+              alt="..."
+            />
+            <img
+              src="https://flowbite.com/docs/images/carousel/carousel-4.svg"
+              alt="..."
+            />
+            <img
+              src="https://flowbite.com/docs/images/carousel/carousel-5.svg"
+              alt="..."
+            />
+          </Carousel>
         </div>
+
         <h1 className="text-3xl font-bold text-yellow-700 mb-4">
           Welcome, {username}! 🍽️
         </h1>
