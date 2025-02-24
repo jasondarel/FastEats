@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Carousel } from "flowbite-react";
 import bannerMain from "../assets/bannerMain.png";
 import banner1 from "../assets/banner1.png";
@@ -137,7 +136,7 @@ const Home = () => {
           </Carousel>
         </div>
 
-        <h1 className="text-3xl font-bold text-yellow-700 mb-4">
+        <h1 className="text-3xl font-bold text-yellow-700 mb-4 mt-10">
           Welcome, {username}! 🍽️
         </h1>
 

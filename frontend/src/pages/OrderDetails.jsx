@@ -166,10 +166,6 @@ const OrderDetails = () => {
               </h2>
               <div className="space-y-4 bg-gradient-to-r from-amber-50 to-white p-6 rounded-lg">
                 <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                  <span className="text-amber-700 font-medium">Order ID</span>
-                  <span className="text-amber-900">{order.order_id}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-amber-100">
                   <span className="text-amber-700 font-medium">Menu Name</span>
                   <span className="text-amber-900">{order.menu.menu_name}</span>
                 </div>
