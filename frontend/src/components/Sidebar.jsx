@@ -1,7 +1,5 @@
+import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-
-// alert
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
@@ -9,9 +7,15 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Cek awal ukuran layar
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const MySwal = withReactContent(Swal);
+  const buttonRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const [initialPosition, setInitialPosition] = useState({
+    x: window.innerWidth - 70,
+    y: 100,
+  });
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -21,29 +25,25 @@ const Sidebar = ({ isTaskbarOpen }) => {
     }
   }, [isSidebarOpen, isMobile, isTaskbarOpen]);
 
-  // Effect untuk update ukuran layar & sembunyikan hamburger saat taskbar aktif
   useEffect(() => {
     const updateSidebarState = () => {
       const newIsMobile = window.innerWidth < 768;
       setIsMobile(newIsMobile);
 
       if (!newIsMobile) {
-        // Jika desktop, sidebar tetap terbuka & hamburger disembunyikan
         setIsSidebarOpen(true);
         setShowHamburger(false);
       } else {
-        // Jika mobile, atur sesuai dengan taskbar
-        if (isTaskbarOpen) {
-          setShowHamburger(false); // Jangan tampilkan hamburger saat taskbar aktif
-        } else {
-          setShowHamburger(true);
-          setIsSidebarOpen(false);
-        }
+        setShowHamburger(!isTaskbarOpen);
+        setIsSidebarOpen(false);
+        setInitialPosition((prev) => ({
+          x: window.innerWidth - 70,
+          y: prev.y,
+        }));
       }
     };
 
-    updateSidebarState(); // Panggil sekali saat komponen dimuat
-
+    updateSidebarState();
     window.addEventListener("resize", updateSidebarState);
     return () => window.removeEventListener("resize", updateSidebarState);
   }, [isTaskbarOpen]);
@@ -52,7 +52,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
     localStorage.removeItem("token");
     MySwal.fire({
       title: "Logged Out",
-      text: "Sucessfully Logged Out!",
+      text: "Successfully Logged Out!",
       icon: "info",
       confirmButtonText: "Ok",
       confirmButtonColor: "#efb100",
@@ -64,50 +64,101 @@ const Sidebar = ({ isTaskbarOpen }) => {
   };
 
   const toggleSidebar = () => {
-    if (isMobile) {
+    if (!isDraggingRef.current && isMobile) {
       setIsSidebarOpen(!isSidebarOpen);
-      setShowHamburger(isSidebarOpen);
+      setShowHamburger(!isSidebarOpen);
     }
+  };
+
+  const handleMouseDown = (e) => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    e.preventDefault();
+    isDraggingRef.current = true;
+
+    let startX = e.clientX - button.offsetLeft;
+    let startY = e.clientY - button.offsetTop;
+
+    function onMouseMove(e) {
+      if (!isDraggingRef.current) return;
+
+      let left = e.clientX - startX;
+      let top = e.clientY - startY;
+
+      // Constrain to viewport
+      left = Math.max(20, Math.min(window.innerWidth - 70, left));
+      top = Math.max(20, Math.min(window.innerHeight - 70, top));
+
+      button.style.left = `${left}px`;
+      button.style.top = `${top}px`;
+    }
+
+    function onMouseUp() {
+      if (!isDraggingRef.current || !button) return;
+
+      isDraggingRef.current = false;
+
+      // Get current position and snap to nearest edge
+      const currentX = button.offsetLeft;
+      const snappedX =
+        currentX < window.innerWidth / 2 ? 20 : window.innerWidth - 70;
+
+      button.style.left = `${snappedX}px`;
+      setInitialPosition({
+        x: snappedX,
+        y: button.offsetTop,
+      });
+
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   };
 
   return (
     <div className="z-10">
-      {/* Tombol Hamburger (Hanya di Mobile & Taskbar tidak aktif) */}
       {showHamburger && (
         <button
+          ref={buttonRef}
+          onMouseDown={handleMouseDown}
           onClick={toggleSidebar}
-          className="fixed left-5 z-40 text-yellow-500 text-3xl p-2 rounded-full shadow-lg bg-white border transition-all duration-300 cursor-pointer top-16"
+          className="fixed z-40 text-yellow-500 text-3xl p-2 rounded-full shadow-lg bg-white border cursor-grab active:cursor-grabbing"
+          style={{
+            left: `${initialPosition.x}px`,
+            top: `${initialPosition.y}px`,
+            touchAction: "none",
+          }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            stroke-width="1.5"
+            strokeWidth="1.5"
             stroke="currentColor"
-            class="size-6"
+            className="size-6"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
             />
           </svg>
         </button>
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg bg-white transform transition-transform duration-300 ease-in-out z-index-10 ${
+        className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg bg-white transform transition-transform duration-300 ease-in-out z-10 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
         style={{
           backgroundImage: "url('/foodbg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          zIndex: "10",
         }}
       >
-        {/* Tombol Close (Hanya di Mobile) */}
         {isSidebarOpen && isMobile && (
           <button
             onClick={toggleSidebar}
@@ -117,10 +168,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
           </button>
         )}
 
-        {/* Overlay Background */}
         <div className="absolute top-0 left-0 w-full h-full bg-black opacity-70 -z-10"></div>
 
-        {/* Sidebar Content */}
         <div className="relative z-10 flex flex-col flex-grow">
           <img
             src="/logo_FastEats.png"
@@ -128,7 +177,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
             className="w-32 mx-auto mb-4"
           />
 
-          {/* Navigation */}
           <nav className="flex-grow">
             <ul className="space-y-2">
               <li>
@@ -165,7 +213,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </li>
             </ul>
           </nav>
-          {/* Logout Button */}
+
           <button
             onClick={handleLogout}
             className="w-full p-2 text-center rounded bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer transition"
