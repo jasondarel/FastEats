@@ -4,7 +4,7 @@ const createTables = async () => {
   const client = await pool.connect();
   try {
     console.log("Creating tables...");
-
+    
     await client.query(`
       CREATE TABLE IF NOT EXISTS restaurants (
         restaurant_id SERIAL PRIMARY KEY,

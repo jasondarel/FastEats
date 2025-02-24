@@ -70,14 +70,14 @@ const getMenuService = async (menuId) => {};
 const updateMenuService = async (menuReq, menuId) => {
   const result = await pool.query(
     `UPDATE menu_item 
-         SET menu_name = $1, 
-             menu_description = $2, 
-             menu_price = $3, 
-             menu_category = $4, 
-             menu_image = $5,
-             updated_at = NOW()
-         WHERE menu_id = $6 
-         RETURNING *`,
+    SET menu_name = $1, 
+        menu_description = $2, 
+        menu_price = $3, 
+        menu_category = $4, 
+        menu_image = $5,
+        updated_at = NOW()
+    WHERE menu_id = $6 
+    RETURNING *`,
     [
       menuReq.menuName,
       menuReq.menuDescription,
@@ -106,8 +106,6 @@ const isMenuAvailable = async (menuName, restaurantId) => {
   );
   return result.rowCount > 0;
 };
-
-
 
 export {
   createMenuService,

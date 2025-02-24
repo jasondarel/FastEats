@@ -1,36 +1,11 @@
+import { getMenuByRestaurantIdService } from "../../restaurant-service/src/service/menuService.js";
 import pool from "../config/db.js";
 import axios from "axios";
+import { createOrderService } from "../service/orderService.js";
 
-export const createOrder = async (req, res) => {
+export const createOrderController = async (req, res) => {
   try {
-    const userId = req.user?.userId;
-    const { menuId, quantity } = req.body;
-
-    if (!menuId || !quantity) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing fields",
-      });
-    }
-
-    if (isNaN(menuId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid restaurantId or menuId",
-      });
-    }
-
-    console.log("Fetching restaurant data...");
-    const restaurantResponse = await axios.get(
-      `http://localhost:5000/restaurant/restaurant/${restaurantId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const userId = req.user.userId;
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
@@ -40,9 +15,25 @@ export const createOrder = async (req, res) => {
     }
     const token = authHeader.split(" ")[1];
 
-    console.log("Fetching menu data...");
+    const orderReq = req.body;
+    orderReq.userId = userId;
+
+    if (!orderReq.menuId || !orderReq.quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields",
+      });
+    }
+
+    if (isNaN(orderReq.menuId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid restaurantId or menuId",
+      });
+    }
+
     const menuResponse = await axios.get(
-      `http://localhost:5000/restaurant/menu-by-Id/${menuId}`,
+      `http://localhost:5000/restaurant/menu-by-Id/${orderReq.menuId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,17 +42,40 @@ export const createOrder = async (req, res) => {
       }
     );
 
-    // Simpan order ke database
-    console.log("Inserting order into database...");
-    const result = await pool.query(
-      "INSERT INTO orders (user_id, menu_id, restaurant_id, total_price) VALUES ($1, $2, $3, $4) RETURNING *",
-      [userId, menuId, restaurantResponse.data.restaurant.restaurant_id, quantity]
+    console.log("Fetching restaurant data...");
+    const restaurantResponse = await axios.get(
+      `http://localhost:5000/restaurant/restaurant/${menuResponse.data.menu.restaurant_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
+    orderReq.restaurantId = restaurantResponse.data.restaurant.restaurant_id;
+
+    if(restaurantResponse.data.restaurant.owner_id === userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot order from your own restaurant",
+      });
+    }
+    console.log("Fetching menu data...");
+    
+
+    console.log("Inserting order into database...");
+    const response = await createOrderService(orderReq);
+    if (!response) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create order",
+      });
+    }
 
     res.status(201).json({
       success: true,
-      order: result.rows[0],
       message: "Order created successfully",
+      order: response,
     });
   } catch (error) {
     console.error("❌ Internal Server Error:", error.message);
@@ -70,7 +84,6 @@ export const createOrder = async (req, res) => {
       return res.status(error.response.status).json(error.response.data);
     }
 
-    // Tangani error umum
     res.status(500).json({
       success: false,
       message: "Internal server error",

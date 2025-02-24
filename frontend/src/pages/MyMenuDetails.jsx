@@ -357,7 +357,7 @@ const MyMenuDetails = () => {
           <img
             src={
               menu.menu_image
-                ? `http://localhost:5000/restaurant/uploads/${menu.menu_image}`
+                ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`
                 : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
             }
             alt={menu.menu_name || "Menu item"}
@@ -447,7 +447,7 @@ const MyMenuDetails = () => {
                     />
                   ) : menu.menu_image ? (
                     <img
-                      src={`http://localhost:5000/restaurant/uploads/${menu.menu_image}`}
+                      src={`http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`}
                       alt={menu.menu_name}
                       className="max-h-64 mx-auto mb-2 object-contain"
                     />

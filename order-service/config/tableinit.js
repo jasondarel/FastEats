@@ -12,8 +12,9 @@ const createTable = async () => {
             menu_id INT,
             restaurant_id INT,
             item_quantity INT DEFAULT 1,
-            status TEXT DEFAULT 'pending', -- 'pending', 'preparing', 'delivered',
-            created_at TIMESTAMP DEFAULT NOW()
+            status TEXT DEFAULT 'pending', -- 'Pending', 'Preparing', 'Completed',
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
         );
     `);
 

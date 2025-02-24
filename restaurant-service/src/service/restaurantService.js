@@ -142,7 +142,19 @@ const getRestaurantService = async (Id) => {
     }
 };
 
+const updateOpenRestaurantService = async (restaurantId, isIopen) => {
+    try {
+        const result = await pool.query(
+            `UPDATE restaurants SET is_open = $1 WHERE restaurant_id = $2 RETURNING *`,
+            [isIopen, restaurantId]
+        );
 
+        return result.rows[0];
+    } catch (error) {
+        console.error("❌ Error updating restaurant:", error);
+        throw error;
+    }
+}
 
 export {
     isRestaurantAvailableByName,
@@ -155,5 +167,6 @@ export {
     isOwnerAvailable,
     createRestaurantService,
     updateRestaurantService,
-    deleteRestaurantService
+    deleteRestaurantService,
+    updateOpenRestaurantService
 };
