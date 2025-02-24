@@ -14,6 +14,7 @@ import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import OrderHistory from "./pages/OrderHistory";
+import OrderDetails from "./pages/OrderDetails";
 import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
@@ -127,6 +128,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/order/:orderId" element={<OrderDetails />} />
 
           <Route
             path="/order-status/preparing-order"

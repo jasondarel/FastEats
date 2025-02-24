@@ -1,12 +1,16 @@
+// OrderHistory.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import image from "../assets/orderHistory-dummy.jpg";
 
-// Extract OrderItem into a separate component to reduce repetition
-const OrderItem = ({ order }) => {
+const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   return (
-    <div className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300">
+    <div
+      className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300 cursor-pointer"
+      onClick={() => onOrderClick(order.id)}
+    >
       <div className="flex justify-between gap-x-2 md:gap-x-6 lg:gap-x-60">
         <div className="flex">
           <div className="flex items-center mr-3">
@@ -27,7 +31,9 @@ const OrderItem = ({ order }) => {
           </div>
           <div>
             <h4 className="font-bold leading-3 text-sm">Order</h4>
-            <p className="text-sm text-slate-700">{order.created_at || "13 Nov 2025"}</p>
+            <p className="text-sm text-slate-700">
+              {order.created_at || "13 Nov 2025"}
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-center">
@@ -39,13 +45,17 @@ const OrderItem = ({ order }) => {
       <hr className="my-3 border-gray-300" />
       <div className="flex">
         <img
-          src={order.menu.menu.menu_image ? `http://localhost:5000/restaurant/uploads/menu/${order.menu.menu.menu_image}` : image}
+          src={
+            order.menu?.menu?.menu_image
+              ? `http://localhost:5000/restaurant/uploads/menu/${order.menu.menu.menu_image}`
+              : image
+          }
           alt="product"
           className="w-16 h-16 md:w-20 md:h-20 object-contain"
         />
         <div className="pt-3 pl-3">
           <h2 className="font-bold truncate max-w-[200px] md:max-w-80 overflow-hidden text-ellipsis whitespace-nowrap text-base md:text-lg">
-            {order.menu.menu.menu_name || "Minuman Yang Sangat Mantap banget"}
+            {order.menu?.menu?.menu_name || "Minuman Yang Sangat Mantap banget"}
           </h2>
           <p className="text-slate-600">{order.item_quantity || 1} Item</p>
         </div>
@@ -56,8 +66,11 @@ const OrderItem = ({ order }) => {
           <p className="font-bold">Rp {order.total_price || "89.99"}</p>
         </div>
         <div className="flex items-center justify-center">
-          <button 
-            onClick={() => order.onOrderAgain?.(order)}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOrderAgain(order);
+            }}
             className="bg-green-700 px-3 py-0.5 rounded-md text-white font-semibold text-sm hover:bg-green-800 transition-colors"
           >
             Order again
@@ -69,6 +82,7 @@ const OrderItem = ({ order }) => {
 };
 
 const OrderHistory = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,8 +93,8 @@ const OrderHistory = () => {
       const response = await axios.get("http://localhost:5000/order/orders", {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       });
       setOrders(response.data.orders);
     } catch (error) {
@@ -95,8 +109,13 @@ const OrderHistory = () => {
     fetchOrderHistory();
   }, []);
 
+  const handleOrderClick = (orderId) => {
+    navigate(`/order/${orderId}`);
+  };
+
   const handleOrderAgain = async (order) => {
     console.log("Ordering again:", order);
+    // Add your order again logic here
   };
 
   return (
@@ -120,13 +139,16 @@ const OrderHistory = () => {
           {!loading && !error && orders.length === 0 && (
             <div className="text-center text-gray-500">No orders found</div>
           )}
-          {!loading && !error && orders.map((order) => (
-            <OrderItem 
-              key={order.id} 
-              order={order}
-              onOrderAgain={handleOrderAgain}
-            />
-          ))}
+          {!loading &&
+            !error &&
+            orders.map((order) => (
+              <OrderItem
+                key={order.id}
+                order={order}
+                onOrderClick={() => handleOrderClick(order.order_id)}
+                onOrderAgain={handleOrderAgain}
+              />
+            ))}
         </div>
       </div>
     </div>
