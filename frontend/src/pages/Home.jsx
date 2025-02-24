@@ -7,6 +7,8 @@ import bannerMain from "../assets/bannerMain.png";
 import banner1 from "../assets/banner1.png";
 import banner2 from "../assets/banner2.png";
 
+import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
+
 const Home = () => {
   const [username, setUsername] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
@@ -125,7 +127,7 @@ const Home = () => {
     <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
-        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96 xl:px-50 mb-10">
+        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96 xl:px-50">
           <Carousel>
             <img
               className="scale-x-100 scale-y-[0.7] bg-amber-900"
@@ -137,8 +139,29 @@ const Home = () => {
           </Carousel>
         </div>
 
-        <h1 className="text-3xl font-bold text-yellow-700 mb-4">
-          Welcome, {username}! 🍽️
+        <h1 className="flex-col flex items-center justify-center text-xl md:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
+          <div className="flex items-end bg-black justify-center min-w-30 md:min-w-50 xl:min-w-70 rounded-xl">
+            <RotatingText
+              texts={[
+                "Hello",
+                "¡Hola!",
+                "你好",
+                "привет",
+                "こんにちは",
+                "안녕하세요",
+              ]}
+              mainClassName="flex items-end px-2 sm:px-2 md:px-3 text-yellow-300 overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg"
+              staggerFrom={"last"}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-120%" }}
+              staggerDuration={0.025}
+              splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              rotationInterval={2000}
+            />
+          </div>
+          {username}!
         </h1>
 
         {error && (
@@ -147,7 +170,7 @@ const Home = () => {
           </div>
         )}
 
-        <div className="mb-6">
+        <div className="flex justify-center items-end mb-6">
           <p className="text-gray-800 text-lg font-medium">
             What would you like to eat today?
           </p>
