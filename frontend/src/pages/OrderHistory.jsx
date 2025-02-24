@@ -6,6 +6,21 @@ import Sidebar from "../components/Sidebar";
 import image from "../assets/orderHistory-dummy.jpg";
 
 const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const jakartaDate = date.toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    return jakartaDate;
+  };
+
   return (
     <div
       className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300 cursor-pointer"
@@ -33,6 +48,9 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
             <h4 className="font-bold leading-3 text-sm">Order</h4>
             <p className="text-sm text-slate-700">
               {order.created_at || "13 Nov 2025"}
+            </p>
+            <p className="text-sm text-slate-700">
+              {formatDate(order.created_at) || "13 Nov 2025"}
             </p>
           </div>
         </div>
