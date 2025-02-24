@@ -14,6 +14,7 @@ import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import OrderHistory from "./pages/OrderHistory";
+import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
 import OrderCompletedPage from "./pages/OrderCompletedPage";
