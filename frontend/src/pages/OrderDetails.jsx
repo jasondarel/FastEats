@@ -34,8 +34,9 @@ const OrderDetails = () => {
           }
         );
 
-        if (response.data) {
-          setOrder(response.data); // Set the data directly since it's the order object
+        console.log("Order data received:", response.data);
+        if (response.data.success && response.data.order) {
+          setOrder(response.data.order);
         } else {
           throw new Error("No order data received");
         }
@@ -49,6 +50,20 @@ const OrderDetails = () => {
 
     fetchOrderDetails();
   }, [orderId]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  };
 
   const handleBack = () => {
     navigate("/order-history");
@@ -81,6 +96,7 @@ const OrderDetails = () => {
       </div>
     );
   }
+
   return (
     <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen bg-amber-50">
       <Sidebar />
@@ -134,17 +150,13 @@ const OrderDetails = () => {
                 <div className="text-sm text-amber-700 font-medium">
                   Order Date
                 </div>
-                <div className="text-lg">
-                  {new Date(order.created_at).toLocaleString()}
-                </div>
+                <div className="text-lg">{formatDate(order.created_at)}</div>
               </div>
               <div className="border-l-4 border-amber-400 pl-4">
                 <div className="text-sm text-amber-700 font-medium">
                   Last Updated
                 </div>
-                <div className="text-lg">
-                  {new Date(order.updated_at).toLocaleString()}
-                </div>
+                <div className="text-lg">{formatDate(order.updated_at)}</div>
               </div>
             </div>
 
@@ -158,8 +170,40 @@ const OrderDetails = () => {
                   <span className="text-amber-900">{order.order_id}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">Menu Name</span>
+                  <span className="text-amber-900">{order.menu.menu_name}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">
+                    Menu Category
+                  </span>
+                  <span className="text-amber-900">
+                    {order.menu.menu_category}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">
+                    Price per Item
+                  </span>
+                  <span className="text-amber-900">
+                    Rp{" "}
+                    {parseFloat(order.menu.menu_price).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
                   <span className="text-amber-700 font-medium">Quantity</span>
                   <span className="text-amber-900">{order.item_quantity}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">
+                    Total Price
+                  </span>
+                  <span className="text-amber-900">
+                    Rp{" "}
+                    {(
+                      parseFloat(order.menu.menu_price) * order.item_quantity
+                    ).toLocaleString("id-ID")}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-amber-700 font-medium">Status</span>
@@ -167,6 +211,25 @@ const OrderDetails = () => {
                 </div>
               </div>
             </div>
+
+            {order.menu.menu_description && (
+              <div className="mt-8 p-4 bg-amber-50 rounded-lg">
+                <div className="text-sm text-amber-700 font-medium mb-2">
+                  Menu Description
+                </div>
+                <p className="text-amber-900">{order.menu.menu_description}</p>
+              </div>
+            )}
+
+            {order.menu.menu_image && (
+              <div className="mt-8 p-4 bg-amber-50 rounded-lg">
+                <img
+                  src={`http://localhost:5000/restaurant/uploads/menu/${order.menu.menu_image}`}
+                  alt={order.menu.menu_name}
+                  className="w-32 h-32 object-contain mx-auto"
+                />
+              </div>
+            )}
 
             <div className="mt-8 p-4 bg-amber-50 rounded-lg">
               <div className="flex items-center text-amber-700">
@@ -185,8 +248,7 @@ const OrderDetails = () => {
                   />
                 </svg>
                 <span className="font-medium">
-                  Order processed at{" "}
-                  {new Date(order.created_at).toLocaleTimeString()}
+                  Order processed at {formatDate(order.created_at)}
                 </span>
               </div>
             </div>
