@@ -138,15 +138,15 @@ export const cancelOrderController = async(req, res) => {
   const {userId} = req.user;
   const order_id = req.params.order_id;
 
-  const result = await cancelOrderService(order_id);
-  if(!result) {
+  const order = await getOrderByIdService(order_id);
+
+  if(!order) {
     return res.status(404).json({
       success: false,
       message: "Order not found"
     });
   }
 
-  const order = await getOrderByIdService(order_id);
   if(order.user_id !== userId) {
     return res.status(403).json({
       success: false,
@@ -161,6 +161,14 @@ export const cancelOrderController = async(req, res) => {
     });
   }
 
+  const result = await cancelOrderService(order_id);
+  if(!result) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found"
+    });
+  }
+
   return res.status(200).json({
     success: true,
     message: "Order cancelled successfully"
@@ -170,6 +178,7 @@ export const cancelOrderController = async(req, res) => {
 export const getOrderByIdController = async (req, res) => {
   const { userId } = req.user;
   const { order_id } = req.params;
+  const token = req.headers.authorization?.split(" ")[1];
   try {
     const result = await getOrderByIdService(order_id);
 
@@ -184,6 +193,17 @@ export const getOrderByIdController = async (req, res) => {
         success: false,
         message: "You are not authorized to view this order"
       })
+    }
+
+    const menu = await axios.get(`http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+    const order = {
+      ...result,
+      menu: menu.data.menu
     }
 
     return res.status(200).json({
