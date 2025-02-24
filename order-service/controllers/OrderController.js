@@ -17,7 +17,7 @@ export const createOrderController = async (req, res) => {
 
     const orderReq = req.body;
     orderReq.userId = userId;
-
+    console.log(orderReq)
     if (!orderReq.menuId || !orderReq.quantity) {
       return res.status(400).json({
         success: false,
