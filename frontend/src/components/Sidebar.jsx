@@ -12,6 +12,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const MySwal = withReactContent(Swal);
   const buttonRef = useRef(null);
   const isDraggingRef = useRef(false);
+  const wasDraggedRef = useRef(false);
   const [initialPosition, setInitialPosition] = useState({
     x: window.innerWidth - 70,
     y: 100,
@@ -64,10 +65,13 @@ const Sidebar = ({ isTaskbarOpen }) => {
   };
 
   const toggleSidebar = () => {
-    if (!isDraggingRef.current && isMobile) {
+    // Only toggle if it wasn't dragged
+    if (!wasDraggedRef.current && isMobile) {
       setIsSidebarOpen(!isSidebarOpen);
       setShowHamburger(!isSidebarOpen);
     }
+    // Reset the dragged state
+    wasDraggedRef.current = false;
   };
 
   const handleMouseDown = (e) => {
@@ -76,12 +80,17 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
     e.preventDefault();
     isDraggingRef.current = true;
+    wasDraggedRef.current = false; // Reset drag state on mouse down
 
     let startX = e.clientX - button.offsetLeft;
     let startY = e.clientY - button.offsetTop;
+    let hasMoved = false; // Track if any movement occurred
 
     function onMouseMove(e) {
       if (!isDraggingRef.current) return;
+
+      hasMoved = true; // Movement detected
+      wasDraggedRef.current = true; // Set drag state
 
       let left = e.clientX - startX;
       let top = e.clientY - startY;
@@ -90,6 +99,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
       left = Math.max(20, Math.min(window.innerWidth - 70, left));
       top = Math.max(20, Math.min(window.innerHeight - 70, top));
 
+      // Disable transition during drag for smooth movement
+      button.style.transition = "none";
       button.style.left = `${left}px`;
       button.style.top = `${top}px`;
     }
@@ -99,16 +110,20 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
       isDraggingRef.current = false;
 
-      // Get current position and snap to nearest edge
-      const currentX = button.offsetLeft;
-      const snappedX =
-        currentX < window.innerWidth / 2 ? 20 : window.innerWidth - 70;
+      // Only snap if actually dragged
+      if (hasMoved) {
+        const currentX = button.offsetLeft;
+        const snappedX =
+          currentX < window.innerWidth / 2 ? 20 : window.innerWidth - 70;
 
-      button.style.left = `${snappedX}px`;
-      setInitialPosition({
-        x: snappedX,
-        y: button.offsetTop,
-      });
+        // Re-enable transition for smooth snapping
+        button.style.transition = "left 0.3s ease";
+        button.style.left = `${snappedX}px`;
+        setInitialPosition({
+          x: snappedX,
+          y: button.offsetTop,
+        });
+      }
 
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
@@ -130,6 +145,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
             left: `${initialPosition.x}px`,
             top: `${initialPosition.y}px`,
             touchAction: "none",
+            transition: "left 0.3s ease", // Add transition for smooth snapping
           }}
         >
           <svg
