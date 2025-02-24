@@ -1,7 +1,7 @@
 import { getMenuByRestaurantIdService } from "../../restaurant-service/src/service/menuService.js";
 import pool from "../config/db.js";
 import axios from "axios";
-import { createOrderService } from "../service/orderService.js";
+import { createOrderService, getUserOrdersService } from "../service/orderService.js";
 
 export const createOrderController = async (req, res) => {
   try {
@@ -91,16 +91,49 @@ export const createOrderController = async (req, res) => {
   }
 };
 
+export const getOrdersController = async (req, res) => {
+  const { userId } = req.user;
+  const token = req.headers.authorization?.split(" ")[1];
 
-//getall
-export const getOrder = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM orders");
-    res.json(result.rows);
+    const orders = await getUserOrdersService(userId);
+    if (orders.length === 0) {
+      return res.status(404).json({ error: "No orders found" });
+    }
+
+    const ordersWithMenu = await Promise.all(
+      orders.map(async (order) => {
+        try {
+          const { data: menuData } = await axios.get(
+            `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const totalPrice = order.item_quantity * menuData.menu.menu_price;
+          return { ...order, menu: menuData, total_price: totalPrice };
+        } catch (menuError) {
+          return {
+            ...order,
+            menu: null,
+            total_price: null,
+            menuError: "Failed to fetch menu data",
+          };
+        }
+      })
+    );
+    return res.status(200).json({
+      success: true,
+      orders: ordersWithMenu,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 //Get Order by ID
 export const getOrderById = async (req, res) => {

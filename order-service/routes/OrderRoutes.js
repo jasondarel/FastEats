@@ -1,7 +1,7 @@
 import express from "express";
 import {
   createOrderController,
-  getOrder,
+  getOrdersController,
   getOrderById,
   updateOrder,
   deleteOrder,
@@ -11,7 +11,7 @@ import authMiddleware from "../middleware/apiKeyAuth.js";
 const router = express.Router();
 
 router.post("/order", authMiddleware, createOrderController);
-router.get("/orders", getOrder);
+router.get("/orders", authMiddleware, getOrdersController);
 router.get("/orders/:order_id", getOrderById);
 router.put("/orders/:order_id", updateOrder);
 router.delete("/orders/:order_id", deleteOrder);

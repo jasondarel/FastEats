@@ -8,6 +8,15 @@ const createOrderService = async(order) => {
     return result.rows[0];
 }
 
+const getUserOrdersService = async(userId) => {
+    const result = await pool.query(
+        "SELECT * FROM orders WHERE user_id = $1",
+        [userId]
+    );
+    return result.rows;
+}
+
 export {
-    createOrderService
+    createOrderService,
+    getUserOrdersService
 }
