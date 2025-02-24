@@ -143,7 +143,7 @@ const OrderHistory = () => {
       </div>
       <div className="flex flex-col flex-grow items-center mt-6 md:mt-0 md:ml-4 w-full">
         {/* Sticky Header */}
-        <div className="w-full max-w-lg z-10 sticky top-0 py-4">
+        <div className="w-full max-w-lg sticky top-0 py-4">
           <h2 className="text-4xl font-extrabold text-center text-yellow-600">
             Order History
           </h2>
