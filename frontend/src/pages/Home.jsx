@@ -101,7 +101,7 @@ const Home = () => {
     setSearchQuery(query);
 
     const filtered = restaurants
-      .filter((restaurant) => restaurant.is_open) // 🔥 Ensure only open restaurants
+      .filter((restaurant) => restaurant.is_open)
       .filter((restaurant) =>
         restaurant.restaurant_name.toLowerCase().includes(query)
       );
@@ -207,7 +207,7 @@ const Home = () => {
 
         <section className="mt-8">
           <h2 className="text-xl font-bold text-yellow-800 mb-4">
-            🍕 Available Restaurants
+            Available Restaurants
           </h2>
           {filteredRestaurants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

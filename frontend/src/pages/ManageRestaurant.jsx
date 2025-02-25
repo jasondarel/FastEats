@@ -130,7 +130,7 @@ const ManageRestaurant = () => {
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("isOpen", isOpen);
-      console.log(imageFile)
+      console.log(imageFile);
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
       }
@@ -263,7 +263,7 @@ const ManageRestaurant = () => {
       }}
     >
       <Sidebar />
-      <main className="ml-20 flex-1 flex justify-center items-center p-5">
+      <main className="md:ml-20 flex-1 flex justify-center items-center p-5">
         <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaUtensils className="mr-2" /> Manage Your Restaurant

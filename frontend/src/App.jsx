@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,8 +14,9 @@ import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
-import OrderHistory from "./pages/OrderHistory";
+import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
+import OrderList from "./pages/OrderList";
 import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
@@ -57,7 +59,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/my-menu"
             element={
@@ -66,7 +67,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/become-seller"
             element={
@@ -75,7 +75,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/manage-restaurant"
             element={
@@ -84,7 +83,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/cart"
             element={
@@ -93,7 +91,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/menu-details/:menuId"
             element={
@@ -102,7 +99,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/my-menu/:menuId/details"
             element={
@@ -112,7 +108,6 @@ function App() {
             }
           />
           <Route
-            // path="/menu-detils/:menuId/update-menu"
             path="/update-menu"
             element={
               <ProtectedRoute>
@@ -120,18 +115,15 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
-            path="/order-history"
+            path="/orders"
             element={
               <ProtectedRoute>
-                <OrderHistory />
+                <Orders />
               </ProtectedRoute>
             }
           />
-
           <Route path="/order/:orderId" element={<OrderDetails />} />
-
           <Route
             path="/order-status/preparing-order"
             element={
@@ -140,7 +132,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-status/delivering-order"
             element={
@@ -149,7 +140,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-status/completed-order"
             element={
@@ -158,11 +148,18 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/thanks"
             element={
                 <Thanks />
+            }
+          />
+          <Route
+            path="/order-list"
+            element={
+              <ProtectedRoute>
+                <OrderList />
+              </ProtectedRoute>
             }
           />
         </Routes>

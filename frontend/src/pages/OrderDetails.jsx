@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
+import Swal from "sweetalert2";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -162,7 +164,57 @@ const OrderDetails = () => {
   };
 
   const handleBack = () => {
-    navigate("/order-history");
+    navigate("/orders");
+  };
+
+  // Function to get status color class
+  const getStatusColorClass = (status) => {
+    switch (status) {
+      case "Waiting":
+        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
+      case "Preparing":
+        return "bg-blue-200 text-blue-800"; // Blue for preparing
+      case "Completed":
+        return "bg-green-300 text-green-800"; // Green for completed
+      case "Cancelled":
+        return "bg-red-200 text-red-800"; // Red for cancelled
+      case "Delivering":
+        return "bg-amber-200 text-amber-800"; // Amber for delivering
+      default:
+        return "bg-gray-200 text-gray-800"; // Gray for any other status
+    }
+  };
+
+  // Function to get Lottie animation URL based on status
+  const getLottieAnimation = (status) => {
+    switch (status) {
+      case "Preparing":
+        return "https://lottie.host/e113de9a-3d49-4136-bc9c-0703a1041edd/eT7Kkp0txx.lottie";
+      case "Delivering":
+        return "https://lottie.host/1227bbdc-43c4-4906-bf08-6d27acf0d697/DOrQKgF1UY.lottie";
+      case "Completed":
+        return "https://lottie.host/dd23579f-26b5-4b04-8fe3-edc841827620/Qh3EsqxT3g.lottie";
+      case "Waiting":
+        return "https://lottie.host/e32b2761-4d9d-4f63-95ab-899051f6b8da/jeAjS2g6jh.lottie";
+      case "Cancelled":
+        return "https://lottie.host/1a20f4b7-ffd5-47c2-9ff0-f8abfbd91352/QaXJ8BkEZQ.lottie";
+    }
+  };
+
+  // Function to get status message (only for Preparing and Delivering)
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case "Preparing":
+        return "Our chefs are preparing your delicious meal!";
+      case "Delivering":
+        return "Your order is on the way to your location!";
+      case "Completed":
+        return "Your order has been delivered successfully!";
+      case "Waiting":
+        return "Please complete your payment to proceed";
+      case "Cancelled":
+        return "Your order has been cancelled";
+    }
   };
 
   if (loading) {
@@ -192,6 +244,80 @@ const OrderDetails = () => {
       </div>
     );
   }
+
+  // Render buttons based on order status
+  const renderActionButtons = () => {
+    if (!order) return null;
+
+    switch (order.status) {
+      case "Waiting":
+        return (
+          <div className="flex justify-between gap-4">
+            <button
+              className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+              onClick={() => handleCancel(order.order_id)}
+            >
+              Cancel
+            </button>
+            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+              Pay
+            </button>
+          </div>
+        );
+      case "Completed":
+      case "Cancelled":
+        return (
+          <div className="flex justify-center">
+            <button
+              className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+              onClick={handleOrderAgain}
+            >
+              Order Again
+            </button>
+          </div>
+        );
+      case "Preparing":
+      case "Delivering":
+        return null; // No buttons for these statuses
+      default:
+        return (
+          <button className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+            Pay
+          </button>
+        );
+    }
+  };
+
+  // Render status with Lottie animation when applicable
+  const renderStatusWithAnimation = () => {
+    if (!order) return null;
+
+    const lottieUrl = getLottieAnimation(order.status);
+    const statusMessage = getStatusMessage(order.status);
+
+    // Set speed to 0.5 (half speed) for Cancelled status, 1 for others
+    const animationSpeed = order.status === "Cancelled" ? 0.5 : 1;
+
+    if (lottieUrl) {
+      return (
+        <div className="mb-6">
+          <div className="relative w-64 h-64 mx-auto">
+            <DotLottieReact
+              src={lottieUrl}
+              loop
+              autoplay
+              speed={animationSpeed} // Add speed property to control animation speed
+            />
+          </div>
+          {statusMessage && (
+            <p className="text-amber-700 text-center">{statusMessage}</p>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen bg-amber-50">
@@ -227,15 +353,9 @@ const OrderDetails = () => {
                 Order #{order.order_id}
               </h1>
               <span
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  order.status === "Completed"
-                    ? "bg-green-100 text-green-800"
-                    : order.status === "Waiting"
-                    ? "bg-amber-100 text-amber-800"
-                    : order.status === "Pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColorClass(
+                  order.status
+                )}`}
               >
                 {order.status}
               </span>
