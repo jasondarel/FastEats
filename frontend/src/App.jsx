@@ -19,7 +19,8 @@ import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
 import OrderCompletedPage from "./pages/OrderCompletedPage";
-import Payment from "./pages/Payment";
+import Payment from "./pages/Thanks";
+import Thanks from "./pages/Thanks";
 
 function App() {
   return (
@@ -159,11 +160,9 @@ function App() {
           />
 
           <Route
-            path="/payment"
+            path="/thanks"
             element={
-              <ProtectedRoute>
-                <Payment />
-              </ProtectedRoute>
+                <Thanks />
             }
           />
         </Routes>
