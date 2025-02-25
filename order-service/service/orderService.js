@@ -24,6 +24,14 @@ const getOrderByIdService = async(orderId) => {
     return result.rows[0];
 }
 
+const payOrderService = async(orderId) => {
+    const result = await pool.query(
+        "update orders set status = 'Preparing' where order_id = $1 RETURNING *",
+        [orderId]
+    )
+    return result.rows[0];
+}
+
 const cancelOrderService = async(orderId) => {
     const result = await pool.query(
         "update orders set status = 'Cancelled' where order_id = $1 RETURNING *",
@@ -32,9 +40,20 @@ const cancelOrderService = async(orderId) => {
     return result.rows[0];
 }
 
+const pendingOrderService = async(orderId) => {
+    const result = await pool.query(
+        "update orders set status = 'Pending' where order_id = $1 RETURNING *",
+        [orderId]
+    )
+    return result.rows[0];
+}
+
+
 export {
     createOrderService,
     getUserOrdersService,
     getOrderByIdService,
-    cancelOrderService
+    cancelOrderService,
+    payOrderService,
+    pendingOrderService
 }

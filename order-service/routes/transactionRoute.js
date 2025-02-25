@@ -1,15 +1,7 @@
 import express from "express";
 import {
-  createOrderController,
-  getOrdersController,
-  getOrderByIdController,
-  updateOrder,
-  deleteOrder,
-  cancelOrderController,
-  payOrderController,
-  payOrderConfirmationController,
-  thanksController
-} from "../controllers/OrderController.js";
+
+} from "../controllers/transactionController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();

@@ -12,11 +12,29 @@ const createTable = async () => {
             menu_id INT,
             restaurant_id INT,
             item_quantity INT DEFAULT 1,
-            status TEXT DEFAULT 'Waiting', -- 'Waiting', 'Preparing', 'Delivering', 'Completed', 'Cancelled'
+            status TEXT DEFAULT 'Waiting', -- 'Waiting', 'Pending', 'Preparing', 'Completed', 'Cancelled'
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
         );
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS transactions (
+          transaction_id SERIAL PRIMARY KEY,
+          order_id INT NOT NULL,
+          currency VARCHAR(10),
+          transaction_time TIMESTAMP,
+          expiry_time TIMESTAMP,
+          amount DECIMAL(15, 2),
+          bank VARCHAR(50),
+          va_number VARCHAR(50),
+          payment_type VARCHAR(50),
+          transaction_status VARCHAR(20),
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+      );
+  `);
 
     console.log("✅ Tables created successfully!");
   } catch (error) {
