@@ -8,7 +8,7 @@ function hashPassword(password) {
 }
 
 function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "12h" });
 }
 
 function validateEmail(email) {
