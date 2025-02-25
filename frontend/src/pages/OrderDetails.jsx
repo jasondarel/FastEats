@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -139,8 +140,42 @@ const OrderDetails = () => {
         return "bg-green-300 text-green-800"; // Green for completed
       case "Cancelled":
         return "bg-red-200 text-red-800"; // Red for cancelled
+      case "Delivering":
+        return "bg-amber-200 text-amber-800"; // Amber for delivering
       default:
         return "bg-gray-200 text-gray-800"; // Gray for any other status
+    }
+  };
+
+  // Function to get Lottie animation URL based on status
+  const getLottieAnimation = (status) => {
+    switch (status) {
+      case "Preparing":
+        return "https://lottie.host/e113de9a-3d49-4136-bc9c-0703a1041edd/eT7Kkp0txx.lottie";
+      case "Delivering":
+        return "https://lottie.host/1227bbdc-43c4-4906-bf08-6d27acf0d697/DOrQKgF1UY.lottie";
+      case "Completed":
+        return "https://lottie.host/dd23579f-26b5-4b04-8fe3-edc841827620/Qh3EsqxT3g.lottie";
+      case "Waiting":
+        return "https://lottie.host/e32b2761-4d9d-4f63-95ab-899051f6b8da/jeAjS2g6jh.lottie";
+      case "Cancelled":
+        return "https://lottie.host/1a20f4b7-ffd5-47c2-9ff0-f8abfbd91352/QaXJ8BkEZQ.lottie";
+    }
+  };
+
+  // Function to get status message (only for Preparing and Delivering)
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case "Preparing":
+        return "Our chefs are preparing your delicious meal!";
+      case "Delivering":
+        return "Your order is on the way to your location!";
+      case "Completed":
+        return "Your order has been delivered successfully!";
+      case "Waiting":
+        return "Please complete your payment to proceed";
+      case "Cancelled":
+        return "Your order has been cancelled";
     }
   };
 
@@ -196,7 +231,7 @@ const OrderDetails = () => {
         return (
           <div className="flex justify-center">
             <button
-              className="w-100 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+              className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
               onClick={handleOrderAgain}
             >
               Order Again
@@ -213,6 +248,29 @@ const OrderDetails = () => {
           </button>
         );
     }
+  };
+
+  // Render status with Lottie animation when applicable
+  const renderStatusWithAnimation = () => {
+    if (!order) return null;
+
+    const lottieUrl = getLottieAnimation(order.status);
+    const statusMessage = getStatusMessage(order.status);
+
+    if (lottieUrl) {
+      return (
+        <div className="mb-6">
+          <div className="relative w-64 h-64 mx-auto">
+            <DotLottieReact src={lottieUrl} loop autoplay />
+          </div>
+          {statusMessage && (
+            <p className="text-amber-700 text-center">{statusMessage}</p>
+          )}
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -256,6 +314,9 @@ const OrderDetails = () => {
                 {order.status}
               </span>
             </div>
+
+            {/* Lottie animation for specific statuses */}
+            {renderStatusWithAnimation()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-amber-50 p-4 rounded-lg">
               <div className="border-l-4 border-amber-400 pl-4">
