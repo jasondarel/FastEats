@@ -125,7 +125,7 @@ const OrderDetails = () => {
   };
 
   const handleBack = () => {
-    navigate("/order-history");
+    navigate("/orders");
   };
 
   // Function to get status color class
