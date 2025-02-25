@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -106,7 +107,6 @@ function App() {
             }
           />
           <Route
-            // path="/menu-detils/:menuId/update-menu"
             path="/update-menu"
             element={
               <ProtectedRoute>

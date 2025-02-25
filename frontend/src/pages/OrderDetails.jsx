@@ -257,11 +257,19 @@ const OrderDetails = () => {
     const lottieUrl = getLottieAnimation(order.status);
     const statusMessage = getStatusMessage(order.status);
 
+    // Set speed to 0.5 (half speed) for Cancelled status, 1 for others
+    const animationSpeed = order.status === "Cancelled" ? 0.5 : 1;
+
     if (lottieUrl) {
       return (
         <div className="mb-6">
           <div className="relative w-64 h-64 mx-auto">
-            <DotLottieReact src={lottieUrl} loop autoplay />
+            <DotLottieReact
+              src={lottieUrl}
+              loop
+              autoplay
+              speed={animationSpeed} // Add speed property to control animation speed
+            />
           </div>
           {statusMessage && (
             <p className="text-amber-700 text-center">{statusMessage}</p>
