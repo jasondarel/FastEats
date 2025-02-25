@@ -11,21 +11,7 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
-    const script = document.createElement("script");
-    script.src = snapScript;
-    script.setAttribute("data-client-key", clientKey);
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   const handleCancel = async (orderId) => {
     // Show SweetAlert confirmation dialog
@@ -78,7 +64,7 @@ const OrderDetails = () => {
   const handleOrderAgain = async () => {
     // Navigate to the menu page or specific menu item
     if (order && order.menu) {
-      navigate(`/menu-details/${order.menu.menu_id}`);
+      navigate(`/menu/${order.menu.menu_id}`);
     } else {
       navigate("/menu");
       try {
@@ -203,6 +189,42 @@ const OrderDetails = () => {
 
   useEffect(() => {
     console.log("Fetching details for order ID:", orderId);
+    const fetchOrderDetails = async () => {
+      if (!orderId) {
+        setError("Order ID is missing");
+        setLoading(false);
+        return;
+      }
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+
+        const response = await axios.get(
+          `http://localhost:5000/order/orders/${orderId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Order data received:", response.data);
+        if (response.data.success && response.data.order) {
+          setOrder(response.data.order);
+        } else {
+          throw new Error("No order data received");
+        }
+      } catch (error) {
+        console.error("Error fetching order details:", error);
+        setError(error.message || "Failed to fetch order details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOrderDetails();
   }, [orderId]);
 
@@ -295,7 +317,7 @@ const OrderDetails = () => {
             onClick={handleBack}
             className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
           >
-            Back to Order History
+            Back to Orders
           </button>
         </div>
       </div>
@@ -399,7 +421,7 @@ const OrderDetails = () => {
                 d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
               />
             </svg>
-            Back to Order History
+            Back to Orders
           </button>
         </div>
 
@@ -418,7 +440,9 @@ const OrderDetails = () => {
               </span>
             </div>
 
-            {/* Rest of the UI remains the same */}
+            {/* Lottie animation for specific statuses */}
+            {renderStatusWithAnimation()}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-amber-50 p-4 rounded-lg">
               <div className="border-l-4 border-amber-400 pl-4">
                 <div className="text-sm text-amber-700 font-medium">
@@ -523,32 +547,7 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            <div className="mt-8 flex justify-between gap-4">
-              <button
-                className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
-                onClick={() => handleCancel(order.order_id)}
-                disabled={paymentLoading}
-              >
-                Cancel
-              </button>
-              <button
-                className={`w-1/2 py-2 px-4 ${
-                  paymentLoading
-                    ? "bg-yellow-400 cursor-wait"
-                    : "bg-yellow-500 hover:bg-yellow-600"
-                } text-white font-semibold rounded-lg transition`}
-                onClick={() =>
-                  handlePayConfirmation(
-                    order.order_id,
-                    order.item_quantity,
-                    order.menu.menu_price
-                  )
-                }
-                disabled={paymentLoading}
-              >
-                {paymentLoading ? "Memproses..." : "Pay"}
-              </button>
-            </div>
+            <div className="mt-8">{renderActionButtons()}</div>
           </div>
         )}
       </div>
