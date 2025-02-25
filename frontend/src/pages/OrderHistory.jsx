@@ -1,9 +1,9 @@
-// OrderHistory.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import image from "../assets/orderHistory-dummy.jpg";
+import { FaHistory, FaShoppingBag, FaSync, FaList } from "react-icons/fa";
 
 const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const formatDate = (dateString) => {
@@ -37,28 +37,19 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     }
   };
 
+  // Show "Order again" button for Completed OR Cancelled status
+  const showOrderAgainButton =
+    order.status === "Completed" || order.status === "Cancelled";
+
   return (
     <div
-      className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300 cursor-pointer"
+      className="my-3 px-4 py-4 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow cursor-pointer"
       onClick={() => onOrderClick(order.id)}
     >
-      <div className="flex justify-between gap-x-2 md:gap-x-6 lg:gap-x-60">
+      <div className="flex justify-between gap-x-2">
         <div className="flex">
           <div className="flex items-center mr-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-              />
-            </svg>
+            <FaShoppingBag className="text-yellow-600 text-lg" />
           </div>
           <div>
             <h4 className="font-bold leading-3 text-sm">Order</h4>
@@ -72,7 +63,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         </div>
         <div className="flex items-center justify-center">
           <div
-            className={`px-1 py-0.5 rounded-md font-semibold text-sm ${getStatusStyles(
+            className={`px-2 py-1 rounded-md font-semibold text-sm ${getStatusStyles(
               order.status || "Completed"
             )}`}
           >
@@ -89,31 +80,35 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
               : image
           }
           alt="product"
-          className="w-16 h-16 md:w-20 md:h-20 object-contain"
+          className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-gray-200"
         />
-        <div className="pt-3 pl-3">
-          <h2 className="font-bold truncate max-w-[200px] md:max-w-80 overflow-hidden text-ellipsis whitespace-nowrap text-base md:text-lg">
+        <div className="pt-2 pl-4 flex-1 min-w-0">
+          <h2 className="font-bold truncate overflow-hidden text-ellipsis whitespace-nowrap text-base md:text-lg">
             {order.menu?.menu?.menu_name || "Minuman Yang Sangat Mantap banget"}
           </h2>
           <p className="text-slate-600">{order.item_quantity || 1} Item</p>
         </div>
       </div>
-      <div className="flex justify-between mt-2 gap-x-2 md:gap-x-6 lg:gap-x-60">
+      <div className="flex justify-between mt-3">
         <div className="flex flex-col">
-          <h2 className="text-sm">Total Order</h2>
-          <p className="font-bold">Rp {order.total_price || "89.99"}</p>
+          <h2 className="text-sm text-gray-600">Total Order</h2>
+          <p className="font-bold text-yellow-600">
+            Rp {order.total_price || "89.99"}
+          </p>
         </div>
-        <div className="flex items-center justify-center">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onOrderAgain(order);
-            }}
-            className="bg-yellow-700 px-3 py-0.5 rounded-md text-white font-semibold text-sm hover:bg-yellow-800 transition-colors"
-          >
-            Order again
-          </button>
-        </div>
+        {showOrderAgainButton && (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOrderAgain(order);
+              }}
+              className="bg-yellow-500 hover:bg-yellow-600 px-4 py-1.5 rounded-lg text-white font-semibold text-sm transition-colors flex items-center"
+            >
+              <FaSync className="mr-2" /> Order again
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -124,6 +119,17 @@ const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Add CSS to prevent scrolling on page load
+  useEffect(() => {
+    // Disable scrolling on body
+    document.body.style.overflow = "hidden";
+
+    // Cleanup function to restore scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
 
   const fetchOrderHistory = async () => {
     try {
@@ -157,38 +163,79 @@ const OrderHistory = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 h-screen overflow-hidden">
-      <div className="md:w-auto">
-        <Sidebar />
-      </div>
-      <div className="flex flex-col flex-grow items-center mt-6 md:mt-0 md:ml-4 w-full">
-        {/* Sticky Header */}
-        <div className="w-full max-w-lg sticky top-0 py-4">
-          <h2 className="text-4xl font-extrabold text-center text-yellow-600">
-            Order History
+    <div
+      className="flex min-h-screen w-full"
+      style={{
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        overflow: "hidden", // Added to prevent scrolling
+      }}
+    >
+      <Sidebar />
+      <main className="md:ml-20 flex-1 flex flex-col items-center p-5 pt-8 w-full max-w-full">
+        <div className="w-full max-w-2xl p-8 bg-white shadow-xl rounded-xl mb-6">
+          <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
+            <FaHistory className="mr-3" /> Order History
           </h2>
-          <hr className="border-t-2 border-gray-400 w-full max-w-lg my-4" />
+
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="flex items-center">
+              <FaList className="text-yellow-500 text-xl mr-3" />
+              <div>
+                <h3 className="font-medium">Your Past Orders</h3>
+                <p className="text-sm text-gray-600">
+                  View and reorder your previous purchases
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrollable Order List - Allow this to scroll even if page scrolling is disabled */}
+          <div className="w-full max-h-[70vh] overflow-y-auto pr-2 overflow-x-hidden">
+            {loading && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-yellow-500 border-t-transparent mb-2"></div>
+                <p className="text-yellow-600 font-medium">Loading orders...</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="text-center py-8 text-red-500">
+                <p className="font-medium mb-2">Error loading orders</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && orders.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p className="font-medium mb-2">No orders found</p>
+                <p className="text-sm">Your order history will appear here</p>
+              </div>
+            )}
+
+            {!loading &&
+              !error &&
+              orders.map((order) => (
+                <OrderItem
+                  key={order.id}
+                  order={order}
+                  onOrderClick={() => handleOrderClick(order.order_id)}
+                  onOrderAgain={handleOrderAgain}
+                />
+              ))}
+          </div>
         </div>
 
-        {/* Scrollable Order List */}
-        <div className="w-full max-w-lg h-[calc(100vh-120px)] overflow-y-auto p-3 lg:scale-125 lg:mt-10 lg:max-h-[580px] xl:mt-13 xl:scale-[1.3] xl:max-h-[570px]">
-          {loading && <div className="text-center">Loading orders...</div>}
-          {error && <div className="text-red-500 text-center">{error}</div>}
-          {!loading && !error && orders.length === 0 && (
-            <div className="text-center text-gray-500">No orders found</div>
-          )}
-          {!loading &&
-            !error &&
-            orders.map((order) => (
-              <OrderItem
-                key={order.id}
-                order={order}
-                onOrderClick={() => handleOrderClick(order.order_id)}
-                onOrderAgain={handleOrderAgain}
-              />
-            ))}
-        </div>
-      </div>
+        {/* Floating My Menu Button */}
+        <a
+          href="../menu"
+          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
+        >
+          <FaShoppingBag className="mr-2" /> Order Now
+        </a>
+      </main>
     </div>
   );
 };
