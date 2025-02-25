@@ -114,7 +114,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   );
 };
 
-const OrderHistory = () => {
+const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,7 +174,7 @@ const OrderHistory = () => {
     <div
       className="flex min-h-screen w-full"
       style={{
-        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
+        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/orders.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
