@@ -13,7 +13,7 @@ import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
-import OrderHistory from "./pages/OrderHistory";
+import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
@@ -121,10 +121,10 @@ function App() {
           />
 
           <Route
-            path="/order-history"
+            path="/orders"
             element={
               <ProtectedRoute>
-                <OrderHistory />
+                <Orders />
               </ProtectedRoute>
             }
           />

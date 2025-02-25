@@ -221,10 +221,10 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </li>
               <li>
                 <Link
-                  to="/order-history"
+                  to="/orders"
                   className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
                 >
-                  Order History
+                  My Orders
                 </Link>
               </li>
             </ul>

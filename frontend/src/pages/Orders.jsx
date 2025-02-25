@@ -189,7 +189,7 @@ const OrderHistory = () => {
       >
         <div className="w-full max-w-2xl p-8 bg-white shadow-xl rounded-xl mb-6">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
-            <FaHistory className="mr-3" /> Order History
+            <FaHistory className="mr-3" /> My Orders
           </h2>
 
           <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -198,7 +198,7 @@ const OrderHistory = () => {
               <div>
                 <h3 className="font-medium">Your Past Orders</h3>
                 <p className="text-sm text-gray-600">
-                  View and reorder your previous purchases
+                  View and reorder your previous or ongoing purchases
                 </p>
               </div>
             </div>
@@ -252,4 +252,4 @@ const OrderHistory = () => {
   );
 };
 
-export default OrderHistory;
+export default Orders;
