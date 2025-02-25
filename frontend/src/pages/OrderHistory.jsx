@@ -21,6 +21,22 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     return jakartaDate;
   };
 
+  // Function to determine status colors based on order status
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "Waiting":
+        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
+      case "Preparing":
+        return "bg-blue-200 text-blue-800"; // Blue for preparing
+      case "Completed":
+        return "bg-green-300 text-green-800"; // Green for completed
+      case "Cancelled":
+        return "bg-red-200 text-red-800"; // Red for cancelled
+      default:
+        return "bg-gray-200 text-gray-800"; // Gray for any other status
+    }
+  };
+
   return (
     <div
       className="my-2 px-3 py-4 rounded-md shadow-sm shadow-slate-300 cursor-pointer"
@@ -55,7 +71,11 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           </div>
         </div>
         <div className="flex items-center justify-center">
-          <div className="bg-green-300 px-1 py-0.5 rounded-md text-green-800 font-semibold text-sm">
+          <div
+            className={`px-1 py-0.5 rounded-md font-semibold text-sm ${getStatusStyles(
+              order.status || "Completed"
+            )}`}
+          >
             {order.status || "Completed"}
           </div>
         </div>
@@ -89,7 +109,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
               e.stopPropagation();
               onOrderAgain(order);
             }}
-            className="bg-green-700 px-3 py-0.5 rounded-md text-white font-semibold text-sm hover:bg-green-800 transition-colors"
+            className="bg-yellow-700 px-3 py-0.5 rounded-md text-white font-semibold text-sm hover:bg-yellow-800 transition-colors"
           >
             Order again
           </button>
