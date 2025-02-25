@@ -1,7 +1,14 @@
 import { getMenuByRestaurantIdService } from "../../restaurant-service/src/service/menuService.js";
 import pool from "../config/db.js";
 import axios from "axios";
-import { cancelOrderService, createOrderService, getOrderByIdService, getUserOrdersService, payOrderService, pendingOrderService } from "../service/orderService.js";
+import {
+  cancelOrderService,
+  createOrderService,
+  getOrderByIdService,
+  getUserOrdersService,
+  payOrderService,
+  pendingOrderService,
+} from "../service/orderService.js";
 import crypto from "crypto";
 import { createTransactionService } from "../service/transactionService.js";
 
@@ -19,7 +26,7 @@ export const createOrderController = async (req, res) => {
 
     const orderReq = req.body;
     orderReq.userId = userId;
-    console.log(orderReq)
+    console.log(orderReq);
     if (!orderReq.menuId || !orderReq.quantity) {
       return res.status(400).json({
         success: false,
@@ -56,14 +63,13 @@ export const createOrderController = async (req, res) => {
     );
     orderReq.restaurantId = restaurantResponse.data.restaurant.restaurant_id;
 
-    if(restaurantResponse.data.restaurant.owner_id === userId) {
+    if (restaurantResponse.data.restaurant.owner_id === userId) {
       return res.status(403).json({
         success: false,
         message: "You cannot order from your own restaurant",
       });
     }
     console.log("Fetching menu data...");
-    
 
     console.log("Inserting order into database...");
     const response = await createOrderService(orderReq);
@@ -136,46 +142,46 @@ export const getOrdersController = async (req, res) => {
   }
 };
 
-export const cancelOrderController = async(req, res) => {
-  const {userId} = req.user;
+export const cancelOrderController = async (req, res) => {
+  const { userId } = req.user;
   const order_id = req.params.order_id;
 
   const order = await getOrderByIdService(order_id);
 
-  if(!order) {
+  if (!order) {
     return res.status(404).json({
       success: false,
-      message: "Order not found"
+      message: "Order not found",
     });
   }
 
-  if(order.user_id !== userId) {
+  if (order.user_id !== userId) {
     return res.status(403).json({
       success: false,
-      message: "You are not authorized to cancel this order"
+      message: "You are not authorized to cancel this order",
     });
   }
 
-  if(order.status !== "Waiting") {
+  if (order.status !== "Waiting") {
     return res.status(400).json({
       success: false,
-      message: "Order cannot be cancelled"
+      message: "Order cannot be cancelled",
     });
   }
 
   const result = await cancelOrderService(order_id);
-  if(!result) {
+  if (!result) {
     return res.status(404).json({
       success: false,
-      message: "Order not found"
+      message: "Order not found",
     });
   }
 
   return res.status(200).json({
     success: true,
-    message: "Order cancelled successfully"
+    message: "Order cancelled successfully",
   });
-}
+};
 
 export const getOrderByIdController = async (req, res) => {
   const { userId } = req.user;
@@ -185,36 +191,39 @@ export const getOrderByIdController = async (req, res) => {
     const result = await getOrderByIdService(order_id);
 
     if (!result) {
-      return res.status(404).json({ 
-        error: "Order Not Found" 
+      return res.status(404).json({
+        error: "Order Not Found",
       });
     }
 
-    if(result.user_id !== userId) {
+    if (result.user_id !== userId) {
       return res.status(403).json({
         success: false,
-        message: "You are not authorized to view this order"
-      })
+        message: "You are not authorized to view this order",
+      });
     }
 
-    const menu = await axios.get(`http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+    const menu = await axios.get(
+      `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
     const order = {
       ...result,
-      menu: menu.data.menu
-    }
+      menu: menu.data.menu,
+    };
 
     return res.status(200).json({
-        success: true,
-        order
+      success: true,
+      order,
     });
   } catch (error) {
-    res.status(500).json({ 
-      error: error.message 
+    res.status(500).json({
+      error: error.message,
     });
   }
 };
@@ -226,36 +235,51 @@ export const payOrderConfirmationController = async (req, res) => {
 
     const order = await getOrderByIdService(order_id);
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     if (order.user_id !== userId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized to pay for this order' });
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to pay for this order",
+      });
     }
 
-    if (order.status !== 'Waiting') {
-      return res.status(400).json({ success: false, message: 'Order cannot be paid' });
+    if (order.status !== "Waiting") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Order cannot be paid" });
     }
 
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-    const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString('base64')}`;
-
-    const response = await axios.post('https://app.sandbox.midtrans.com/snap/v1/transactions', {
-      transaction_details: {
-        order_id,
-        gross_amount: itemPrice * itemQuantity,
+    const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
+      "base64"
+    )}`;
+    console.log("Sending payment request to Midtrans...");
+    console.log("Bae64Auth:", base64Auth);
+    const response = await axios.post(
+      "https://app.sandbox.midtrans.com/snap/v1/transactions",
+      {
+        transaction_details: {
+          order_id,
+          gross_amount: itemPrice * itemQuantity,
+        },
+        credit_card: { secure: true },
       },
-      credit_card: { secure: true },
-    }, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: base64Auth,
-      },
-    });
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: base64Auth,
+        },
+      }
+    );
+    console.log("Payment response:", response.data);
     return res.status(200).json({ success: true, data: response.data });
   } catch (err) {
-    console.error(err.response);
+    console.error(err.response.data);
     return res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -263,48 +287,58 @@ export const payOrderConfirmationController = async (req, res) => {
 export const payOrderController = async (req, res) => {
   try {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-    
+
     if (!MIDTRANS_SERVER_KEY) {
-      console.error('MIDTRANS_SERVER_KEY is not defined in environment variables');
-      return res.status(500).json({ success: false, message: "Server configuration error" });
+      console.error(
+        "MIDTRANS_SERVER_KEY is not defined in environment variables"
+      );
+      return res
+        .status(500)
+        .json({ success: false, message: "Server configuration error" });
     }
-    console.log('Received payment notification:', req.body);
-    const { 
-      order_id, 
-      transaction_status, 
-      status_code, 
-      gross_amount, 
+    console.log("Received payment notification:", req.body);
+    const {
+      order_id,
+      transaction_status,
+      status_code,
+      gross_amount,
       signature_key,
       transaction_time,
       transaction_id,
       payment_type,
       currency,
       expiry_time,
-     } = req.body;
-    
-     const {va_number, bank} = req.body.va_numbers[0];
+    } = req.body;
+
+    const { va_number, bank } = req.body.va_numbers[0];
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
-      console.log('Missing required fields in payment notification');
-      return res.status(400).json({ success: false, message: "Missing required payment information" });
+      console.log("Missing required fields in payment notification");
+      return res.status(400).json({
+        success: false,
+        message: "Missing required payment information",
+      });
     }
-  
+
     const expectedSignature = crypto
-      .createHash('sha512')
+      .createHash("sha512")
       .update(`${order_id}${status_code}${gross_amount}${MIDTRANS_SERVER_KEY}`)
-      .digest('hex');
+      .digest("hex");
 
     const signatureBuffer = Buffer.from(signature_key);
     const expectedBuffer = Buffer.from(expectedSignature);
-    
-    const isSignatureValid = signatureBuffer.length === expectedBuffer.length && 
+
+    const isSignatureValid =
+      signatureBuffer.length === expectedBuffer.length &&
       crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
-    
+
     if (!isSignatureValid) {
-      return res.status(403).json({ success: false, message: "Invalid signature key" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Invalid signature key" });
     }
-    
-    if(transaction_status === "pending") {
+
+    if (transaction_status === "pending") {
       const newTransaction = {
         order_id: order_id,
         currency: currency,
@@ -314,10 +348,12 @@ export const payOrderController = async (req, res) => {
         bank: bank,
         va_number: va_number,
         payment_type: payment_type,
-        transaction_status: transaction_status
-      }
+        transaction_status: transaction_status,
+      };
 
-      const transactionResponse = await createTransactionService(newTransaction);
+      const transactionResponse = await createTransactionService(
+        newTransaction
+      );
 
       const orderResponse = await pendingOrderService(order_id);
     }
@@ -329,28 +365,30 @@ export const payOrderController = async (req, res) => {
         return res.status(200).json({
           success: true,
           message: "Order paid successfully",
-          order: response
+          order: response,
         });
       } catch (error) {
         console.error("Error processing payment for order:", order_id, error);
         return res.status(500).json({
           success: false,
-          message: "Error processing payment"
+          message: "Error processing payment",
         });
       }
     } else {
-      console.log(`Order payment status: ${transaction_status} for order: ${order_id}`);
+      console.log(
+        `Order payment status: ${transaction_status} for order: ${order_id}`
+      );
       return res.status(200).json({
         success: false,
         message: `Payment ${transaction_status}`,
-        order_id
+        order_id,
       });
     }
   } catch (error) {
     console.error("Unexpected error in payment controller:", error);
     return res.status(500).json({
       success: false,
-      message: "An unexpected error occurred"
+      message: "An unexpected error occurred",
     });
   }
 };
@@ -406,5 +444,7 @@ export const thanksController = async (req, res) => {
     return res.status(400).json({ message: "Missing required parameters" });
   }
 
-  res.redirect(`http://localhost:5173/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`);
+  res.redirect(
+    `http://localhost:5173/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`
+  );
 };
