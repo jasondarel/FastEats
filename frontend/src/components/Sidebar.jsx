@@ -279,7 +279,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 {profile.email}
               </h2>
               <h2 className="font-bold text-xl truncate overflow-hidden whitespace-nowrap">
-                {profile.name || guest}
+                {profile.name || "guest"}
               </h2>
             </div>
           </div>
