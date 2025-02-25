@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -9,25 +10,64 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const token  = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-  const handleCancel = async(orderId) => {
-    try {
-      const response = await axios.patch(`http://localhost:5000/order/cancel-order/${orderId}`, {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+  const handleCancel = async (orderId) => {
+    // Show SweetAlert confirmation dialog
+    Swal.fire({
+      title: "Cancel Order?",
+      text: "Are you sure you want to cancel this order?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, cancel it!",
+      cancelButtonText: "No, keep my order",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.patch(
+            `http://localhost:5000/order/cancel-order/${orderId}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          // Show success message with SweetAlert
+          Swal.fire(
+            "Cancelled!",
+            response.data.message || "Your order has been cancelled.",
+            "success"
+          ).then(() => {
+            navigate("/order-history");
+          });
+        } catch (err) {
+          console.error("Error cancelling order:", err);
+          setError(err.message || "Failed to cancel order");
+
+          // Show error message with SweetAlert
+          Swal.fire(
+            "Error!",
+            "Failed to cancel the order. Please try again.",
+            "error"
+          );
         }
-      );
-      alert(response.data.message);
-      navigate("/order-history");
-    } catch(err) {
-      console.error("Error cancelling order:", err);
-      setError(err.message || "Failed to cancel order");
+      }
+    });
+  };
+
+  const handleOrderAgain = () => {
+    // Navigate to the menu page or specific menu item
+    if (order && order.menu) {
+      navigate(`/menu/${order.menu.menu_id}`);
+    } else {
+      navigate("/menu");
     }
-  }
+  };
 
   useEffect(() => {
     console.log("Fetching details for order ID:", orderId);
@@ -88,6 +128,22 @@ const OrderDetails = () => {
     navigate("/order-history");
   };
 
+  // Function to get status color class
+  const getStatusColorClass = (status) => {
+    switch (status) {
+      case "Waiting":
+        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
+      case "Preparing":
+        return "bg-blue-200 text-blue-800"; // Blue for preparing
+      case "Completed":
+        return "bg-green-300 text-green-800"; // Green for completed
+      case "Cancelled":
+        return "bg-red-200 text-red-800"; // Red for cancelled
+      default:
+        return "bg-gray-200 text-gray-800"; // Gray for any other status
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen">
@@ -115,6 +171,49 @@ const OrderDetails = () => {
       </div>
     );
   }
+
+  // Render buttons based on order status
+  const renderActionButtons = () => {
+    if (!order) return null;
+
+    switch (order.status) {
+      case "Waiting":
+        return (
+          <div className="flex justify-between gap-4">
+            <button
+              className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+              onClick={() => handleCancel(order.order_id)}
+            >
+              Cancel
+            </button>
+            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+              Pay
+            </button>
+          </div>
+        );
+      case "Completed":
+      case "Cancelled":
+        return (
+          <div className="flex justify-center">
+            <button
+              className="w-100 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+              onClick={handleOrderAgain}
+            >
+              Order Again
+            </button>
+          </div>
+        );
+      case "Preparing":
+      case "Delivering":
+        return null; // No buttons for these statuses
+      default:
+        return (
+          <button className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+            Pay
+          </button>
+        );
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen bg-amber-50">
@@ -150,15 +249,9 @@ const OrderDetails = () => {
                 Order #{order.order_id}
               </h1>
               <span
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  order.status === "Completed"
-                    ? "bg-green-100 text-green-800"
-                    : order.status === "Waiting"
-                    ? "bg-amber-100 text-amber-800"
-                    : order.status === "Pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColorClass(
+                  order.status
+                )}`}
               >
                 {order.status}
               </span>
@@ -268,14 +361,7 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            <div className="mt-8 flex justify-between gap-4">
-              <button className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition" onClick={() => handleCancel(order.order_id)}>
-                Cancel
-              </button>
-              <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
-                Pay
-              </button>
-            </div>
+            <div className="mt-8">{renderActionButtons()}</div>
           </div>
         )}
       </div>
