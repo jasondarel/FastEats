@@ -11,103 +11,141 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const token = localStorage.getItem("token");
 
+  useEffect(() => {
+    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
+    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+    const script = document.createElement("script");
+    script.src = snapScript;
+    script.setAttribute("data-client-key", clientKey);
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const handleCancel = async (orderId) => {
-    // Show SweetAlert confirmation dialog
-    Swal.fire({
-      title: "Cancel Order?",
-      text: "Are you sure you want to cancel this order?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, cancel it!",
-      cancelButtonText: "No, keep my order",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.patch(
-            `http://localhost:5000/order/cancel-order/${orderId}`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          // Show success message with SweetAlert
-          Swal.fire(
-            "Cancelled!",
-            response.data.message || "Your order has been cancelled.",
-            "success"
-          ).then(() => {
-            navigate("/order-history");
-          });
-        } catch (err) {
-          console.error("Error cancelling order:", err);
-          setError(err.message || "Failed to cancel order");
-
-          // Show error message with SweetAlert
-          Swal.fire(
-            "Error!",
-            "Failed to cancel the order. Please try again.",
-            "error"
-          );
+    try {
+      const response = await axios.patch(
+        `http://localhost:5000/order/cancel-order/${orderId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      }
-    });
+      );
+      alert(response.data.message);
+      navigate("/order-history");
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      setError(err.message || "Failed to cancel order");
+    }
   };
 
-  const handleOrderAgain = () => {
-    // Navigate to the menu page or specific menu item
-    if (order && order.menu) {
-      navigate(`/menu/${order.menu.menu_id}`);
-    } else {
-      navigate("/menu");
+  const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
+    try {
+      setPaymentLoading(true);
+      console.log("Confirming payment for order ID:", orderId);
+      console.log("Item Quantity:", itemQuantity);
+      console.log("Item Price:", itemPrice);
+      
+      const response = await axios.post(
+        "http://localhost:5000/order/pay-order-confirmation",
+        {
+          order_id: orderId,
+          itemQuantity: itemQuantity,
+          itemPrice: itemPrice
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const snapToken = response.data.data.token;
+        
+        // Tambahkan opsi redirect_url: false untuk mencegah redirect otomatis
+        window.snap.pay(snapToken, {
+          skipOrderSummary: true,
+          showOrderId: true,
+          
+          onSuccess: function (result) {
+            console.log('success', result);
+            alert("Pembayaran berhasil!");
+            // Refresh halaman untuk memperbarui status atau navigasikan ke halaman sukses
+            window.location.href = "/payment-success?order_id=" + orderId;
+          },
+          onPending: function (result) {
+            console.log('pending', result);
+            alert("Pembayaran dalam proses. Silakan selesaikan pembayaran Anda.");
+            setPaymentLoading(false);
+            fetchOrderDetails();
+          },
+          onError: function (result) {
+            console.log('error', result);
+            alert("Terjadi kesalahan dalam proses pembayaran.");
+            setPaymentLoading(false);
+          },
+          onClose: function () {
+            console.log('customer closed the popup without finishing the payment');
+            alert("Pembayaran dibatalkan. Silakan coba lagi nanti.");
+            setPaymentLoading(false);
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error confirming payment:", err);
+      setError(err.message || "Failed to confirm payment");
+      setPaymentLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async () => {
+    if (!orderId) {
+      setError("Order ID is missing");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.get(
+        `http://localhost:5000/order/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Order data received:", response.data);
+      if (response.data.success && response.data.order) {
+        setOrder(response.data.order);
+      } else {
+        throw new Error("No order data received");
+      }
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      setError(error.message || "Failed to fetch order details");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     console.log("Fetching details for order ID:", orderId);
-    const fetchOrderDetails = async () => {
-      if (!orderId) {
-        setError("Order ID is missing");
-        setLoading(false);
-        return;
-      }
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
-
-        const response = await axios.get(
-          `http://localhost:5000/order/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        console.log("Order data received:", response.data);
-        if (response.data.success && response.data.order) {
-          setOrder(response.data.order);
-        } else {
-          throw new Error("No order data received");
-        }
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        setError(error.message || "Failed to fetch order details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrderDetails();
   }, [orderId]);
 
@@ -323,9 +361,7 @@ const OrderDetails = () => {
               </span>
             </div>
 
-            {/* Lottie animation for specific statuses */}
-            {renderStatusWithAnimation()}
-
+            {/* Rest of the UI remains the same */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-amber-50 p-4 rounded-lg">
               <div className="border-l-4 border-amber-400 pl-4">
                 <div className="text-sm text-amber-700 font-medium">
@@ -430,7 +466,32 @@ const OrderDetails = () => {
               </div>
             </div>
 
-            <div className="mt-8">{renderActionButtons()}</div>
+            <div className="mt-8 flex justify-between gap-4">
+              <button
+                className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+                onClick={() => handleCancel(order.order_id)}
+                disabled={paymentLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className={`w-1/2 py-2 px-4 ${
+                  paymentLoading
+                    ? "bg-yellow-400 cursor-wait"
+                    : "bg-yellow-500 hover:bg-yellow-600"
+                } text-white font-semibold rounded-lg transition`}
+                onClick={() =>
+                  handlePayConfirmation(
+                    order.order_id,
+                    order.item_quantity,
+                    order.menu.menu_price
+                  )
+                }
+                disabled={paymentLoading}
+              >
+                {paymentLoading ? "Memproses..." : "Pay"}
+              </button>
+            </div>
           </div>
         )}
       </div>
