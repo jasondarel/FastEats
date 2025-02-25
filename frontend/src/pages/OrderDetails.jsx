@@ -44,7 +44,7 @@ const OrderDetails = () => {
             response.data.message || "Your order has been cancelled.",
             "success"
           ).then(() => {
-            navigate("/order-history");
+            navigate("/orders");
           });
         } catch (err) {
           console.error("Error cancelling order:", err);
@@ -200,7 +200,7 @@ const OrderDetails = () => {
             onClick={handleBack}
             className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
           >
-            Back to Order History
+            Back to Orders
           </button>
         </div>
       </div>
@@ -216,12 +216,12 @@ const OrderDetails = () => {
         return (
           <div className="flex justify-between gap-4">
             <button
-              className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+              className="w-1/2 py-2 px-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition cursor-pointer"
               onClick={() => handleCancel(order.order_id)}
             >
               Cancel
             </button>
-            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer  ">
               Pay
             </button>
           </div>
@@ -304,7 +304,7 @@ const OrderDetails = () => {
                 d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
               />
             </svg>
-            Back to Order History
+            Back to Orders
           </button>
         </div>
 

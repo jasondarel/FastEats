@@ -41,6 +41,11 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const showOrderAgainButton =
     order.status === "Completed" || order.status === "Cancelled";
 
+  const navigate = useNavigate();
+  const handleOrderAgains = () => {
+    navigate(`/menu-details/${order.menu_id}`);
+  };
+
   return (
     <div
       className="my-3 px-4 py-4 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow cursor-pointer"
@@ -102,6 +107,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
               onClick={(e) => {
                 e.stopPropagation();
                 onOrderAgain(order);
+                handleOrderAgains();
               }}
               className="bg-yellow-500 hover:bg-yellow-600 px-4 py-1.5 rounded-lg text-white font-semibold text-sm transition-colors flex items-center"
             >
