@@ -15,6 +15,7 @@ import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import OrderHistory from "./pages/OrderHistory";
 import OrderDetails from "./pages/OrderDetails";
+import OrderList from "./pages/OrderList";
 import "flowbite";
 import OrderPreparingPage from "./pages/OrderPreparingPage";
 import OrderDeliveringPage from "./pages/OrderDeliveringPage";
@@ -56,7 +57,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/my-menu"
             element={
@@ -65,7 +65,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/become-seller"
             element={
@@ -74,7 +73,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/manage-restaurant"
             element={
@@ -83,7 +81,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/cart"
             element={
@@ -92,7 +89,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/menu-details/:menuId"
             element={
@@ -101,7 +97,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/my-menu/:menuId/details"
             element={
@@ -119,7 +114,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-history"
             element={
@@ -128,9 +122,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route path="/order/:orderId" element={<OrderDetails />} />
-
           <Route
             path="/order-status/preparing-order"
             element={
@@ -139,7 +131,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-status/delivering-order"
             element={
@@ -148,7 +139,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-status/completed-order"
             element={
@@ -157,12 +147,19 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/payment"
             element={
               <ProtectedRoute>
                 <Payment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-list"
+            element={
+              <ProtectedRoute>
+                <OrderList />
               </ProtectedRoute>
             }
           />
