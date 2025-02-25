@@ -140,10 +140,18 @@ const OrderHistory = () => {
           "Content-Type": "application/json",
         },
       });
-      setOrders(response.data.orders);
+
+      // Check if orders exist; otherwise, set an empty array
+      setOrders(response.data.orders || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
-      setError(error.message || "Failed to fetch orders");
+
+      // If the error is a 404, treat it as "no orders" instead of a failure
+      if (error.response && error.response.status === 404) {
+        setOrders([]); // No orders found
+      } else {
+        setError(error.message || "Failed to fetch orders");
+      }
     } finally {
       setLoading(false);
     }
@@ -174,7 +182,11 @@ const OrderHistory = () => {
       }}
     >
       <Sidebar />
-      <main className="md:ml-20 flex-1 flex flex-col items-center p-5 pt-8 w-full max-w-full">
+      <main
+        className={`md:ml-20 flex-1 flex flex-col items-center p-5 pt-8 w-full max-w-full ${
+          !loading && !error && orders.length === 0 ? "justify-center" : ""
+        }`}
+      >
         <div className="w-full max-w-2xl p-8 bg-white shadow-xl rounded-xl mb-6">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaHistory className="mr-3" /> Order History
