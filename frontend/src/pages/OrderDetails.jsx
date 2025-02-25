@@ -28,6 +28,59 @@ const OrderDetails = () => {
   }, []);
 
   const handleCancel = async (orderId) => {
+    // Show SweetAlert confirmation dialog
+    Swal.fire({
+      title: "Cancel Order?",
+      text: "Are you sure you want to cancel this order?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, cancel it!",
+      cancelButtonText: "No, keep my order",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.patch(
+            `http://localhost:5000/order/cancel-order/${orderId}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          // Show success message with SweetAlert
+          Swal.fire(
+            "Cancelled!",
+            response.data.message || "Your order has been cancelled.",
+            "success"
+          ).then(() => {
+            navigate("/orders");
+          });
+        } catch (err) {
+          console.error("Error cancelling order:", err);
+          setError(err.message || "Failed to cancel order");
+
+          // Show error message with SweetAlert
+          Swal.fire(
+            "Error!",
+            "Failed to cancel the order. Please try again.",
+            "error"
+          );
+        }
+      }
+    });
+  };
+
+  const handleOrderAgain = () => {
+    // Navigate to the menu page or specific menu item
+    if (order && order.menu) {
+      navigate(`/menu-details/${order.menu.menu_id}`);
+    } else {
+      navigate("/menu");
     try {
       const response = await axios.patch(
         `http://localhost:5000/order/cancel-order/${orderId}`,
@@ -254,12 +307,12 @@ const OrderDetails = () => {
         return (
           <div className="flex justify-between gap-4">
             <button
-              className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+              className="w-1/2 py-2 px-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition cursor-pointer"
               onClick={() => handleCancel(order.order_id)}
             >
               Cancel
             </button>
-            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
+            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer  ">
               Pay
             </button>
           </div>
