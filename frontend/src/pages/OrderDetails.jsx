@@ -75,44 +75,44 @@ const OrderDetails = () => {
     });
   };
 
-  const handleOrderAgain = () => {
+  const handleOrderAgain = async () => {
     // Navigate to the menu page or specific menu item
     if (order && order.menu) {
       navigate(`/menu-details/${order.menu.menu_id}`);
     } else {
       navigate("/menu");
-    try {
-      const response = await axios.patch(
-        `http://localhost:5000/order/cancel-order/${orderId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      alert(response.data.message);
-      navigate("/order-history");
-    } catch (err) {
-      console.error("Error cancelling order:", err);
-      setError(err.message || "Failed to cancel order");
+      try {
+        const response = await axios.patch(
+          `http://localhost:5000/order/cancel-order/${orderId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        alert(response.data.message);
+        navigate("/order-history");
+      } catch (err) {
+        console.error("Error cancelling order:", err);
+        setError(err.message || "Failed to cancel order");
+      }
     }
   };
-
   const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
     try {
       setPaymentLoading(true);
       console.log("Confirming payment for order ID:", orderId);
       console.log("Item Quantity:", itemQuantity);
       console.log("Item Price:", itemPrice);
-      
+
       const response = await axios.post(
         "http://localhost:5000/order/pay-order-confirmation",
         {
           order_id: orderId,
           itemQuantity: itemQuantity,
-          itemPrice: itemPrice
+          itemPrice: itemPrice,
         },
         {
           headers: {
@@ -124,34 +124,38 @@ const OrderDetails = () => {
 
       if (response.data.success) {
         const snapToken = response.data.data.token;
-        
+
         // Tambahkan opsi redirect_url: false untuk mencegah redirect otomatis
         window.snap.pay(snapToken, {
           skipOrderSummary: true,
           showOrderId: true,
-          
+
           onSuccess: function (result) {
-            console.log('success', result);
+            console.log("success", result);
             alert("Pembayaran berhasil!");
             // Refresh halaman untuk memperbarui status atau navigasikan ke halaman sukses
             window.location.href = "/payment-success?order_id=" + orderId;
           },
           onPending: function (result) {
-            console.log('pending', result);
-            alert("Pembayaran dalam proses. Silakan selesaikan pembayaran Anda.");
+            console.log("pending", result);
+            alert(
+              "Pembayaran dalam proses. Silakan selesaikan pembayaran Anda."
+            );
             setPaymentLoading(false);
             fetchOrderDetails();
           },
           onError: function (result) {
-            console.log('error', result);
+            console.log("error", result);
             alert("Terjadi kesalahan dalam proses pembayaran.");
             setPaymentLoading(false);
           },
           onClose: function () {
-            console.log('customer closed the popup without finishing the payment');
+            console.log(
+              "customer closed the popup without finishing the payment"
+            );
             alert("Pembayaran dibatalkan. Silakan coba lagi nanti.");
             setPaymentLoading(false);
-          }
+          },
         });
       }
     } catch (err) {
@@ -167,7 +171,7 @@ const OrderDetails = () => {
       setLoading(false);
       return;
     }
-    
+
     try {
       if (!token) {
         throw new Error("No authentication token found");
