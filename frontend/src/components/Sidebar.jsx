@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import axios from "axios";
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
@@ -16,6 +17,12 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const [initialPosition, setInitialPosition] = useState({
     x: window.innerWidth - 70,
     y: 100,
+  });
+
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    profile_photo: "",
   });
 
   useEffect(() => {
@@ -48,6 +55,28 @@ const Sidebar = ({ isTaskbarOpen }) => {
     window.addEventListener("resize", updateSidebarState);
     return () => window.removeEventListener("resize", updateSidebarState);
   }, [isTaskbarOpen]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get("http://localhost:5002/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setProfile({
+          name: response.data.user.name,
+          email: response.data.user.email,
+          profile_photo: response.data.user.profile_photo,
+        });
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -229,6 +258,31 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </li>
             </ul>
           </nav>
+
+          <div className="flex items-center mb-4 ">
+            {/* Profile Picture */}
+            <div className="bg-white w-15 h-15 rounded-full flex items-center justify-center overflow-hidden">
+              <img
+                src={
+                  profile.profile_photo ||
+                  "https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png"
+                }
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex flex-col ml-2 max-w-[150px]">
+              {" "}
+              <h2 className="font-semibold truncate overflow-hidden whitespace-nowrap">
+                {profile.email}
+              </h2>
+              <h2 className="font-bold text-xl truncate overflow-hidden whitespace-nowrap">
+                {profile.name || guest}
+              </h2>
+            </div>
+          </div>
 
           <button
             onClick={handleLogout}
