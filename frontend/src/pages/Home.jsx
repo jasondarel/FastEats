@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { Carousel } from "flowbite-react";
 import bannerMain from "../assets/bannerMain.png";
 import banner1 from "../assets/banner1.png";
 import banner2 from "../assets/banner2.png";
@@ -126,17 +125,7 @@ const Home = () => {
     <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
-        <div className="h-56 sm:h-64 xl:h-80 2xl:h-96 xl:px-50">
-          <Carousel>
-            <img
-              className="scale-x-100 scale-y-[0.7] bg-amber-900"
-              src={bannerMain}
-              alt="..."
-            />
-            <img className="scale-x-100 scale-y-65" src={banner1} alt="..." />
-            <img className="scale-y-[0.65]" src={banner2} alt="..." />
-          </Carousel>
-        </div>
+        
 
         <h1 className="flex-col flex items-center justify-center text-xl md:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
           <div className="flex items-end bg-black justify-center min-w-30 md:min-w-50 xl:min-w-70 rounded-xl">
