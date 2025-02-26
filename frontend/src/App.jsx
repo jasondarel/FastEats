@@ -18,9 +18,6 @@ import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import OrderList from "./pages/OrderList";
 import "flowbite";
-import OrderPreparingPage from "./pages/OrderPreparingPage";
-import OrderDeliveringPage from "./pages/OrderDeliveringPage";
-import OrderCompletedPage from "./pages/OrderCompletedPage";
 import Payment from "./pages/Thanks";
 import Thanks from "./pages/Thanks";
 import PayNow from "./pages/PayNow";
@@ -125,36 +122,8 @@ function App() {
             }
           />
           <Route path="/order/:orderId" element={<OrderDetails />} />
-          <Route
-            path="/order-status/preparing-order"
-            element={
-              <ProtectedRoute>
-                <OrderPreparingPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-status/delivering-order"
-            element={
-              <ProtectedRoute>
-                <OrderDeliveringPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/order-status/completed-order"
-            element={
-              <ProtectedRoute>
-                <OrderCompletedPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/thanks"
-            element={
-                <Thanks />
-            }
-          />
+
+          <Route path="/thanks" element={<Thanks />} />
           <Route
             path="/order-list"
             element={
@@ -163,12 +132,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/pay-now/:orderId"
-            element={
-                <PayNow />
-            }
-            />
+          <Route path="/pay-now/:orderId" element={<PayNow />} />
         </Routes>
       </div>
     </div>
