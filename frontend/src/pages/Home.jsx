@@ -157,20 +157,20 @@ const Home = () => {
                   src={image}
                   alt={`Slide ${index + 1}`}
                   className="w-full flex-shrink-0 rounded-md"
-                  style={{ width: "100%", height: "500px", objectFit: "cover" }}
+                  style={{ width: "100%", height: "500px", objectFit: "cover" }}  
                 />
               ))}
             </div>
 
             {/* Slider Controls */}
             <button
-              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white text-md cursor-pointer"
               onClick={prevSlide}
             >
               ❮
             </button>
             <button
-              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full  text-white text-md cursor-pointer"
               onClick={nextSlide}
             >
               ❯
