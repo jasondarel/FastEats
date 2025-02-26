@@ -13,7 +13,8 @@ const SearchBar = ({
   setMaxPrice,
   showUnavailable = false,
   setShowUnavailable = null,
-  showFilterButton = true, // New prop to control filter button visibility
+  showFilterButton = true,
+  placeholder = "Search menu...", // Add default placeholder prop
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const filterRef = useRef(null);
@@ -75,7 +76,7 @@ const SearchBar = ({
       <div className="relative flex-grow max-w-lg">
         <input
           type="text"
-          placeholder="Search menu..."
+          placeholder={placeholder} // Use the custom placeholder
           value={searchQuery}
           onChange={handleSearch}
           className="w-full p-2 pl-10 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"

@@ -183,7 +183,8 @@ const Home = () => {
           setMinPrice={() => {}}
           maxPrice=""
           setMaxPrice={() => {}}
-          showFilterButton={false} // Hide the filter button
+          showFilterButton={false}
+          placeholder="Search restaurants..." // Custom placeholder for restaurant search
         />
 
         <section className="mt-8">
