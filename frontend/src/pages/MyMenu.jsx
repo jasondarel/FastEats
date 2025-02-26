@@ -253,6 +253,7 @@ const MyMenuPage = () => {
           setMinPrice={setMinPrice}
           maxPrice={maxPrice}
           setMaxPrice={setMaxPrice}
+          placeholder="Search my menu items..."
         />
 
         {filteredMenu.length > 0 ? (

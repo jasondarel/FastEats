@@ -4,14 +4,15 @@ import Sidebar from "../components/Sidebar";
 import bannerMain from "../assets/bannerMain.png";
 import banner1 from "../assets/banner1.png";
 import banner2 from "../assets/banner2.png";
+import SearchBar from "../components/SearchBar"; // Import the updated SearchBar component
 
 import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
-  const [filteredRestaurants, setFilteredRestaurants] = useState([]); // New state for filtered results
-  const [searchQuery, setSearchQuery] = useState(""); // Search state
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -77,7 +78,7 @@ const Home = () => {
 
         const data = await response.json();
 
-        // 🔥 Filter out closed restaurants before updating state
+        // Filter out closed restaurants before updating state
         const openRestaurants = data.restaurants.filter(
           (restaurant) => restaurant.is_open
         );
@@ -94,19 +95,15 @@ const Home = () => {
     fetchRestaurants();
   }, []);
 
-  // Handle search
-  const handleSearch = (event) => {
-    const query = event.target.value.toLowerCase();
-    setSearchQuery(query);
-
-    const filtered = restaurants
-      .filter((restaurant) => restaurant.is_open)
-      .filter((restaurant) =>
-        restaurant.restaurant_name.toLowerCase().includes(query)
-      );
-
+  // Update filtered restaurants whenever search query changes
+  useEffect(() => {
+    const filtered = restaurants.filter((restaurant) =>
+      restaurant.restaurant_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
     setFilteredRestaurants(filtered);
-  };
+  }, [searchQuery, restaurants]);
 
   if (isLoading) {
     return (
@@ -165,34 +162,19 @@ const Home = () => {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex justify-center items-center">
-          <div className="relative flex-grow max-w-lg w-full">
-            <input
-              type="text"
-              placeholder="Search Restaurant..."
-              value={searchQuery}
-              onChange={handleSearch}
-              className="w-full p-2 pl-10 border border-yellow-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white"
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-yellow-500"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+        {/* Use SearchBar without filter button */}
+        <SearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filterCategory=""
+          setFilterCategory={() => {}}
+          minPrice=""
+          setMinPrice={() => {}}
+          maxPrice=""
+          setMaxPrice={() => {}}
+          showFilterButton={false}
+          placeholder="Search restaurants..." // Custom placeholder for restaurant search
+        />
 
         <section className="mt-8">
           <h2 className="text-xl font-bold text-yellow-800 mb-4">

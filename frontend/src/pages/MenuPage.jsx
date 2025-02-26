@@ -126,6 +126,7 @@ const MenuPage = () => {
           setMaxPrice={setMaxPrice}
           showUnavailable={showUnavailable}
           setShowUnavailable={setShowUnavailable}
+          placeholder="Search menu items..." // Custom placeholder for menu search
         />
 
         {/* Menu Items */}
