@@ -106,18 +106,23 @@ const OrderDetails = () => {
           onSuccess: function (result) {
             console.log("success", result);
             alert("Pembayaran berhasil!");
-            
+
             window.location.href = "/payment-success?order_id=" + orderId;
           },
           onPending: async function (result) {
             try {
-              const response = await axios.post("http://localhost:5000/order/save-snap-token", {
-                order_id: orderId,
-                snap_token: snapToken,
-              });
-              alert("Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi.");
+              const response = await axios.post(
+                "http://localhost:5000/order/save-snap-token",
+                {
+                  order_id: orderId,
+                  snap_token: snapToken,
+                }
+              );
+              alert(
+                "Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi."
+              );
               setPaymentLoading(false);
-            }catch(err) {
+            } catch (err) {
               console.error("Error saving snap token:", err);
             }
           },
@@ -128,10 +133,14 @@ const OrderDetails = () => {
           },
           onClose: async function () {
             try {
-              const statusResponse = await axios.get(`http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`);
-          
+              const statusResponse = await axios.get(
+                `http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`
+              );
+
               if (statusResponse.data.transaction_status === "pending") {
-                alert("Anda sudah memilih metode pembayaran, silakan lanjutkan pembayaran di halaman transaksi.");
+                alert(
+                  "Anda sudah memilih metode pembayaran, silakan lanjutkan pembayaran di halaman transaksi."
+                );
               } else {
                 alert("Pembayaran dibatalkan. Silakan coba lagi.");
               }
@@ -265,6 +274,8 @@ const OrderDetails = () => {
         return "bg-red-200 text-red-800"; // Red for cancelled
       case "Delivering":
         return "bg-amber-200 text-amber-800"; // Amber for delivering
+      case "Pending":
+        return "bg-purple-200 text-purple-800"; // Amber for delivering
       default:
         return "bg-gray-200 text-gray-800"; // Gray for any other status
     }
@@ -298,11 +309,11 @@ const OrderDetails = () => {
       case "Completed":
         return "Your order has been delivered successfully!";
       case "Waiting":
-        return "Please complete your payment to proceed";
+        return "Please select a payment method to proceed.";
       case "Pending":
-        return "Your order has been cancelled";
+        return "Please complete your payment to proceed.";
       case "Cancelled":
-        return "Your order has been cancelled";
+        return "Your order has been cancelled.";
     }
   };
 
@@ -334,13 +345,15 @@ const OrderDetails = () => {
     );
   }
 
-  const handlePayment = async() => {
+  const handlePayment = async () => {
     const orderId = order.order_id;
 
     if (!orderId) return;
-    
+
     try {
-      const response = await fetch(`http://localhost:5000/order/snap/${orderId}`);
+      const response = await fetch(
+        `http://localhost:5000/order/snap/${orderId}`
+      );
       const data = await response.json();
 
       if (data?.snap_token) {
@@ -352,7 +365,7 @@ const OrderDetails = () => {
       console.error("Error fetching transaction token:", error);
       alert("Error processing payment.");
     }
-  }
+  };
 
   // Render buttons based on order status
   const renderActionButtons = () => {
@@ -394,7 +407,7 @@ const OrderDetails = () => {
               Pay Order
             </button>
           </div>
-        )
+        );
       case "Cancelled":
         return (
           <div className="flex justify-center">
