@@ -5,9 +5,11 @@ import {
   cancelOrderService,
   createOrderService,
   getOrderByIdService,
+  getSnapTokenService,
   getUserOrdersService,
   payOrderService,
   pendingOrderService,
+  saveSnapTokenService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import { createTransactionService } from "../service/transactionService.js";
@@ -229,6 +231,7 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
+  console.log("Received payment confirmation:", req.body);
   try {
     const { userId } = req.user;
     const { order_id, itemPrice, itemQuantity } = req.body;
@@ -310,8 +313,6 @@ export const payOrderController = async (req, res) => {
       expiry_time,
     } = req.body;
 
-    const { va_number, bank } = req.body.va_numbers[0];
-
     if (!order_id || !status_code || !gross_amount || !signature_key) {
       console.log("Missing required fields in payment notification");
       return res.status(400).json({
@@ -339,17 +340,31 @@ export const payOrderController = async (req, res) => {
     }
 
     if (transaction_status === "pending") {
-      const newTransaction = {
-        order_id: order_id,
-        currency: currency,
-        transaction_time: transaction_time,
-        expiry_time: expiry_time,
-        gross_amount: gross_amount,
-        bank: bank,
-        va_number: va_number,
-        payment_type: payment_type,
-        transaction_status: transaction_status,
-      };
+      let newTransaction;
+      if(payment_type === "bank_transfer") {
+        const { va_number, bank } = req.body.va_numbers[0];
+        newTransaction = {
+          order_id: order_id,
+          currency: currency,
+          transaction_time: transaction_time,
+          expiry_time: expiry_time,
+          gross_amount: gross_amount,
+          bank: bank,
+          va_number: va_number,
+          payment_type: payment_type,
+          transaction_status: transaction_status,
+        };
+      } else if(payment_type === "qris") {
+        newTransaction = {
+          order_id: order_id,
+          currency: currency,
+          transaction_time: transaction_time,
+          expiry_time: expiry_time,
+          gross_amount: gross_amount,
+          payment_type: payment_type,
+          transaction_status: transaction_status,
+        };
+      }
 
       const transactionResponse = await createTransactionService(
         newTransaction
@@ -448,3 +463,43 @@ export const thanksController = async (req, res) => {
     `http://localhost:5173/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`
   );
 };
+
+export const checkMidtransStatusController = async (req, res) => {
+  try {
+    const { order_id } = req.query;
+    
+    const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
+    const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`;
+
+    const response = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+      headers: { Authorization: base64Auth },
+    });
+
+    return res.status(200).json(response.data);
+  } catch (err) {
+    console.error("Midtrans status check error:", err.response?.data || err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+export const saveSnapTokenController = async (req, res) => {
+  const { order_id, snap_token } = req.body;
+  const response = await saveSnapTokenService(order_id, snap_token);
+  if (!response) {
+    return res.status(500).json({ success: false, message: "Failed to save snap token" });
+  }
+  return res.status(200).json({ success: true, message: "Snap token saved successfully" });
+}
+
+export const getSnapTokenController = async (req, res) => {
+  const { order_id } = req.params;
+  try {
+    const response = await getSnapTokenService(order_id);
+    if (!response) {
+      return res.status(404).json({ success: false, message: "Snap token not found" });
+    }
+    return res.status(200).json({ success: true, snap_token: response.snap_token });
+  } catch(err) {
+
+  }
+}

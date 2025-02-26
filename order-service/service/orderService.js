@@ -48,6 +48,21 @@ const pendingOrderService = async(orderId) => {
     return result.rows[0];
 }
 
+const saveSnapTokenService = async(orderId, snapToken) => {
+    const result = await pool.query(
+        "INSERT INTO snaps (order_id, snap_token) VALUES ($1, $2) RETURNING *",
+        [orderId, snapToken]
+    );
+    return result.rows[0];
+}
+
+const getSnapTokenService = async(orderId) => {
+    const result = await pool.query(
+        "SELECT * FROM snaps WHERE order_id = $1",
+        [orderId]
+    );
+    return result.rows[0];
+}
 
 export {
     createOrderService,
@@ -55,5 +70,7 @@ export {
     getOrderByIdService,
     cancelOrderService,
     payOrderService,
-    pendingOrderService
+    pendingOrderService,
+    saveSnapTokenService,
+    getSnapTokenService
 }
