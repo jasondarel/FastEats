@@ -11,10 +11,10 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const token = localStorage.getItem("token");
 
   const handleCancel = async (orderId) => {
-    // Show SweetAlert confirmation dialog
     Swal.fire({
       title: "Cancel Order?",
       text: "Are you sure you want to cancel this order?",
@@ -38,7 +38,6 @@ const OrderDetails = () => {
             }
           );
 
-          // Show success message with SweetAlert
           Swal.fire(
             "Cancelled!",
             response.data.message || "Your order has been cancelled.",
@@ -61,7 +60,140 @@ const OrderDetails = () => {
     });
   };
 
-  const handleOrderAgain = async () => {
+  useEffect(() => {
+    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
+    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+    const script = document.createElement("script");
+    script.src = snapScript;
+    script.setAttribute("data-client-key", clientKey);
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
+    console.log("Confirming payment for order ID:", orderId);
+    try {
+      setPaymentLoading(true);
+      console.log("Confirming payment for order ID:", orderId);
+      console.log("Item Quantity:", itemQuantity);
+      console.log("Item Price:", itemPrice);
+      console.log("Token:", token);
+      const response = await axios.post(
+        "http://localhost:5000/order/pay-order-confirmation",
+        {
+          order_id: orderId,
+          itemQuantity: itemQuantity,
+          itemPrice: itemPrice,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const snapToken = response.data.data.token;
+        console.log("Snap Token:", snapToken);
+        window.snap.pay(snapToken, {
+          skipOrderSummary: true,
+          showOrderId: true,
+
+          onSuccess: function (result) {
+            console.log("success", result);
+            alert("Pembayaran berhasil!");
+
+            window.location.href = "/payment-success?order_id=" + orderId;
+          },
+          onPending: async function (result) {
+            try {
+              const response = await axios.post(
+                "http://localhost:5000/order/save-snap-token",
+                {
+                  order_id: orderId,
+                  snap_token: snapToken,
+                }
+              );
+              alert(
+                "Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi."
+              );
+              setPaymentLoading(false);
+            } catch (err) {
+              console.error("Error saving snap token:", err);
+            }
+          },
+          onError: function (result) {
+            console.log("error", result);
+            alert("Terjadi kesalahan dalam proses pembayaran.");
+            setPaymentLoading(false);
+          },
+          onClose: async function () {
+            try {
+              const statusResponse = await axios.get(
+                `http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`
+              );
+
+              if (statusResponse.data.transaction_status === "pending") {
+                alert(
+                  "Anda sudah memilih metode pembayaran, silakan lanjutkan pembayaran di halaman transaksi."
+                );
+              } else {
+                alert("Pembayaran dibatalkan. Silakan coba lagi.");
+              }
+            } catch (error) {
+              console.error("Error checking transaction status:", error);
+            }
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Error confirming payment:", err);
+      setError(err.message || "Failed to confirm payment");
+      setPaymentLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async () => {
+    if (!orderId) {
+      setError("Order ID is missing");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.get(
+        `http://localhost:5000/order/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Order data received:", response.data);
+      if (response.data.success && response.data.order) {
+        setOrder(response.data.order);
+      } else {
+        throw new Error("No order data received");
+      }
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      setError(error.message || "Failed to fetch order details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOrderAgain = () => {
     // Navigate to the menu page or specific menu item
     if (order && order.menu) {
       navigate(`/menu/${order.menu.menu_id}`);
@@ -259,6 +391,8 @@ const OrderDetails = () => {
         return "bg-red-200 text-red-800"; // Red for cancelled
       case "Delivering":
         return "bg-amber-200 text-amber-800"; // Amber for delivering
+      case "Pending":
+        return "bg-purple-200 text-purple-800"; // Amber for delivering
       default:
         return "bg-gray-200 text-gray-800"; // Gray for any other status
     }
@@ -277,6 +411,8 @@ const OrderDetails = () => {
         return "https://lottie.host/e32b2761-4d9d-4f63-95ab-899051f6b8da/jeAjS2g6jh.lottie";
       case "Cancelled":
         return "https://lottie.host/1a20f4b7-ffd5-47c2-9ff0-f8abfbd91352/QaXJ8BkEZQ.lottie";
+      case "Pending":
+        return "https://lottie.host/e32b2761-4d9d-4f63-95ab-899051f6b8da/jeAjS2g6jh.lottie";
     }
   };
 
@@ -290,9 +426,11 @@ const OrderDetails = () => {
       case "Completed":
         return "Your order has been delivered successfully!";
       case "Waiting":
-        return "Please complete your payment to proceed";
+        return "Please select a payment method to proceed.";
+      case "Pending":
+        return "Please complete your payment to proceed.";
       case "Cancelled":
-        return "Your order has been cancelled";
+        return "Your order has been cancelled.";
     }
   };
 
@@ -324,6 +462,28 @@ const OrderDetails = () => {
     );
   }
 
+  const handlePayment = async () => {
+    const orderId = order.order_id;
+
+    if (!orderId) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/order/snap/${orderId}`
+      );
+      const data = await response.json();
+
+      if (data?.snap_token) {
+        window.snap.pay(data.snap_token);
+      } else {
+        alert("Failed to get transaction token.");
+      }
+    } catch (error) {
+      console.error("Error fetching transaction token:", error);
+      alert("Error processing payment.");
+    }
+  };
+
   // Render buttons based on order status
   const renderActionButtons = () => {
     if (!order) return null;
@@ -333,17 +493,38 @@ const OrderDetails = () => {
         return (
           <div className="flex justify-between gap-4">
             <button
-              className="w-1/2 py-2 px-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition cursor-pointer"
+              className="w-1/2 py-2 px-4 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
               onClick={() => handleCancel(order.order_id)}
+              disabled={paymentLoading}
             >
               Cancel
             </button>
-            <button className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer  ">
+            <button
+              className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer  "
+              onClick={() =>
+                handlePayConfirmation(
+                  order.order_id,
+                  order.item_quantity,
+                  order.menu.menu_price
+                )
+              }
+            >
               Pay
             </button>
           </div>
         );
       case "Completed":
+      case "Pending":
+        return (
+          <div className="flex justify-center">
+            <button
+              className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+              onClick={handlePayment}
+            >
+              Pay Order
+            </button>
+          </div>
+        );
       case "Cancelled":
         return (
           <div className="flex justify-center">
@@ -360,8 +541,22 @@ const OrderDetails = () => {
         return null; // No buttons for these statuses
       default:
         return (
-          <button className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
-            Pay
+          <button
+            className={`w-1/2 py-2 px-4 ${
+              paymentLoading
+                ? "bg-yellow-400 cursor-wait"
+                : "bg-yellow-500 hover:bg-yellow-600"
+            } text-white font-semibold rounded-lg transition`}
+            onClick={() =>
+              handlePayConfirmation(
+                order.order_id,
+                order.item_quantity,
+                order.menu.menu_price
+              )
+            }
+            disabled={paymentLoading}
+          >
+            {paymentLoading ? "Memproses..." : "Pay"}
           </button>
         );
     }

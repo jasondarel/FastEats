@@ -36,6 +36,16 @@ const createTable = async () => {
       );
   `);
 
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS snaps (
+            snap_id SERIAL PRIMARY KEY,
+            order_id INT NOT NULL,
+            snap_token TEXT,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW(),
+            FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+        );`)
+
     console.log("✅ Tables created successfully!");
   } catch (error) {
     console.error("❌ Error creating tables:", error);

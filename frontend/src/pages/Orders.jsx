@@ -32,6 +32,8 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         return "bg-green-300 text-green-800"; // Green for completed
       case "Cancelled":
         return "bg-red-200 text-red-800"; // Red for cancelled
+      case "Pending":
+        return "bg-purple-200 text-purple-800"; // Red for cancelled
       default:
         return "bg-gray-200 text-gray-800"; // Gray for any other status
     }
@@ -58,7 +60,6 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           </div>
           <div>
             <h4 className="font-bold leading-3 text-sm">Order</h4>
-
             <p className="text-sm text-slate-700">
               {formatDate(order.created_at) || "13 Nov 2025"}
             </p>
