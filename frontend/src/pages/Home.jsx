@@ -157,7 +157,7 @@ const Home = () => {
                   src={image}
                   alt={`Slide ${index + 1}`}
                   className="w-full flex-shrink-0 rounded-md"
-                  style={{ width: "100%", height: "500px", objectFit: "cover" }}  
+                  style={{ width: "100%", height: "500px", objectFit: "cover" }}
                 />
               ))}
             </div>

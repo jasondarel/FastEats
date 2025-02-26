@@ -277,8 +277,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
               onClick={toggleProfileDropup}
               className="flex items-center p-2 rounded-lg hover:bg-black hover:bg-opacity-30 transition cursor-pointer"
             >
-              {/* Profile Picture */}
-              <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
+              {/* Profile Picture - Added min-width to prevent squeezing */}
+              <div className="bg-white w-12 h-12 min-w-[3rem] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 <img
                   src={
                     profile.profile_photo ||
@@ -289,20 +289,20 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 />
               </div>
 
-              {/* Profile Info */}
-              <div className="flex flex-col ml-2 max-w-[150px]">
-                <h2 className="font-bold text-xl truncate overflow-hidden whitespace-nowrap">
+              {/* Profile Info - Improved width management */}
+              <div className="flex flex-col ml-2 flex-grow min-w-0">
+                <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
                   {profile.name || "guest"}
                 </h2>
-                <h2 className="font-semibold truncate overflow-hidden whitespace-nowrap text-sm">
+                <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
                   {profile.email}
                 </h2>
               </div>
 
-              {/* Dropdown indicator arrow */}
+              {/* Dropdown indicator arrow - Made it flex-shrink-0 */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-5 w-5 ml-1 transform transition-transform ${
+                className={`h-5 w-5 ml-1 transform transition-transform flex-shrink-0 ${
                   isProfileDropupOpen ? "" : "rotate-180"
                 }`}
                 fill="none"
@@ -346,7 +346,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-500 hover:text-white transition"
+                  className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-500 hover:text-white transition cursor-pointer"
                 >
                   <div className="flex items-center">
                     <svg
