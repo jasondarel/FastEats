@@ -21,6 +21,7 @@ import "flowbite";
 import Payment from "./pages/Thanks";
 import Thanks from "./pages/Thanks";
 import PayNow from "./pages/PayNow";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
 
 function App() {
   return (
@@ -133,6 +134,15 @@ function App() {
             }
           />
           <Route path="/pay-now/:orderId" element={<PayNow />} />
+
+          <Route
+            path="/restaurant-dashboard"
+            element={
+              <ProtectedRoute>
+                <RestaurantDashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </div>
