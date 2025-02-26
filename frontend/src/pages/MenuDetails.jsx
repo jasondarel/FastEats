@@ -200,9 +200,24 @@ const MenuDetails = () => {
             >
               <MinusCircle className="w-6 h-6" />
             </button>
-            <span className="text-xl font-semibold min-w-[3ch] text-center">
-              {quantity}
-            </span>
+
+            {/* Input with CSS to hide number arrows */}
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                setQuantity(value > 0 ? value : 1);
+              }}
+              onBlur={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                if (value < 1) setQuantity(1);
+              }}
+              className="text-xl font-semibold min-w-[3ch] w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-yellow-500 rounded
+                  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="1"
+            />
+
             <button
               onClick={() => handleQuantityChange(1)}
               className="text-yellow-600 hover:text-yellow-700 transition-colors"
@@ -226,8 +241,8 @@ const MenuDetails = () => {
           <button
             onClick={handleAddToCart}
             className="flex-1 bg-white border-2 border-yellow-500 text-yellow-500 px-6 py-3 rounded-lg font-semibold 
-                     flex items-center justify-center gap-2 hover:bg-yellow-50
-                     transition-colors duration-200 ease-in-out"
+               flex items-center justify-center gap-2 hover:bg-yellow-50
+               transition-colors duration-200 ease-in-out"
           >
             <ShoppingCart className="w-5 h-5" />
             Add to Cart
@@ -236,8 +251,8 @@ const MenuDetails = () => {
           <button
             onClick={handleOrderNow}
             className="flex-1 bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold 
-                     flex items-center justify-center gap-2 hover:bg-yellow-600
-                     transition-colors duration-200 ease-in-out"
+               flex items-center justify-center gap-2 hover:bg-yellow-600
+               transition-colors duration-200 ease-in-out"
           >
             <CreditCard className="w-5 h-5" />
             Order Now - Rp {(menu.menu_price * quantity).toLocaleString()}

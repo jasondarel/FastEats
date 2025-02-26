@@ -540,6 +540,16 @@ const OrderDetails = () => {
               <h2 className="text-xl font-semibold mb-6 text-amber-900">
                 Order Details
               </h2>
+              {/* Menu Image - Moved here, right before the Order Details section */}
+              {order.menu.menu_image && (
+                <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+                  <img
+                    src={`http://localhost:5000/restaurant/uploads/menu/${order.menu.menu_image}`}
+                    alt={order.menu.menu_name}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
               <div className="space-y-4 bg-gradient-to-r from-amber-50 to-white p-6 rounded-lg">
                 <div className="flex justify-between items-center py-2 border-b border-amber-100">
                   <span className="text-amber-700 font-medium">Menu Name</span>
@@ -590,16 +600,6 @@ const OrderDetails = () => {
                   Menu Description
                 </div>
                 <p className="text-amber-900">{order.menu.menu_description}</p>
-              </div>
-            )}
-
-            {order.menu.menu_image && (
-              <div className="mt-8 p-4 bg-amber-50 rounded-lg">
-                <img
-                  src={`http://localhost:5000/restaurant/uploads/menu/${order.menu.menu_image}`}
-                  alt={order.menu.menu_name}
-                  className="w-32 h-32 object-contain mx-auto"
-                />
               </div>
             )}
 
