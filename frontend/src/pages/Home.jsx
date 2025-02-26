@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import bannerMain from "../assets/bannerMain.png";
-import banner1 from "../assets/banner1.png";
-import banner2 from "../assets/banner2.png";
+// import banner0 from "../assets/bannerMain.png";
+// import banner1 from "../assets/banner1.png";
+// import banner2 from "../assets/banner2.png";
 import SearchBar from "../components/SearchBar"; // Import the updated SearchBar component
 
 import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
@@ -105,6 +105,28 @@ const Home = () => {
     setFilteredRestaurants(filtered);
   }, [searchQuery, restaurants]);
 
+  const images = ["/bannerMain.png", "/banner1.png", "/banner2.png"];
+  const intervalTime = 5000; // Ganti angka ini untuk mengatur kecepatan auto slide (ms)
+  const [currentIndex, setCurrentIndex] = useState(0); // Added state for carousel
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
+  };
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  // Auto Slide Effect
+  useEffect(() => {
+    const interval = setInterval(nextSlide, intervalTime);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
   if (isLoading) {
     return (
       <div className="flex ml-64 bg-yellow-50 min-h-screen">
@@ -122,8 +144,39 @@ const Home = () => {
     <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5">
-        
+        <div className="flex  justify-center">
+          <div className="relative w-[1200px] overflow-hidden rounded-md">
+            {/* Carousel Wrapper */}
+            <div
+              className="flex transition-transform duration-1500 will-change-transform ease-in-out rounded-md"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {images.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`Slide ${index + 1}`}
+                  className="w-full flex-shrink-0 rounded-md"
+                  style={{ width: "100%", height: "500px", objectFit: "cover" }}
+                />
+              ))}
+            </div>
 
+            {/* Slider Controls */}
+            <button
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"
+              onClick={prevSlide}
+            >
+              ❮
+            </button>
+            <button
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"
+              onClick={nextSlide}
+            >
+              ❯
+            </button>
+          </div>
+        </div>
         <h1 className="flex-col flex items-center justify-center text-xl md:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
           <div className="flex items-end bg-black justify-center min-w-30 md:min-w-50 xl:min-w-70 rounded-xl">
             <RotatingText
