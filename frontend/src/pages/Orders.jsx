@@ -60,6 +60,10 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           </div>
           <div>
             <h4 className="font-bold leading-3 text-sm">Order</h4>
+<<<<<<< HEAD
+=======
+
+>>>>>>> f867aabf4ea09b41f332fd330dddf794a574e25e
             <p className="text-sm text-slate-700">
               {formatDate(order.created_at) || "13 Nov 2025"}
             </p>
