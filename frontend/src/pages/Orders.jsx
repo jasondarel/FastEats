@@ -108,7 +108,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                 onOrderAgain(order);
                 handleOrderAgains();
               }}
-              className="bg-yellow-500 hover:bg-yellow-600 px-4 py-1.5 rounded-lg text-white font-semibold text-sm transition-colors flex items-center"
+              className="bg-yellow-500 hover:bg-yellow-600 px-4 py-1.5 rounded-lg text-white font-semibold text-sm transition-colors flex items-center cursor-pointer"
             >
               <FaSync className="mr-2" /> Order again
             </button>

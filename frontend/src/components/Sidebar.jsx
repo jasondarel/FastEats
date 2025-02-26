@@ -346,7 +346,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-500 hover:text-white transition"
+                  className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-500 hover:text-white transition cursor-pointer"
                 >
                   <div className="flex items-center">
                     <svg
