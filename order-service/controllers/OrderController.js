@@ -5,6 +5,7 @@ import {
   cancelOrderService,
   createOrderService,
   getOrderByIdService,
+  getOrdersByRestaurantIdService,
   getSnapTokenService,
   getUserOrdersService,
   payOrderService,
@@ -503,3 +504,96 @@ export const getSnapTokenController = async (req, res) => {
 
   }
 }
+
+export const getOrdersByRestaurantIdController = async (req, res) => {
+  const { userId, role } = req.user;
+  const token = req.headers.authorization;
+
+  try {
+    // Check user role
+    if (role !== "seller") {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view these orders",
+      });
+    }
+    
+    // Get restaurant information
+    const restaurant = await axios.get(
+      `http://localhost:5000/restaurant/restaurant`,
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    const restaurant_id = restaurant.data.restaurant.restaurant_id;
+    
+    // Verify restaurant ownership
+    if (restaurant.data.restaurant.owner_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view these orders",
+      });
+    }
+    
+    // Get orders for the restaurant
+    const orders = await getOrdersByRestaurantIdService(restaurant_id);
+    
+    if (orders.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No orders found" 
+      });
+    }
+    
+    const ordersWithDetails = await Promise.all(
+      orders.map(async (order) => {
+        // Get menu details
+        const menu = await axios.get(
+          `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        
+        // Get user details
+        const user = await axios.get(
+          `http://localhost:5000/user/user/${order.user_id}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            }
+          }
+        );
+        
+        return {
+          ...order,
+          menu: menu.data.menu,
+          user: user.data.user
+        };
+      })
+    );
+    
+    console.log("Orders with details:", ordersWithDetails);
+
+    return res.status(200).json({
+      success: true,
+      orders: ordersWithDetails,
+    });
+    
+  } catch (error) {
+    console.error("Error fetching restaurant orders:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to retrieve orders", 
+      error: error.message 
+    });
+  }
+};

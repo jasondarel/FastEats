@@ -24,6 +24,14 @@ const getOrderByIdService = async(orderId) => {
     return result.rows[0];
 }
 
+const getOrdersByRestaurantIdService = async(restaurantId) => {
+    const result = await pool.query(
+        "SELECT * FROM orders WHERE restaurant_id = $1 AND status = 'Preparing'",
+        [restaurantId]
+    );
+    return result.rows;
+}
+
 const payOrderService = async(orderId) => {
     const result = await pool.query(
         "update orders set status = 'Preparing' where order_id = $1 RETURNING *",
@@ -72,5 +80,6 @@ export {
     payOrderService,
     pendingOrderService,
     saveSnapTokenService,
-    getSnapTokenService
+    getSnapTokenService,
+    getOrdersByRestaurantIdService
 }

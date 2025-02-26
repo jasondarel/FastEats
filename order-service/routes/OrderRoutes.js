@@ -11,7 +11,8 @@ import {
   thanksController,
   checkMidtransStatusController,
   saveSnapTokenController,
-  getSnapTokenController
+  getSnapTokenController,
+  getOrdersByRestaurantIdController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -25,6 +26,7 @@ router.post("/pay-order", payOrderController);
 router.get("/thanks", thanksController);
 router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
 router.put("/orders/:order_id", updateOrder);
+router.get("/orders-by-restaurant", authMiddleware, getOrdersByRestaurantIdController);
 router.get("/check-midtrans-status", checkMidtransStatusController);
 router.post("/save-snap-token", saveSnapTokenController);
 router.get("/snap/:order_id", getSnapTokenController);
