@@ -23,6 +23,7 @@ import OrderDeliveringPage from "./pages/OrderDeliveringPage";
 import OrderCompletedPage from "./pages/OrderCompletedPage";
 import Payment from "./pages/Thanks";
 import Thanks from "./pages/Thanks";
+import PayNow from "./pages/PayNow";
 
 function App() {
   return (
@@ -162,6 +163,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/pay-now/:orderId"
+            element={
+                <PayNow />
+            }
+            />
         </Routes>
       </div>
     </div>

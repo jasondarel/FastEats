@@ -8,7 +8,10 @@ import {
   cancelOrderController,
   payOrderController,
   payOrderConfirmationController,
-  thanksController
+  thanksController,
+  checkMidtransStatusController,
+  saveSnapTokenController,
+  getSnapTokenController
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -22,6 +25,9 @@ router.post("/pay-order", payOrderController);
 router.get("/thanks", thanksController);
 router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
 router.put("/orders/:order_id", updateOrder);
+router.get("/check-midtrans-status", checkMidtransStatusController);
+router.post("/save-snap-token", saveSnapTokenController);
+router.get("/snap/:order_id", getSnapTokenController);
 router.delete("/orders/:order_id", deleteOrder);
 
 export default router;

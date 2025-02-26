@@ -15,7 +15,6 @@ const OrderDetails = () => {
   const token = localStorage.getItem("token");
 
   const handleCancel = async (orderId) => {
-    // Show SweetAlert confirmation dialog
     Swal.fire({
       title: "Cancel Order?",
       text: "Are you sure you want to cancel this order?",
@@ -39,7 +38,6 @@ const OrderDetails = () => {
             }
           );
 
-          // Show success message with SweetAlert
           Swal.fire(
             "Cancelled!",
             response.data.message || "Your order has been cancelled.",
@@ -76,12 +74,13 @@ const OrderDetails = () => {
   }, []);
 
   const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
+    console.log("Confirming payment for order ID:", orderId);
     try {
       setPaymentLoading(true);
       console.log("Confirming payment for order ID:", orderId);
       console.log("Item Quantity:", itemQuantity);
       console.log("Item Price:", itemPrice);
-
+      console.log("Token:", token);
       const response = await axios.post(
         "http://localhost:5000/order/pay-order-confirmation",
         {
@@ -100,7 +99,6 @@ const OrderDetails = () => {
       if (response.data.success) {
         const snapToken = response.data.data.token;
         console.log("Snap Token:", snapToken);
-        // Tambahkan opsi redirect_url: false untuk mencegah redirect otomatis
         window.snap.pay(snapToken, {
           skipOrderSummary: true,
           showOrderId: true,
@@ -108,28 +106,38 @@ const OrderDetails = () => {
           onSuccess: function (result) {
             console.log("success", result);
             alert("Pembayaran berhasil!");
-            // Refresh halaman untuk memperbarui status atau navigasikan ke halaman sukses
+            
             window.location.href = "/payment-success?order_id=" + orderId;
           },
-          onPending: function (result) {
-            console.log("pending", result);
-            alert(
-              "Pembayaran dalam proses. Silakan selesaikan pembayaran Anda."
-            );
-            setPaymentLoading(false);
-            fetchOrderDetails();
+          onPending: async function (result) {
+            try {
+              const response = await axios.post("http://localhost:5000/order/save-snap-token", {
+                order_id: orderId,
+                snap_token: snapToken,
+              });
+              alert("Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi.");
+              setPaymentLoading(false);
+            }catch(err) {
+              console.error("Error saving snap token:", err);
+            }
           },
           onError: function (result) {
             console.log("error", result);
             alert("Terjadi kesalahan dalam proses pembayaran.");
             setPaymentLoading(false);
           },
-          onClose: function () {
-            console.log(
-              "customer closed the popup without finishing the payment"
-            );
-            alert("Pembayaran dibatalkan. Silakan coba lagi nanti.");
-            setPaymentLoading(false);
+          onClose: async function () {
+            try {
+              const statusResponse = await axios.get(`http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`);
+          
+              if (statusResponse.data.transaction_status === "pending") {
+                alert("Anda sudah memilih metode pembayaran, silakan lanjutkan pembayaran di halaman transaksi.");
+              } else {
+                alert("Pembayaran dibatalkan. Silakan coba lagi.");
+              }
+            } catch (error) {
+              console.error("Error checking transaction status:", error);
+            }
           },
         });
       }
@@ -326,6 +334,26 @@ const OrderDetails = () => {
     );
   }
 
+  const handlePayment = async() => {
+    const orderId = order.order_id;
+
+    if (!orderId) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5000/order/snap/${orderId}`);
+      const data = await response.json();
+
+      if (data?.snap_token) {
+        window.snap.pay(data.snap_token);
+      } else {
+        alert("Failed to get transaction token.");
+      }
+    } catch (error) {
+      console.error("Error fetching transaction token:", error);
+      alert("Error processing payment.");
+    }
+  }
+
   // Render buttons based on order status
   const renderActionButtons = () => {
     if (!order) return null;
@@ -356,6 +384,17 @@ const OrderDetails = () => {
           </div>
         );
       case "Completed":
+      case "Pending":
+        return (
+          <div className="flex justify-center">
+            <button
+              className="w-full py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+              onClick={handlePayment}
+            >
+              Pay Order
+            </button>
+          </div>
+        )
       case "Cancelled":
         return (
           <div className="flex justify-center">

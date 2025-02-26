@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 
 const createTransactionService = async (transaction) => {
+    console.log("transaction", transaction);
     const result = await pool.query(
         `INSERT INTO transactions 
             (order_id, currency, transaction_time, expiry_time, amount, bank, va_number, payment_type, transaction_status) 
