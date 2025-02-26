@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
+import SortButton from "../components/SortButton"; // Import the new component
 import image from "../assets/orderHistory-dummy.jpg";
 import { FaHistory, FaShoppingBag, FaSync, FaList } from "react-icons/fa";
 
@@ -124,6 +125,26 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState("date"); // Default sort by date
+  const [sortOrder, setSortOrder] = useState("desc"); // Default newest first
+
+  // Sort options configuration for the SortButton
+  const sortOptions = [
+    {
+      label: "Date",
+      options: [
+        { field: "date", direction: "desc", label: "Date (Newest)" },
+        { field: "date", direction: "asc", label: "Date (Oldest)" },
+      ],
+    },
+    {
+      label: "Price",
+      options: [
+        { field: "price", direction: "asc", label: "Price (Lowest)" },
+        { field: "price", direction: "desc", label: "Price (Highest)" },
+      ],
+    },
+  ];
 
   // Add CSS to prevent scrolling on page load
   useEffect(() => {
@@ -175,6 +196,38 @@ const Orders = () => {
     // Add your order again logic here
   };
 
+  // Handle sort change from SortButton component
+  const handleSortChange = (field, direction) => {
+    setSortBy(field);
+    setSortOrder(direction);
+  };
+
+  // Function to sort orders based on criteria
+  const getSortedOrders = () => {
+    if (!orders || orders.length === 0) return [];
+
+    const sortedOrders = [...orders];
+
+    if (sortBy === "date") {
+      sortedOrders.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      });
+    } else if (sortBy === "price") {
+      sortedOrders.sort((a, b) => {
+        const priceA = parseFloat(a.total_price || 0);
+        const priceB = parseFloat(b.total_price || 0);
+        return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
+      });
+    }
+
+    return sortedOrders;
+  };
+
+  // Get sorted orders
+  const sortedOrders = getSortedOrders();
+
   return (
     <div
       className="flex min-h-screen w-full"
@@ -209,6 +262,18 @@ const Orders = () => {
             </div>
           </div>
 
+          {/* Sort Button - now using the reusable component */}
+          {!loading && !error && orders.length > 0 && (
+            <div className="mb-4 flex justify-end items-center">
+              <SortButton
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSortChange={handleSortChange}
+                options={sortOptions}
+              />
+            </div>
+          )}
+
           {/* Scrollable Order List - Allow this to scroll even if page scrolling is disabled */}
           <div className="w-full max-h-[70vh] overflow-y-auto pr-2 overflow-x-hidden">
             {loading && (
@@ -234,7 +299,7 @@ const Orders = () => {
 
             {!loading &&
               !error &&
-              orders.map((order) => (
+              sortedOrders.map((order) => (
                 <OrderItem
                   key={order.id}
                   order={order}
