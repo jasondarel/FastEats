@@ -193,7 +193,7 @@ const OrderDetails = () => {
     }
   };
 
-  const handleOrderAgain = () => {
+  const handleOrderAgain = async () => {
     // Navigate to the menu page or specific menu item
     if (order && order.menu) {
       navigate(`/menu/${order.menu.menu_id}`);
