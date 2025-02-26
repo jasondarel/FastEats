@@ -1,3 +1,11 @@
-./node_modules
+# Ignore node_modules and environment files
+node_modules/
 .env
-./src/uploads
+
+# Ignore all files inside menu and restaurant but keep the folders
+/src/uploads/menu/*
+/src/uploads/restaurant/*
+
+# Allow tracking the folders themselves
+!/src/uploads/menu/.gitkeep
+!/src/uploads/restaurant/.gitkeep
