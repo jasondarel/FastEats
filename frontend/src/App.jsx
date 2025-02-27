@@ -8,7 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import MenuPage from "./pages/MenuPage/index";
 import BecomeSeller from "./pages/BecomeSeller";
-import ManageRestaurant from "./pages/ManageRestaurant";
+import ManageRestaurant from "./pages/ManageRestaurant/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails";

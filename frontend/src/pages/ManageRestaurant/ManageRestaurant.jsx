@@ -4,20 +4,14 @@ import {
   getRestaurantData,
   updateRestaurant,
   toggleRestaurantStatus,
-} from "../../service/restaurantServices/manageRestaurantService";
-import Sidebar from "../components/Sidebar";
-import {
-  FaUtensils,
-  FaMapMarkerAlt,
-  FaSave,
-  FaImage,
-  FaCamera,
-  FaDoorOpen,
-  FaDoorClosed,
-} from "react-icons/fa";
-
+} from "../../../service/restaurantServices/manageRestaurantService";
+import Sidebar from "../../components/Sidebar";
+import RestaurantStatusToggle from "./components/RestaurantStatusToggle";
+import RestaurantImageUploader from "./components//RestaurantImageUploader";
+import RestaurantDetailsForm from "./components/RestaurantDetailsForm";
+import FloatingMenuButton from "./components/FloatingMenuButton";
+import { FaUtensils } from "react-icons/fa";
 import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -29,8 +23,6 @@ const ManageRestaurant = () => {
   const [isChanged, setIsChanged] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const navigate = useNavigate();
-  const MySwal = withReactContent(Swal);
   const [formDataState, setFormDataState] = useState({
     menuName: "",
     menuDesc: "",
@@ -38,6 +30,7 @@ const ManageRestaurant = () => {
     menuCategory: "",
     menuImage: null,
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -73,19 +66,8 @@ const ManageRestaurant = () => {
     fetchRestaurantData();
   }, [navigate]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (file) => {
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size must be less than 5MB");
-        return;
-      }
-
-      if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file");
-        return;
-      }
-
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -128,7 +110,6 @@ const ManageRestaurant = () => {
     }
 
     try {
-      console.log("Form data state: ", formDataState);
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
@@ -142,7 +123,7 @@ const ManageRestaurant = () => {
         );
       }
 
-      const response = await updateRestaurant(token, formData);
+      await updateRestaurant(token, formData);
 
       Swal.fire({
         title: "Success!",
@@ -196,7 +177,6 @@ const ManageRestaurant = () => {
       return;
     }
 
-    // Confirmation dialog
     const statusAction = isOpen ? "close" : "open";
 
     const result = await Swal.fire({
@@ -214,7 +194,7 @@ const ManageRestaurant = () => {
       try {
         const newStatus = !isOpen;
 
-        const response = await toggleRestaurantStatus(token, newStatus);
+        await toggleRestaurantStatus(token, newStatus);
 
         setIsOpen(newStatus);
         setInitialIsOpen(newStatus);
@@ -258,139 +238,27 @@ const ManageRestaurant = () => {
             <FaUtensils className="mr-2" /> Manage Your Restaurant
           </h2>
 
-          {/* Restaurant Status Toggle */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center">
-                {isOpen ? (
-                  <FaDoorOpen className="text-green-500 text-xl mr-3" />
-                ) : (
-                  <FaDoorClosed className="text-red-500 text-xl mr-3" />
-                )}
-                <div>
-                  <h3 className="font-medium">Restaurant Status</h3>
-                  <p
-                    className={`text-sm ${
-                      isOpen ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {isOpen ? "Currently Open" : "Currently Closed"}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleToggleRestaurantStatus}
-                className={`px-4 py-2 rounded-lg text-white font-medium transition ${
-                  isOpen
-                    ? "bg-red-500 hover:bg-red-600 hover:cursor-pointer"
-                    : "bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-                }`}
-              >
-                {isOpen ? "Close Restaurant" : "Open Restaurant"}
-              </button>
-            </div>
-          </div>
+          <RestaurantStatusToggle
+            isOpen={isOpen}
+            onToggle={handleToggleRestaurantStatus}
+          />
 
-          {/* Image Section */}
-          <div className="mb-8">
-            <label className="block text-gray-700 font-medium mb-3">
-              Restaurant Image
-            </label>
-            <div className="relative group">
-              <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
-                {imagePreview ? (
-                  <>
-                    <img
-                      src={imagePreview}
-                      alt="Restaurant"
-                      className="w-full h-full object-contain"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
-                        <FaCamera className="mr-2" />
-                        Change Image
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                        />
-                      </label>
-                    </div>
-                  </>
-                ) : (
-                  <label className="cursor-pointer text-gray-500 flex flex-col items-center">
-                    <FaImage className="w-12 h-12 mb-2" />
-                    <span>Click to upload image</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                  </label>
-                )}
-              </div>
-              <p className="text-sm text-gray-500 mt-2 text-center">
-                Recommended: 1200x800px, Max size: 5MB
-              </p>
-            </div>
-          </div>
+          <RestaurantImageUploader
+            imagePreview={imagePreview}
+            onImageChange={handleImageChange}
+          />
 
-          <form onSubmit={handleUpdateRestaurant} className="space-y-5">
-            <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Restaurant Name
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-                <FaUtensils className="ml-3 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Enter your restaurant name"
-                  value={restaurantName}
-                  onChange={(e) => setRestaurantName(e.target.value)}
-                  required
-                  className="w-full p-3 focus:outline-none"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Restaurant Address
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-                <FaMapMarkerAlt className="ml-3 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Enter your restaurant address"
-                  value={restaurantAddress}
-                  onChange={(e) => setRestaurantAddress(e.target.value)}
-                  required
-                  className="w-full p-3 focus:outline-none"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={!isChanged}
-              className={`w-full p-3 text-white text-lg font-semibold rounded-lg transition flex items-center justify-center ${
-                isChanged
-                  ? "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <FaSave className="mr-2" /> Update Restaurant
-            </button>
-          </form>
+          <RestaurantDetailsForm
+            restaurantName={restaurantName}
+            setRestaurantName={setRestaurantName}
+            restaurantAddress={restaurantAddress}
+            setRestaurantAddress={setRestaurantAddress}
+            isChanged={isChanged}
+            onSubmit={handleUpdateRestaurant}
+          />
         </div>
 
-        {/* Floating My Menu Button */}
-        <a
-          href="../my-menu"
-          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
-        >
-          <FaUtensils className="mr-2" /> My Menu
-        </a>
+        <FloatingMenuButton />
       </main>
     </div>
   );
