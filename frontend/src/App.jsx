@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
-import Home from "./pages/Home/Home";
+import Home from "./pages/Home/index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProfilePage from "./pages/ProfilePage";
@@ -18,8 +18,8 @@ import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import OrderList from "./pages/OrderList";
 import "flowbite";
-import Payment from "./pages/Thanks";
-import Thanks from "./pages/Thanks";
+import Payment from "./pages/Thanks/Thanks";
+import Thanks from "./pages/Thanks/Thanks";
 import PayNow from "./pages/PayNow";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import OrderSummary from "./pages/OrderSummary";
