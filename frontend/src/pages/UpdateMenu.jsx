@@ -2,11 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
-//icon
-import foodIcon from "../assets/foods-icon.png";
-import drinkIcon from "../assets/drinks-icon.png";
-import dessertIcon from "../assets/dessert-icon.png";
-import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 
 const UpdateMenu = () => {
@@ -25,6 +20,12 @@ const UpdateMenu = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [menuImage, setMenuImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+
+  //icons
+  const foodIcon = "/icons/foods-icon.png";
+  const drinkIcon = "/icons/drinks-icon.png";
+  const dessertIcon = "/icons/dessert-icon.png";
+  const otherIcon = "/icons/other-icon.png";
 
   const handleClick = (category) => {
     setSelectedCategory(category);
