@@ -1,28 +1,19 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-
-//alert
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+import { loginService } from "../../service/userServices/loginService";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({}); // Store field-specific errors
   const navigate = useNavigate();
-  const MySwal = withReactContent(Swal);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrors({}); // Clear previous errors
 
     try {
-      const res = await axios.post("http://localhost:5000/user/login", {
-        email,
-        password,
-      });
-
+      const data = await loginService(email, password);
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (error) {
