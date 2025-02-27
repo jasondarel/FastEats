@@ -6,6 +6,7 @@ import {
   updateOrder,
   deleteOrder,
   cancelOrderController,
+  completeOrderController,
   payOrderController,
   payOrderConfirmationController,
   thanksController,
@@ -22,6 +23,7 @@ const router = express.Router();
 router.post("/order", authMiddleware, createOrderController);
 router.get("/orders", authMiddleware, getOrdersController);
 router.patch("/cancel-order/:order_id", authMiddleware, cancelOrderController);
+router.patch("/complete-order/:order_id", authMiddleware, completeOrderController);
 router.post("/pay-order-confirmation", authMiddleware, payOrderConfirmationController);
 router.post("/pay-order", payOrderController);
 router.get("/thanks", thanksController);

@@ -27,6 +27,13 @@ const ManageRestaurant = () => {
   const [imageFile, setImageFile] = useState(null);
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
+  const [formDataState, setFormDataState] = useState({
+    menuName: "",
+    menuDesc: "",
+    menuPrice: "",
+    menuCategory: "",
+    menuImage: null,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -43,6 +50,10 @@ const ManageRestaurant = () => {
         );
         const { restaurant } = response.data;
         if (restaurant) {
+          setFormDataState({
+            restaurantName: restaurant.restaurant_name || "",
+            restaurantImage: restaurant.restaurant_image || "",
+          })
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
@@ -54,6 +65,7 @@ const ManageRestaurant = () => {
             ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
+          
         } else {
           alert("Restaurant data not found.");
         }
@@ -121,13 +133,18 @@ const ManageRestaurant = () => {
     }
 
     try {
+      console.log("Form data state: ", formDataState);
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("isOpen", isOpen);
-      console.log(imageFile);
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
+      } else {
+        formData.append(
+          "restaurantImage",
+          formDataState.restaurantImage ? formDataState.restaurantImage : null
+        );
       }
 
       const response = await axios.put(
@@ -156,7 +173,6 @@ const ManageRestaurant = () => {
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setInitialIsOpen(isOpen);
-      setImageFile(null);
       setIsChanged(false);
     } catch (error) {
       if (error.response) {
