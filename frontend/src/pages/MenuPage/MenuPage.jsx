@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import { Link } from "react-router-dom";
-import SearchBar from "../components/SearchBar";
-import BackButton from "../components/BackButton";
+import SearchBar from "../../components/SearchBar";
+import BackButton from "../../components/BackButton";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();

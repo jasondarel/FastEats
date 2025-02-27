@@ -1,12 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
-import Home from "./pages/Home";
+import Home from "./pages/Home/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
-import MenuPage from "./pages/MenuPage";
+import MenuPage from "./pages/MenuPage/MenuPage";
 import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";

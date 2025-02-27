@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import SearchBar from "../components/SearchBar";
-import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
-import RestaurantCard from "../components/RestaurantCard";
-import Carousel from "../components/Carousel"; // Import the new Carousel component
+import Sidebar from "../../components/Sidebar";
+import SearchBar from "../../components/SearchBar";
+import RotatingText from "../../blocks/TextAnimations/RotatingText/RotatingText";
+import RestaurantCard from "./components/RestaurantCard";
+import Carousel from "./components/Carousel"; // Import the new Carousel component
 import { Menu } from "lucide-react";
 
 const Home = () => {
