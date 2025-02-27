@@ -11,34 +11,37 @@ const OrderList = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/order/orders-by-restaurant", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
+      const response = await fetch(
+        "http://localhost:5000/order/orders-by-restaurant",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Process orders to calculate total price for each order
-        const processedOrders = data.orders.map(order => {
+        const processedOrders = data.orders.map((order) => {
           // Calculate total price from menu price and item quantity
           const menuPrice = parseFloat(order.menu?.menu_price || 0);
           const quantity = order.item_quantity || 1;
           const calculatedTotalPrice = menuPrice * quantity;
-          
+
           return {
             ...order,
-            calculatedTotalPrice
+            calculatedTotalPrice,
           };
         });
-        
+
         setOrders(processedOrders);
       } else {
         setError(data.message || "Failed to fetch orders");
       }
-    } catch(err) {
+    } catch (err) {
       console.error("Error fetching orders:", err);
       setError("An error occurred while fetching orders");
     } finally {
@@ -53,20 +56,20 @@ const OrderList = () => {
   // Function to format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('id-ID', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("id-ID", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Function to format price
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
@@ -107,8 +110,10 @@ const OrderList = () => {
           <div className="w-full max-w-6xl flex flex-col lg:flex-row lg:flex-wrap lg:justify-between">
             {orders.map((order) => {
               // Create a reliable unique key using order_id
-              const orderKey = order.order_id || `order-${Math.random().toString(36).substr(2, 9)}`;
-              
+              const orderKey =
+                order.order_id ||
+                `order-${Math.random().toString(36).substr(2, 9)}`;
+
               return (
                 <div
                   key={orderKey}
@@ -119,10 +124,13 @@ const OrderList = () => {
                       <h2 className="text-2xl font-bold text-yellow-500">
                         {order.user?.name || "Customer"}
                       </h2>
-                      <p className="text-slate-700">({formatDate(order.created_at)})</p>
+                      <p className="text-slate-700">
+                        ({formatDate(order.created_at)})
+                      </p>
                     </div>
                     <div className="flex font-semibold text-slate-700">
-                      {order.item_quantity || 1} menu <ChevronRightIcon className="pt-0.5" />
+                      {order.item_quantity || 1} menu{" "}
+                      <ChevronRightIcon className="pt-0.5" />
                     </div>
                   </div>
                   <hr className="mt-5"></hr>
