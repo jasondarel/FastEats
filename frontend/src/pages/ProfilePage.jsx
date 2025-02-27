@@ -222,7 +222,7 @@ const Profile = () => {
             disabled={!isProfileChanged}
             className={`w-full p-3 rounded-lg transition font-semibold lg:font-bold lg:text-xl ${
               isProfileChanged
-                ? "bg-yellow-500 text-white hover:bg-yellow-600"
+                ? "bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
@@ -268,7 +268,7 @@ const Profile = () => {
             disabled={!isPasswordChanged}
             className={`w-full p-3 rounded-lg transition ${
               isPasswordChanged
-                ? "bg-red-500 text-white hover:bg-red-600"
+                ? "bg-red-500 text-white hover:bg-red-600 hover:cursor-pointer"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >
