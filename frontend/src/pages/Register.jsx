@@ -10,21 +10,22 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrors({}); // Reset errors before validation
+    setErrors({});
 
     try {
       await axios.post("http://localhost:5000/user/register", {
         name,
         email,
         password,
+        confirmPassword,
       });
-      // alert("Registration successful! Please login.");
       Swal.fire({
         title: "Sucessfully Registered",
         text: "Registration successful! Please login.",
@@ -37,24 +38,18 @@ const Register = () => {
         }
       });
     } catch (error) {
-      const errMsg = error.response?.data?.error || "An error occurred";
-
-      if (errMsg.toLowerCase().includes("name")) {
-        setErrors((prev) => ({ ...prev, name: errMsg }));
-      }
-      if (errMsg.toLowerCase().includes("email")) {
-        setErrors((prev) => ({ ...prev, email: errMsg }));
-      }
-      if (errMsg.toLowerCase().includes("password")) {
-        setErrors((prev) => ({ ...prev, password: errMsg }));
-      }
-      if (
-        !errMsg.toLowerCase().includes("name") &&
-        !errMsg.toLowerCase().includes("email") &&
-        !errMsg.toLowerCase().includes("password")
-      ) {
-        setErrors((prev) => ({ ...prev, general: errMsg }));
-      }
+      console.log(error.response)
+      const errors = error.response?.data.errors || "An error occurred";
+      setErrors(errors);
+      Object.keys(errors).forEach((key) => {
+        MySwal.fire({
+          title: "Error",
+          text: errors[key],
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
+      });
     }
   };
 
@@ -115,6 +110,19 @@ const Register = () => {
               />
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
               )}
             </div>
             <button

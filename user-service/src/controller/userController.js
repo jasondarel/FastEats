@@ -10,75 +10,79 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { validateLoginRequest, validateRegisterRequest } from "../validator/userValidator.js";
+import { getUserByEmailService, registerService } from "../service/userService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads");
 
 const registerController = async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "Missing fields" });
-
-  if (!validateEmail(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
-  }
-
-  if (!validatePassword(password)) {
-    return res.status(400).json({
-      error:
-        "Password must be at least 8 characters long, also must include letters and numbers",
-    });
-  }
-
-  const hashedPassword = hashPassword(password);
-
   try {
-    await pool.query(
-      "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
-      [name, email, hashedPassword, "user"]
-    );
-    res.json({ message: "User registered" });
+    const errors = await validateRegisterRequest(req.body);
+    if(Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+    }
+    
+    const hashedPassword = hashPassword(req.body.password);
+    req.body.password = hashedPassword;
+
+    const response = await registerService(req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: response.message,
+    })
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
 const loginController = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: "Missing fields" });
-
-  if (!validateEmail(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
-  }
   try {
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-
-    if (
-      user.rows.length === 0 ||
-      user.rows[0].password_hash !== hashPassword(password)
-    ) {
-      return res.status(401).json({
+    const errors = await validateLoginRequest(req.body);
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
         success: false,
-        message: "Wrong email or password.",
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    const user = await getUserByEmailService(req.body.email);
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
       });
     }
 
     const token = generateToken({
-      userId: user.rows[0].id,
-      email: user.rows[0].email,
-      role: user.rows[0].role,
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     });
-    res.json({ token });
+    
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+    })
+
   } catch (err) {
-    console.log("kena error");
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 

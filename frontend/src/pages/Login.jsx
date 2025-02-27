@@ -9,7 +9,7 @@ import withReactContent from "sweetalert2-react-content";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({}); // Store field-specific errors
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
@@ -22,19 +22,27 @@ const Login = () => {
         email,
         password,
       });
-
+      Swal.fire({
+        title: "Login Successful",
+        text: "You are now logged in",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      })
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (error) {
-      const errMsg = error.response.data.message || "An error occurred";
-      console.log(errMsg);
-      if (errMsg.includes("email")) {
-        setErrors({ email: errMsg });
-      } else if (errMsg.includes("password")) {
-        setErrors({ password: errMsg });
-      } else {
-        setErrors({ general: errMsg });
-      }
+      const errors = error.response?.data.errors || "An error occurred";
+      setErrors(errors);
+      Object.keys(errors).forEach((key) => {
+        MySwal.fire({
+          title: "Error",
+          text: errors[key],
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
+      });
     }
   };
 
