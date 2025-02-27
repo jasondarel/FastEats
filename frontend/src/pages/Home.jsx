@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import SearchBar from "../components/SearchBar";
 import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
-import { Menu } from "lucide-react"; // Import the Menu icon for hamburger menu
+import RestaurantCard from "../components/RestaurantCard";
+import Carousel from "../components/Carousel"; // Import the new Carousel component
+import { Menu } from "lucide-react";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -14,6 +16,9 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
+
+  // Banner images for carousel
+  const bannerImages = ["/bannerMain.png", "/banner1.png", "/banner2.png"];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -102,27 +107,10 @@ const Home = () => {
     setFilteredRestaurants(filtered);
   }, [searchQuery, restaurants]);
 
-  const images = ["/bannerMain.png", "/banner1.png", "/banner2.png"];
-  const intervalTime = 5000; // Ganti angka ini untuk mengatur kecepatan auto slide (ms)
-  const [currentIndex, setCurrentIndex] = useState(0); // Added state for carousel
-
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
-    );
+  // Handle restaurant click
+  const handleRestaurantClick = (restaurantId) => {
+    navigate(`/restaurant/${restaurantId}/menu`);
   };
-
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  // Auto Slide Effect
-  useEffect(() => {
-    const interval = setInterval(nextSlide, intervalTime);
-    return () => clearInterval(interval);
-  }, [currentIndex]);
 
   if (isLoading) {
     return (
@@ -140,39 +128,8 @@ const Home = () => {
     <div className="flex flex-col md:flex-row bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-4 md:p-5 lg:ml-64">
-        {/* Carousel - responsive with better height handling */}
-        <div className="flex justify-center">
-          <div className="relative w-full md:w-[90%] lg:w-[90%] xl:w-[1200px] overflow-hidden rounded-md">
-            {/* Carousel Wrapper */}
-            <div
-              className="flex transition-transform duration-1500 will-change-transform ease-in-out rounded-md"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-            >
-              {images.map((image, index) => (
-                <img
-                  key={index}
-                  src={image}
-                  alt={`Slide ${index + 1}`}
-                  className="w-full flex-shrink-0 rounded-md h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] object-cover"
-                />
-              ))}
-            </div>
-
-            {/* Slider Controls */}
-            <button
-              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-1 md:p-2 rounded-full text-white text-sm md:text-md cursor-pointer"
-              onClick={prevSlide}
-            >
-              ❮
-            </button>
-            <button
-              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-1 md:p-2 rounded-full text-white text-sm md:text-md cursor-pointer"
-              onClick={nextSlide}
-            >
-              ❯
-            </button>
-          </div>
-        </div>
+        {/* Carousel Component */}
+        <Carousel images={bannerImages} intervalTime={5000} />
 
         {/* Welcome header - responsive text sizes */}
         <h1 className="flex-col flex items-center justify-center text-xl md:text-2xl lg:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
@@ -229,7 +186,7 @@ const Home = () => {
           />
         </div>
 
-        {/* Restaurant grid - responsive columns with better spacing for large screens */}
+        {/* Restaurant grid - using the RestaurantCard component */}
         <section className="mt-8 max-w-8xl mx-auto">
           <h2 className="text-lg md:text-xl font-bold text-yellow-800 mb-4">
             Available Restaurants
@@ -237,35 +194,13 @@ const Home = () => {
           {filteredRestaurants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredRestaurants.map((restaurant) => (
-                <div
+                <RestaurantCard
                   key={restaurant.restaurant_id}
-                  className="w-full border border-yellow-300 rounded-lg bg-white shadow-lg hover:shadow-xl hover:bg-yellow-100 transition-all cursor-pointer"
+                  restaurant={restaurant}
                   onClick={() =>
-                    navigate(`/restaurant/${restaurant.restaurant_id}/menu`)
+                    handleRestaurantClick(restaurant.restaurant_id)
                   }
-                >
-                  <div className="h-36 sm:h-40 md:h-44 lg:h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
-                    {restaurant.restaurant_image ? (
-                      <img
-                        className="w-full h-full object-cover rounded-t-lg"
-                        src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`}
-                        alt={restaurant.restaurant_name}
-                      />
-                    ) : (
-                      <span className="text-gray-600 text-lg font-semibold">
-                        Image
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3 md:p-4">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">
-                      {restaurant.restaurant_name}
-                    </h3>
-                    <p className="text-gray-600 mt-1 text-xs sm:text-sm md:text-base">
-                      {restaurant.restaurant_address}
-                    </p>
-                  </div>
-                </div>
+                />
               ))}
             </div>
           ) : (

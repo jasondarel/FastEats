@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import Swal from "sweetalert2";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import BackButton from "../components/BackButton";
+import StatusBadge from "../components/StatusBadge"; // Import the StatusBadge component
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -258,26 +259,6 @@ const OrderDetails = () => {
     });
   };
 
-  // Function to get status color class
-  const getStatusColorClass = (status) => {
-    switch (status) {
-      case "Waiting":
-        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
-      case "Preparing":
-        return "bg-blue-200 text-blue-800"; // Blue for preparing
-      case "Completed":
-        return "bg-green-300 text-green-800"; // Green for completed
-      case "Cancelled":
-        return "bg-red-200 text-red-800"; // Red for cancelled
-      case "Delivering":
-        return "bg-amber-200 text-amber-800"; // Amber for delivering
-      case "Pending":
-        return "bg-purple-200 text-purple-800"; // Amber for delivering
-      default:
-        return "bg-gray-200 text-gray-800"; // Gray for any other status
-    }
-  };
-
   // Function to get Lottie animation URL based on status
   const getLottieAnimation = (status) => {
     switch (status) {
@@ -363,7 +344,7 @@ const OrderDetails = () => {
               Cancel
             </button>
             <button
-              className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer  "
+              className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer"
               onClick={() =>
                 handlePayConfirmation(
                   order.order_id,
@@ -470,13 +451,11 @@ const OrderDetails = () => {
               <h1 className="text-2xl font-bold text-amber-900">
                 Order #{order.order_id}
               </h1>
-              <span
-                className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColorClass(
-                  order.status
-                )}`}
-              >
-                {order.status}
-              </span>
+              {/* Replace the old status badge with the new StatusBadge component */}
+              <StatusBadge
+                status={order.status}
+                className="px-4 py-2 rounded-full text-sm font-medium"
+              />
             </div>
 
             {/* Lottie animation for specific statuses */}
@@ -550,7 +529,11 @@ const OrderDetails = () => {
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-amber-700 font-medium">Status</span>
-                  <span className="text-amber-900">{order.status}</span>
+                  {/* Using StatusBadge for the status in the details section */}
+                  <StatusBadge
+                    status={order.status}
+                    className="px-3 py-1 rounded text-xs font-medium"
+                  />
                 </div>
               </div>
             </div>

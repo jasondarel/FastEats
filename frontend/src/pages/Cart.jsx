@@ -11,7 +11,6 @@ import trash from "../assets/trash.png";
 const Cart = () => {
   const initialQuantities = Array(5).fill(1); // Initial quantity for each item
   const [quantities, setQuantities] = useState(initialQuantities);
-  const [price, setprice] = useState("$2.99");
 
   const increaseQuantity = (index) => {
     const newQuantities = [...quantities];

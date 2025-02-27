@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
-import SortButton from "../components/SortButton"; // Import the new component
+import SortButton from "../components/SortButton";
+import StatusBadge from "../components/StatusBadge"; // Import the new component
 import image from "../assets/orderHistory-dummy.jpg";
 import { FaHistory, FaShoppingBag, FaSync, FaList } from "react-icons/fa";
 
@@ -20,24 +21,6 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
       hour12: false,
     });
     return jakartaDate;
-  };
-
-  // Function to determine status colors based on order status
-  const getStatusStyles = (status) => {
-    switch (status) {
-      case "Waiting":
-        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
-      case "Preparing":
-        return "bg-blue-200 text-blue-800"; // Blue for preparing
-      case "Completed":
-        return "bg-green-300 text-green-800"; // Green for completed
-      case "Cancelled":
-        return "bg-red-200 text-red-800"; // Red for cancelled
-      case "Pending":
-        return "bg-purple-200 text-purple-800"; // Red for cancelled
-      default:
-        return "bg-gray-200 text-gray-800"; // Gray for any other status
-    }
   };
 
   // Show "Order again" button for Completed OR Cancelled status
@@ -67,13 +50,11 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           </div>
         </div>
         <div className="flex items-center justify-center">
-          <div
-            className={`px-2 py-1 rounded-md font-semibold text-sm ${getStatusStyles(
-              order.status || "Completed"
-            )}`}
-          >
-            {order.status || "Completed"}
-          </div>
+          {/* Using StatusBadge component instead of inline styles */}
+          <StatusBadge
+            status={order.status || "Completed"}
+            className="px-2 py-1 rounded-md font-semibold text-sm"
+          />
         </div>
       </div>
       <hr className="my-3 border-gray-300" />
@@ -120,6 +101,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   );
 };
 
+// Rest of the Orders component remains the same
 const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
