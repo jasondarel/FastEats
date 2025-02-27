@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginService } from "../../service/userServices/loginService";
+import loginService from "../../service/userServices/loginService";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,10 +14,9 @@ const Login = () => {
 
     try {
       const data = await loginService(email, password);
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", data.token);
       navigate("/");
-    } catch (error) {
-      const errMsg = error.response.data.message || "An error occurred";
+    } catch (errMsg) {
       console.log(errMsg);
       if (errMsg.includes("email")) {
         setErrors({ email: errMsg });
