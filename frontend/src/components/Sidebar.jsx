@@ -93,17 +93,27 @@ const Sidebar = ({ isTaskbarOpen }) => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsProfileDropupOpen(false);
     MySwal.fire({
-      title: "Logged Out",
-      text: "Successfully Logged Out!",
-      icon: "info",
-      confirmButtonText: "Ok",
+      title: "Logout",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      confirmButtonText: "Yes, Logout",
       confirmButtonColor: "#efb100",
+      showCancelButton: true,
+      cancelButtonText: "Cancel",
+      cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/login");
+        localStorage.removeItem("token");
+        setIsProfileDropupOpen(false);
+        MySwal.fire({
+          title: "Logged out!",
+          text: "You have been successfully logged out.",
+          icon: "success",
+          confirmButtonColor: "#efb100",
+        }).then(() => {
+          navigate("/login");
+        });
       }
     });
   };
