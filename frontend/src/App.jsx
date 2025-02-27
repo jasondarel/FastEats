@@ -7,7 +7,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
 import MenuPage from "./pages/MenuPage/MenuPage";
-import BecomeSeller from "./pages/BecomeSeller";
+import BecomeSeller from "./pages/BecomeSeller/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
