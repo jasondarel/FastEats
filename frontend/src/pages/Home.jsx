@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-// import banner0 from "../assets/bannerMain.png";
-// import banner1 from "../assets/banner1.png";
-// import banner2 from "../assets/banner2.png";
-import SearchBar from "../components/SearchBar"; // Import the updated SearchBar component
-
+import SearchBar from "../components/SearchBar";
 import RotatingText from "../blocks/TextAnimations/RotatingText/RotatingText";
+import { Menu } from "lucide-react"; // Import the Menu icon for hamburger menu
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -129,9 +126,8 @@ const Home = () => {
 
   if (isLoading) {
     return (
-      <div className="flex ml-64 bg-yellow-50 min-h-screen">
-        <Sidebar />
-        <main className="flex-1 p-5 flex items-center justify-center">
+      <div className="flex flex-col md:flex-row bg-yellow-50 min-h-screen">
+        <main className="flex-1 p-5 flex items-center justify-center lg:ml-64">
           <div className="text-yellow-600 font-semibold text-lg">
             Loading...
           </div>
@@ -141,11 +137,12 @@ const Home = () => {
   }
 
   return (
-    <div className="flex ml-0 md:ml-64 bg-yellow-50 min-h-screen">
+    <div className="flex flex-col md:flex-row bg-yellow-50 min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-5">
-        <div className="flex  justify-center">
-          <div className="relative w-[1200px] overflow-hidden rounded-md">
+      <main className="flex-1 p-4 md:p-5 lg:ml-64">
+        {/* Carousel - responsive with better height handling */}
+        <div className="flex justify-center">
+          <div className="relative w-full md:w-[90%] lg:w-[90%] xl:w-[1200px] overflow-hidden rounded-md">
             {/* Carousel Wrapper */}
             <div
               className="flex transition-transform duration-1500 will-change-transform ease-in-out rounded-md"
@@ -156,29 +153,30 @@ const Home = () => {
                   key={index}
                   src={image}
                   alt={`Slide ${index + 1}`}
-                  className="w-full flex-shrink-0 rounded-md"
-                  style={{ width: "100%", height: "500px", objectFit: "cover" }}
+                  className="w-full flex-shrink-0 rounded-md h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] object-cover"
                 />
               ))}
             </div>
 
             {/* Slider Controls */}
             <button
-              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white text-md cursor-pointer"
+              className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 p-1 md:p-2 rounded-full text-white text-sm md:text-md cursor-pointer"
               onClick={prevSlide}
             >
               ❮
             </button>
             <button
-              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full  text-white text-md cursor-pointer"
+              className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 p-1 md:p-2 rounded-full text-white text-sm md:text-md cursor-pointer"
               onClick={nextSlide}
             >
               ❯
             </button>
           </div>
         </div>
-        <h1 className="flex-col flex items-center justify-center text-xl md:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
-          <div className="flex items-end bg-black justify-center min-w-30 md:min-w-50 xl:min-w-70 rounded-xl">
+
+        {/* Welcome header - responsive text sizes */}
+        <h1 className="flex-col flex items-center justify-center text-xl md:text-2xl lg:text-3xl xl:text-5xl font-bold text-yellow-700 mb-4 mt-5">
+          <div className="flex items-end bg-black justify-center min-w-30 md:min-w-40 lg:min-w-50 xl:min-w-70 rounded-xl">
             <RotatingText
               texts={[
                 "Hello",
@@ -210,31 +208,34 @@ const Home = () => {
         )}
 
         <div className="flex justify-center items-end mb-6">
-          <p className="text-gray-800 text-lg font-medium">
+          <p className="text-gray-800 text-base md:text-lg font-medium">
             What would you like to eat today?
           </p>
         </div>
 
-        {/* Use SearchBar without filter button */}
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filterCategory=""
-          setFilterCategory={() => {}}
-          minPrice=""
-          setMinPrice={() => {}}
-          maxPrice=""
-          setMaxPrice={() => {}}
-          showFilterButton={false}
-          placeholder="Search restaurants..." // Custom placeholder for restaurant search
-        />
+        {/* Search bar - wider on large screens */}
+        <div className="w-full md:w-4/5 lg:w-3/4 xl:w-2/3 mx-auto">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterCategory=""
+            setFilterCategory={() => {}}
+            minPrice=""
+            setMinPrice={() => {}}
+            maxPrice=""
+            setMaxPrice={() => {}}
+            showFilterButton={false}
+            placeholder="Search restaurants..."
+          />
+        </div>
 
-        <section className="mt-8">
-          <h2 className="text-xl font-bold text-yellow-800 mb-4">
+        {/* Restaurant grid - responsive columns with better spacing for large screens */}
+        <section className="mt-8 max-w-8xl mx-auto">
+          <h2 className="text-lg md:text-xl font-bold text-yellow-800 mb-4">
             Available Restaurants
           </h2>
           {filteredRestaurants.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredRestaurants.map((restaurant) => (
                 <div
                   key={restaurant.restaurant_id}
@@ -243,7 +244,7 @@ const Home = () => {
                     navigate(`/restaurant/${restaurant.restaurant_id}/menu`)
                   }
                 >
-                  <div className="h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
+                  <div className="h-36 sm:h-40 md:h-44 lg:h-48 w-full bg-yellow-200 rounded-t-lg flex items-center justify-center overflow-hidden">
                     {restaurant.restaurant_image ? (
                       <img
                         className="w-full h-full object-cover rounded-t-lg"
@@ -256,11 +257,11 @@ const Home = () => {
                       </span>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="p-3 md:p-4">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900">
                       {restaurant.restaurant_name}
                     </h3>
-                    <p className="text-gray-600 mt-1">
+                    <p className="text-gray-600 mt-1 text-xs sm:text-sm md:text-base">
                       {restaurant.restaurant_address}
                     </p>
                   </div>
