@@ -48,6 +48,14 @@ const cancelOrderService = async(orderId) => {
     return result.rows[0];
 }
 
+const completeOrderService = async(orderId) => {
+    const result = await pool.query(
+        "update orders set status = 'Completed' where order_id = $1 RETURNING *",
+        [orderId]
+    )
+    return result.rows[0];
+}
+
 const pendingOrderService = async(orderId) => {
     const result = await pool.query(
         "update orders set status = 'Pending' where order_id = $1 RETURNING *",
@@ -81,5 +89,6 @@ export {
     pendingOrderService,
     saveSnapTokenService,
     getSnapTokenService,
-    getOrdersByRestaurantIdService
+    getOrdersByRestaurantIdService,
+    completeOrderService
 }

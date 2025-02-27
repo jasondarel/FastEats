@@ -3,6 +3,7 @@ import pool from "../config/db.js";
 import axios from "axios";
 import {
   cancelOrderService,
+  completeOrderService,
   createOrderService,
   getOrderByIdService,
   getOrdersByRestaurantIdService,
@@ -165,6 +166,13 @@ export const cancelOrderController = async (req, res) => {
     });
   }
 
+  if (order.status === "Cancelled") {
+    return res.status(400).json({
+      success: false,
+      message: "Order is already cancelled",
+    });
+  }
+
   if (order.status !== "Waiting") {
     return res.status(400).json({
       success: false,
@@ -183,6 +191,69 @@ export const cancelOrderController = async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Order cancelled successfully",
+  });
+};
+export const completeOrderController = async (req, res) => {
+  const { userId } = req.user;
+  const order_id = req.params.order_id;
+  const order = await getOrderByIdService(order_id);
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  const restaurant = await axios.get(
+    `http://localhost:5000/restaurant/restaurant/${order.restaurant_id}`,
+    {
+      headers: {
+        Authorization: req.headers.authorization,
+        "Content-Type": "application/json",
+      },
+    }
+  )
+
+  if(!restaurant) {
+    return res.status(404).json({
+      success: false,
+      message: "Restaurant not found"
+    });
+  }
+
+  if (restaurant.data.restaurant.owner_id !== userId) {
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to cancel this order",
+    });
+  }
+
+  if(order.status === "Completed") {
+    return res.status(400).json({
+      success: false,
+      message: "Order is already completed"
+    });
+  }
+
+  if (order.status !== "Preparing") {
+    return res.status(400).json({
+      success: false,
+      message: "Order cannot be Completed",
+    });
+  }
+
+  const result = await completeOrderService(order_id);
+  if (!result) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Order Completed successfully",
   });
 };
 
