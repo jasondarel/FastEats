@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import BackButton from "../components/BackButton";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();
@@ -20,6 +22,7 @@ const MyMenuDetails = () => {
   const [previewImage, setPreviewImage] = useState(null);
 
   const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const fetchMenuDetails = async () => {
@@ -128,12 +131,19 @@ const MyMenuDetails = () => {
       }
 
       const data = await response.json();
+
+      Swal.fire({
+        title: "Success!",
+        text: data.message || "Menu availability updated successfully",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      });
+
       setMenu((prevMenu) => ({
         ...prevMenu,
         is_available: !prevMenu.is_available,
       }));
-
-      alert(data.message || "Menu availability updated successfully");
     } catch (error) {
       console.error("Error updating menu availability:", error);
       setError(error.message);
@@ -178,10 +188,19 @@ const MyMenuDetails = () => {
       }
 
       const updateData = await response.json();
-      setMenu(updateData.menu);
-      setShowEditForm(false);
-      alert("Menu updated successfully");
-      window.location.reload();
+      MySwal.fire({
+        title: "Menu Updated!",
+        text: "Menu updated successfully",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setMenu(updateData.menu);
+          setShowEditForm(false);
+          window.location.reload();
+        }
+      });
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
@@ -191,28 +210,79 @@ const MyMenuDetails = () => {
             const validationErrors = Object.values(data.errors)
               .map((msg) => `• ${msg}`)
               .join("\n");
-            alert(`Validation Error:\n${validationErrors}`);
+            MySwal.fire({
+              title: "Validation Error",
+              text: `Please check the following errors:\n${validationErrors}`,
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
           } else if (data.message) {
-            alert(`Error: ${data.message}`);
+            MySwal.fire({
+              title: "Error",
+              text: data.message,
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
           } else {
-            alert("Invalid request. Please check your input.");
+            MySwal.fire({
+              title: "Error",
+              text: "Invalid request. Please check your input.",
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
           }
         } else if (status === 401) {
-          alert("Unauthorized! Please log in again.");
-          localStorage.removeItem("token");
-          navigate("/login");
+          MySwal.fire({
+            title: "Unauthorized!",
+            text: "Please log in again.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            confirmButtonColor: "#efb100",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }
+          });
         } else {
-          alert(
-            data.message ||
-              "An unexpected error occurred. Please try again later."
-          );
+          MySwal.fire({
+            title: "Error",
+            text:
+              data.message ||
+              "An unexpected error occurred. Please try again later.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            confirmButtonColor: "#efb100",
+          });
         }
       }
     }
   };
 
   const handleDeleteMenu = async () => {
-    if (!window.confirm("Are you sure you want to delete this menu item?")) {
+    if (menu.is_available) {
+      MySwal.fire(
+        "Error",
+        "You cannot delete a menu item that is currently available.",
+        "error"
+      );
+      return;
+    }
+
+    const confirmation = await MySwal.fire({
+      title: "Confirm deletion",
+      text: "Are you sure you want to delete this menu item?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!confirmation.isConfirmed) {
       return;
     }
 
@@ -235,7 +305,7 @@ const MyMenuDetails = () => {
         throw new Error("Failed to delete menu");
       }
 
-      alert("Menu deleted successfully");
+      MySwal.fire("Deleted!", "Menu deleted successfully", "success");
       navigate("/my-menu");
     } catch (error) {
       console.error("Error deleting menu:", error);
