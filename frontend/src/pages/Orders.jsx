@@ -307,7 +307,7 @@ const Orders = () => {
 
         {/* Floating My Menu Button */}
         <a
-          href="../menu"
+          href="../home"
           className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
         >
           <FaShoppingBag className="mr-2" /> Order Now
