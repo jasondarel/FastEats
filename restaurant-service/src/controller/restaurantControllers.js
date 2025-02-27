@@ -68,13 +68,10 @@ const updateRestaurantController = async (req, res) => {
         const restaurantId = restaurant.restaurant_id;
         const restaurantReq = req.body;
 
-        // Jika ada file yang diupload, tambahkan ke request
         if (req.file) {
-            restaurantReq.restaurantImage = req.file.filename; // Sesuaikan jika pakai storage lain
+            restaurantReq.restaurantImage = req.file.filename;
         }
 
-
-        // Tambahkan validasi input
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
             return res.status(400).json({
