@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
+import BackButton from "../components/BackButton";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
@@ -87,25 +88,7 @@ const MenuPage = () => {
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
-      <button
-        onClick={() => navigate("/home")}
-        className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18 18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+      <BackButton to="/home" />
       <main className="flex-1 p-5 relative mt-20 ml-10">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
         {error && (

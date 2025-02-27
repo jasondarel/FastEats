@@ -1,14 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import foodIcon from "../assets/foods-icon.png";
-import drinkIcon from "../assets/drinks-icon.png";
-import dessertIcon from "../assets/dessert-icon.png";
-import otherIcon from "../assets/other-icon.png";
 import axios from "axios";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import SearchBar from "../components/SearchBar";
+import BackButton from "../components/BackButton";
 
 const validCategories = ["Food", "Drink", "Dessert", "Others"];
 
@@ -201,11 +198,63 @@ const MyMenuPage = () => {
         confirmButtonColor: "#efb100",
       });
     } catch (error) {
-      console.error(
-        "Error creating menu:",
-        error.response?.data?.message || error.message
-      );
-      setError(error.response?.data?.message || "An error occurred");
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          if (data.errors) {
+            const validationErrors = Object.values(data.errors)
+              .map((msg) => `• ${msg}`)
+              .join("\n");
+            Swal.fire({
+              title: "Validation Error",
+              text: validationErrors,
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
+          } else if (data.message) {
+            Swal.fire({
+              title: "Error",
+              text: data.message,
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
+          } else {
+            Swal.fire({
+              title: "Error",
+              text: "Invalid request. Please check your input.",
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#efb100",
+            });
+          }
+        } else if (status === 401) {
+          Swal.fire({
+            title: "Unauthorized!",
+            text: "Please log in again.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            confirmButtonColor: "#efb100",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }
+          });
+        } else {
+          Swal.fire({
+            title: "Error",
+            text:
+              data.message ||
+              "An unexpected error occurred. Please try again later.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            confirmButtonColor: "#efb100",
+          });
+        }
+      }
     }
   };
 
@@ -213,28 +262,16 @@ const MyMenuPage = () => {
     return <div className="text-center p-5">Loading menu...</div>;
   }
 
+  //icons
+  const foodIcon = "/icons/foods-icon.png";
+  const drinkIcon = "/icons/drinks-icon.png";
+  const dessertIcon = "/icons/dessert-icon.png";
+  const otherIcon = "/icons/other-icon.png";
+
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
-      <button
-        onClick={() => navigate("/manage-restaurant")}
-        className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18 18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+      <BackButton to="/manage-restaurant" />
       <main className="flex-1 p-5 relative mt-20 ml-10">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
         {error && (

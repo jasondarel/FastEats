@@ -293,8 +293,8 @@ const ManageRestaurant = () => {
                 onClick={handleToggleRestaurantStatus}
                 className={`px-4 py-2 rounded-lg text-white font-medium transition ${
                   isOpen
-                    ? "bg-red-500 hover:bg-red-600"
-                    : "bg-green-500 hover:bg-green-600"
+                    ? "bg-red-500 hover:bg-red-600 hover:cursor-pointer"
+                    : "bg-green-500 hover:bg-green-600 hover:cursor-pointer"
                 }`}
               >
                 {isOpen ? "Close Restaurant" : "Open Restaurant"}
@@ -386,7 +386,7 @@ const ManageRestaurant = () => {
               disabled={!isChanged}
               className={`w-full p-3 text-white text-lg font-semibold rounded-lg transition flex items-center justify-center ${
                 isChanged
-                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  ? "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer"
                   : "bg-gray-400 cursor-not-allowed"
               }`}
             >

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import BackButton from "../components/BackButton";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();
@@ -155,9 +156,10 @@ const MyMenuDetails = () => {
       if (menuImage) {
         formDataObj.append("menuImage", menuImage);
       } else {
-        formDataObj.append("menuImage", formData.menuImage
-          ? formData.menuImage
-          : null);
+        formDataObj.append(
+          "menuImage",
+          formData.menuImage ? formData.menuImage : null
+        );
       }
 
       const response = await fetch(
@@ -265,25 +267,7 @@ const MyMenuDetails = () => {
       <Sidebar />
       <main className="flex-1 p-5 relative">
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl mt-16">
-          <button
-            onClick={() => navigate("/my-menu")}
-            className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18 18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <BackButton to="/my-menu" />
 
           <div className="flex justify-between items-center mb-4">
             <div>

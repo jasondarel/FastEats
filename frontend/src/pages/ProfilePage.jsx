@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUser, FaMapMarkerAlt, FaPhone, FaLock } from "react-icons/fa";
-
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import BackButton from "../components/BackButton";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
@@ -154,25 +154,7 @@ const Profile = () => {
       }}
     >
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto scale-95 lg:min-w-2xl lg:scale-90 relative">
-        <button
-          onClick={() => navigate("/home")}
-          className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18 18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+        <BackButton to="/home" />
         <h2 className="mt-10 text-2xl lg:text-4xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
