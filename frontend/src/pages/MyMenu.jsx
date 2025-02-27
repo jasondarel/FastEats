@@ -9,6 +9,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import SearchBar from "../components/SearchBar";
+import BackButton from "../components/BackButton";
 
 const validCategories = ["Food", "Drink", "Dessert", "Others"];
 
@@ -216,25 +217,7 @@ const MyMenuPage = () => {
   return (
     <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
       <Sidebar />
-      <button
-        onClick={() => navigate("/manage-restaurant")}
-        className="absolute top-8 right-8 flex items-center justify-center w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18 18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+      <BackButton to="/manage-restaurant" />
       <main className="flex-1 p-5 relative mt-20 ml-10">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">My Menu</h1>
         {error && (

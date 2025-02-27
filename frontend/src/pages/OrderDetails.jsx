@@ -4,6 +4,7 @@ import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Swal from "sweetalert2";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import BackButton from "../components/BackButton";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -257,10 +258,6 @@ const OrderDetails = () => {
     });
   };
 
-  const handleBack = () => {
-    navigate("/orders");
-  };
-
   // Function to get status color class
   const getStatusColorClass = (status) => {
     switch (status) {
@@ -323,23 +320,6 @@ const OrderDetails = () => {
         <Sidebar />
         <div className="flex justify-center items-center w-full">
           <div className="text-xl">Loading order details...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen">
-        <Sidebar />
-        <div className="flex flex-col items-center w-full">
-          <div className="text-red-500 text-xl mb-4">Error: {error}</div>
-          <button
-            onClick={handleBack}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
-          >
-            Back to Orders
-          </button>
         </div>
       </div>
     );
@@ -481,26 +461,7 @@ const OrderDetails = () => {
       <Sidebar />
       <div className="flex-grow max-w-4xl mx-auto w-full">
         <div className="mb-6">
-          <button
-            onClick={handleBack}
-            className="flex items-center text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-5 h-5 mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-              />
-            </svg>
-            Back to Orders
-          </button>
+          <BackButton to="/orders" />
         </div>
 
         {order && (
