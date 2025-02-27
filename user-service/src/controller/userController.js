@@ -1,7 +1,6 @@
 import {
   generateToken,
   hashPassword,
-  validateEmail,
   validatePassword,
   validatePhoneNumber,
 } from "../util/userUtil.js";

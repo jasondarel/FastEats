@@ -25,6 +25,16 @@ const createTables = async () => {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_payments (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        bank_bca TEXT UNIQUE NOT NULL, 
+        gopay TEXT UNIQUE NOT NULL,
+        dana TEXT UNIQUE NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
     console.log("✅ Tables created successfully!");
   } catch (error) {
     console.error("❌ Error creating tables:", error);
