@@ -7,8 +7,6 @@ import withReactContent from "sweetalert2-react-content";
 import SearchBar from "../components/SearchBar";
 import BackButton from "../components/BackButton";
 
-const validCategories = ["Food", "Drink", "Dessert", "Others"];
-
 const MyMenuPage = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
