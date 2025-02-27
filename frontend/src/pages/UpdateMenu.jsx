@@ -6,14 +6,10 @@ import axios from "axios";
 
 const UpdateMenu = () => {
   const { restaurantId } = useParams();
-  const [menuItems, setMenuItems] = useState([]);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
-  const [menuCategory, setMenuCategory] = useState("");
   const navigate = useNavigate();
   const [menuPrice, setMenuPrice] = useState("");
 
