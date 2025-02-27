@@ -23,6 +23,16 @@ const createTransactionService = async (transaction) => {
     return result.rows[0];
 };
 
+const getTransactionByOrderIdService = async (orderId) => {
+    const result = await pool.query(
+        "SELECT * FROM transactions WHERE order_id = $1",
+        [orderId]
+    );
+
+    return result.rows[0];
+}
+
 export {
-    createTransactionService
+    createTransactionService,
+    getTransactionByOrderIdService
 }

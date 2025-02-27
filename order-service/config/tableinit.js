@@ -29,7 +29,6 @@ const createTable = async () => {
           bank VARCHAR(50),
           va_number VARCHAR(50),
           payment_type VARCHAR(50),
-          transaction_status VARCHAR(20),
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW(),
           FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
