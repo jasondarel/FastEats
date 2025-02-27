@@ -147,6 +147,10 @@ const ManageRestaurant = () => {
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
       });
 
       setInitialRestaurantName(restaurantName);
