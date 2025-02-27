@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { jwtDecode } from "jwt-decode";
 import {
   FaUtensils,
   FaMapMarkerAlt,
@@ -111,10 +110,6 @@ const ManageRestaurant = () => {
     imageFile,
   ]);
 
-  const handleToggleOpenStatus = () => {
-    setIsOpen(!isOpen);
-  };
-
   const handleUpdateRestaurant = async (e) => {
     e.preventDefault();
     if (!isChanged) return;
@@ -152,11 +147,8 @@ const ManageRestaurant = () => {
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.reload();
-        }
       });
+
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setInitialIsOpen(isOpen);
