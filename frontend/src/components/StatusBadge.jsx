@@ -13,8 +13,8 @@ const StatusBadge = ({ status, className = "" }) => {
         return "bg-green-300 text-green-800"; // Green for completed
       case "Cancelled":
         return "bg-red-200 text-red-800"; // Red for cancelled
-      case "Delivering":
-        return "bg-amber-200 text-amber-800"; // Amber for delivering
+      //   case "Delivering":
+      //     return "bg-amber-200 text-amber-800"; // Amber for delivering
       case "Pending":
         return "bg-purple-200 text-purple-800"; // Purple for pending
       default:
