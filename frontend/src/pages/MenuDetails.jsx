@@ -8,7 +8,7 @@ import {
   CreditCard,
   RotateCcw,
 } from "lucide-react";
-import axios from "axios";
+import insertOrderService from "../../service/restaurantServices/menuDetailsService";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
@@ -70,19 +70,7 @@ const MenuDetails = () => {
 
     console.log(menuId, quantity);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/order/order",
-        {
-          menuId: menuId,
-          quantity: quantity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await insertOrderService(menuId, quantity, token);
       // alert("Order placed successfully!");
       Swal.fire({
         title: "Success!",

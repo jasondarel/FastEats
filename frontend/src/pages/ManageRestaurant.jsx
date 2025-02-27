@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  getRestaurantData,
+  updateRestaurant,
+  toggleRestaurantStatus,
+} from "../../service/restaurantServices/manageRestaurantService";
 import Sidebar from "../components/Sidebar";
 import {
   FaUtensils,
@@ -39,21 +43,13 @@ const ManageRestaurant = () => {
     const token = localStorage.getItem("token");
     const fetchRestaurantData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/restaurant/restaurant",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await getRestaurantData(token);
         const { restaurant } = response.data;
         if (restaurant) {
           setFormDataState({
             restaurantName: restaurant.restaurant_name || "",
             restaurantImage: restaurant.restaurant_image || "",
-          })
+          });
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
           setInitialRestaurantName(restaurant.restaurant_name);
@@ -65,7 +61,6 @@ const ManageRestaurant = () => {
             ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
-          
         } else {
           alert("Restaurant data not found.");
         }
@@ -147,16 +142,7 @@ const ManageRestaurant = () => {
         );
       }
 
-      const response = await axios.put(
-        "http://localhost:5000/restaurant/restaurant",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await updateRestaurant(token, formData);
 
       Swal.fire({
         title: "Success!",
@@ -228,16 +214,7 @@ const ManageRestaurant = () => {
       try {
         const newStatus = !isOpen;
 
-        const response = await axios.patch(
-          "http://localhost:5000/restaurant/is-open",
-          { isOpen: newStatus },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await toggleRestaurantStatus(token, newStatus);
 
         setIsOpen(newStatus);
         setInitialIsOpen(newStatus);
