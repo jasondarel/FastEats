@@ -597,3 +597,81 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     });
   }
 };
+
+export const getRestaurantOrderController = async (req, res) => {
+  const { userId, role } = req.user;
+  const {order_id} = req.params;
+  const token = req.headers.authorization;
+
+  if(role !== "seller") {
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to view this order"
+    });
+  }
+
+  if(!order_id) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing order_id"
+    });
+  }
+
+  try {
+    const order = await getOrderByIdService(order_id);
+    if(!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    const menu = await axios.get(
+      `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    if(order.restaurant_id !== menu.data.menu.restaurant_id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to view this order"
+      });
+    }
+
+    const user = await axios.get(
+      `http://localhost:5000/user/user/${order.user_id}`,
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        }
+      }
+    );
+
+    console.log("User:", user);
+    console.log("Menu:", menu);
+
+    if(!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      order: {
+        ...order,
+        menu: menu.data.menu,
+        user: user.data.user
+      }
+    });
+  } catch(err) {
+
+  }
+}
