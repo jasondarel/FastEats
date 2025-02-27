@@ -13,7 +13,7 @@ import {
   saveSnapTokenService,
 } from "../service/orderService.js";
 import crypto from "crypto";
-import { createTransactionService } from "../service/transactionService.js";
+import { createTransactionService, getTransactionByOrderIdService } from "../service/transactionService.js";
 
 export const createOrderController = async (req, res) => {
   try {
@@ -653,6 +653,12 @@ export const getRestaurantOrderController = async (req, res) => {
       }
     );
 
+    const transaction = await getTransactionByOrderIdService(order_id);
+
+    if(!transaction) {
+
+    }
+
     console.log("User:", user);
     console.log("Menu:", menu);
 
@@ -668,7 +674,8 @@ export const getRestaurantOrderController = async (req, res) => {
       order: {
         ...order,
         menu: menu.data.menu,
-        user: user.data.user
+        user: user.data.user,
+        transaction: transaction
       }
     });
   } catch(err) {
