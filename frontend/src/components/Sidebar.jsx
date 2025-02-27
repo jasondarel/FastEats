@@ -8,7 +8,10 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Changed to include medium screens (width < 1024px)
+  const [isMobileOrMedium, setIsMobileOrMedium] = useState(
+    window.innerWidth < 1024
+  );
   const [isProfileDropupOpen, setIsProfileDropupOpen] = useState(false);
 
   const MySwal = withReactContent(Swal);
@@ -30,17 +33,18 @@ const Sidebar = ({ isTaskbarOpen }) => {
   useEffect(() => {
     if (isSidebarOpen) {
       setShowHamburger(false);
-    } else if (isMobile && !isTaskbarOpen) {
+    } else if (isMobileOrMedium && !isTaskbarOpen) {
       setShowHamburger(true);
     }
-  }, [isSidebarOpen, isMobile, isTaskbarOpen]);
+  }, [isSidebarOpen, isMobileOrMedium, isTaskbarOpen]);
 
   useEffect(() => {
     const updateSidebarState = () => {
-      const newIsMobile = window.innerWidth < 768;
-      setIsMobile(newIsMobile);
+      // Changed to check for medium screens (width < 1024px)
+      const newIsMobileOrMedium = window.innerWidth < 1024;
+      setIsMobileOrMedium(newIsMobileOrMedium);
 
-      if (!newIsMobile) {
+      if (!newIsMobileOrMedium) {
         setIsSidebarOpen(true);
         setShowHamburger(false);
       } else {
@@ -93,24 +97,34 @@ const Sidebar = ({ isTaskbarOpen }) => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsProfileDropupOpen(false);
     MySwal.fire({
-      title: "Logged Out",
-      text: "Successfully Logged Out!",
-      icon: "info",
-      confirmButtonText: "Ok",
+      title: "Logout",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      confirmButtonText: "Yes, Logout",
       confirmButtonColor: "#efb100",
+      showCancelButton: true,
+      cancelButtonText: "Cancel",
+      cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/login");
+        localStorage.removeItem("token");
+        setIsProfileDropupOpen(false);
+        MySwal.fire({
+          title: "Logged out!",
+          text: "You have been successfully logged out.",
+          icon: "success",
+          confirmButtonColor: "#efb100",
+        }).then(() => {
+          navigate("/login");
+        });
       }
     });
   };
 
   const toggleSidebar = () => {
     // Only toggle if it wasn't dragged
-    if (!wasDraggedRef.current && isMobile) {
+    if (!wasDraggedRef.current && isMobileOrMedium) {
       setIsSidebarOpen(!isSidebarOpen);
       setShowHamburger(!isSidebarOpen);
     }
@@ -216,17 +230,17 @@ const Sidebar = ({ isTaskbarOpen }) => {
       <aside
         className={`fixed top-0 left-0 w-64 h-full text-yellow-500 p-5 flex flex-col shadow-lg bg-white transform transition-transform duration-300 ease-in-out z-10 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        } lg:translate-x-0`}
         style={{
           backgroundImage: "url('/foodbg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        {isSidebarOpen && isMobile && (
+        {isSidebarOpen && isMobileOrMedium && (
           <button
             onClick={toggleSidebar}
-            className="absolute top-5 right-5 text-yellow-500 text-2xl z-50 md:hidden hover:cursor-pointer"
+            className="absolute top-5 right-5 text-yellow-500 text-2xl z-50 lg:hidden hover:cursor-pointer"
           >
             &times;
           </button>

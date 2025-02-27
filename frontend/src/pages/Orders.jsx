@@ -230,22 +230,17 @@ const Orders = () => {
 
   return (
     <div
-      className="flex min-h-screen w-full"
+      className="flex w-screen min-h-screen"
       style={{
         backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/orders.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        overflow: "hidden", // Added to prevent scrolling
       }}
     >
       <Sidebar />
-      <main
-        className={`md:ml-20 flex-1 flex flex-col items-center p-5 pt-8 w-full max-w-full ${
-          !loading && !error && orders.length === 0 ? "justify-center" : ""
-        }`}
-      >
-        <div className="w-full max-w-2xl p-8 bg-white shadow-xl rounded-xl mb-6">
+      <main className="md:ml-20 flex-1 flex justify-center items-center p-5">
+        <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaHistory className="mr-3" /> My Orders
           </h2>
@@ -274,8 +269,8 @@ const Orders = () => {
             </div>
           )}
 
-          {/* Scrollable Order List - Allow this to scroll even if page scrolling is disabled */}
-          <div className="w-full max-h-[70vh] overflow-y-auto pr-2 overflow-x-hidden">
+          {/* Scrollable Order List */}
+          <div className="w-full max-h-[500px] overflow-y-auto pr-2 overflow-x-hidden">
             {loading && (
               <div className="text-center py-8">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-yellow-500 border-t-transparent mb-2"></div>
@@ -312,7 +307,7 @@ const Orders = () => {
 
         {/* Floating My Menu Button */}
         <a
-          href="../menu"
+          href="../home"
           className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
         >
           <FaShoppingBag className="mr-2" /> Order Now
