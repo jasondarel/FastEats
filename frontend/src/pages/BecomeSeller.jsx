@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import becomeSellerService from "../../service/userServices/becomeSellerService";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
@@ -32,18 +32,19 @@ const BecomeSeller = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setErrors(prev => ({
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setErrors((prev) => ({
           ...prev,
-          image: "Image size should be less than 5MB"
+          image: "Image size should be less than 5MB",
         }));
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({
           ...prev,
-          image: "Please upload an image file"
+          image: "Please upload an image file",
         }));
         return;
       }
@@ -54,7 +55,7 @@ const BecomeSeller = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
-      setErrors(prev => ({ ...prev, image: null }));
+      setErrors((prev) => ({ ...prev, image: null }));
     }
   };
 
@@ -68,9 +69,9 @@ const BecomeSeller = () => {
     }
 
     if (!restaurantImage) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        image: "Please upload a restaurant image"
+        image: "Please upload a restaurant image",
       }));
       return;
     }
@@ -88,21 +89,7 @@ const BecomeSeller = () => {
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("restaurantImage", restaurantImage);
 
-      formData.forEach((value, key) => {
-        console.log(key, value);
-      });
-
-    console.log("form Data: ", formData);
-      const response = await axios.post(
-        "http://localhost:5000/user/become-seller",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await becomeSellerService(formData, token);
 
       alert(
         response.data.message + " ..Please login again" ||
@@ -175,7 +162,7 @@ const BecomeSeller = () => {
                 </p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Restaurant Address
