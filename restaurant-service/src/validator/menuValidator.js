@@ -15,6 +15,10 @@ const validateCreateMenuRequest = async(menuReq) => {
         }
     }
 
+    if(!menuReq.menuImage) {
+        errors.menuImage = 'Menu image is required';
+    }
+
     const validCategories = ["Food", "Drink", "Dessert", "Others"];
     if (!menuReq.menuCategory || menuReq.menuCategory.trim() === '') {
         errors.menuCategory = 'Menu category is required';
