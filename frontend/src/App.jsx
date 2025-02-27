@@ -22,6 +22,7 @@ import Payment from "./pages/Thanks";
 import Thanks from "./pages/Thanks";
 import PayNow from "./pages/PayNow";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
+import OrderSummary from "./pages/OrderSummary";
 
 function App() {
   return (
@@ -140,6 +141,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <RestaurantDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-summary/:order_id"
+            element={
+              <ProtectedRoute>
+                <OrderSummary />
               </ProtectedRoute>
             }
           />
