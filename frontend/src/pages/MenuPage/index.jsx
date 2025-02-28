@@ -46,7 +46,7 @@ const MenuPage = () => {
   }
 
   return (
-    <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
+    <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
       <Sidebar />
       <BackButton to="/home" />
       <main className="flex-1 p-5 relative mt-20 ml-10">

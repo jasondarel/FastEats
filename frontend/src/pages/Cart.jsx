@@ -37,7 +37,7 @@ const Cart = () => {
       }}
     >
       <Sidebar className="z-50 hidden md:block" />
-      <div className="items-center justify-center py-4 px-6 bg-white rounded-md shadow-yellow-500 shadow-2xl md:ml-64 w-full md:w-auto lg:scale-[0.95] lg:my-5 xl:scale-100 xl:my-5">
+      <div className="items-center justify-center py-4 px-6 bg-white rounded-md shadow-yellow-500 shadow-2xl lg:ml-64 w-full md:w-auto lg:scale-[0.95] lg:my-5 xl:scale-100 xl:my-5">
         <div className="flex justify-between mb-10">
           <h2 className="font-semibold text-slate-700 sm:font-bold sm:text-lg md:text-2xl xl:text-3xl xl:my-5">
             Shopping Cart
