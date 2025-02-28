@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import axios from "axios";
+import createNewMenuService from "../../service/restaurantServices/myMenuService";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import SearchBar from "../components/SearchBar";
@@ -169,16 +169,7 @@ const MyMenuPage = () => {
         formData.append("menuImage", menuImage);
       }
 
-      const response = await axios.post(
-        "http://localhost:5000/restaurant/menu",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = createNewMenuService(formData, token);
 
       setMenuItems((prevItems) => [...prevItems, response.data.dataMenu]);
       setShowCreateMenuForm(false);
@@ -189,11 +180,15 @@ const MyMenuPage = () => {
       setPreviewImage(null);
       setMenuImage(null);
       Swal.fire({
-        title: "Sucess!",
+        title: "Success!",
         text: "Menu created successfully",
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
       });
     } catch (error) {
       if (error.response) {
