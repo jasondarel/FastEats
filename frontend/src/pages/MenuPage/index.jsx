@@ -1,9 +1,9 @@
-// MenuPage.jsx
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import SearchBar from "../../components/SearchBar";
 import BackButton from "../../components/BackButton";
+import CategoryFilter from "../../components/CategoryFilter"; // Import the new component
 import MenuItemGrid from "./components/MenuItemGrid";
 import ErrorMessage from "./components/ErrorMessage";
 import LoadingIndicator from "./components/LoadingIndicator";
@@ -12,31 +12,26 @@ import useMenuData from "./components/useMenuData";
 const MenuPage = () => {
   const { restaurantId } = useParams();
 
-  // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showUnavailable, setShowUnavailable] = useState(false);
 
-  // Custom hook to handle data fetching and state
   const { menuItems, error, isLoading } = useMenuData(restaurantId);
 
-  // Filter logic
   const filteredMenu = menuItems.filter((item) => {
     const matchesSearch = item.menu_name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory
-      ? item.menu_category === filterCategory
-      : true;
+    const matchesCategory =
+      filterCategory === "All" || item.menu_category === filterCategory;
 
     const price = parseInt(item.menu_price);
     let matchesPrice = true;
     if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
     if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-    // Only show available items unless showUnavailable is toggled on
     const matchesAvailability = showUnavailable
       ? true
       : item.is_available === true;
@@ -61,8 +56,6 @@ const MenuPage = () => {
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
           minPrice={minPrice}
           setMinPrice={setMinPrice}
           maxPrice={maxPrice}
@@ -70,6 +63,11 @@ const MenuPage = () => {
           showUnavailable={showUnavailable}
           setShowUnavailable={setShowUnavailable}
           placeholder="Search menu items..."
+        />
+
+        <CategoryFilter
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
         />
 
         <MenuItemGrid

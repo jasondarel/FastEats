@@ -7,6 +7,7 @@ import SearchBar from "../../components/SearchBar";
 import BackButton from "../../components/BackButton";
 import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
+import CategoryFilter from "../../components/CategoryFilter"; // Import the new component
 import { handleApiError } from "./components/HandleAlert";
 
 const MyMenuPage = () => {
@@ -18,7 +19,7 @@ const MyMenuPage = () => {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All"); // Initialize with "All" category
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -97,9 +98,10 @@ const MyMenuPage = () => {
     const matchesSearch = item.menu_name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory
-      ? item.menu_category === filterCategory
-      : true;
+
+    // Update category filter logic to handle "All" as a special case
+    const matchesCategory =
+      filterCategory === "All" ? true : item.menu_category === filterCategory;
 
     const price = parseInt(item.menu_price);
     let matchesPrice = true;
@@ -137,6 +139,12 @@ const MyMenuPage = () => {
           placeholder="Search my menu items..."
         />
 
+        {/* Add the CategoryFilter component here */}
+        <CategoryFilter
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
+        />
+
         {filteredMenu.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredMenu.map((item) => (
@@ -149,7 +157,7 @@ const MyMenuPage = () => {
           </div>
         ) : (
           <div className="text-gray-500 text-center py-8">
-            {searchQuery || filterCategory || minPrice || maxPrice
+            {searchQuery || filterCategory !== "All" || minPrice || maxPrice
               ? "No menu items match your search criteria."
               : "No menu available."}
           </div>
