@@ -76,12 +76,12 @@ const OrderSummary = () => {
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch (error) {
       return dateString;
@@ -91,40 +91,42 @@ const OrderSummary = () => {
   const handleCompleteOrder = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/order/complete-order/${order_id}`,{
+        `http://localhost:5000/order/complete-order/${order_id}`,
+        {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        })
-        alert("Order completed successfully!");
-    }catch(err) {
+        }
+      );
+      alert("Order completed successfully!");
+    } catch (err) {
       console.error("Error completing order:", err);
     }
-  }
+  };
 
   // Format currency
   const formatCurrency = (amount) => {
-    return `IDR ${parseFloat(amount).toLocaleString('id-ID', {
+    return `IDR ${parseFloat(amount).toLocaleString("id-ID", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     })}`;
   };
 
   const getStepStatus = (currentStatus) => {
     const statusMap = {
-      "Pending": "Payment Pending",
-      "Processing": "Preparing",
-      "Completed": "Completed",
-      "Cancelled": "Cancelled"
+      Pending: "Payment Pending",
+      Processing: "Preparing",
+      Completed: "Completed",
+      Cancelled: "Cancelled",
     };
     return statusMap[currentStatus] || currentStatus;
   };
 
   const currentStep = getStepStatus(order.status);
   const steps = ["Waiting", "Pending", "Preparing", "Completed"];
-  
+
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
       <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
@@ -142,7 +144,7 @@ const OrderSummary = () => {
           const stepIndex = steps.indexOf(currentStep);
           const isActive = step === currentStep;
           const isCompleted = steps.indexOf(step) < stepIndex;
-          
+
           return (
             <div
               key={index}
@@ -187,8 +189,14 @@ const OrderSummary = () => {
         {[
           { label: "Order Date", value: formatDate(order.created_at) },
           { label: "Customer", value: `${user.name} (${user.email})` },
-          { label: "Payment Method", value: transaction?.payment_type?.toUpperCase() || "QRIS" },
-          { label: "Payment Expires", value: formatDate(transaction?.expiry_time) },
+          {
+            label: "Payment Method",
+            value: transaction?.payment_type?.toUpperCase() || "QRIS",
+          },
+          {
+            label: "Payment Expires",
+            value: formatDate(transaction?.expiry_time),
+          },
         ].map((item, index) => (
           <div key={index} className="bg-gray-100 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">{item.label}</div>
@@ -201,7 +209,11 @@ const OrderSummary = () => {
         <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
         <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg mb-4">
           <img
-            src={menu.menu_image ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}` : "/api/placeholder/80/80"}
+            src={
+              menu.menu_image
+                ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`
+                : "/api/placeholder/80/80"
+            }
             alt={menu.menu_name}
             className="w-20 h-20 object-cover rounded-lg"
           />
@@ -223,9 +235,11 @@ const OrderSummary = () => {
       <div className="bg-gray-100 p-6 rounded-lg mb-8">
         <h2 className="text-lg font-semibold mb-4">Payment Details</h2>
         {[
-          { 
-            label: "Subtotal", 
-            value: formatCurrency(parseFloat(menu.menu_price) * order.item_quantity) 
+          {
+            label: "Subtotal",
+            value: formatCurrency(
+              parseFloat(menu.menu_price) * order.item_quantity
+            ),
           },
           { label: "Tax", value: formatCurrency(0) },
           { label: "Delivery Fee", value: formatCurrency(0) },
@@ -238,15 +252,20 @@ const OrderSummary = () => {
         <div className="flex justify-between mt-4 pt-4 border-t border-dashed border-gray-300">
           <span className="font-semibold text-lg">Total</span>
           <span className="font-bold text-xl text-blue-900">
-            {transaction ? formatCurrency(transaction.amount) : formatCurrency(parseFloat(menu.menu_price) * order.item_quantity)}
+            {transaction
+              ? formatCurrency(transaction.amount)
+              : formatCurrency(
+                  parseFloat(menu.menu_price) * order.item_quantity
+                )}
           </span>
         </div>
-        
       </div>
       <div className="flex justify-end gap-4">
         {order.status === "Preparing" && (
-          <button className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:opacity-90"
-          onClick={() => handleCompleteOrder()}>
+          <button
+            className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:opacity-90"
+            onClick={() => handleCompleteOrder()}
+          >
             Complete Order
           </button>
         )}

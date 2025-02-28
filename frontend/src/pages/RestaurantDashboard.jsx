@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileSpreadsheet, FileText, ChevronDown } from "lucide-react";
-import Chart from 'chart.js/auto';
+import Chart from "chart.js/auto";
 
 const RestaurantDashboard = () => {
   // References for charts
@@ -8,7 +8,7 @@ const RestaurantDashboard = () => {
   const monthlyRevenueChartRef = useRef(null);
   const dailyOrdersChartRef = useRef(null);
   const dailyRevenueChartRef = useRef(null);
-  
+
   // Chart instances
   const [monthlyOrdersChart, setMonthlyOrdersChart] = useState(null);
   const [monthlyRevenueChart, setMonthlyRevenueChart] = useState(null);
@@ -75,7 +75,7 @@ const RestaurantDashboard = () => {
 
   // View mode state (monthly/daily)
   const [viewMode, setViewMode] = useState("monthly");
-  
+
   // Month selection for daily view
   const [selectedMonth, setSelectedMonth] = useState("February");
 
@@ -102,58 +102,62 @@ const RestaurantDashboard = () => {
   // Create monthly charts
   const createMonthlyCharts = () => {
     if (monthlyOrdersChartRef.current && monthlyRevenueChartRef.current) {
-      const monthlyLabels = monthlyData.map(item => item.month);
-      const monthlyOrdersData = monthlyData.map(item => item.orders);
-      const monthlyRevenueData = monthlyData.map(item => item.revenue);
+      const monthlyLabels = monthlyData.map((item) => item.month);
+      const monthlyOrdersData = monthlyData.map((item) => item.orders);
+      const monthlyRevenueData = monthlyData.map((item) => item.revenue);
 
       // Create monthly orders chart
       const ordersChart = new Chart(monthlyOrdersChartRef.current, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: monthlyLabels,
-          datasets: [{
-            label: 'Orders',
-            data: monthlyOrdersData,
-            backgroundColor: '#3B82F6',
-            borderColor: '#2563EB',
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              label: "Orders",
+              data: monthlyOrdersData,
+              backgroundColor: "#3B82F6",
+              borderColor: "#2563EB",
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setMonthlyOrdersChart(ordersChart);
 
       // Create monthly revenue chart
       const revenueChart = new Chart(monthlyRevenueChartRef.current, {
-        type: 'line',
+        type: "line",
         data: {
           labels: monthlyLabels,
-          datasets: [{
-            label: 'Revenue',
-            data: monthlyRevenueData,
-            backgroundColor: 'rgba(16, 185, 129, 0.2)', 
-            borderColor: '#10B981',
-            borderWidth: 2,
-            tension: 0.1
-          }]
+          datasets: [
+            {
+              label: "Revenue",
+              data: monthlyRevenueData,
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              borderColor: "#10B981",
+              borderWidth: 2,
+              tension: 0.1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setMonthlyRevenueChart(revenueChart);
     }
@@ -162,58 +166,62 @@ const RestaurantDashboard = () => {
   // Create daily charts
   const createDailyCharts = () => {
     if (dailyOrdersChartRef.current && dailyRevenueChartRef.current) {
-      const dailyLabels = dailyData.map(item => item.day);
-      const dailyOrdersData = dailyData.map(item => item.orders);
-      const dailyRevenueData = dailyData.map(item => item.revenue);
+      const dailyLabels = dailyData.map((item) => item.day);
+      const dailyOrdersData = dailyData.map((item) => item.orders);
+      const dailyRevenueData = dailyData.map((item) => item.revenue);
 
       // Create daily orders chart
       const ordersChart = new Chart(dailyOrdersChartRef.current, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: dailyLabels,
-          datasets: [{
-            label: 'Orders',
-            data: dailyOrdersData,
-            backgroundColor: '#3B82F6',
-            borderColor: '#2563EB',
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              label: "Orders",
+              data: dailyOrdersData,
+              backgroundColor: "#3B82F6",
+              borderColor: "#2563EB",
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setDailyOrdersChart(ordersChart);
 
       // Create daily revenue chart
       const revenueChart = new Chart(dailyRevenueChartRef.current, {
-        type: 'line',
+        type: "line",
         data: {
           labels: dailyLabels,
-          datasets: [{
-            label: 'Revenue',
-            data: dailyRevenueData,
-            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-            borderColor: '#10B981',
-            borderWidth: 2,
-            tension: 0.1
-          }]
+          datasets: [
+            {
+              label: "Revenue",
+              data: dailyRevenueData,
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              borderColor: "#10B981",
+              borderWidth: 2,
+              tension: 0.1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setDailyRevenueChart(revenueChart);
     }
@@ -239,12 +247,12 @@ const RestaurantDashboard = () => {
   useEffect(() => {
     // Always destroy charts before creating new ones
     destroyCharts();
-    
+
     // Use a small timeout to ensure DOM is ready
     const timer = setTimeout(() => {
       initializeCharts();
     }, 0);
-    
+
     return () => clearTimeout(timer);
   }, [viewMode]);
 
@@ -302,7 +310,7 @@ const RestaurantDashboard = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Export Buttons */}
               <div className="flex space-x-4 mt-6">
                 <button
@@ -329,16 +337,18 @@ const RestaurantDashboard = () => {
               <h2 className="text-xl font-semibold text-gray-700">
                 Performance Overview
               </h2>
-              
+
               {/* Toggle view button */}
               <div className="flex items-center">
                 <button
                   onClick={toggleViewMode}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
                 >
-                  {viewMode === "monthly" ? "Switch to Daily View" : "Switch to Monthly View"}
+                  {viewMode === "monthly"
+                    ? "Switch to Daily View"
+                    : "Switch to Monthly View"}
                 </button>
-                
+
                 {/* Month selector - only visible in daily view */}
                 {viewMode === "daily" && (
                   <div className="relative ml-4">

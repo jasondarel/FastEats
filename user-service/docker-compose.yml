@@ -10,9 +10,30 @@ services:
     ports:
       - "${DB_PORT}:5432"
     env_file:
-      - .env 
+      - .env
     volumes:
       - user_pgdata:/var/lib/postgresql/data
+    networks:
+      - user_service_network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: user_service_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - user_service_network
+
+networks:
+  user_service_network:
 
 volumes:
   user_pgdata:
+  rabbitmq_data:
