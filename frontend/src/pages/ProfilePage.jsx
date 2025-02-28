@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {
+  getProfileService,
+  saveProfileService,
+  changePasswordService,
+} from "../../service/userServices/profileService";
 import { FaUser, FaMapMarkerAlt, FaPhone, FaLock } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -32,9 +37,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5002/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await getProfileService(token);
         setProfile(res.data.user);
         setOriginalProfile(res.data.user); // Simpan data asli
         setPreview(res.data.user.profile_photo || null);
@@ -83,11 +86,7 @@ const Profile = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        "http://localhost:5002/profile",
-        { ...profile, profile_photo: preview },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await saveProfileService(profile, preview, token);
       // alert("Profile updated successfully!");
       Swal.fire({
         title: "Success!",
@@ -128,9 +127,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.put("http://localhost:5002/change-password", changePassword, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await changePasswordService(changePassword, token);
       alert("Password updated successfully!");
       setChangePassword({
         currentPassword: "",
