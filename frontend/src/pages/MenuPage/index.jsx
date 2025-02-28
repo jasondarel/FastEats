@@ -8,7 +8,7 @@ import MenuItemGrid from "./components/MenuItemGrid";
 import ErrorMessage from "./components/ErrorMessage";
 import LoadingIndicator from "./components/LoadingIndicator";
 import useMenuData from "./components/useMenuData";
-import { ArrowDownAZ, ArrowUpZA, ArrowDownUp, ArrowUpDown } from "lucide-react";
+import { ArrowDownAZ, ArrowUpZA } from "lucide-react";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
@@ -22,56 +22,23 @@ const MenuPage = () => {
 
   const { menuItems, error, isLoading } = useMenuData(restaurantId);
 
-  // Function to cycle through sort options
+  // Function to toggle between A-Z and Z-A
   const handleSortClick = () => {
-    switch (sortOption) {
-      case "nameAsc": // A to Z
-        setSortOption("nameDesc"); // Z to A
-        break;
-      case "nameDesc": // Z to A
-        setSortOption("priceLow"); // Price: Low to High
-        break;
-      case "priceLow": // Price: Low to High
-        setSortOption("priceHigh"); // Price: High to Low
-        break;
-      case "priceHigh": // Price: High to Low
-        setSortOption("nameAsc"); // Back to A to Z
-        break;
-      default:
-        setSortOption("nameAsc");
-    }
+    setSortOption(sortOption === "nameAsc" ? "nameDesc" : "nameAsc");
   };
 
   // Get the appropriate icon based on current sort option
   const getSortIcon = () => {
-    switch (sortOption) {
-      case "nameAsc":
-        return <ArrowDownAZ size={18} />;
-      case "nameDesc":
-        return <ArrowUpZA size={18} />;
-      case "priceLow":
-        return <ArrowDownUp size={18} />;
-      case "priceHigh":
-        return <ArrowUpDown size={18} />;
-      default:
-        return <ArrowDownAZ size={18} />;
-    }
+    return sortOption === "nameAsc" ? (
+      <ArrowDownAZ size={18} />
+    ) : (
+      <ArrowUpZA size={18} />
+    );
   };
 
   // Get label text for the current sort
   const getSortLabel = () => {
-    switch (sortOption) {
-      case "nameAsc":
-        return "A to Z";
-      case "nameDesc":
-        return "Z to A";
-      case "priceLow":
-        return "Price: Low to High";
-      case "priceHigh":
-        return "Price: High to Low";
-      default:
-        return "A to Z";
-    }
+    return sortOption === "nameAsc" ? "A to Z" : "Z to A";
   };
 
   // Apply filters and sorting
@@ -97,18 +64,10 @@ const MenuPage = () => {
       );
     })
     .sort((a, b) => {
-      switch (sortOption) {
-        case "nameAsc":
-          return a.menu_name.localeCompare(b.menu_name);
-        case "nameDesc":
-          return b.menu_name.localeCompare(a.menu_name);
-        case "priceLow":
-          return parseInt(a.menu_price) - parseInt(b.menu_price);
-        case "priceHigh":
-          return parseInt(b.menu_price) - parseInt(a.menu_price);
-        default:
-          return a.menu_name.localeCompare(b.menu_name);
-      }
+      // Only sort by name ascending or descending
+      return sortOption === "nameAsc"
+        ? a.menu_name.localeCompare(b.menu_name)
+        : b.menu_name.localeCompare(a.menu_name);
     });
 
   if (isLoading) {
@@ -138,7 +97,7 @@ const MenuPage = () => {
 
           <button
             onClick={handleSortClick}
-            className="flex items-center hover:cursor-pointer gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 hover:cursor-pointer transition-colors"
           >
             {getSortIcon()}
             <span>{getSortLabel()}</span>
