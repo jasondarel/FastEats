@@ -12,7 +12,7 @@ import ManageRestaurant from "./pages/ManageRestaurant/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
 import MenuDetails from "./pages/MenuDetails/MenuDetails";
-import MyMenuDetails from "./pages/MyMenuDetails";
+import MyMenuDetails from "./pages/MyMenuDetails/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
