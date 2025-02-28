@@ -20,7 +20,7 @@ const MenuItemGrid = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
       {filteredMenu.map((item) => (
         <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
           <MenuItem item={item} />

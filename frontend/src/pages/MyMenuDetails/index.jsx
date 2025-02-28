@@ -346,7 +346,7 @@ const MyMenuDetails = () => {
     );
 
   return (
-    <div className="flex ml-0 md:ml-64 bg-white min-h-screen">
+    <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
       <Sidebar />
       <main className="flex-1 p-5 relative">
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl mt-16">
