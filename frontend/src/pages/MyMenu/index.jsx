@@ -7,7 +7,8 @@ import SearchBar from "../../components/SearchBar";
 import BackButton from "../../components/BackButton";
 import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
-import CategoryFilter from "../../components/CategoryFilter"; // Import the new component
+import CategoryFilter from "../../components/CategoryFilter";
+import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
 import { handleApiError } from "./components/HandleAlert";
 
 const MyMenuPage = () => {
@@ -19,9 +20,11 @@ const MyMenuPage = () => {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("All"); // Initialize with "All" category
+  const [filterCategory, setFilterCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [showUnavailable, setShowUnavailable] = useState(false);
+  const [sortOption, setSortOption] = useState("nameAsc"); // Default sort: A to Z
 
   const navigate = useNavigate();
 
@@ -93,23 +96,34 @@ const MyMenuPage = () => {
     }
   };
 
-  // Filter logic
-  const filteredMenu = menuItems.filter((item) => {
-    const matchesSearch = item.menu_name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+  // Filter and sort logic
+  const filteredAndSortedMenu = menuItems
+    .filter((item) => {
+      const matchesSearch = item.menu_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        filterCategory === "All" ? true : item.menu_category === filterCategory;
 
-    // Update category filter logic to handle "All" as a special case
-    const matchesCategory =
-      filterCategory === "All" ? true : item.menu_category === filterCategory;
+      const price = parseInt(item.menu_price);
+      let matchesPrice = true;
+      if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
+      if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-    const price = parseInt(item.menu_price);
-    let matchesPrice = true;
-    if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
-    if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
+      const matchesAvailability = showUnavailable
+        ? true
+        : item.is_available === true;
 
-    return matchesSearch && matchesCategory && matchesPrice;
-  });
+      return (
+        matchesSearch && matchesCategory && matchesPrice && matchesAvailability
+      );
+    })
+    .sort((a, b) => {
+      // Only sort by name ascending or descending
+      return sortOption === "nameAsc"
+        ? a.menu_name.localeCompare(b.menu_name)
+        : b.menu_name.localeCompare(a.menu_name);
+    });
 
   if (isLoading) {
     return <div className="text-center p-5">Loading menu...</div>;
@@ -127,27 +141,32 @@ const MyMenuPage = () => {
           </div>
         )}
 
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
-          minPrice={minPrice}
-          setMinPrice={setMinPrice}
-          maxPrice={maxPrice}
-          setMaxPrice={setMaxPrice}
-          placeholder="Search my menu items..."
-        />
+        <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
+          <div className="flex-grow max-w-2xl flex justify-center right-0">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              showUnavailable={showUnavailable}
+              setShowUnavailable={setShowUnavailable}
+              placeholder="Search menu items..."
+            />
+          </div>
 
-        {/* Add the CategoryFilter component here */}
+          <AlphabetSort sortOption={sortOption} setSortOption={setSortOption} />
+        </div>
+
         <CategoryFilter
           filterCategory={filterCategory}
           setFilterCategory={setFilterCategory}
         />
 
-        {filteredMenu.length > 0 ? (
+        {filteredAndSortedMenu.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredMenu.map((item) => (
+            {filteredAndSortedMenu.map((item) => (
               <MenuItemCard
                 key={item.menu_id}
                 item={item}
@@ -180,4 +199,5 @@ const MyMenuPage = () => {
     </div>
   );
 };
+
 export default MyMenuPage;
