@@ -78,11 +78,11 @@ const MenuPage = () => {
     <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
       <Sidebar />
       <BackButton to="/home" />
-      <main className="flex-1 p-5 relative mt-20 ml-10">
+      <main className="flex-1 p-5 relative mt-20 px-10">
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
         {error && <ErrorMessage message={error} />}
 
-        <div className="flex flex-wrap gap-4 items-center mb-6">
+        <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}

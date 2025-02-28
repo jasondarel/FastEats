@@ -19,7 +19,7 @@ const SearchBar = ({
   const handleSearch = (e) => setSearchQuery(e.target.value);
 
   return (
-    <div className="mb-6 flex flex-wrap gap-4 items-center justify-center">
+    <div className="flex flex-wrap gap-4 items-center justify-center">
       {/* Search Bar */}
       <div className="relative flex-grow max-w-lg">
         <input
