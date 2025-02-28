@@ -20,7 +20,7 @@ const Register = () => {
     setErrors({});
 
     try {
-      await axios.post("http://localhost:5000/user/register", {
+      const otpToken = await axios.post("http://localhost:5000/user/register", {
         name,
         email,
         password,
@@ -28,13 +28,13 @@ const Register = () => {
       });
       Swal.fire({
         title: "Sucessfully Registered",
-        text: "Registration successful! Please login.",
+        text: "Registration successful! Check your email for validate your email.",
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
       }).then((result) => {
         if (result.isConfirmed) {
-          navigate("/login");
+          navigate(`/otp-verification?token=${otpToken.data.token}`);
         }
       });
     } catch (error) {

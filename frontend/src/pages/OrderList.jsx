@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { ChevronRightIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const OrderList = () => {
   const token = localStorage.getItem("token");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -52,6 +54,10 @@ const OrderList = () => {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  const toOrderDetail = (orderId) => {
+    navigate(`/order-summary/${orderId}`);
+  }
 
   // Function to format date
   const formatDate = (dateString) => {
@@ -118,6 +124,7 @@ const OrderList = () => {
                 <div
                   key={orderKey}
                   className="flex-col border border-slate-300 shadow-xl rounded-xl px-3 py-2 cursor-pointer mb-4 lg:w-[48%] hover:shadow-2xl transition-shadow"
+                  onClick={() => toOrderDetail(order.order_id)}
                 >
                   <div className="flex justify-between gap-8 lg:gap-4">
                     <div>

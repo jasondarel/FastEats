@@ -23,6 +23,7 @@ import Thanks from "./pages/Thanks";
 import PayNow from "./pages/PayNow";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import OrderSummary from "./pages/OrderSummary";
+import OtpVerifPage from "./pages/OtpVerifPage";
 
 function App() {
   return (
@@ -160,6 +161,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route 
+          path="/otp-verification" 
+          element={<OtpVerifPage />} />
         </Routes>
       </div>
     </div>
