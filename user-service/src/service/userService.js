@@ -9,6 +9,14 @@ export const registerService = async(userReq) => {
     return result.rows[0];
 }
 
+export const validateUserService = async(email) => {
+    const result = await pool.query(
+        "UPDATE users SET is_verified = true WHERE email = $1 RETURNING *",
+        [email]
+    );
+    return result.rows[0];
+}
+
 export const getUserByEmailService = async(email) => {
     const result = await pool.query(
         "SELECT * FROM users WHERE email = $1",

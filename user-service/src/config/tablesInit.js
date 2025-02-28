@@ -9,6 +9,7 @@ const createTables = async () => {
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
+        is_verified BOOLEAN DEFAULT FALSE,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'user', -- Role field from auth_users
         created_at TIMESTAMP DEFAULT NOW()

@@ -64,6 +64,10 @@ export const validateLoginRequest = async(userReq) => {
         } else if(user.password_hash !== hashedPassword) {
             errors.password = 'Invalid credentials';
         }
+
+        if(!user.is_verified) {
+            errors.email = 'Email is not verified';
+        }
     } catch(err) {
         errors.general = 'Invalid credentials';
     }

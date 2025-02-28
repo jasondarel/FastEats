@@ -1,20 +1,25 @@
 import {
-  generateToken,
+  generateLoginToken,
+  generateValidationEmailToken,
   hashPassword,
   validatePassword,
+  publishMessage,
   validatePhoneNumber,
+  generateOtpCode,
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+import jwt from "jsonwebtoken";
 import { fileURLToPath } from "url";
 import { validateLoginRequest, validateRegisterRequest } from "../validator/userValidator.js";
-import { getUserByEmailService, registerService } from "../service/userService.js";
+import { getUserByEmailService, registerService, validateUserService } from "../service/userService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads");
+const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads/restaurant");
+const blackListedTokens = new Set();
 
 const registerController = async (req, res) => {
   try {
@@ -30,11 +35,28 @@ const registerController = async (req, res) => {
     const hashedPassword = hashPassword(req.body.password);
     req.body.password = hashedPassword;
 
+    const otp = generateOtpCode(6);
+
+    const emailVericationToken = generateValidationEmailToken({
+      email: req.body.email,
+      otp: otp,
+    });
+
+
     const response = await registerService(req.body);
+
+    const emailPayload = {
+      email: req.body.email,
+      token: emailVericationToken,
+      otp: otp,
+    }
+
+    await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
 
     return res.status(201).json({
       success: true,
       message: response.message,
+      token: emailVericationToken,
     })
   } catch (err) {
     console.error(err);
@@ -64,7 +86,7 @@ const loginController = async (req, res) => {
       });
     }
 
-    const token = generateToken({
+    const token = generateLoginToken({
       userId: user.id,
       email: user.email,
       role: user.role,
@@ -92,6 +114,84 @@ const getUsersController = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const verifyTokenController = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader.split(" ")[1];
+
+  if(!token) {
+    return res.status(401).json({
+      success: false,
+      message: "Token not found",
+    });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if(err) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Token is valid",
+    });
+  })
+}
+
+export const verifyOtpController = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No token provided",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (blackListedTokens.has(token)) {
+      return res.status(401).json({
+        success: false,
+        message: "Token has been revoked. Please login again",
+      });
+    }
+
+    const user = await new Promise((resolve, reject) => {
+      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) reject(err);
+        else resolve(decoded);
+      });
+    });
+
+    if (user.otp !== otp) {
+      console.log("Invalid OTP");
+      return res.status(401).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    const response = await validateUserService(user.email);
+
+    blackListedTokens.add(token);
+
+    return res.status(200).json({
+      success: true,
+      message: "Token verified successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 
