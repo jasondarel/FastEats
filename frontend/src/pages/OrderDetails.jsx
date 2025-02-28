@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import {
+  cancelOrderService,
+  payConfirmationService,
+  saveSnapService,
+  checkMidtransStatusService,
+  getOrderDetailService,
+} from "../../service/orderServices/orderDetails";
 import Sidebar from "../components/Sidebar";
 import Swal from "sweetalert2";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import BackButton from "../components/BackButton";
 import StatusBadge from "../components/StatusBadge"; // Import the StatusBadge component
+import axios from "axios";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -29,16 +36,7 @@ const OrderDetails = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.patch(
-            `http://localhost:5000/order/cancel-order/${orderId}`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const response = await cancelOrderService(orderId, token);
 
           Swal.fire(
             "Cancelled!",
@@ -79,23 +77,12 @@ const OrderDetails = () => {
     console.log("Confirming payment for order ID:", orderId);
     try {
       setPaymentLoading(true);
-      console.log("Confirming payment for order ID:", orderId);
-      console.log("Item Quantity:", itemQuantity);
-      console.log("Item Price:", itemPrice);
-      console.log("Token:", token);
-      const response = await axios.post(
-        "http://localhost:5000/order/pay-order-confirmation",
-        {
-          order_id: orderId,
-          itemQuantity: itemQuantity,
-          itemPrice: itemPrice,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+
+      const response = await payConfirmationService(
+        orderId,
+        itemQuantity,
+        itemPrice,
+        token
       );
 
       if (response.data.success) {
@@ -113,13 +100,7 @@ const OrderDetails = () => {
           },
           onPending: async function (result) {
             try {
-              const response = await axios.post(
-                "http://localhost:5000/order/save-snap-token",
-                {
-                  order_id: orderId,
-                  snap_token: snapToken,
-                }
-              );
+              const response = await saveSnapService(orderId, snapToken);
               alert(
                 "Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi."
               );
@@ -135,9 +116,7 @@ const OrderDetails = () => {
           },
           onClose: async function () {
             try {
-              const statusResponse = await axios.get(
-                `http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`
-              );
+              const statusResponse = await checkMidtransStatusService(orderId);
 
               if (statusResponse.data.transaction_status === "pending") {
                 alert(
@@ -156,42 +135,6 @@ const OrderDetails = () => {
       console.error("Error confirming payment:", err);
       setError(err.message || "Failed to confirm payment");
       setPaymentLoading(false);
-    }
-  };
-
-  const fetchOrderDetails = async () => {
-    if (!orderId) {
-      setError("Order ID is missing");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await axios.get(
-        `http://localhost:5000/order/orders/${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Order data received:", response.data);
-      if (response.data.success && response.data.order) {
-        setOrder(response.data.order);
-      } else {
-        throw new Error("No order data received");
-      }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-      setError(error.message || "Failed to fetch order details");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -218,15 +161,7 @@ const OrderDetails = () => {
           throw new Error("No authentication token found");
         }
 
-        const response = await axios.get(
-          `http://localhost:5000/order/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await getOrderDetailService(orderId, token);
 
         console.log("Order data received:", response.data);
         if (response.data.success && response.data.order) {
