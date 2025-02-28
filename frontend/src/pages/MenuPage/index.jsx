@@ -7,8 +7,8 @@ import CategoryFilter from "../../components/CategoryFilter";
 import MenuItemGrid from "./components/MenuItemGrid";
 import ErrorMessage from "./components/ErrorMessage";
 import LoadingIndicator from "./components/LoadingIndicator";
+import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
 import useMenuData from "./components/useMenuData";
-import { ArrowDownAZ, ArrowUpZA } from "lucide-react";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
@@ -21,25 +21,6 @@ const MenuPage = () => {
   const [sortOption, setSortOption] = useState("nameAsc"); // Default sort: A to Z
 
   const { menuItems, error, isLoading } = useMenuData(restaurantId);
-
-  // Function to toggle between A-Z and Z-A
-  const handleSortClick = () => {
-    setSortOption(sortOption === "nameAsc" ? "nameDesc" : "nameAsc");
-  };
-
-  // Get the appropriate icon based on current sort option
-  const getSortIcon = () => {
-    return sortOption === "nameAsc" ? (
-      <ArrowDownAZ size={18} />
-    ) : (
-      <ArrowUpZA size={18} />
-    );
-  };
-
-  // Get label text for the current sort
-  const getSortLabel = () => {
-    return sortOption === "nameAsc" ? "A to Z" : "Z to A";
-  };
 
   // Apply filters and sorting
   const filteredAndSortedMenu = menuItems
@@ -82,26 +63,22 @@ const MenuPage = () => {
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
         {error && <ErrorMessage message={error} />}
 
-        <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
-          <SearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            minPrice={minPrice}
-            setMinPrice={setMinPrice}
-            maxPrice={maxPrice}
-            setMaxPrice={setMaxPrice}
-            showUnavailable={showUnavailable}
-            setShowUnavailable={setShowUnavailable}
-            placeholder="Search menu items..."
-          />
+        <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
+          <div className="flex-grow max-w-2xl flex justify-center right-0">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              showUnavailable={showUnavailable}
+              setShowUnavailable={setShowUnavailable}
+              placeholder="Search menu items..."
+            />
+          </div>
 
-          <button
-            onClick={handleSortClick}
-            className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 hover:cursor-pointer transition-colors"
-          >
-            {getSortIcon()}
-            <span>{getSortLabel()}</span>
-          </button>
+          <AlphabetSort sortOption={sortOption} setSortOption={setSortOption} />
         </div>
 
         <CategoryFilter
