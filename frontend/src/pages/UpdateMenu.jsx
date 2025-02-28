@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
-import axios from "axios";
+import {
+  updateMenuService,
+  deleteMenuService,
+} from "../../service/restaurantServices/updateMenuService";
 
 const UpdateMenu = () => {
   const { restaurantId } = useParams();
@@ -66,16 +69,7 @@ const UpdateMenu = () => {
         formData.append("menuImage", menuImage);
       }
 
-      const response = await axios.put(
-        `http://localhost:5000/restaurant/menu/${menuId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = updateMenuService(menuId, formData, token);
 
       alert("Menu updated successfully");
       navigate("/my-menu");
@@ -94,11 +88,7 @@ const UpdateMenu = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        await axios.delete(`http://localhost:5000/restaurant/menu/${menuId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await deleteMenuService(menuId, token);
 
         alert("Menu deleted successfully");
         navigate("/my-menu");
