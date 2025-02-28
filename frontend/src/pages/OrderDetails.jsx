@@ -357,7 +357,6 @@ const OrderDetails = () => {
             </button>
           </div>
         );
-      case "Completed":
       case "Pending":
         return (
           <div className="flex justify-center">
@@ -382,6 +381,7 @@ const OrderDetails = () => {
         );
       case "Preparing":
       case "Delivering":
+      case "Completed": // Added "Completed" here to remove the button
         return null; // No buttons for these statuses
       default:
         return (
@@ -526,14 +526,6 @@ const OrderDetails = () => {
                       parseFloat(order.menu.menu_price) * order.item_quantity
                     ).toLocaleString("id-ID")}
                   </span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-amber-700 font-medium">Status</span>
-                  {/* Using StatusBadge for the status in the details section */}
-                  <StatusBadge
-                    status={order.status}
-                    className="px-3 py-1 rounded text-xs font-medium"
-                  />
                 </div>
               </div>
             </div>
