@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import registerUser from "../../service/userServices/registerService";
 import { useNavigate, Link } from "react-router-dom";
 
 //sweet alert
@@ -19,11 +19,7 @@ const Register = () => {
     setErrors({}); // Reset errors before validation
 
     try {
-      await axios.post("http://localhost:5000/user/register", {
-        name,
-        email,
-        password,
-      });
+      await registerUser(name, email, password);
       // alert("Registration successful! Please login.");
       Swal.fire({
         title: "Sucessfully Registered",
