@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import getOrderHistoryService from "../../service/orderServices/ordersService";
 import Sidebar from "../components/Sidebar";
 import SortButton from "../components/SortButton";
 import StatusBadge from "../components/StatusBadge"; // Import the new component
@@ -142,12 +142,7 @@ const Orders = () => {
   const fetchOrderHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/order/orders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await getOrderHistoryService(token);
 
       // Check if orders exist; otherwise, set an empty array
       setOrders(response.data.orders || []);
