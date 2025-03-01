@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Register from "./pages/register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
@@ -34,7 +34,7 @@ function App() {
           <Route path="/" element={<Navigate to="/home" />} />
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Register />} />us
           {/* Protected Routes (Require Login) */}
           <Route
             path="/home"
