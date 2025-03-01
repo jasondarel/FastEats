@@ -1,11 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 
-const validCategories = ["Food", "Drink", "Dessert", "Others"];
-
 // Separate FilterButton component
 const FilterButton = ({
-  filterCategory,
-  setFilterCategory,
   minPrice,
   setMinPrice,
   maxPrice,
@@ -18,7 +14,6 @@ const FilterButton = ({
 
   // Calculate active filter count
   const activeFilterCount = [
-    filterCategory ? 1 : 0,
     minPrice || maxPrice ? 1 : 0,
     showUnavailable ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
@@ -42,16 +37,12 @@ const FilterButton = ({
   };
 
   const clearFilters = () => {
-    setFilterCategory("");
     setMinPrice("");
     setMaxPrice("");
     if (setShowUnavailable) {
       setShowUnavailable(false);
     }
   };
-
-  // Handle category filter
-  const handleCategoryFilter = (e) => setFilterCategory(e.target.value);
 
   // Handle price range input
   const handleMinPriceChange = (e) => setMinPrice(e.target.value);
@@ -108,25 +99,6 @@ const FilterButton = ({
               >
                 Clear all
               </button>
-            </div>
-
-            {/* Category Filter */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={filterCategory}
-                onChange={handleCategoryFilter}
-                className="w-full p-2 border border-yellow-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-              >
-                <option value="">All Categories</option>
-                {validCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Price Range Filter */}
