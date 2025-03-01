@@ -1,5 +1,4 @@
 import express from 'express';
-const router = express.Router();
 import authMiddleware from '../middleware/authMiddleware.js';
 import { 
     createRestaurantController,
@@ -17,6 +16,8 @@ import multerUpload from '../config/multerInit.js';
 const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/restaurant";
 const upload = multerUpload(__filename, uploadLocation);
+
+const router = express.Router();
 
 router.get("/", (req, res) => {
     res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);

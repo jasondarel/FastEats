@@ -1,8 +1,9 @@
-import { getUserByEmailService } from "../service/userService.js";
+import { getPasswordHashByIdService, getUserByEmailService } from "../service/userService.js";
 import { 
     hashPassword, 
     validateEmail, 
-    validatePassword 
+    validatePassword, 
+    validatePhoneNumber
 } from "../util/userUtil.js";
 
 export const validateRegisterRequest = async(userReq) => {
@@ -73,5 +74,63 @@ export const validateLoginRequest = async(userReq) => {
     }
 
 
+    return errors
+}
+
+export const validateUpdateProfileRequest = async(userReq) => {
+    const errors = {};
+
+    const { name, profile_photo, address, phone_number } = userReq;
+    
+    if (!name || name.trim() === '') {
+        errors.name = 'Name is required';
+    } else if (name.length < 5) {
+        errors.name = 'Name too short (5 characters minimum)';
+    }
+
+    if(phone_number && !validatePhoneNumber(phone_number)) {
+        errors.phone_number = 'Invalid phone number';
+    }
+
+    return errors
+}
+
+export const validateChangePasswordRequest = async(userReq, userId) => {
+    const errors = {};
+
+    const {currentPassword, newPassword, confirmPassword} = userReq;
+
+    if(!currentPassword || currentPassword.trim() === '') {
+        errors.currentPassword = 'Current password is required';
+    } else if(!validatePassword(currentPassword)) {
+        errors.currentPassword = 'Password must be at least 8 characters long, also must include letters and numbers';
+    }
+
+    if(!newPassword || newPassword.trim() === '') {
+        errors.newPassword = 'New password is required';
+    } else if(!validatePassword(newPassword)) {
+        errors.newPassword = 'Password must be at least 8 characters long, also must include letters and numbers';
+    }
+
+    if(!confirmPassword || confirmPassword.trim() === '') {
+        errors.confirmPassword = 'Confirm password is required';
+    } else if(!validatePassword(confirmPassword)) {
+        errors.confirmPassword = 'Password must be at least 8 characters long, also must include letters and numbers';
+    }
+
+    if(newPassword !== confirmPassword) {
+        errors.confirPassword = 'Password does not match';
+    }
+
+    if(currentPassword === newPassword) {
+        errors.newPassword = 'New password must be different from current password';
+    }
+
+    const user = await getPasswordHashByIdService(userId);
+    if(!user) {
+        errors.currentPassword = 'Invalid current password';
+    } else if(user.password_hash !== hashPassword(currentPassword)) {
+        errors.currentPassword = 'Invalid current password';
+    }
     return errors
 }
