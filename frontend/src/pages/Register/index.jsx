@@ -24,7 +24,7 @@ const Register = () => {
         confirmButtonColor: "#efb100",
       }).then((result) => {
         if (result.isConfirmed) {
-            navigate(`/otp-verification?token=${otpToken.data.token}`);
+            navigate(`/otp-verification?token=${otpToken.data.token}&email=${email}`);
         }
       });
     } catch (error) {

@@ -1,15 +1,15 @@
 import amqp from "amqplib";
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
-const EXCHANGE_NAME = "email_exchange";
+export const EXCHANGE_NAME = "email_exchange";
 const EXCHANGE_TYPE = "direct";
 const QUEUE_NAME = "email_verification_queue";
-const ROUTING_KEY = "email_verification";
+export const ROUTING_KEY = "email_verification";
 
 let channel;
 let connection;
 
-const rabbitMQInit = async () => {
+export const rabbitMQInit = async () => {
   try {
     connection = await amqp.connect(RABBITMQ_URL);
     channel = await connection.createChannel();
@@ -27,13 +27,10 @@ const rabbitMQInit = async () => {
   }
 };
 
-// Fungsi untuk mendapatkan channel yang sudah siap
-const getChannel = async () => {
+export const getChannel = async () => {
   if (!channel) {
     console.log("⏳ Channel not initialized. Reconnecting...");
     await rabbitMQInit();
   }
   return channel;
 };
-
-export { getChannel, rabbitMQInit, EXCHANGE_NAME, ROUTING_KEY };

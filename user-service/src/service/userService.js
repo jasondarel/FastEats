@@ -9,10 +9,10 @@ export const registerService = async(userReq) => {
     return result.rows[0];
 }
 
-export const validateUserService = async(email) => {
+export const validateUserService = async(userId) => {
     const result = await pool.query(
-        "UPDATE users SET is_verified = true WHERE email = $1 RETURNING *",
-        [email]
+        "UPDATE users SET is_verified = TRUE WHERE id = $1 RETURNING *",
+        [userId]
     );
     return result.rows[0];
 }

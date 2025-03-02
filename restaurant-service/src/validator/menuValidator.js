@@ -1,9 +1,8 @@
 import { 
     isMenuAvailable 
 } from "../service/menuService.js";
-import { isRestaurantAvailableById } from "../service/restaurantService.js";
 
-const validateCreateMenuRequest = async(menuReq) => {
+export const validateCreateMenuRequest = async(menuReq) => {
     const errors = {};
 
     if (!menuReq.menuName || menuReq.menuName.trim() === '') {
@@ -35,7 +34,7 @@ const validateCreateMenuRequest = async(menuReq) => {
     return errors
 }
 
-const validateUpdateMenuRequest = async(menuReq, restaurantId) => {
+export const validateUpdateMenuRequest = async(menuReq) => {
     const errors = {};
 
     if (!menuReq.menuName || menuReq.menuName.trim() === '') {
@@ -63,7 +62,7 @@ const validateUpdateMenuRequest = async(menuReq, restaurantId) => {
     return errors
 }
 
-const validateUpdateMenuDetailRequest = async(detailMenuReq) => {
+export const validateUpdateMenuDetailRequest = async(detailMenuReq) => {
     const errors = {};
     const menuSizes = ["Regular", "Medium", "Large"];
     if (!menuSizes.includes(detailMenuReq.menuSize)) {
@@ -78,9 +77,3 @@ const validateUpdateMenuDetailRequest = async(detailMenuReq) => {
 
     return errors
 }
-
-export {
-    validateCreateMenuRequest,
-    validateUpdateMenuRequest,
-    validateUpdateMenuDetailRequest
-};

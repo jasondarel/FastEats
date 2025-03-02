@@ -31,9 +31,21 @@ services:
     networks:
       - user_service_network
 
+  redis:
+    image: redis:latest
+    container_name: user_service_redis
+    restart: always
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - user_service_network
+
 networks:
   user_service_network:
 
 volumes:
   user_pgdata:
   rabbitmq_data:
+  redis_data:

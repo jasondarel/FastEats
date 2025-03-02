@@ -1,5 +1,5 @@
 import { 
-    createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService, getRestaurantService, 
+    createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService,
     getRestaurantByRestaurantIdService,
     getRestaurantsService,
     updateRestaurantService,
@@ -8,7 +8,7 @@ import {
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
 
-const createRestaurantController = async(req, res) => {
+export const createRestaurantController = async(req, res) => {
     const restaurantReq = req.body;
     restaurantReq.ownerId = req.user.userId;
     try {
@@ -46,17 +46,15 @@ const createRestaurantController = async(req, res) => {
     
 }
 
-const updateRestaurantController = async (req, res) => {
+export const updateRestaurantController = async (req, res) => {
+    const { role, userId } = req.user;
     try {
-        const { role, userId } = req.user;
-
         if (role !== "seller") {
             return res.status(403).json({
                 success: false,
                 message: "Only sellers can update a restaurant",
             });
         }
-
         const restaurant = await getRestaurantByOwnerIdService(userId);
         if (!restaurant) {
             return res.status(404).json({
@@ -81,7 +79,6 @@ const updateRestaurantController = async (req, res) => {
             });
         }
 
-        // Update restoran
         const updatedRestaurant = await updateRestaurantService(
             restaurantReq,
             restaurantId
@@ -115,11 +112,8 @@ const updateRestaurantController = async (req, res) => {
     }
 };
 
-
-
-const deleteRestaurantController = async (req, res) => {
+export const deleteRestaurantController = async (req, res) => {
     const { restaurantId } = req.params;
-
     try {
         const deletedRestaurant = await deleteRestaurantService(restaurantId);
 
@@ -145,7 +139,7 @@ const deleteRestaurantController = async (req, res) => {
     }
 };
 
-const getRestaurantsController = async(req, res) => {
+export const getRestaurantsController = async(req, res) => {
     const userId = req.user.userId;
     try {
         const result = await getRestaurantsService(userId);
@@ -163,9 +157,9 @@ const getRestaurantsController = async(req, res) => {
 }
 
 
-const getRestaurantByOwnerIdController = async (req, res) => {
+export const getRestaurantByOwnerIdController = async (req, res) => {
+    const { ownerId } = req.params;
     try {
-        const { ownerId } = req.params;
         const result = await getRestaurantByOwnerIdService(ownerId);
 
         if (!result) {
@@ -188,11 +182,9 @@ const getRestaurantByOwnerIdController = async (req, res) => {
     }
 };
 
-const getRestaurantByRestaurantIdController = async (req, res) => {
+export const getRestaurantByRestaurantIdController = async (req, res) => {
+    const { restaurantId } = req.params;
     try {
-        const { restaurantId } = req.params;
-
-        // Cek apakah restaurantId valid (harus angka)
         if (!restaurantId || isNaN(restaurantId)) {
             return res.status(400).json({
                 success: false,
@@ -223,9 +215,9 @@ const getRestaurantByRestaurantIdController = async (req, res) => {
 };
 
 
-const getRestaurantController = async (req, res) => {
+export const getRestaurantController = async (req, res) => {
+    const userId = req.user.userId;
     try {
-        const userId = req.user.userId;
 
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
@@ -258,10 +250,10 @@ const getRestaurantController = async (req, res) => {
     }
 };
 
-const updateOpenRestaurantController = async (req, res) => {
+export const updateOpenRestaurantController = async (req, res) => {
+    const {userId, role} = req.user;
+    const isOpen = req.body.isOpen;
     try {
-        const {userId, role} = req.user;
-        const isOpen = req.body.isOpen;
 
         if (role !== "seller") {
             return res.status(403).json({
@@ -311,14 +303,3 @@ const updateOpenRestaurantController = async (req, res) => {
         });
     }
 }
-
-export {
-    createRestaurantController,
-    getRestaurantsController,
-    getRestaurantByOwnerIdController,
-    getRestaurantByRestaurantIdController,
-    getRestaurantController,
-    updateRestaurantController,
-    deleteRestaurantController,
-    updateOpenRestaurantController
-};

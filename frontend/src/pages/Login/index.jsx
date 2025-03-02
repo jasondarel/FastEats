@@ -33,8 +33,19 @@ const Login = () => {
       localStorage.setItem("token", data.data.token);
       navigate("/");
     } catch (error) {
-        const errors = error ? error : "An error occurred";
-        setErrors(errors);
+        if(error.status == 401) {
+          MySwal.fire({
+            title: "Error",
+            text: "Your Email is not verified yet. Please verify your email first.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            confirmButtonColor: "#ef4444",
+          })
+          const {token} = error.data;
+          navigate(`/otp-verification?token=${token}&email=${email}`);
+          return;
+        }
+        
         Object.keys(errors).forEach((key) => {
           MySwal.fire({
             title: "Error",
@@ -44,6 +55,7 @@ const Login = () => {
             confirmButtonColor: "#ef4444",
           });
         });
+        setErrors(error.data.errors);
     }
   };
 

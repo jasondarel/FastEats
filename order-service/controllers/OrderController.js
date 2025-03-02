@@ -1,4 +1,3 @@
-import { getMenuByRestaurantIdService } from "../../restaurant-service/src/service/menuService.js";
 import pool from "../config/db.js";
 import axios from "axios";
 import {

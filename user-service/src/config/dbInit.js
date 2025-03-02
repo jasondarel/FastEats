@@ -8,7 +8,6 @@ const { Pool } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const pool = new Pool({
@@ -33,6 +32,5 @@ const testDatabase = async () => {
 };
 
 testDatabase();
-// createTables();
 
 export default pool;

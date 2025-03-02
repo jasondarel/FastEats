@@ -8,7 +8,7 @@ const loginService = async (email, password) => {
     });
     return response;
   } catch (error) {
-    throw error.response.data.errors;
+    throw error.response;
   }
 };
 

@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import userRoutes from "./route/userRoute.js";
 import fileUpload from "express-fileupload"
 import { rabbitMQInit } from "./config/rabbitMQInit.js";
+import { redisInit } from "./config/redisInit.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ console.log(
 );
 
 createTables();
+redisInit();
 rabbitMQInit();
 
 // Start Server

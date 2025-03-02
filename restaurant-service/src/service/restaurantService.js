@@ -1,7 +1,7 @@
 import axios from "axios";
 import pool from "../config/dbInit.js";
 
-const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
+export const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_name = $1 AND restaurant_id != $2`,
         [restaurantName, restaurantId]
@@ -9,13 +9,13 @@ const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
     return result.rowCount > 0;
 };
 
-const isRestaurantAvailableByName = async (restaurantName) => {
+export const isRestaurantAvailableByName = async (restaurantName) => {
     const result = await pool.query("SELECT 1 FROM restaurants WHERE restaurant_name = $1", [restaurantName]);
     return result.rowCount > 0;
 }
 
 
-const isRestaurantAvailableById = async (restaurantId) => {
+export const isRestaurantAvailableById = async (restaurantId) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_id = $1`,
         [restaurantId]
@@ -23,7 +23,7 @@ const isRestaurantAvailableById = async (restaurantId) => {
     return result.rowCount > 0;
 };
 
-const createRestaurantService = async (restaurantReq) => {
+export const createRestaurantService = async (restaurantReq) => {
     const result = await pool.query(
         `INSERT INTO restaurants (restaurant_name, restaurant_address, owner_id, restaurant_image) 
         VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -39,7 +39,7 @@ const createRestaurantService = async (restaurantReq) => {
 };
 
 
-const updateRestaurantService = async (restaurantReq, id) => {
+export const updateRestaurantService = async (restaurantReq, id) => {
     const result = await pool.query(
         `UPDATE restaurants 
         SET restaurant_name = $1, restaurant_address = $2, restaurant_image = $3, updated_at = NOW()
@@ -55,7 +55,7 @@ const updateRestaurantService = async (restaurantReq, id) => {
     return result.rows[0];
 };
 
-const deleteRestaurantService = async (id) => {
+export const deleteRestaurantService = async (id) => {
     const result = await pool.query(
         `DELETE FROM restaurants WHERE restaurant_id = $1 RETURNING *`,
         [id]
@@ -70,7 +70,7 @@ const deleteRestaurantService = async (id) => {
 
 
 
-const isOwnerAvailable = async(ownerId) => {
+export const isOwnerAvailable = async(ownerId) => {
     try {
         const response = await axios.get(`http://localhost:5000/user/is-user-exist/${ownerId}`);
         if(response.data.success) {
@@ -82,7 +82,7 @@ const isOwnerAvailable = async(ownerId) => {
     }
 }
 
-const getRestaurantsService = async (ownerId) => {
+export const getRestaurantsService = async (ownerId) => {
     try {
         const result = await pool.query(
             "SELECT * FROM restaurants WHERE owner_id != $1",
@@ -96,7 +96,7 @@ const getRestaurantsService = async (ownerId) => {
 };
 
 
-const getRestaurantByOwnerIdService = async (ownerId) => {
+export const getRestaurantByOwnerIdService = async (ownerId) => {
     try {
         const result = await pool.query(
             "SELECT * FROM restaurants WHERE owner_id = $1",
@@ -109,7 +109,7 @@ const getRestaurantByOwnerIdService = async (ownerId) => {
     }
 };
 
-const getRestaurantByRestaurantIdService = async (restaurantId) => {
+export const getRestaurantByRestaurantIdService = async (restaurantId) => {
     try {
         // Validasi sebelum query
         if (!restaurantId || isNaN(restaurantId)) {
@@ -129,7 +129,7 @@ const getRestaurantByRestaurantIdService = async (restaurantId) => {
 };
 
 
-const getRestaurantService = async (Id) => {
+export const getRestaurantService = async (Id) => {
     try {
         const result = await pool.query(
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
@@ -142,7 +142,7 @@ const getRestaurantService = async (Id) => {
     }
 };
 
-const updateOpenRestaurantService = async (restaurantId, isIopen) => {
+export const updateOpenRestaurantService = async (restaurantId, isIopen) => {
     try {
         const result = await pool.query(
             `UPDATE restaurants SET is_open = $1 WHERE restaurant_id = $2 RETURNING *`,
@@ -155,18 +155,3 @@ const updateOpenRestaurantService = async (restaurantId, isIopen) => {
         throw error;
     }
 }
-
-export {
-    isRestaurantAvailableByName,
-    isRestaurantAvailableByNameId,
-    isRestaurantAvailableById,
-    getRestaurantsService,
-    getRestaurantService,
-    getRestaurantByOwnerIdService,
-    getRestaurantByRestaurantIdService,
-    isOwnerAvailable,
-    createRestaurantService,
-    updateRestaurantService,
-    deleteRestaurantService,
-    updateOpenRestaurantService
-};

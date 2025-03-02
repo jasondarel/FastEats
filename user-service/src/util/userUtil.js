@@ -8,34 +8,34 @@ import {
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
-function hashPassword(password) {
+export const hashPassword = (password) => {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-function generateLoginToken(payload) {
+export const generateLoginToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "12h" });
 }
 
-function generateValidationEmailToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "6m" });
+export const generateRandomToken = (len) => {
+  return crypto.randomBytes(len).toString("hex");
 }
 
-function validateEmail(email) {
+export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-function validatePassword(password) {
+export const validatePassword = (password) => {
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
   return passwordRegex.test(password);
 }
 
-function validatePhoneNumber(phone) {
+export const validatePhoneNumber = (phone) => {
   const phoneRegex = /^\d{12}$/;
   return phoneRegex.test(phone);
 }
 
-export const publishMessage = async (email, token, otp) => {
+export const publishMessage = async(email, token, otp) => {
   const channel = await getChannel();
 
   const message = JSON.stringify({ email, token, otp });
@@ -55,13 +55,4 @@ export const generateOtpCode = (len) => {
       result += characters[randomIndex];
   }
   return result;
-};
-
-export {
-  hashPassword,
-  generateLoginToken,
-  generateValidationEmailToken,
-  validateEmail,
-  validatePhoneNumber,
-  validatePassword,
 };

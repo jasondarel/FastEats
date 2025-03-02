@@ -1,7 +1,6 @@
 import {
   createMenuService,
   getMenusService,
-  getMenuService,
   updateMenuService,
   deleteMenuService,
   getMenuByRestaurantIdService,
@@ -14,7 +13,7 @@ import {
   validateUpdateMenuRequest,
 } from "../validator/menuValidator.js";
 
-const createMenuController = async (req, res) => {
+export const createMenuController = async (req, res) => {
   const menuReq = req.body;
   const userId = req.user.userId;
   const role = req.user.role;
@@ -73,7 +72,7 @@ const createMenuController = async (req, res) => {
   }
 };
 
-const getMenusController = async (req, res) => {
+export const getMenusController = async (req, res) => {
   const userId = req.user.userId;
   const role = req.user.role;
 
@@ -107,7 +106,7 @@ const getMenusController = async (req, res) => {
   }
 };
 
-const getMenuByRestoIdController = async (req, res) => {
+export const getMenuByRestoIdController = async (req, res) => {
   const restaurantId = req.params.restaurantId;
   try {
     const result = await getMenuByRestaurantIdService(restaurantId);
@@ -123,7 +122,8 @@ const getMenuByRestoIdController = async (req, res) => {
     });
   }
 };
-const getMenuByMenuIdController = async (req, res) => {
+
+export const getMenuByMenuIdController = async (req, res) => {
   try {
     const { menuId } = req.params;
 
@@ -156,7 +156,7 @@ const getMenuByMenuIdController = async (req, res) => {
   }
 };
 
-const updateMenuController = async (req, res) => {
+export const updateMenuController = async (req, res) => {
   const { role, userId } = req.user;
   if (role !== "seller") {
     return res.status(403).json({
@@ -234,7 +234,7 @@ const updateMenuController = async (req, res) => {
   }
 };
 
-const deleteMenuController = async (req, res) => {
+export const deleteMenuController = async (req, res) => {
   const { role, userId } = req.user;
   const menuId = req.params.menuId;
   if (role !== "seller") {
@@ -293,7 +293,7 @@ const deleteMenuController = async (req, res) => {
   }
 };
 
-const updateAvailableMenuController = async(req, res) => {
+export const updateAvailableMenuController = async(req, res) => {
   const { role, userId } = req.user;
   if(role !== "seller") {
     return res.status(403).json({
@@ -359,13 +359,3 @@ const updateAvailableMenuController = async(req, res) => {
   }
   
 }
-
-export {
-  createMenuController,
-  getMenusController,
-  getMenuByMenuIdController,
-  updateMenuController,
-  deleteMenuController,
-  getMenuByRestoIdController,
-  updateAvailableMenuController
-};

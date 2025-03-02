@@ -1,11 +1,9 @@
 import {
   generateLoginToken,
-  generateValidationEmailToken,
   hashPassword,
-  validatePassword,
   publishMessage,
-  validatePhoneNumber,
   generateOtpCode,
+  generateRandomToken,
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
@@ -13,8 +11,22 @@ import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from "url";
-import { validateChangePasswordRequest, validateLoginRequest, validateRegisterRequest, validateUpdateProfileRequest } from "../validator/userValidator.js";
-import { becomeSellerService, changePasswordService, createUserDetailsService, getPasswordHashByIdService, getUserByEmailService, getUserByIdService, getUserDetailsByIdService, registerService, updateUserDetailsService, validateUserService } from "../service/userService.js";
+import { 
+  validateChangePasswordRequest, validateLoginRequest, 
+  validateRegisterRequest, validateUpdateProfileRequest 
+} from "../validator/userValidator.js";
+import { 
+  becomeSellerService, 
+  changePasswordService, 
+  createUserDetailsService, 
+  getUserByEmailService, 
+  getUserByIdService, 
+  getUserDetailsByIdService, 
+  registerService, 
+  updateUserDetailsService, 
+  validateUserService 
+} from "../service/userService.js";
+import { getRedisClient } from "../config/redisInit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,18 +48,25 @@ export const registerController = async (req, res) => {
     req.body.password = hashedPassword;
 
     const response = await registerService(req.body);
-
     const otp = generateOtpCode(6);
+    const emailVerificationToken = generateRandomToken(50);
 
-    const emailVericationToken = generateValidationEmailToken({
-      email: req.body.email,
-      otp: otp,
+    const redisKey = `email_verification:${req.body.email}`;
+
+    const redisClient = getRedisClient();
+    await redisClient.del(redisKey);
+    await redisClient.hset(redisKey, {
+      otp,
+      token: emailVerificationToken,
       userId: response.id,
     });
+    await redisClient.expire(redisKey, 300);
+
+    const redisData = await redisClient.hgetall(redisKey);
 
     const emailPayload = {
       email: req.body.email,
-      token: emailVericationToken,
+      token: emailVerificationToken,
       otp: otp,
     }
 
@@ -56,7 +75,7 @@ export const registerController = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: response.message,
-      token: emailVericationToken,
+      token: emailVerificationToken,
     })
   } catch (err) {
     console.error(err);
@@ -70,6 +89,43 @@ export const registerController = async (req, res) => {
 export const loginController = async (req, res) => {
   try {
     const errors = await validateLoginRequest(req.body);
+
+    if(errors.email === "Email is not verified") {
+      const emailVerificationToken = generateRandomToken(50);
+
+      const redisKey = `email_verification:${req.body.email}`;
+      const redisClient = getRedisClient();
+      const response = await getUserByEmailService(req.body.email);
+      const otp = generateOtpCode(6);
+      await redisClient.del(redisKey);
+      await redisClient.hset(redisKey, {
+        otp,
+        token: emailVerificationToken,
+        userId: response.id,
+      });
+      await redisClient.expire(redisKey, 300);
+      
+      if(!response) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
+
+      const emailPayload = {
+        email: req.body.email,
+        token: emailVerificationToken,
+        otp: otp,
+      }
+      await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+
+      return res.status(401).json({
+        success: false,
+        message: "Email is not verified",
+        token: emailVerificationToken,
+      })
+    }
+
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({
         success: false,
@@ -77,6 +133,7 @@ export const loginController = async (req, res) => {
         errors,
       });
     }
+    
 
     const user = await getUserByEmailService(req.body.email);
     if (!user) {
@@ -118,8 +175,7 @@ export const getUsersController = async (req, res) => {
 };
 
 export const verifyTokenController = async (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader.split(" ")[1];
+  const {token, email} = req.query;
 
   if(!token) {
     return res.status(401).json({
@@ -128,59 +184,93 @@ export const verifyTokenController = async (req, res) => {
     });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if(err) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Token is valid",
+  if(!email) {
+    return res.status(401).json({
+      success: false,
+      message: "Email not found",
     });
-  })
+  }
+  const redisKey = `email_verification:${email}`;
+  const redisClient = getRedisClient();
+  const redisData = await redisClient.hgetall(redisKey);
+
+  if(!redisData) {
+    return res.status(401).json({
+      success: false,
+      message: "Token expired",
+    });
+  }
+
+  if(redisData.token !== token) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
+  }
 }
 
 export const verifyOtpController = async (req, res) => {
+  const { otp, token, email } = req.body;
   try {
-    const { otp } = req.body;
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
+    if(!otp) {
+      return res.status(400).json({
         success: false,
-        message: "Unauthorized: No token provided",
+        message: "OTP is required",
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    if(!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+
+    if(!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const redisKey = `email_verification:${email}`;
+    const redisClient = getRedisClient();
+    const user = await redisClient.hgetall(redisKey);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email",
+      });
+    }
+
     if (blackListedTokens.has(token)) {
       return res.status(401).json({
         success: false,
-        message: "Token has been revoked. Please login again",
+        message: "Token expired",
       });
     }
 
-    const user = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) reject(err);
-        else resolve(decoded);
-      });
-    });
-
     if (user.otp !== otp) {
-      console.log("Invalid OTP");
       return res.status(401).json({
         success: false,
         message: "Invalid OTP",
       });
     }
     
-    await validateUserService(user.email);
+    if(user.token !== token) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    await validateUserService(user.userId);
     await createUserDetailsService({ user_id: user.userId });
+
     
-    blackListedTokens.add(token);
+    redisClient.del(redisKey);
+
     return res.status(200).json({
       success: true,
       message: "Token verified successfully",

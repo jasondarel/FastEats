@@ -11,6 +11,7 @@ console.log(`PORT: ${process.env.PORT}`);
 console.log(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
 console.log(`USER_SERVICE_URL: ${process.env.USER_SERVICE_URL}`);
 console.log(`ORDER_SERVICE_URL: ${process.env.ORDER_SERVICE_URL}`);
+console.log(`NOTIFICATION_SERVICE_URL: ${process.env.NOTIFICATION_SERVICE_URL}`);
 
 // Restaurant service proxy
 const restaurantProxy = createProxyMiddleware({
@@ -60,10 +61,26 @@ const orderProxy = createProxyMiddleware({
   },
 })
 
+const notificationProxy = createProxyMiddleware({
+  target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5005',
+  changeOrigin: true,
+  onProxyReq: (proxyReq, req) => {
+    console.log(`Notification Service - Proxying request: ${req.method} ${req.originalUrl}`);
+  },
+  onProxyRes: (proxyRes, req) => {
+    console.log(`Notification Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    console.error(`Notification Service - Proxy error: ${err.message}`);
+    res.status(500).json({ error: "Notification Service Proxy error", details: err.message });
+  },
+})
+
 // Apply proxy middleware for each service
 app.use('/restaurant', restaurantProxy);
 app.use('/user', userProxy);
 app.use('/order', orderProxy);
+app.use('/notification', notificationProxy);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -72,7 +89,9 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       restaurant: process.env.RESTAURANT_SERVICE_URL || 'http://localhost:5003',
-      user: process.env.USER_SERVICE_URL || 'http://localhost:5002'
+      user: process.env.USER_SERVICE_URL || 'http://localhost:5002',
+      order: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
+      notification: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5005',
     }
   });
 });
@@ -85,4 +104,5 @@ app.listen(PORT, () => {
   console.log('- /user/* -> User Service');
   console.log('- /order/* -> Order Service');
   console.log('- /health -> Gateway Health Check');
+  console.log('- /notification/* -> Notification Service');
 });
