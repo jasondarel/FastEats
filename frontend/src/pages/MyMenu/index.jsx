@@ -23,7 +23,6 @@ const MyMenuPage = () => {
   const [filterCategory, setFilterCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [showUnavailable, setShowUnavailable] = useState(false);
   const [sortOption, setSortOption] = useState("nameAsc"); // Default sort: A to Z
 
   const navigate = useNavigate();
@@ -104,18 +103,13 @@ const MyMenuPage = () => {
         .includes(searchQuery.toLowerCase());
       const matchesCategory =
         filterCategory === "All" ? true : item.menu_category === filterCategory;
-
       const price = parseInt(item.menu_price);
       let matchesPrice = true;
       if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
       if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-      const matchesAvailability = showUnavailable
-        ? true
-        : item.is_available === true;
-
       return (
-        matchesSearch && matchesCategory && matchesPrice && matchesAvailability
+        matchesSearch && matchesCategory && matchesPrice
       );
     })
     .sort((a, b) => {
@@ -150,8 +144,6 @@ const MyMenuPage = () => {
               setMinPrice={setMinPrice}
               maxPrice={maxPrice}
               setMaxPrice={setMaxPrice}
-              showUnavailable={showUnavailable}
-              setShowUnavailable={setShowUnavailable}
               placeholder="Search menu items..."
             />
           </div>

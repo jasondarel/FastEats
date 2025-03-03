@@ -6,6 +6,7 @@ import OrderListHeader from "./components/OrderListHeader";
 import LoadingState from "./components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import EmptyState from "./components/EmptyState";
+import { Navigate } from "react-router-dom";
 
 const OrderList = () => {
   const token = localStorage.getItem("token");
@@ -84,7 +85,10 @@ const OrderList = () => {
                 order.order_id ||
                 `order-${Math.random().toString(36).substr(2, 9)}`;
 
-              return <OrderCard key={orderKey} order={order} />;
+              return <OrderCard 
+              key={orderKey} 
+              order={order}
+               />;
             })}
           </div>
         )}
