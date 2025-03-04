@@ -1,0 +1,265 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+================================================================
+File Summary
+================================================================
+
+Purpose:
+--------
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+File Format:
+------------
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Multiple file entries, each consisting of:
+  a. A separator line (================)
+  b. The file path (File: path/to/file)
+  c. Another separator line
+  d. The full contents of the file
+  e. A blank line
+
+Usage Guidelines:
+-----------------
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+Notes:
+------
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+
+Additional Info:
+----------------
+
+================================================================
+Directory Structure
+================================================================
+components/AuthLayout.jsx
+components/ErrorMessage.jsx
+components/RegisterForm.jsx
+index.jsx
+
+================================================================
+Files
+================================================================
+
+================
+File: components/AuthLayout.jsx
+================
+import React from "react";
+
+const AuthLayout = ({ children }) => {
+  return (
+    <div className="fixed inset-0 w-full h-screen overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 w-full h-full bg-gray-900 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/foodbg.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-gray-900/75"></div>
+      </div>
+
+      {/* Auth Card */}
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
+          <img
+            src="/logo_FastEats.png"
+            alt="Logo"
+            className="w-32 mx-auto mb-4"
+          />
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLayout;
+
+================
+File: components/ErrorMessage.jsx
+================
+import React from "react";
+
+const ErrorMessage = ({ error, center = false }) => {
+  if (!error) return null;
+
+  return (
+    <p className={`text-red-500 text-sm mt-1 ${center ? "text-center" : ""}`}>
+      {error}
+    </p>
+  );
+};
+
+export default ErrorMessage;
+
+================
+File: components/RegisterForm.jsx
+================
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import ErrorMessage from "./ErrorMessage";
+
+const RegisterForm = ({ onRegister, errors }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onRegister(name, email, password, confirmPassword);
+  };
+
+  return (
+    <>
+      <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+          <ErrorMessage error={errors.name} />
+        </div>
+        <div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+          <ErrorMessage error={errors.email} />
+        </div>
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          />
+          <ErrorMessage error={errors.password} />
+        </div>
+        <div>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+              )}
+            </div>
+        <button
+          type="submit"
+          className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
+        >
+          Register
+        </button>
+        <ErrorMessage error={errors.general} center />
+      </form>
+      <p className="mt-4 text-center">
+        Already have an account?{" "}
+        <Link
+          to="/login"
+          className="text-yellow-500 underline hover:text-yellow-600"
+        >
+          Login here
+        </Link>
+      </p>
+    </>
+  );
+};
+
+export default RegisterForm;
+
+================
+File: index.jsx
+================
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import RegisterForm from "../Register/components/RegisterForm";
+import AuthLayout from "./components/AuthLayout";
+import registerService from "../../../service/userServices/registerService";
+
+const Register = () => {
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const MySwal = withReactContent(Swal);
+
+  const handleRegister = async (name, email, password, confirmPassword) => {
+    setErrors({});
+
+    try {
+      const otpToken = await registerService(
+        name,
+        email,
+        password,
+        confirmPassword
+      );
+      Swal.fire({
+        title: "Sucessfully Registered",
+        text: "Registration successful! Check your email for validate your email.",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(
+            `/otp-verification?token=${otpToken.data.token}&email=${email}`
+          );
+        }
+      });
+    } catch (error) {
+      const errors = error.response?.data.errors || "An error occurred";
+      setErrors(errors);
+      Object.keys(errors).forEach((key) => {
+        MySwal.fire({
+          title: "Error",
+          text: errors[key],
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
+      });
+    }
+  };
+
+  return (
+    <AuthLayout>
+      <RegisterForm onRegister={handleRegister} errors={errors} />
+    </AuthLayout>
+  );
+};
+
+export default Register;
+
+
+
+================================================================
+End of Codebase
+================================================================
