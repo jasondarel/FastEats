@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 
 export const createRestaurantController = async(req, res) => {
     const restaurantReq = req.body;
-    restaurantReq.ownerId = req.user.userId;
+    restaurantReq.ownerId = restaurantReq.ownerId
     try {
         const errors = await validateCreateRestaurantRequest(restaurantReq);
         const errorLen = Object.keys(errors).length;

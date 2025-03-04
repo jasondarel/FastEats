@@ -36,6 +36,48 @@ export const validateRegisterRequest = async(userReq) => {
     return errors
 }
 
+export const validateRegisterSellerRequest = async(userReq) => {
+    const errors = {};
+
+    const { name, email, password, confirmPassword, restaurantName, restaurantAddress } = userReq;
+    
+    if (!name || name.trim() === '') {
+        errors.name = 'Name is required';
+    } else if (name.length < 5) {
+        errors.name = 'Name too short (5 characters minimum)';
+    }
+
+    if(!restaurantName || restaurantName.trim() === '') {
+        errors.restaurantName = 'Restaurant name is required';
+    } else if(restaurantName.length < 5) {
+        errors.restaurantName = 'Restaurant name too short (5 characters minimum)';
+    }
+
+    if(!restaurantAddress || restaurantAddress.trim() === '') {
+        errors.restaurantAddress = 'Restaurant address is required';
+    } else if(restaurantAddress.length < 10) {
+        errors.restaurantAddress = 'Restaurant address too short (10 characters minimum)';
+    }
+
+    if(!validateEmail(email)) {
+        errors.email = 'Invalid email format';
+    }
+
+    if(!validatePassword(password)) {
+        errors.password = 'Password must be at least 8 characters long, also must include letters and numbers';
+    }
+
+    if(password !== confirmPassword) {
+        errors.confirmPassword = 'Password does not match';
+    }
+
+    const user = await getUserByEmailService(email);
+    if(user) {
+        errors.email = 'Email already exist';
+    }
+    return errors
+}
+
 export const validateLoginRequest = async(userReq) => {
     const errors = {};
 

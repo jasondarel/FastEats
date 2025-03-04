@@ -9,11 +9,10 @@ import pool from "../config/dbInit.js";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
-import jwt from "jsonwebtoken";
 import { fileURLToPath } from "url";
 import { 
   validateChangePasswordRequest, validateLoginRequest, 
-  validateRegisterRequest, validateUpdateProfileRequest 
+  validateRegisterRequest, validateRegisterSellerRequest, validateUpdateProfileRequest 
 } from "../validator/userValidator.js";
 import { 
   becomeSellerService, 
@@ -23,6 +22,7 @@ import {
   getUserByEmailService, 
   getUserByIdService, 
   getUserDetailsByIdService, 
+  registerSellerService, 
   registerService, 
   updateUserDetailsService, 
   validateUserService 
@@ -72,6 +72,89 @@ export const registerController = async (req, res) => {
     }
 
     await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+
+    return res.status(201).json({
+      success: true,
+      message: response.message,
+      token: emailVerificationToken,
+    })
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const registerSellerController = async (req, res) => {
+  try {
+    const errors = await validateRegisterSellerRequest(req.body);
+    if(Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    const hashedPassword = hashPassword(req.body.password);
+    req.body.password = hashedPassword;
+
+    const response = await registerSellerService(req.body);
+    const otp = generateOtpCode(6);
+    const emailVerificationToken = generateRandomToken(50);
+
+    const redisKey = `email_verification:${req.body.email}`;
+
+    const redisClient = getRedisClient();
+    await redisClient.del(redisKey);
+    await redisClient.hset(redisKey, {
+      otp,
+      token: emailVerificationToken,
+      userId: response.id,
+    });
+    await redisClient.expire(redisKey, 300);
+
+    const emailPayload = {
+      email: req.body.email,
+      token: emailVerificationToken,
+      otp: otp,
+    }
+
+    await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+
+    if(response.role === "seller") {
+      if (!req.files || !req.files.restaurantImage) {
+        return res.status(400).json({
+          success: false,
+          message: "Restaurant image is required",
+        });
+      }
+  
+      const uploadedFile = req.files.restaurantImage;
+  
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+  
+      const fileExt = path.extname(uploadedFile.name);
+      const safeFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+      const filePath = path.join(uploadDir, safeFileName);
+  
+      await uploadedFile.mv(filePath);
+  
+      const restaurantData = {
+        ...req.body,
+        ownerId: response.id,
+        restaurantImage: safeFileName,
+      };
+  
+       await axios.post(
+        "http://localhost:5000/restaurant/restaurant",
+        restaurantData,
+      );
+    }
 
     return res.status(201).json({
       success: true,
