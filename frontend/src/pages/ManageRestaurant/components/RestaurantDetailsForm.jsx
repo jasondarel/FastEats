@@ -3,8 +3,6 @@ import {
   FaUtensils,
   FaMapMarkerAlt,
   FaSave,
-  FaMoneyBillAlt,
-  FaWallet,
   FaExclamationCircle,
 } from "react-icons/fa";
 
@@ -116,10 +114,10 @@ const RestaurantDetailsForm = ({
               : "focus-within:ring-yellow-500"
           }`}
         >
-          <FaMoneyBillAlt
-            className={`ml-3 ${
-              errors.bcaAccount ? "text-red-500" : "text-gray-500"
-            }`}
+          <img
+            src="/bca.png"
+            alt="BCA"
+            className="ml-3 w-6 h-6" // Adjust size as needed
           />
           <input
             type="text"
@@ -154,10 +152,10 @@ const RestaurantDetailsForm = ({
               : "focus-within:ring-yellow-500"
           }`}
         >
-          <FaWallet
-            className={`ml-3 ${
-              errors.gopay ? "text-red-500" : "text-gray-500"
-            }`}
+          <img
+            src="/gopay.png"
+            alt="GoPay"
+            className="ml-3 w-6 h-6" // Adjust size as needed
           />
           <input
             type="text"
@@ -192,8 +190,10 @@ const RestaurantDetailsForm = ({
               : "focus-within:ring-yellow-500"
           }`}
         >
-          <FaWallet
-            className={`ml-3 ${errors.dana ? "text-red-500" : "text-gray-500"}`}
+          <img
+            src="/dana.png"
+            alt="DANA"
+            className="ml-2 w-7" // Adjust size as needed
           />
           <input
             type="text"

@@ -241,7 +241,7 @@ const ManageRestaurant = () => {
 
   return (
     <div
-      className="flex overflow-x-hidden w-full min-h-screen bg-yellow-100"
+      className="flex overflow-hidden w-full h-screen bg-yellow-100 fixed"
       style={{
         backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
         backgroundSize: "cover",
@@ -250,37 +250,39 @@ const ManageRestaurant = () => {
       }}
     >
       <Sidebar />
-      <main className="md:ml-20 flex-1 flex justify-center items-center p-5 overflow-x-hidden">
-        <div className="w-full max-w-xl p-4 sm:p-8 bg-white shadow-xl rounded-xl overflow-hidden">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
+      <main className="md:ml-20 flex-1 flex justify-center items-center p-5">
+        <div className="w-full max-w-xl h-full max-h-screen bg-white shadow-xl rounded-xl flex flex-col">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-yellow-600 p-6 flex items-center justify-center border-b">
             <FaUtensils className="mr-2" />
             <span className="truncate">Manage Your Restaurant</span>
           </h2>
 
-          <RestaurantStatusToggle
-            isOpen={isOpen}
-            onToggle={handleToggleRestaurantStatus}
-          />
+          <div className="overflow-y-auto p-4 sm:p-8 flex-1">
+            <RestaurantStatusToggle
+              isOpen={isOpen}
+              onToggle={handleToggleRestaurantStatus}
+            />
 
-          <RestaurantImageUploader
-            imagePreview={imagePreview}
-            onImageChange={handleImageChange}
-          />
+            <RestaurantImageUploader
+              imagePreview={imagePreview}
+              onImageChange={handleImageChange}
+            />
 
-          <RestaurantDetailsForm
-            restaurantName={restaurantName}
-            setRestaurantName={setRestaurantName}
-            restaurantAddress={restaurantAddress}
-            setRestaurantAddress={setRestaurantAddress}
-            bcaAccount={bcaAccount}
-            setBcaAccount={setBcaAccount}
-            gopay={gopay}
-            setGopay={setGopay}
-            dana={dana}
-            setDana={setDana}
-            isChanged={isChanged}
-            onSubmit={handleUpdateRestaurant}
-          />
+            <RestaurantDetailsForm
+              restaurantName={restaurantName}
+              setRestaurantName={setRestaurantName}
+              restaurantAddress={restaurantAddress}
+              setRestaurantAddress={setRestaurantAddress}
+              bcaAccount={bcaAccount}
+              setBcaAccount={setBcaAccount}
+              gopay={gopay}
+              setGopay={setGopay}
+              dana={dana}
+              setDana={setDana}
+              isChanged={isChanged}
+              onSubmit={handleUpdateRestaurant}
+            />
+          </div>
         </div>
 
         <FloatingMenuButton />
