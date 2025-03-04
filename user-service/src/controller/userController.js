@@ -97,7 +97,7 @@ export const registerSellerController = async (req, res) => {
         errors,
       });
     }
-    
+
     const hashedPassword = hashPassword(req.body.password);
     req.body.password = hashedPassword;
 
