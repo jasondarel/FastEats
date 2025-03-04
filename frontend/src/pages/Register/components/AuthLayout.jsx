@@ -1,6 +1,6 @@
 import React from "react";
 
-const AuthLayout = ({ children }) => {
+const AuthLayout = ({ children, isSellerRegister }) => {
   return (
     <div className="fixed inset-0 w-full h-screen overflow-hidden">
       {/* Background Image */}
@@ -12,8 +12,12 @@ const AuthLayout = ({ children }) => {
       </div>
 
       {/* Auth Card */}
-      <div className="relative z-10 flex items-center justify-center w-full h-full">
-        <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
+      <div className="relative z-10 flex items-center justify-center w-full h-full p-4 overflow-auto">
+        <div
+          className={`w-full ${
+            isSellerRegister ? "max-w-4xl" : "max-w-md"
+          } p-8 bg-white shadow-lg rounded-lg`}
+        >
           <img
             src="/logo_FastEats.png"
             alt="Logo"
