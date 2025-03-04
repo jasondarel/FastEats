@@ -10,6 +10,7 @@ import {
     becomeSellerController,
     verifyTokenController,
     verifyOtpController,
+    getCurrentUserController
 } from "../controller/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
@@ -25,6 +26,7 @@ userRoutes.post("/register", registerController);
 userRoutes.post("/login", loginController);
 userRoutes.get("/profile", authMiddleware, getProfileController);
 userRoutes.put("/profile", authMiddleware, updateProfileController);
+userRoutes.get("/user", authMiddleware, getCurrentUserController);
 userRoutes.get("/users", authMiddleware, getUsersController);
 userRoutes.get("/user/:id", authMiddleware, getUserController);
 userRoutes.put("/change-password", authMiddleware, changePasswordController);

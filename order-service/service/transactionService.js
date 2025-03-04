@@ -4,8 +4,8 @@ const createTransactionService = async (transaction) => {
     console.log("transaction", transaction);
     const result = await pool.query(
         `INSERT INTO transactions 
-            (order_id, currency, transaction_time, expiry_time, amount, bank, va_number, payment_type, transaction_status) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+            (order_id, currency, transaction_time, expiry_time, amount, bank, va_number, payment_type) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
         RETURNING *`,
         [
             transaction.order_id,
@@ -16,7 +16,6 @@ const createTransactionService = async (transaction) => {
             transaction.bank || null,
             transaction.va_number || null,
             transaction.payment_type,
-            transaction.transaction_status
         ]
     );
 

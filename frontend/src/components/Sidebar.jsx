@@ -12,6 +12,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
   const [isMobileOrMedium, setIsMobileOrMedium] = useState(
     window.innerWidth < 1024
   );
+  const [role, setRole] = useState("");
   const [isProfileDropupOpen, setIsProfileDropupOpen] = useState(false);
 
   const MySwal = withReactContent(Swal);
@@ -81,6 +82,31 @@ const Sidebar = ({ isTaskbarOpen }) => {
         console.error("Error fetching profile data:", error);
       }
     };
+
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch("http://localhost:5000/user/user", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user profile. Status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        setRole(data.user.role);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    }
+    fetchUser();
     fetchUserProfile();
   }, []);
 
@@ -281,6 +307,26 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   My Orders
                 </Link>
               </li>
+              {role === "seller" &&
+                <li>
+                  <Link
+                    to="/order-list"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Order List
+                  </Link>
+                </li>
+              }
+              {role === "seller" && 
+                <li>
+                  <Link
+                    to="/restaurant-dashboard"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Restaurant Dashboard
+                  </Link>
+                </li>
+              }
             </ul>
           </nav>
 

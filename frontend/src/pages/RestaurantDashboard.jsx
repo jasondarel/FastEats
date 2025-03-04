@@ -15,69 +15,189 @@ const RestaurantDashboard = () => {
   const [dailyOrdersChart, setDailyOrdersChart] = useState(null);
   const [dailyRevenueChart, setDailyRevenueChart] = useState(null);
 
-  // Sample data - in a real app, this would come from props or an API
+  // State for orders data
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantImage, setRestaurantImage] = useState(null);
+
+  // Sample restaurant info - update with real data in production
   const restaurantInfo = {
-    name: "Jensen huang",
-    image: "/jensen.png",
-    totalOrders: 1248,
-    totalRevenue: "$45,890",
+    name: restaurantName,
+    image: restaurantImage,
+    totalOrders: 0,
+    totalRevenue: "$0",
   };
-
-  // Monthly data
-  const monthlyData = [
-    { month: "Jan", orders: 92, revenue: 3200 },
-    { month: "Feb", orders: 87, revenue: 3100 },
-    { month: "Mar", orders: 95, revenue: 3500 },
-    { month: "Apr", orders: 110, revenue: 4200 },
-    { month: "May", orders: 120, revenue: 4500 },
-    { month: "Jun", orders: 135, revenue: 5100 },
-    { month: "Jul", orders: 150, revenue: 5800 },
-    { month: "Aug", orders: 142, revenue: 5300 },
-    { month: "Sep", orders: 125, revenue: 4800 },
-    { month: "Oct", orders: 110, revenue: 4100 },
-    { month: "Nov", orders: 95, revenue: 3290 },
-    { month: "Dec", orders: 87, revenue: 3000 },
-  ];
-
-  // Daily data for the current month (sample data)
-  const dailyData = [
-    { day: "1", revenue: 165, orders: 5 },
-    { day: "2", revenue: 190, orders: 6 },
-    { day: "3", revenue: 210, orders: 7 },
-    { day: "4", revenue: 188, orders: 6 },
-    { day: "5", revenue: 240, orders: 8 },
-    { day: "6", revenue: 252, orders: 8 },
-    { day: "7", revenue: 265, orders: 9 },
-    { day: "8", revenue: 230, orders: 7 },
-    { day: "9", revenue: 245, orders: 8 },
-    { day: "10", revenue: 260, orders: 9 },
-    { day: "11", revenue: 275, orders: 9 },
-    { day: "12", revenue: 220, orders: 7 },
-    { day: "13", revenue: 235, orders: 8 },
-    { day: "14", revenue: 267, orders: 9 },
-    { day: "15", revenue: 290, orders: 10 },
-    { day: "16", revenue: 310, orders: 11 },
-    { day: "17", revenue: 285, orders: 10 },
-    { day: "18", revenue: 270, orders: 9 },
-    { day: "19", revenue: 295, orders: 10 },
-    { day: "20", revenue: 320, orders: 11 },
-    { day: "21", revenue: 305, orders: 10 },
-    { day: "22", revenue: 315, orders: 11 },
-    { day: "23", revenue: 330, orders: 12 },
-    { day: "24", revenue: 300, orders: 10 },
-    { day: "25", revenue: 290, orders: 10 },
-    { day: "26", revenue: 280, orders: 9 },
-    { day: "27", revenue: 310, orders: 11 },
-    { day: "28", revenue: 325, orders: 11 },
-    { day: "29", revenue: 340, orders: 12 },
-    { day: "30", revenue: 355, orders: 12 },
-  ];
 
   // View mode state (monthly/daily)
   const [viewMode, setViewMode] = useState("monthly");
   
   // Month selection for daily view
-  const [selectedMonth, setSelectedMonth] = useState("February");
+  const [selectedMonth, setSelectedMonth] = useState("March");
+
+  const fetchOrderLists = async() => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/order/orders-by-restaurant",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setOrders(data.orders);
+    } catch(err) {
+      console.error("Error fetching orders:", err);
+    }
+  }
+
+  const fetchRestaurantInfo = async() => {
+    try {
+      const response = await fetch("http://localhost:5000/restaurant/restaurant", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      const data = await response.json();
+      setRestaurantName(data.restaurant.restaurant_name);
+      setRestaurantImage(data.restaurant.restaurant_image);
+    } catch(err) {
+      console.error("Error fetching restaurant info:", err);
+    }
+  }
+
+  // Fetch data - simulated with the provided JSON
+  useEffect(() => {
+    fetchRestaurantInfo();
+    fetchOrderLists();
+    // In a real app, this would be an API call
+    const fetchData = () => {
+      try {
+        const responseData = {
+          "success": true,
+          "orders": [
+            {
+              "order_id": 63,
+              "user_id": 51,
+              "menu_id": 2,
+              "restaurant_id": 3,
+              "item_quantity": 1,
+              "status": "Preparing",
+              "created_at": "2025-03-02T19:17:18.250Z",
+              "updated_at": "2025-03-02T19:17:18.250Z",
+              "menu": {
+                "menu_id": 2,
+                "menu_name": "Kopi Gula Aren",
+                "menu_description": null,
+                "menu_image": "1740967311253-picture-1578886068.jpg",
+                "restaurant_id": 3,
+                "menu_category": "Drink",
+                "is_available": true,
+                "menu_price": "20000.00",
+                "created_at": "2025-03-02T19:01:51.364Z",
+                "updated_at": "2025-03-02T19:01:51.364Z"
+              },
+              "user": {
+                "id": 51,
+                "name": "AndreanDjabbar",
+                "email": "andreanjabar19@gmail.com",
+                "role": "user",
+                "profile_photo": null,
+                "address": null,
+                "phone_number": null
+              }
+            }
+          ]
+        };
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Process orders data for dashboard
+  const processOrdersData = () => {
+    if (orders.length === 0) return { monthlyData: [], dailyData: [] };
+
+    // Initialize data structures for monthly and daily views
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let monthlyDataMap = {};
+    months.forEach(month => {
+      monthlyDataMap[month] = { orders: 0, revenue: 0 };
+    });
+
+    // Initialize days for current month (using selectedMonth)
+    let dailyDataMap = {};
+    // Get month index from name
+    const monthIndex = months.indexOf(selectedMonth);
+    // Get days in month (for simplicity, using current year)
+    const daysInMonth = new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+      dailyDataMap[i.toString()] = { orders: 0, revenue: 0 };
+    }
+
+    // Process each order
+    orders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      const monthName = months[orderDate.getMonth()];
+      const day = orderDate.getDate().toString();
+      const price = parseFloat(order.menu.menu_price) * order.item_quantity;
+
+      // Update monthly data
+      if (monthlyDataMap[monthName]) {
+        monthlyDataMap[monthName].orders += order.item_quantity;
+        monthlyDataMap[monthName].revenue += price;
+      }
+
+      // Update daily data if order is in selected month
+      if (orderDate.getMonth() === monthIndex && dailyDataMap[day]) {
+        dailyDataMap[day].orders += order.item_quantity;
+        dailyDataMap[day].revenue += price;
+      }
+    });
+
+    // Convert maps to arrays for chart.js
+    const monthlyData = months.map(month => ({
+      month,
+      orders: monthlyDataMap[month].orders,
+      revenue: monthlyDataMap[month].revenue
+    }));
+
+    const dailyData = Object.keys(dailyDataMap).map(day => ({
+      day,
+      orders: dailyDataMap[day].orders,
+      revenue: dailyDataMap[day].revenue
+    }));
+
+    return { monthlyData, dailyData };
+  };
+
+  // Calculate restaurant summary info
+  const calculateSummaryInfo = () => {
+    if (orders.length === 0) return { totalOrders: 0, totalRevenue: "$0" };
+
+    let totalOrderQuantity = 0;
+    let totalRevenue = 0;
+
+    orders.forEach(order => {
+      totalOrderQuantity += order.item_quantity;
+      totalRevenue += parseFloat(order.menu.menu_price) * order.item_quantity;
+    });
+
+    return {
+      totalOrders: totalOrderQuantity,
+      totalRevenue: `$${totalRevenue.toFixed(2)}`,
+    };
+  };
 
   // Destroy all chart instances
   const destroyCharts = () => {
@@ -102,6 +222,7 @@ const RestaurantDashboard = () => {
   // Create monthly charts
   const createMonthlyCharts = () => {
     if (monthlyOrdersChartRef.current && monthlyRevenueChartRef.current) {
+      const { monthlyData } = processOrdersData();
       const monthlyLabels = monthlyData.map(item => item.month);
       const monthlyOrdersData = monthlyData.map(item => item.orders);
       const monthlyRevenueData = monthlyData.map(item => item.revenue);
@@ -150,7 +271,12 @@ const RestaurantDashboard = () => {
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
             }
           }
         }
@@ -162,6 +288,7 @@ const RestaurantDashboard = () => {
   // Create daily charts
   const createDailyCharts = () => {
     if (dailyOrdersChartRef.current && dailyRevenueChartRef.current) {
+      const { dailyData } = processOrdersData();
       const dailyLabels = dailyData.map(item => item.day);
       const dailyOrdersData = dailyData.map(item => item.orders);
       const dailyRevenueData = dailyData.map(item => item.revenue);
@@ -210,7 +337,12 @@ const RestaurantDashboard = () => {
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
             }
           }
         }
@@ -237,6 +369,8 @@ const RestaurantDashboard = () => {
 
   // Effect for viewMode changes
   useEffect(() => {
+    if (loading) return;
+    
     // Always destroy charts before creating new ones
     destroyCharts();
     
@@ -246,7 +380,7 @@ const RestaurantDashboard = () => {
     }, 0);
     
     return () => clearTimeout(timer);
-  }, [viewMode]);
+  }, [viewMode, loading, orders, selectedMonth]);
 
   // Export handlers
   const handleExportToPDF = () => {
@@ -266,15 +400,26 @@ const RestaurantDashboard = () => {
     setViewMode(viewMode === "monthly" ? "daily" : "monthly");
   };
 
+  // Handle month selection change
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+  };
+
+  // Get summary information
+  const summaryInfo = calculateSummaryInfo();
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading dashboard data...</div>;
+  }
+
   return (
     <div className="bg-gray-100 min-h-screen p-6">
       <div className="max-w-6xl mx-auto md:mt-10">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-          {/* Header with restaurant info */}
           <div className="flex flex-col md:flex-row p-6 border-b">
             <div className="md:w-1/3 mb-4 md:mb-0">
               <img
-                src={restaurantInfo.image}
+                src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurantInfo.image}`}
                 alt={restaurantInfo.name}
                 className="rounded-lg shadow-md w-full h-64 object-cover"
               />
@@ -290,7 +435,7 @@ const RestaurantDashboard = () => {
                     Total Orders
                   </p>
                   <p className="text-3xl font-bold text-blue-700">
-                    {restaurantInfo.totalOrders}
+                    {summaryInfo.totalOrders}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg border border-green-100">
@@ -298,7 +443,7 @@ const RestaurantDashboard = () => {
                     Total Revenue
                   </p>
                   <p className="text-3xl font-bold text-green-700">
-                    {restaurantInfo.totalRevenue}
+                    {summaryInfo.totalRevenue}
                   </p>
                 </div>
               </div>
@@ -339,19 +484,31 @@ const RestaurantDashboard = () => {
                   {viewMode === "monthly" ? "Switch to Daily View" : "Switch to Monthly View"}
                 </button>
                 
-                {/* Month selector - only visible in daily view */}
                 {viewMode === "daily" && (
                   <div className="relative ml-4">
-                    <div className="flex items-center border rounded-md px-3 py-2 bg-white cursor-pointer">
-                      <span>{selectedMonth}</span>
-                      <ChevronDown size={16} className="ml-2" />
-                    </div>
+                    <select 
+                      value={selectedMonth}
+                      onChange={(e) => handleMonthChange(e.target.value)}
+                      className="border rounded-md px-3 py-2 bg-white cursor-pointer"
+                    >
+                      <option value="Jan">January</option>
+                      <option value="Feb">February</option>
+                      <option value="Mar">March</option>
+                      <option value="Apr">April</option>
+                      <option value="May">May</option>
+                      <option value="Jun">June</option>
+                      <option value="Jul">July</option>
+                      <option value="Aug">August</option>
+                      <option value="Sep">September</option>
+                      <option value="Oct">October</option>
+                      <option value="Nov">November</option>
+                      <option value="Dec">December</option>
+                    </select>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Monthly View */}
             {viewMode === "monthly" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Orders Chart */}

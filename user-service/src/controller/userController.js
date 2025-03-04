@@ -19,6 +19,7 @@ import {
   becomeSellerService, 
   changePasswordService, 
   createUserDetailsService, 
+  getCurrentUserService, 
   getUserByEmailService, 
   getUserByIdService, 
   getUserDetailsByIdService, 
@@ -328,6 +329,29 @@ export const getUserController = async (req, res) => {
     })
   }
 };
+
+export const getCurrentUserController = async (req, res) => {
+  const {userId} = req.user;
+  try {
+    const user = await getCurrentUserService(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      user,
+    })
+  } catch(err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}
 
 export const getProfileController = async (req, res) => {
   const {userId} = req.user;
