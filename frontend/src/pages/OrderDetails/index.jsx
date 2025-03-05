@@ -6,7 +6,7 @@ import {
   saveSnapService,
   checkMidtransStatusService,
   getOrderDetailService,
-} from "../../../service/orderServices/orderDetails";
+} from "../../service/orderServices/orderDetails";
 import Sidebar from "../../components/Sidebar";
 import BackButton from "../../components/BackButton";
 import StatusBadge from "../../components/StatusBadge";

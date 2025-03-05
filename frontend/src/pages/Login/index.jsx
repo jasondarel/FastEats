@@ -1,7 +1,7 @@
 // pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import loginService from "../../../service/userServices/loginService";
+import loginService from "../../service/userServices/loginService";
 import BackgroundImage from "./components/BackgroundImage";
 import AuthCard from "./components/AuthCard";
 import FormInput from "./components/FormInput";

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import becomeSellerService from "../../../service/userServices/becomeSellerService";
+import becomeSellerService from "../../service/userServices/becomeSellerService";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import { jwtDecode } from "jwt-decode";
