@@ -29,9 +29,9 @@ const createTables = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_payments (
         user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-        bank_bca TEXT UNIQUE NOT NULL, 
-        gopay TEXT UNIQUE NOT NULL,
-        dana TEXT UNIQUE NOT NULL,
+        bank_bca TEXT UNIQUE DEFAULT 1234567890, 
+        gopay TEXT UNIQUE DEFAULT 1234567890,
+        dana TEXT UNIQUE DEFAULT 1234567890,
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);

@@ -43,14 +43,13 @@ const RestaurantDetailsForm = ({
       newErrors.bcaAccount = "BCA account must be exactly 10 digits";
     }
 
-    // GoPay validation (12 digits)
-    if (gopay && !/^\d{12}$/.test(gopay)) {
-      newErrors.gopay = "GoPay number must be exactly 12 digits";
+    if (gopay && !/^\d{10,13}$/.test(gopay)) {
+      newErrors.gopay = "GoPay number must be between 10 and 13 digits";
     }
-
-    // DANA validation (12 digits)
-    if (dana && !/^\d{12}$/.test(dana)) {
-      newErrors.dana = "DANA number must be exactly 12 digits";
+    
+    // DANA validation (10-13 digits)
+    if (dana && !/^\d{10,13}$/.test(dana)) {
+      newErrors.dana = "DANA number must be between 10 and 13 digits";
     }
 
     setErrors(newErrors);
@@ -161,7 +160,7 @@ const RestaurantDetailsForm = ({
           />
           <input
             type="text"
-            placeholder="Enter your GoPay number (12 digits)"
+            placeholder="Enter your GoPay number (10-13 digits)"
             value={gopay}
             onChange={(e) => {
               // Only allow numeric input
@@ -197,7 +196,7 @@ const RestaurantDetailsForm = ({
           />
           <input
             type="text"
-            placeholder="Enter your DANA number (12 digits)"
+            placeholder="Enter your DANA number (10-13 digits)"
             value={dana}
             onChange={(e) => {
               // Only allow numeric input

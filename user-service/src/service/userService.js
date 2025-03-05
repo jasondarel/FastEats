@@ -18,6 +18,14 @@ export const registerSellerService = async(userReq) => {
     return result.rows[0];
 }
 
+export const createUserPaymentService = async(userId) => {
+    const result = await pool.query(
+        "INSERT INTO user_payments (user_id) VALUES ($1) RETURNING *",
+        [userId]
+    );
+    return result.rows[0];
+}
+
 export const getCurrentUserService = async(userId) => {
     const result = await pool.query(
         "SELECT id, name, email, role FROM users WHERE id = $1",

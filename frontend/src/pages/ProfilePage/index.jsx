@@ -4,6 +4,7 @@ import ProfileForm from "./components/ProfileForm";
 import PasswordForm from "./components/PasswordForm";
 import BackButton from "../../components/BackButton";
 import ProfilePhoto from "./components/ProfilePhoto";
+import PaymentForm from "./components/paymentForm";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
@@ -76,7 +77,7 @@ const Profile = () => {
         </h2>
 
         <ProfilePhoto preview={preview} handlePhotoChange={handlePhotoChange} />
-
+        
         <ProfileForm
           profile={profile}
           handleChange={handleProfileChange}
@@ -87,6 +88,8 @@ const Profile = () => {
 
         <h2 className="text-lg font-semibold mt-6">Change Password</h2>
         <PasswordForm />
+        <h2 className="text-lg font-semibold mt-6">Set Payment Data</h2>
+        <PaymentForm/>
       </div>
     </div>
   );

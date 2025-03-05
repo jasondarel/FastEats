@@ -18,6 +18,7 @@ import {
   becomeSellerService, 
   changePasswordService, 
   createUserDetailsService, 
+  createUserPaymentService, 
   getCurrentUserService, 
   getUserByEmailService, 
   getUserByIdService, 
@@ -155,7 +156,7 @@ export const registerSellerController = async (req, res) => {
         restaurantData,
       );
     }
-
+    await createUserPaymentService(response.id);
     return res.status(201).json({
       success: true,
       message: response.message,
@@ -584,7 +585,7 @@ export const becomeSellerController = async (req, res) => {
     );
 
     await becomeSellerService(userId);
-
+    await createUserPaymentService(userId);
     return res.status(200).json({
       success: true,
       message: "User upgraded to seller",
