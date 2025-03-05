@@ -4,12 +4,14 @@ import {
   FaWallet,
   FaExclamationCircle,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const PaymentForm = () => {
     const [bcaAccount, setBcaAccount] = useState("");
     const [gopay, setGopay] = useState("");
     const [dana, setDana] = useState("");
     const [isChanged, setIsChanged] = useState(false);
+    const token = localStorage.getItem("token");
 
     const [errors, setErrors] = useState({
         bcaAccount: "",
@@ -19,6 +21,42 @@ const PaymentForm = () => {
 
     const [isFormValid, setIsFormValid] = useState(false);
     
+    // Fetch current payment data on component mount
+    useEffect(() => {
+        const fetchPaymentData = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/user/user-payment", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch payment data');
+                }
+
+                const data = await response.json();
+                setBcaAccount(data.user.bank_bca || "");
+                setGopay(data.user.gopay || "");
+                setDana(data.user.dana || "");
+            } catch (err) {
+                console.error("Error fetching payment data:", err);
+                Swal.fire({
+                    title: "Error!",
+                    text: "Failed to load payment information",
+                    icon: "error",
+                    confirmButtonText: "Ok",
+                    confirmButtonColor: "#ef4444",
+                });
+            }
+        };
+
+        fetchPaymentData();
+    }, [token]);
+
+    // Validation effect
     useEffect(() => {
         let newErrors = {
             bcaAccount: "",
@@ -53,17 +91,51 @@ const PaymentForm = () => {
         setIsChanged(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log("Form submitted", { bcaAccount, gopay, dana });
+            try {
+                const response = await fetch("http://localhost:5000/user/user-payment", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ bcaAccount, gopay, dana }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update payment data');
+                }
+
+                Swal.fire({
+                    title: "Success!",
+                    text: "Successfully updated the payment information",
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                    confirmButtonColor: "#efb100",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                    }
+                });
+            } catch(err) {
+                console.error(err);
+                Swal.fire({
+                    title: "Error!",
+                    text: err.message,
+                    icon: "error",
+                    confirmButtonText: "Ok",
+                    confirmButtonColor: "#ef4444",
+                });
+            }
         }
     };
 
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="mb-4">
                     <label className="block text-gray-700 font-medium mb-1">
                         BCA Account
                     </label>
@@ -79,7 +151,7 @@ const PaymentForm = () => {
                         <img
                             src="/bca.png"
                             alt="BCA"
-                            className="ml-3 w-6 h-6" // Adjust size as needed
+                            className="ml-3 w-6 h-6" 
                         />
                         <input
                         type="text"
@@ -99,7 +171,7 @@ const PaymentForm = () => {
                     )}
                 </div>
         
-                <div>
+                <div className="mb-4">
                     <label className="block text-gray-700 font-medium mb-1">GoPay</label>
                     <div
                         className={`flex items-center border ${
@@ -113,7 +185,7 @@ const PaymentForm = () => {
                         <img
                             src="/gopay.png"
                             alt="GoPay"
-                            className="ml-3 w-6 h-6" // Adjust size as needed
+                            className="ml-3 w-6 h-6" 
                         />
                         <input
                         type="text"
@@ -133,7 +205,7 @@ const PaymentForm = () => {
                     )}
                 </div>
         
-                <div>
+                <div className="mb-4">
                     <label className="block text-gray-700 font-medium mb-1">DANA</label>
                     <div
                         className={`flex items-center border ${
@@ -147,7 +219,7 @@ const PaymentForm = () => {
                         <img
                             src="/dana.png"
                             alt="DANA"
-                            className="ml-2 w-7" // Adjust size as needed
+                            className="ml-2 w-7" 
                         />
                         <input
                         type="text"
@@ -168,7 +240,7 @@ const PaymentForm = () => {
                 <button
                 type="submit"
                 disabled={!isFormValid}
-                className={`mt-3 w-full p-3 rounded-lg transition ${
+                className={`w-full p-3 rounded-lg transition ${
                     isFormValid
                     ? "bg-red-500 text-white hover:bg-red-600 hover:cursor-pointer"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"

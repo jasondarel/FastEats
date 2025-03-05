@@ -12,7 +12,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { 
   validateChangePasswordRequest, validateLoginRequest, 
-  validateRegisterRequest, validateRegisterSellerRequest, validateUpdateProfileRequest 
+  validateRegisterRequest, validateRegisterSellerRequest, validateUpdateProfileRequest, 
+  validateUpdateUserPaymentRequest
 } from "../validator/userValidator.js";
 import { 
   becomeSellerService, 
@@ -23,9 +24,11 @@ import {
   getUserByEmailService, 
   getUserByIdService, 
   getUserDetailsByIdService, 
+  getUserPaymentByIdService, 
   registerSellerService, 
   registerService, 
   updateUserDetailsService, 
+  updateUserPaymentService, 
   validateUserService 
 } from "../service/userService.js";
 import { getRedisClient } from "../config/redisInit.js";
@@ -505,6 +508,62 @@ export const updateProfileController = async (req, res) => {
       success: false,
       message: "Server error",
     })
+  }
+};
+
+export const updateUserPaymentController = async (req, res) => {
+  const {userId, role} = req.user;
+  if(role !== "seller") {
+    return res.status(400).json({
+      success: false,
+      message: "Only sellers can update payment details",
+    });
+
+  }
+  try {
+    const errors = await validateUpdateUserPaymentRequest(req.body);
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    await updateUserPaymentService(req.body, userId);
+    return res.status(200).json({
+      success: true,
+      message: "Payment details updated successfully",
+    })
+  } catch(err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getUserPaymentController = async (req, res) => {
+  const {userId} = req.user;
+  try {
+    const user = await getUserPaymentByIdService(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      user,
+    })
+  } catch(err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
