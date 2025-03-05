@@ -134,7 +134,7 @@ const MyMenuPage = () => {
         )}
 
         <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
-          <div className="flex-grow max-w-2xl flex justify-center right-0">
+          <div className="flex-grow max-w-2xl flex justify-center right-0 mr-5">
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

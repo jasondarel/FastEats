@@ -19,9 +19,17 @@ const SearchBar = ({
   const handleSearch = (e) => setSearchQuery(e.target.value);
 
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-center w-fit">
+    <div
+      className={`flex items-center justify-center w-full ${
+        showFilterButton ? "gap-4" : ""
+      }`}
+    >
       {/* Search Bar */}
-      <div className="relative flex-grow min-w-lg">
+      <div
+        className={`relative ${
+          showFilterButton ? "flex-grow min-w-lg" : "w-full max-w-lg"
+        }`}
+      >
         <input
           type="text"
           placeholder={placeholder}
@@ -49,16 +57,18 @@ const SearchBar = ({
 
       {/* Include FilterButton only if showFilterButton is true */}
       {showFilterButton && (
-        <FilterButton
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
-          minPrice={minPrice}
-          setMinPrice={setMinPrice}
-          maxPrice={maxPrice}
-          setMaxPrice={setMaxPrice}
-          showUnavailable={showUnavailable}
-          setShowUnavailable={setShowUnavailable}
-        />
+        <div className="flex items-center space-x-2">
+          <FilterButton
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            showUnavailable={showUnavailable}
+            setShowUnavailable={setShowUnavailable}
+          />
+        </div>
       )}
     </div>
   );
