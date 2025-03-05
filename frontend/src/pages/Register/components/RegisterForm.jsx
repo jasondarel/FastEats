@@ -51,7 +51,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
 
   return (
     <>
-      <h2 className="text-2xl font-semibold text-center mb-6">
+      <h2 className="text-2xl font-semibold text-center mb-6 hover:cursor-pointer">
         Register as {userType === "user" ? "Customer" : "Seller"}
       </h2>
 
