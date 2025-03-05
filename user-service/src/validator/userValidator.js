@@ -176,3 +176,28 @@ export const validateChangePasswordRequest = async(userReq, userId) => {
     }
     return errors
 }
+
+export const validateUpdateUserPaymentRequest = async(userReq) => {
+    const {bcaAccount, gopay, dana} = userReq;
+    const errors = {};
+
+    if(!bcaAccount || bcaAccount.trim() === '') {
+        errors.bcaAccount = 'BCA account is required';
+    } else if(!/^\d{10}$/.test(bcaAccount)) {
+        errors.bcaAccount = 'BCA account must be exactly 10 digits';
+    }
+
+    if(! gopay || gopay.trim() === '') {
+        errors.gopay = 'GoPay number is required';
+    } else if(gopay && !/^\d{10,13}$/.test(gopay)) {
+        errors.gopay = 'GoPay number must be between 10 and 13 digits';
+    }
+
+    if(!dana || dana.trim() === '') {
+        errors.dana = 'DANA number is required';
+    } else if(dana && !/^\d{10,13}$/.test(dana)) {
+        errors.dana = 'DANA number must be between 10 and 13 digits';
+    }
+
+    return errors;
+}
