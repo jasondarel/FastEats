@@ -18,6 +18,31 @@ export const registerSellerService = async(userReq) => {
     return result.rows[0];
 }
 
+export const createUserPaymentService = async(userId) => {
+    const result = await pool.query(
+        "INSERT INTO user_payments (user_id) VALUES ($1) RETURNING *",
+        [userId]
+    );
+    return result.rows[0];
+}
+
+export const getUserPaymentByIdService = async(userId) => {
+    const result = await pool.query(
+        "SELECT bank_bca, gopay, dana FROM user_payments WHERE user_id = $1",
+        [userId]
+    );
+    return result.rows[0];
+}
+
+export const updateUserPaymentService = async(userReq, userId) => {
+    const { bcaAccount, gopay, dana } = userReq;
+    const result = await pool.query(
+        "UPDATE user_payments SET bank_bca = $1, gopay = $2, dana = $3, updated_at = NOW() WHERE user_id = $4 RETURNING *",
+        [bcaAccount, gopay, dana, userId]
+    );
+    return result.rows[0];
+}
+
 export const getCurrentUserService = async(userId) => {
     const result = await pool.query(
         "SELECT id, name, email, role FROM users WHERE id = $1",

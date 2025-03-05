@@ -117,13 +117,11 @@ const OtpVerification = () => {
 
   const handleChange = (index, e) => {
     const value = e.target.value;
-
-    // Handle digit input
     if (/^\d?$/.test(value)) {
-      const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
 
+      // Move forward if value is entered and not last input
       if (value !== "" && index < 5) {
         inputRefs.current[index + 1]?.focus();
       }

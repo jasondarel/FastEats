@@ -9,6 +9,7 @@ import MenuStats from "./components/MenuStats";
 import EditMenuForm from "./components/EditMenuForm";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import LoadingState from "./components/LoadingState";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();
@@ -326,12 +327,7 @@ const MyMenuDetails = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="text-center p-5 text-lg font-semibold text-gray-700">
-        Loading...
-      </div>
-    );
+  if (loading) return <LoadingState />;
   if (error)
     return (
       <div className="text-red-500 text-center p-5 text-lg font-semibold">

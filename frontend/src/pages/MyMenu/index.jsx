@@ -8,7 +8,8 @@ import BackButton from "../../components/BackButton";
 import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
 import CategoryFilter from "../../components/CategoryFilter";
-import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
+import AlphabetSort from "../../components/AlphabetSort";
+import LoadingState from "./components/LoadingState"; // Import LoadingState
 import { handleApiError } from "./components/HandleAlert";
 
 const MyMenuPage = () => {
@@ -117,8 +118,9 @@ const MyMenuPage = () => {
         : b.menu_name.localeCompare(a.menu_name);
     });
 
+  // Replace the previous loading state with LoadingState component
   if (isLoading) {
-    return <div className="text-center p-5">Loading menu...</div>;
+    return <LoadingState />;
   }
 
   return (
@@ -134,7 +136,7 @@ const MyMenuPage = () => {
         )}
 
         <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
-          <div className="flex-grow max-w-2xl flex justify-center right-0">
+          <div className="flex-grow max-w-2xl flex justify-center right-0 mr-5">
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

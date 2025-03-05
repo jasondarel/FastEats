@@ -15,8 +15,8 @@ import OrderDateInfo from "./components/OrderDateInfo";
 import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
-import LoadingScreen from "./components/LoadingScreen";
 import Swal from "sweetalert2";
+import LoadingState from "./components/LoadingState";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -205,7 +205,7 @@ const OrderDetails = () => {
   }, [orderId]);
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingState />;
   }
 
   return (
