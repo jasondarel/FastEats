@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FileSpreadsheet, FileText, ChevronDown } from "lucide-react";
-import Chart from 'chart.js/auto';
+import { FileSpreadsheet, FileText } from "lucide-react";
+import Chart from "chart.js/auto";
+import BackButton from "../components/BackButton";
 
 const RestaurantDashboard = () => {
   // References for charts
@@ -8,7 +9,7 @@ const RestaurantDashboard = () => {
   const monthlyRevenueChartRef = useRef(null);
   const dailyOrdersChartRef = useRef(null);
   const dailyRevenueChartRef = useRef(null);
-  
+
   // Chart instances
   const [monthlyOrdersChart, setMonthlyOrdersChart] = useState(null);
   const [monthlyRevenueChart, setMonthlyRevenueChart] = useState(null);
@@ -32,11 +33,11 @@ const RestaurantDashboard = () => {
 
   // View mode state (monthly/daily)
   const [viewMode, setViewMode] = useState("monthly");
-  
+
   // Month selection for daily view
   const [selectedMonth, setSelectedMonth] = useState("March");
 
-  const fetchOrderLists = async() => {
+  const fetchOrderLists = async () => {
     try {
       const response = await fetch(
         "http://localhost:5000/order/orders-by-restaurant",
@@ -49,27 +50,30 @@ const RestaurantDashboard = () => {
       );
       const data = await response.json();
       setOrders(data.orders);
-    } catch(err) {
+    } catch (err) {
       console.error("Error fetching orders:", err);
     }
-  }
+  };
 
-  const fetchRestaurantInfo = async() => {
+  const fetchRestaurantInfo = async () => {
     try {
-      const response = await fetch("http://localhost:5000/restaurant/restaurant", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const response = await fetch(
+        "http://localhost:5000/restaurant/restaurant",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const data = await response.json();
       console.log("Data: ", data);
       setRestaurantName(data.restaurant.restaurant_name);
       setRestaurantImage(data.restaurant.restaurant_image);
-    } catch(err) {
+    } catch (err) {
       console.error("Error fetching restaurant info:", err);
     }
-  }
+  };
 
   // Fetch data - simulated with the provided JSON
   useEffect(() => {
@@ -79,40 +83,40 @@ const RestaurantDashboard = () => {
     const fetchData = () => {
       try {
         const responseData = {
-          "success": true,
-          "orders": [
+          success: true,
+          orders: [
             {
-              "order_id": 63,
-              "user_id": 51,
-              "menu_id": 2,
-              "restaurant_id": 3,
-              "item_quantity": 1,
-              "status": "Preparing",
-              "created_at": "2025-03-02T19:17:18.250Z",
-              "updated_at": "2025-03-02T19:17:18.250Z",
-              "menu": {
-                "menu_id": 2,
-                "menu_name": "Kopi Gula Aren",
-                "menu_description": null,
-                "menu_image": "1740967311253-picture-1578886068.jpg",
-                "restaurant_id": 3,
-                "menu_category": "Drink",
-                "is_available": true,
-                "menu_price": "20000.00",
-                "created_at": "2025-03-02T19:01:51.364Z",
-                "updated_at": "2025-03-02T19:01:51.364Z"
+              order_id: 63,
+              user_id: 51,
+              menu_id: 2,
+              restaurant_id: 3,
+              item_quantity: 1,
+              status: "Preparing",
+              created_at: "2025-03-02T19:17:18.250Z",
+              updated_at: "2025-03-02T19:17:18.250Z",
+              menu: {
+                menu_id: 2,
+                menu_name: "Kopi Gula Aren",
+                menu_description: null,
+                menu_image: "1740967311253-picture-1578886068.jpg",
+                restaurant_id: 3,
+                menu_category: "Drink",
+                is_available: true,
+                menu_price: "20000.00",
+                created_at: "2025-03-02T19:01:51.364Z",
+                updated_at: "2025-03-02T19:01:51.364Z",
               },
-              "user": {
-                "id": 51,
-                "name": "AndreanDjabbar",
-                "email": "andreanjabar19@gmail.com",
-                "role": "user",
-                "profile_photo": null,
-                "address": null,
-                "phone_number": null
-              }
-            }
-          ]
+              user: {
+                id: 51,
+                name: "AndreanDjabbar",
+                email: "andreanjabar19@gmail.com",
+                role: "user",
+                profile_photo: null,
+                address: null,
+                phone_number: null,
+              },
+            },
+          ],
         };
         setLoading(false);
       } catch (error) {
@@ -129,9 +133,22 @@ const RestaurantDashboard = () => {
     if (orders.length === 0) return { monthlyData: [], dailyData: [] };
 
     // Initialize data structures for monthly and daily views
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     let monthlyDataMap = {};
-    months.forEach(month => {
+    months.forEach((month) => {
       monthlyDataMap[month] = { orders: 0, revenue: 0 };
     });
 
@@ -140,14 +157,18 @@ const RestaurantDashboard = () => {
     // Get month index from name
     const monthIndex = months.indexOf(selectedMonth);
     // Get days in month (for simplicity, using current year)
-    const daysInMonth = new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
-    
+    const daysInMonth = new Date(
+      new Date().getFullYear(),
+      monthIndex + 1,
+      0
+    ).getDate();
+
     for (let i = 1; i <= daysInMonth; i++) {
       dailyDataMap[i.toString()] = { orders: 0, revenue: 0 };
     }
 
     // Process each order
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const monthName = months[orderDate.getMonth()];
       const day = orderDate.getDate().toString();
@@ -167,16 +188,16 @@ const RestaurantDashboard = () => {
     });
 
     // Convert maps to arrays for chart.js
-    const monthlyData = months.map(month => ({
+    const monthlyData = months.map((month) => ({
       month,
       orders: monthlyDataMap[month].orders,
-      revenue: monthlyDataMap[month].revenue
+      revenue: monthlyDataMap[month].revenue,
     }));
 
-    const dailyData = Object.keys(dailyDataMap).map(day => ({
+    const dailyData = Object.keys(dailyDataMap).map((day) => ({
       day,
       orders: dailyDataMap[day].orders,
-      revenue: dailyDataMap[day].revenue
+      revenue: dailyDataMap[day].revenue,
     }));
 
     return { monthlyData, dailyData };
@@ -188,18 +209,18 @@ const RestaurantDashboard = () => {
       console.warn("Orders data is missing or invalid:", orders);
       return { totalOrders: 0, totalRevenue: "$0" };
     }
-  
+
     console.log("Orders: ", orders.length);
     if (orders.length === 0) return { totalOrders: 0, totalRevenue: "$0" };
-  
+
     let totalOrderQuantity = 0;
     let totalRevenue = 0;
-  
-    orders.forEach(order => {
+
+    orders.forEach((order) => {
       totalOrderQuantity += order.item_quantity;
       totalRevenue += parseFloat(order.menu.menu_price) * order.item_quantity;
     });
-  
+
     return {
       totalOrders: totalOrderQuantity,
       totalRevenue: `$${totalRevenue.toFixed(2)}`,
@@ -230,48 +251,52 @@ const RestaurantDashboard = () => {
   const createMonthlyCharts = () => {
     if (monthlyOrdersChartRef.current && monthlyRevenueChartRef.current) {
       const { monthlyData } = processOrdersData();
-      const monthlyLabels = monthlyData.map(item => item.month);
-      const monthlyOrdersData = monthlyData.map(item => item.orders);
-      const monthlyRevenueData = monthlyData.map(item => item.revenue);
+      const monthlyLabels = monthlyData.map((item) => item.month);
+      const monthlyOrdersData = monthlyData.map((item) => item.orders);
+      const monthlyRevenueData = monthlyData.map((item) => item.revenue);
 
       // Create monthly orders chart
       const ordersChart = new Chart(monthlyOrdersChartRef.current, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: monthlyLabels,
-          datasets: [{
-            label: 'Orders',
-            data: monthlyOrdersData,
-            backgroundColor: '#3B82F6',
-            borderColor: '#2563EB',
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              label: "Orders",
+              data: monthlyOrdersData,
+              backgroundColor: "#3B82F6",
+              borderColor: "#2563EB",
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setMonthlyOrdersChart(ordersChart);
 
       // Create monthly revenue chart
       const revenueChart = new Chart(monthlyRevenueChartRef.current, {
-        type: 'line',
+        type: "line",
         data: {
           labels: monthlyLabels,
-          datasets: [{
-            label: 'Revenue',
-            data: monthlyRevenueData,
-            backgroundColor: 'rgba(16, 185, 129, 0.2)', 
-            borderColor: '#10B981',
-            borderWidth: 2,
-            tension: 0.1
-          }]
+          datasets: [
+            {
+              label: "Revenue",
+              data: monthlyRevenueData,
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              borderColor: "#10B981",
+              borderWidth: 2,
+              tension: 0.1,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -280,13 +305,13 @@ const RestaurantDashboard = () => {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
-                  return '$' + value;
-                }
-              }
-            }
-          }
-        }
+                callback: function (value) {
+                  return "$" + value;
+                },
+              },
+            },
+          },
+        },
       });
       setMonthlyRevenueChart(revenueChart);
     }
@@ -296,48 +321,52 @@ const RestaurantDashboard = () => {
   const createDailyCharts = () => {
     if (dailyOrdersChartRef.current && dailyRevenueChartRef.current) {
       const { dailyData } = processOrdersData();
-      const dailyLabels = dailyData.map(item => item.day);
-      const dailyOrdersData = dailyData.map(item => item.orders);
-      const dailyRevenueData = dailyData.map(item => item.revenue);
+      const dailyLabels = dailyData.map((item) => item.day);
+      const dailyOrdersData = dailyData.map((item) => item.orders);
+      const dailyRevenueData = dailyData.map((item) => item.revenue);
 
       // Create daily orders chart
       const ordersChart = new Chart(dailyOrdersChartRef.current, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: dailyLabels,
-          datasets: [{
-            label: 'Orders',
-            data: dailyOrdersData,
-            backgroundColor: '#3B82F6',
-            borderColor: '#2563EB',
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              label: "Orders",
+              data: dailyOrdersData,
+              backgroundColor: "#3B82F6",
+              borderColor: "#2563EB",
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       });
       setDailyOrdersChart(ordersChart);
 
       // Create daily revenue chart
       const revenueChart = new Chart(dailyRevenueChartRef.current, {
-        type: 'line',
+        type: "line",
         data: {
           labels: dailyLabels,
-          datasets: [{
-            label: 'Revenue',
-            data: dailyRevenueData,
-            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-            borderColor: '#10B981',
-            borderWidth: 2,
-            tension: 0.1
-          }]
+          datasets: [
+            {
+              label: "Revenue",
+              data: dailyRevenueData,
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              borderColor: "#10B981",
+              borderWidth: 2,
+              tension: 0.1,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -346,13 +375,13 @@ const RestaurantDashboard = () => {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
-                  return '$' + value;
-                }
-              }
-            }
-          }
-        }
+                callback: function (value) {
+                  return "$" + value;
+                },
+              },
+            },
+          },
+        },
       });
       setDailyRevenueChart(revenueChart);
     }
@@ -377,15 +406,15 @@ const RestaurantDashboard = () => {
   // Effect for viewMode changes
   useEffect(() => {
     if (loading) return;
-    
+
     // Always destroy charts before creating new ones
     destroyCharts();
-    
+
     // Use a small timeout to ensure DOM is ready
     const timer = setTimeout(() => {
       initializeCharts();
     }, 0);
-    
+
     return () => clearTimeout(timer);
   }, [viewMode, loading, orders, selectedMonth]);
 
@@ -416,14 +445,20 @@ const RestaurantDashboard = () => {
   const summaryInfo = calculateSummaryInfo();
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading dashboard data...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading dashboard data...
+      </div>
+    );
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6">
+    <div className="bg-amber-50 min-h-screen p-6">
+      <BackButton to="/home" />
       <div className="max-w-6xl mx-auto md:mt-10">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-          <div className="flex flex-col md:flex-row p-6 border-b">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+          {/* Restaurant Header */}
+          <div className="flex flex-col md:flex-row p-6 border-b border-amber-200">
             <div className="md:w-1/3 mb-4 md:mb-0">
               <img
                 src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurantInfo.image}`}
@@ -432,41 +467,41 @@ const RestaurantDashboard = () => {
               />
             </div>
             <div className="md:w-2/3 md:pl-8 flex flex-col justify-center">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-3xl font-bold text-amber-900 mb-2">
                 {restaurantInfo.name}
               </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <p className="text-sm text-blue-500 font-medium">
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                  <p className="text-sm text-amber-600 font-medium">
                     Total Orders
                   </p>
-                  <p className="text-3xl font-bold text-blue-700">
+                  <p className="text-3xl font-bold text-amber-800">
                     {summaryInfo.totalOrders}
                   </p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                  <p className="text-sm text-green-500 font-medium">
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                  <p className="text-sm text-amber-600 font-medium">
                     Total Revenue
                   </p>
-                  <p className="text-3xl font-bold text-green-700">
+                  <p className="text-3xl font-bold text-amber-800">
                     {summaryInfo.totalRevenue}
                   </p>
                 </div>
               </div>
-              
+
               {/* Export Buttons */}
               <div className="flex space-x-4 mt-6">
                 <button
                   onClick={handleExportToPDF}
-                  className="flex items-center px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
                 >
                   <FileText className="mr-2" size={18} />
                   Export to PDF
                 </button>
                 <button
                   onClick={handleExportToExcel}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer"
+                  className="flex items-center px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 transition-colors cursor-pointer"
                 >
                   <FileSpreadsheet className="mr-2" size={18} />
                   Export to Excel
@@ -478,38 +513,46 @@ const RestaurantDashboard = () => {
           {/* Charts section */}
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-700">
+              <h2 className="text-xl font-semibold text-amber-900">
                 Performance Overview
               </h2>
-              
+
               {/* Toggle view button */}
               <div className="flex items-center">
                 <button
                   onClick={toggleViewMode}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors cursor-pointer"
                 >
-                  {viewMode === "monthly" ? "Switch to Daily View" : "Switch to Monthly View"}
+                  {viewMode === "monthly"
+                    ? "Switch to Daily View"
+                    : "Switch to Monthly View"}
                 </button>
-                
+
                 {viewMode === "daily" && (
                   <div className="relative ml-4">
-                    <select 
+                    <select
                       value={selectedMonth}
                       onChange={(e) => handleMonthChange(e.target.value)}
-                      className="border rounded-md px-3 py-2 bg-white cursor-pointer"
+                      className="border border-amber-300 rounded-md px-3 py-2 bg-white text-amber-900 cursor-pointer"
                     >
-                      <option value="Jan">January</option>
-                      <option value="Feb">February</option>
-                      <option value="Mar">March</option>
-                      <option value="Apr">April</option>
-                      <option value="May">May</option>
-                      <option value="Jun">June</option>
-                      <option value="Jul">July</option>
-                      <option value="Aug">August</option>
-                      <option value="Sep">September</option>
-                      <option value="Oct">October</option>
-                      <option value="Nov">November</option>
-                      <option value="Dec">December</option>
+                      {[
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                      ].map((month) => (
+                        <option key={month} value={month}>
+                          {month}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -519,8 +562,8 @@ const RestaurantDashboard = () => {
             {viewMode === "monthly" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Orders Chart */}
-                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-amber-900 mb-2">
                     Monthly Orders
                   </h3>
                   <div className="h-64">
@@ -529,8 +572,8 @@ const RestaurantDashboard = () => {
                 </div>
 
                 {/* Revenue Chart */}
-                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-amber-900 mb-2">
                     Monthly Revenue
                   </h3>
                   <div className="h-64">
@@ -540,12 +583,11 @@ const RestaurantDashboard = () => {
               </div>
             )}
 
-            {/* Daily View */}
             {viewMode === "daily" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Daily Orders Chart */}
-                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-amber-900 mb-2">
                     Daily Orders - {selectedMonth}
                   </h3>
                   <div className="h-64">
@@ -554,8 +596,8 @@ const RestaurantDashboard = () => {
                 </div>
 
                 {/* Daily Revenue Chart */}
-                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
+                  <h3 className="text-lg font-medium text-amber-900 mb-2">
                     Daily Revenue - {selectedMonth}
                   </h3>
                   <div className="h-64">
