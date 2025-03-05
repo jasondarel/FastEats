@@ -1,57 +1,16 @@
-import React, { useState, useEffect } from "react";
-import {
-  FaUtensils,
-  FaMapMarkerAlt,
-  FaSave,
-  FaExclamationCircle,
-} from "react-icons/fa";
+import React from "react";
+import { FaUtensils, FaMapMarkerAlt, FaSave } from "react-icons/fa";
 
 const RestaurantDetailsForm = ({
   restaurantName,
   setRestaurantName,
   restaurantAddress,
   setRestaurantAddress,
-  bcaAccount,
-  setBcaAccount,
-  gopay,
-  setGopay,
-  dana,
-  setDana,
   isChanged,
   onSubmit,
 }) => {
-  const [errors, setErrors] = useState({
-    bcaAccount: "",
-    gopay: "",
-    dana: "",
-  });
-
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  // Validate form fields
-  useEffect(() => {
-    let newErrors = {
-      bcaAccount: "",
-      gopay: "",
-      dana: "",
-    };
-
-    setErrors(newErrors);
-
-    // Check if form is valid and changes were made
-    const hasErrors = Object.values(newErrors).some((error) => error !== "");
-    setIsFormValid(isChanged && !hasErrors);
-  }, [bcaAccount, gopay, dana, isChanged]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isFormValid) {
-      onSubmit(e);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={onSubmit} className="space-y-5">
       <div>
         <label className="block text-gray-700 font-medium mb-1">
           Restaurant Name
@@ -68,7 +27,6 @@ const RestaurantDetailsForm = ({
           />
         </div>
       </div>
-
       <div>
         <label className="block text-gray-700 font-medium mb-1">
           Restaurant Address
@@ -85,12 +43,11 @@ const RestaurantDetailsForm = ({
           />
         </div>
       </div>
-
       <button
         type="submit"
-        disabled={!isFormValid}
+        disabled={!isChanged}
         className={`w-full p-3 text-white text-lg font-semibold rounded-lg transition flex items-center justify-center ${
-          isFormValid
+          isChanged
             ? "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer"
             : "bg-gray-400 cursor-not-allowed"
         }`}
