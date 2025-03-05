@@ -26,7 +26,7 @@ const getOrderByIdService = async(orderId) => {
 
 const getOrdersByRestaurantIdService = async(restaurantId) => {
     const result = await pool.query(
-        "SELECT * FROM orders WHERE restaurant_id = $1 AND status = 'Preparing'",
+        "SELECT * FROM orders WHERE restaurant_id = $1 AND (status = 'Preparing' OR status = 'Completed')",
         [restaurantId]
     );
     return result.rows;
