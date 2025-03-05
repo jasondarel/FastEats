@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import RegisterForm from "../Register/components/RegisterForm";
 import AuthLayout from "./components/AuthLayout";
-import registerService from "../../../service/userServices/registerService";
+import registerService from "../../service/userServices/registerService";
 
 const Register = () => {
   const [errors, setErrors] = useState({});

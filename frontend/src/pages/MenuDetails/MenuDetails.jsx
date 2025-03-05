@@ -9,7 +9,7 @@ import OrderButtons from "./components/OrderButtons";
 import LoadingState from "./components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
-import insertOrderService from "../../../service/restaurantServices/menuDetailsService";
+import insertOrderService from "../../service/restaurantService/menuDetailsService";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 

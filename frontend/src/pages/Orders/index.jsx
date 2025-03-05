@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
-import getOrderHistoryService from "../../../service/orderServices/ordersService";
+import getOrderHistoryService from "../../service/orderServices/ordersService";
 import SortButton from "../../components/SortButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";

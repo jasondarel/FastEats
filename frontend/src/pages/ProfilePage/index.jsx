@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getProfileService } from "../../../service/userServices/profileService";
+import { getProfileService } from "../../service/userServices/profileService";
 import ProfileForm from "./components/ProfileForm";
 import PasswordForm from "./components/PasswordForm";
 import BackButton from "../../components/BackButton";

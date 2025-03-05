@@ -4,7 +4,7 @@ import {
   getRestaurantData,
   updateRestaurant,
   toggleRestaurantStatus,
-} from "../../../service/restaurantServices/manageRestaurantService";
+} from "../../service/restaurantService/manageRestaurantService";
 import Sidebar from "../../components/Sidebar";
 import RestaurantStatusToggle from "./components/RestaurantStatusToggle";
 import RestaurantImageUploader from "./components//RestaurantImageUploader";

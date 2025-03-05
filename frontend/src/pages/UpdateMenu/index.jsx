@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   updateMenuService,
   deleteMenuService,
-} from "../../../service/restaurantServices/updateMenuService";
+} from "../../service/restaurantService/updateMenuService";
 import MenuForm from "./components/MenuForm";
 import CategorySelector from "./components/CategorySelector";
 import ImageUploader from "./components/ImageUploader";

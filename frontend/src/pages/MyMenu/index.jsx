@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import createNewMenuService from "../../../service/restaurantServices/myMenuService";
+import createNewMenuService from "../../service/restaurantService/myMenuService";
 import Swal from "sweetalert2";
 import SearchBar from "../../components/SearchBar";
 import BackButton from "../../components/BackButton";
