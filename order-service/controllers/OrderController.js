@@ -4,6 +4,7 @@ import {
   cancelOrderService,
   completeOrderService,
   createOrderService,
+  getCompletedOrdersByRestaurantIdService,
   getOrderByIdService,
   getOrdersByRestaurantIdService,
   getSnapTokenService,
@@ -609,9 +610,8 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       });
     }
     
-    // Get orders for the restaurant
-    const orders = await getOrdersByRestaurantIdService(restaurant_id);
-    
+    const orders = await getCompletedOrdersByRestaurantIdService(restaurant_id);
+    console.log("Orders: ", orders);
     if (orders.length === 0) {
       return res.status(404).json({ 
         success: false, 
