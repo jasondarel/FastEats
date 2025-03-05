@@ -63,6 +63,7 @@ const RestaurantDashboard = () => {
         },
       })
       const data = await response.json();
+      console.log("Data: ", data);
       setRestaurantName(data.restaurant.restaurant_name);
       setRestaurantImage(data.restaurant.restaurant_image);
     } catch(err) {
@@ -183,16 +184,22 @@ const RestaurantDashboard = () => {
 
   // Calculate restaurant summary info
   const calculateSummaryInfo = () => {
+    if (!orders || !Array.isArray(orders)) {
+      console.warn("Orders data is missing or invalid:", orders);
+      return { totalOrders: 0, totalRevenue: "$0" };
+    }
+  
+    console.log("Orders: ", orders.length);
     if (orders.length === 0) return { totalOrders: 0, totalRevenue: "$0" };
-
+  
     let totalOrderQuantity = 0;
     let totalRevenue = 0;
-
+  
     orders.forEach(order => {
       totalOrderQuantity += order.item_quantity;
       totalRevenue += parseFloat(order.menu.menu_price) * order.item_quantity;
     });
-
+  
     return {
       totalOrders: totalOrderQuantity,
       totalRevenue: `$${totalRevenue.toFixed(2)}`,
