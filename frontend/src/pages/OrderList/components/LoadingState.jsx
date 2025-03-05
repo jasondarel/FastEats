@@ -1,12 +1,13 @@
-// src/components/UI/LoadingState.jsx
 import React from "react";
 
-const LoadingState = ({ message = "Loading..." }) => {
+const LoadingState = () => {
   return (
-    <div className="flex justify-center items-center w-full h-32">
-      <div className="bg-yellow-100 p-6 rounded-lg shadow-md">
-        <p className="text-xl text-yellow-800">{message}</p>
-      </div>
+    <div className="flex flex-col md:flex-row bg-yellow-50 min-h-screen">
+      <main className="flex-1 p-5 flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-amber-500 border-t-4 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </main>
     </div>
   );
 };

@@ -59,14 +59,15 @@ const OrderList = () => {
     fetchOrders();
   }, []);
 
+  if (loading) {
+    return <LoadingState />;
+  }
+
   return (
     <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 h-screen overflow-hidden bg-yellow-50">
       <Sidebar />
       <div className="flex flex-col flex-grow items-center w-full overflow-auto md:px-6 lg:px-8">
         <OrderListHeader />
-
-        {/* Loading state */}
-        {loading && <LoadingState message="Loading orders..." />}
 
         {/* Error state */}
         {error && !loading && <ErrorState message={error} />}

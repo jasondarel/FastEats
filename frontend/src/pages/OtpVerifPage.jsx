@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import BackButton from "../components/BackButton";
 
 const OtpVerification = () => {
   const navigate = useNavigate();
@@ -115,14 +115,15 @@ const OtpVerification = () => {
     }
   };
 
-  const handleChange = (index, value) => {
-    const newOtp = [...otp];
+  const handleChange = (index, e) => {
+    const value = e.target.value;
 
+    // Handle digit input
     if (/^\d?$/.test(value)) {
+      const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
 
-      // Move forward if value is entered and not last input
       if (value !== "" && index < 5) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -130,39 +131,59 @@ const OtpVerification = () => {
   };
 
   const handleKeyDown = (index, e) => {
-    // Backspace behavior
-    if (e.key === "Backspace") {
-      // If current input is empty, move to previous input
-      if (otp[index] === "" && index > 0) {
+    // Handle backspace to remove digit and shift others
+    if (e.key === "Backspace" && otp[index] === "") {
+      if (index > 0) {
+        // Move focus to previous input
         inputRefs.current[index - 1]?.focus();
       }
-      // If current input is not empty, clear it
-      else if (otp[index] !== "") {
-        const newOtp = [...otp];
-        newOtp[index] = "";
-        setOtp(newOtp);
+    } else if (e.key === "Backspace") {
+      // When backspace is pressed on a non-empty input
+      const newOtp = [...otp];
+
+      // Remove the current digit and shift subsequent digits
+      for (let i = index; i < 5; i++) {
+        newOtp[i] = newOtp[i + 1];
       }
+      newOtp[5] = ""; // Clear the last digit
+
+      setOtp(newOtp);
     }
   };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen bg-gray-100"
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/delivery.jpeg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <BackButton to="/login" />
-      <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
-          OTP Verification
-        </h2>
+    <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 p-4">
+      <div
+        className="absolute top-4 left-4 cursor-pointer group"
+        onClick={() => navigate("/login")}
+      >
+        <div className="p-2 bg-white/50 rounded-full hover:bg-white/70 transition-all duration-300 ease-in-out">
+          <ArrowLeft
+            className="text-yellow-600 group-hover:translate-x-[-4px] transition-transform"
+            size={24}
+          />
+        </div>
+      </div>
 
-        <div className="flex justify-center gap-3 my-4">
+      <div
+        className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 border border-yellow-100 
+        transform transition-all duration-500 hover:scale-[1.02]"
+      >
+        <div className="flex justify-center mb-6">
+          <ShieldCheck className="text-yellow-600 animate-pulse" size={64} />
+        </div>
+
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
+          Verify Your Account
+        </h2>
+        <p className="text-center text-gray-500 mb-2">
+          Enter the 6-digit code sent to Your Email...
+        </p>
+        <p className="text-center text-yellow-600 font-semibold mb-4">
+          {emailQuery || ""}
+        </p>
+
+        <div className="flex justify-center gap-3 mb-6">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -170,16 +191,23 @@ const OtpVerification = () => {
               type="text"
               maxLength="1"
               value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
+              onChange={(e) => handleChange(index, e)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-12 h-12 border-2 border-gray-300 rounded-md text-center text-xl font-semibold focus:border-blue-500 focus:ring focus:ring-blue-200 transition"
+              className="w-12 h-14 border-2 border-yellow-200 rounded-lg text-center 
+              text-2xl font-bold text-yellow-800 
+              focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent 
+              transition-all duration-300 ease-in-out 
+              hover:shadow-md hover:border-yellow-400"
             />
           ))}
         </div>
 
         <button
           onClick={verifyOtp}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-md transition"
+          className="w-full py-3 bg-yellow-600 hover:bg-yellow-700 text-white 
+          font-bold rounded-lg transition-all duration-300 ease-in-out 
+          transform hover:scale-[1.02] active:scale-[0.98] 
+          shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
         >
           Verify OTP
         </button>

@@ -1,16 +1,10 @@
 import React from "react";
+import LoadingState from "./LoadingState";
 
 const OrderStateMessage = ({ type, message, subMessage }) => {
   switch (type) {
     case "loading":
-      return (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-yellow-500 border-t-transparent mb-2"></div>
-          <p className="text-yellow-600 font-medium">
-            {message || "Loading orders..."}
-          </p>
-        </div>
-      );
+      return <LoadingState />;
     case "error":
       return (
         <div className="text-center py-8 text-red-500">
