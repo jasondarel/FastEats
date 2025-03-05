@@ -8,7 +8,8 @@ import BackButton from "../../components/BackButton";
 import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
 import CategoryFilter from "../../components/CategoryFilter";
-import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
+import AlphabetSort from "../../components/AlphabetSort";
+import LoadingState from "./components/LoadingState"; // Import LoadingState
 import { handleApiError } from "./components/HandleAlert";
 
 const MyMenuPage = () => {
@@ -117,8 +118,9 @@ const MyMenuPage = () => {
         : b.menu_name.localeCompare(a.menu_name);
     });
 
+  // Replace the previous loading state with LoadingState component
   if (isLoading) {
-    return <div className="text-center p-5">Loading menu...</div>;
+    return <LoadingState />;
   }
 
   return (
