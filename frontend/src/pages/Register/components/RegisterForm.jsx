@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ErrorMessage from "./ErrorMessage";
-import ImageUploader from "./ImageUploader"; // You'll need to create this component
+import ImageUploader from "./ImageUploader";
 
 const RegisterForm = ({ onRegister, errors, userType }) => {
   const [name, setName] = useState("");
@@ -54,107 +54,174 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       <h2 className="text-2xl font-semibold text-center mb-6">
         Register as {userType === "user" ? "Customer" : "Seller"}
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-          <ErrorMessage error={errors.name} />
-        </div>
 
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-          <ErrorMessage error={errors.email} />
-        </div>
+      {userType === "user" ? (
+        // Single column layout for user registration
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <ErrorMessage error={errors.name} />
+          </div>
 
-        {/* Seller-specific fields */}
-        {userType === "seller" && (
-          <>
-            <div>
-              <input
-                type="text"
-                placeholder="Restaurant Name"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                required
-                className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              />
-              <ErrorMessage error={errors.restaurantName} />
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <ErrorMessage error={errors.email} />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <ErrorMessage error={errors.password} />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+            <ErrorMessage error={errors.confirmPassword} />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
+          >
+            Register
+          </button>
+          <ErrorMessage error={errors.general} center />
+        </form>
+      ) : (
+        // Two-column layout for seller registration
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Column - User Information */}
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.name} />
+              </div>
+
+              <div>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.email} />
+              </div>
+
+              <div>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.password} />
+              </div>
+
+              <div>
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.confirmPassword} />
+              </div>
             </div>
 
-            <div>
-              <input
-                type="text"
-                placeholder="Restaurant Address"
-                value={restaurantAddress}
-                onChange={(e) => setRestaurantAddress(e.target.value)}
-                required
-                className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              />
-              <ErrorMessage error={errors.restaurantAddress} />
+            {/* Right Column - Restaurant Information */}
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Restaurant Name"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.restaurantName} />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  placeholder="Restaurant Address"
+                  value={restaurantAddress}
+                  onChange={(e) => setRestaurantAddress(e.target.value)}
+                  required
+                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <ErrorMessage error={errors.restaurantAddress} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Restaurant Image
+                </label>
+                <ImageUploader
+                  imagePreview={imagePreview}
+                  onImageChange={handleImageChange}
+                  onImageRemove={() => {
+                    setImagePreview(null);
+                    setRestaurantImage(null);
+                  }}
+                  error={errors.image}
+                />
+              </div>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Restaurant Image
-              </label>
-              <ImageUploader
-                imagePreview={imagePreview}
-                onImageChange={handleImageChange}
-                onImageRemove={() => {
-                  setImagePreview(null);
-                  setRestaurantImage(null);
-                }}
-                error={errors.image}
-              />
-            </div>
-          </>
-        )}
+          <button
+            type="submit"
+            className="w-full p-3 mt-6 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
+          >
+            Register
+          </button>
+          <ErrorMessage error={errors.general} center />
+        </form>
+      )}
 
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-          <ErrorMessage error={errors.password} />
-        </div>
-
-        <div>
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-          <ErrorMessage error={errors.confirmPassword} />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition hover:cursor-pointer"
-        >
-          Register
-        </button>
-        <ErrorMessage error={errors.general} center />
-      </form>
       <p className="mt-4 text-center">
         Already have an account?{" "}
         <Link

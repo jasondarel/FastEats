@@ -103,7 +103,7 @@ const Register = () => {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout isSellerRegister={userType === "seller"}>
       <div className="mb-6">
         <div className="flex border-b">
           <button
