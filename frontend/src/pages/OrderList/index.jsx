@@ -85,10 +85,7 @@ const OrderList = () => {
                 order.order_id ||
                 `order-${Math.random().toString(36).substr(2, 9)}`;
 
-              return <OrderCard 
-              key={orderKey} 
-              order={order}
-               />;
+              return <OrderCard key={orderKey} order={order} />;
             })}
           </div>
         )}

@@ -108,9 +108,7 @@ const MyMenuPage = () => {
       if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
       if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-      return (
-        matchesSearch && matchesCategory && matchesPrice
-      );
+      return matchesSearch && matchesCategory && matchesPrice;
     })
     .sort((a, b) => {
       // Only sort by name ascending or descending
@@ -176,7 +174,7 @@ const MyMenuPage = () => {
 
         <button
           onClick={() => setShowCreateMenuForm(true)}
-          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105"
+          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105 hover:cursor-pointer"
         >
           + Add Menu
         </button>
