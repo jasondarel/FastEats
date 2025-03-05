@@ -23,12 +23,6 @@ const ManageRestaurant = () => {
   const [isChanged, setIsChanged] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [bcaAccount, setBcaAccount] = useState("");
-  const [gopay, setGopay] = useState("");
-  const [dana, setDana] = useState("");
-  const [initialBcaAccount, setInitialBcaAccount] = useState("");
-  const [initialGopay, setInitialGopay] = useState("");
-  const [initialDana, setInitialDana] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,7 +30,7 @@ const ManageRestaurant = () => {
     const fetchRestaurantData = async () => {
       try {
         const response = await getRestaurantData(token);
-        const { restaurant, user_payments } = response.data;
+        const { restaurant } = response.data;
         if (restaurant) {
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
@@ -44,15 +38,6 @@ const ManageRestaurant = () => {
           setInitialRestaurantAddress(restaurant.restaurant_address);
           setIsOpen(restaurant.is_open || false);
           setInitialIsOpen(restaurant.is_open || false);
-
-          if (user_payments) {
-            setBcaAccount(user_payments.bank_bca);
-            setGopay(user_payments.gopay);
-            setDana(user_payments.dana);
-            setInitialBcaAccount(user_payments.bank_bca);
-            setInitialGopay(user_payments.gopay);
-            setInitialDana(user_payments.dana);
-          }
 
           const imageUrl = restaurant.restaurant_image
             ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
@@ -87,10 +72,7 @@ const ManageRestaurant = () => {
       restaurantName !== initialRestaurantName ||
       restaurantAddress !== initialRestaurantAddress ||
       isOpen !== initialIsOpen ||
-      imageFile ||
-      bcaAccount !== initialBcaAccount ||
-      gopay !== initialGopay ||
-      dana !== initialDana
+      imageFile
     ) {
       setIsChanged(true);
     } else {
@@ -104,12 +86,6 @@ const ManageRestaurant = () => {
     isOpen,
     initialIsOpen,
     imageFile,
-    bcaAccount,
-    gopay,
-    dana,
-    initialBcaAccount,
-    initialGopay,
-    initialDana,
   ]);
 
   const handleUpdateRestaurant = async (e) => {
@@ -127,9 +103,7 @@ const ManageRestaurant = () => {
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
       formData.append("isOpen", isOpen);
-      formData.append("bcaAccount", bcaAccount);
-      formData.append("gopay", gopay);
-      formData.append("dana", dana);
+      
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
       } else if (formDataState && formDataState.restaurantImage) {
@@ -155,9 +129,6 @@ const ManageRestaurant = () => {
       setInitialRestaurantName(restaurantName);
       setInitialRestaurantAddress(restaurantAddress);
       setInitialIsOpen(isOpen);
-      setInitialBcaAccount(bcaAccount);
-      setInitialGopay(gopay);
-      setInitialDana(dana);
       setIsChanged(false);
     } catch (error) {
       if (error.response) {
