@@ -16,7 +16,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
     // Create FormData object
     const formData = new FormData();
     formData.append("menuName", menuName);
-    formData.append("menuDesc", menuDesc);
+    formData.append("menuDescription", menuDesc);
     formData.append("menuCategory", selectedCategory);
     formData.append("menuPrice", menuPrice);
     if (menuImage) {
