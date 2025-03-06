@@ -40,7 +40,7 @@ const RestaurantDashboard = () => {
   const fetchOrderLists = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/order/orders-by-restaurant",
+        "http://localhost:5000/order/restaurant-dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,
