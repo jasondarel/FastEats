@@ -288,30 +288,50 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
           <nav className="flex-grow">
             <ul className="space-y-2">
-              <li>
-                <Link
-                  to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  My Restaurant
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/orders"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
-                >
-                  My Orders
-                </Link>
-              </li>
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/home"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Home
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/orders"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    My Orders
+                  </Link>
+                </li>
+              )}
+
+              {role === "seller" && (
+                <li>
+                  <Link
+                    to="/restaurant-dashboard"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+              )}
+
+              {role == "seller" && (
+                <li>
+                  <Link
+                    to="/manage-restaurant"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Manage Restaurant
+                  </Link>
+                </li>
+              )}
+
               {role === "seller" && (
                 <li>
                   <Link
@@ -319,16 +339,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
                     className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
                   >
                     Order List
-                  </Link>
-                </li>
-              )}
-              {role === "seller" && (
-                <li>
-                  <Link
-                    to="/restaurant-dashboard"
-                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
-                  >
-                    Restaurant Dashboard
                   </Link>
                 </li>
               )}
@@ -385,7 +395,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
             {/* Profile dropdown menu */}
             {isProfileDropupOpen && (
-              <div className="absolute bottom-full left-0 w-full mb-2 bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
+              <div className="absolute bottom-full left-0 w-full bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
                 <Link
                   to="/profile"
                   onClick={() => setIsProfileDropupOpen(false)}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import Chart from "chart.js/auto";
+import Sidebar from "../components/Sidebar";
 import BackButton from "../components/BackButton";
 
 const RestaurantDashboard = () => {
@@ -454,6 +455,7 @@ const RestaurantDashboard = () => {
 
   return (
     <div className="bg-amber-50 min-h-screen p-6">
+      <Sidebar />
       <BackButton to="/home" />
       <div className="max-w-6xl mx-auto md:mt-10">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">

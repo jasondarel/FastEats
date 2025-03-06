@@ -23,7 +23,9 @@ const Login = () => {
 
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then((data) => {
+      .then((response) => {
+        console.log("Login response:", response);
+
         Swal.fire({
           title: "Login Successful",
           text: "You are now logged in",
@@ -31,9 +33,36 @@ const Login = () => {
           confirmButtonText: "Ok",
           confirmButtonColor: "#efb100",
         });
-        navigate("/");
+
+        // Decode the JWT token to get user info
+        // JWT tokens have 3 parts separated by periods
+        // The middle part (payload) is what we need
+        if (response.token) {
+          try {
+            // Extract and decode the payload part of the JWT
+            const payload = response.token.split(".")[1];
+            const decodedPayload = JSON.parse(atob(payload));
+            console.log("Decoded token payload:", decodedPayload);
+
+            // Check if user is a seller
+            if (decodedPayload && decodedPayload.role === "seller") {
+              console.log(
+                "Seller detected, navigating to restaurant dashboard"
+              );
+              navigate("/restaurant-dashboard");
+              return;
+            }
+          } catch (error) {
+            console.error("Error decoding JWT token:", error);
+          }
+        }
+
+        // Default navigation if not a seller or if there was an error
+        console.log("Navigating to home");
+        navigate("/home");
       })
       .catch((error) => {
+        // Error handling remains the same
         if (error.status === 401) {
           MySwal.fire({
             title: "Error",
@@ -42,7 +71,9 @@ const Login = () => {
             confirmButtonText: "Ok",
             confirmButtonColor: "#ef4444",
           });
-          navigate(`/otp-verification?token=${error.data.token}&email=${email}`);
+          navigate(
+            `/otp-verification?token=${error.data.token}&email=${email}`
+          );
           return;
         }
 
@@ -76,13 +107,14 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <SubmitButton text={loading ? "Logging in..." : "Login"} disabled={loading} />
+          <SubmitButton
+            text={loading ? "Logging in..." : "Login"}
+            disabled={loading}
+          />
         </form>
 
         {error && (
-          <p className="text-red-500 text-sm mt-2 text-center">
-            {error}
-          </p>
+          <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
         )}
 
         <AuthLink
