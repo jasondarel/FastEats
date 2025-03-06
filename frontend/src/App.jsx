@@ -11,7 +11,7 @@ import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
-import MenuDetails from "./pages/MenuDetails/MenuDetails";
+import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import Orders from "./pages/Orders";
@@ -34,7 +34,8 @@ function App() {
           <Route path="/" element={<Navigate to="/home" />} />
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />us
+          <Route path="/register" element={<Register />} />
+          us
           {/* Protected Routes (Require Login) */}
           <Route
             path="/home"
@@ -132,7 +133,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route path="/thanks" element={<Thanks />} />
           <Route
             path="/order-list"
@@ -143,7 +143,6 @@ function App() {
             }
           />
           <Route path="/pay-now/:orderId" element={<PayNow />} />
-
           <Route
             path="/restaurant-dashboard"
             element={
@@ -152,7 +151,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/order-summary/:order_id"
             element={
@@ -161,10 +159,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          <Route 
-          path="/otp-verification" 
-          element={<OtpVerifPage />} />
+          <Route path="/otp-verification" element={<OtpVerifPage />} />
         </Routes>
       </div>
     </div>

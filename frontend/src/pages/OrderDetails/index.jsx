@@ -16,7 +16,7 @@ import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
 import Swal from "sweetalert2";
-import LoadingState from "./components/LoadingState";
+import LoadingState from "../../components/LoadingState";
 
 const OrderDetails = () => {
   const { orderId } = useParams();

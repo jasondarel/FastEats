@@ -6,7 +6,7 @@ import MenuImage from "./components/MenuImage";
 import MenuInfo from "./components/MenuInfo";
 import QuantitySelector from "./components/QuantitySelector";
 import OrderButtons from "./components/OrderButtons";
-import LoadingState from "./components/LoadingState";
+import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
