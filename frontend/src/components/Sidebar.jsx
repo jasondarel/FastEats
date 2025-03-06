@@ -3,9 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
+import { useDispatch } from "react-redux"; // Add this import
+import { logout } from "../app/auth/authSlice"; // Add this import - adjust path if needed
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Add this
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   // Changed to include medium screens (width < 1024px)
@@ -105,7 +108,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
       } catch (error) {
         console.error("Error fetching user:", error);
       }
-    }
+    };
     fetchUser();
     fetchUserProfile();
   }, []);
@@ -134,7 +137,9 @@ const Sidebar = ({ isTaskbarOpen }) => {
       cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.removeItem("token");
+        // Use Redux action to logout
+        dispatch(logout());
+
         setIsProfileDropupOpen(false);
         MySwal.fire({
           title: "Logged out!",
@@ -307,7 +312,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   My Orders
                 </Link>
               </li>
-              {role === "seller" &&
+              {role === "seller" && (
                 <li>
                   <Link
                     to="/order-list"
@@ -316,8 +321,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
                     Order List
                   </Link>
                 </li>
-              }
-              {role === "seller" && 
+              )}
+              {role === "seller" && (
                 <li>
                   <Link
                     to="/restaurant-dashboard"
@@ -326,7 +331,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                     Restaurant Dashboard
                   </Link>
                 </li>
-              }
+              )}
             </ul>
           </nav>
 
