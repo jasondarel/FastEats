@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaLock } from "react-icons/fa";
-import { changePasswordService } from "../../../../service/userServices/profileService";
+import { changePasswordService } from "../../../service/userServices/profileService";
 
 const PasswordForm = () => {
   const [changePassword, setChangePassword] = useState({

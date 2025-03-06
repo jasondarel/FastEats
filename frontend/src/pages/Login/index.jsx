@@ -1,7 +1,6 @@
-// pages/Login.jsx
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import loginService from "../../service/userServices/loginService";
 import BackgroundImage from "./components/BackgroundImage";
 import AuthCard from "./components/AuthCard";
 import FormInput from "./components/FormInput";
@@ -9,54 +8,52 @@ import SubmitButton from "./components/SubmitButton";
 import AuthLink from "./components/AuthLink";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { loginUser } from "../../app/auth/authThunk";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
   const MySwal = withReactContent(Swal);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrors({});
 
-    try {
-        const data = await loginService(email, password);
+    dispatch(loginUser({ email, password }))
+      .unwrap()
+      .then((data) => {
         Swal.fire({
-        title: "Login Successful",
-        text: "You are now logged in",
-        icon: "success",
-        confirmButtonText: "Ok",
-        confirmButtonColor: "#efb100",
-        });  
-      localStorage.setItem("token", data.data.token);
-      navigate("/");
-    } catch (error) {
-        if(error.status == 401) {
+          title: "Login Successful",
+          text: "You are now logged in",
+          icon: "success",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#efb100",
+        });
+        navigate("/");
+      })
+      .catch((error) => {
+        if (error.status === 401) {
           MySwal.fire({
             title: "Error",
             text: "Your Email is not verified yet. Please verify your email first.",
             icon: "error",
             confirmButtonText: "Ok",
             confirmButtonColor: "#ef4444",
-          })
-          const {token} = error.data;
-          navigate(`/otp-verification?token=${token}&email=${email}`);
+          });
+          navigate(`/otp-verification?token=${error.data.token}&email=${email}`);
           return;
         }
-        
-        Object.keys(errors).forEach((key) => {
-          MySwal.fire({
-            title: "Error",
-            text: errors[key],
-            icon: "error",
-            confirmButtonText: "Ok",
-            confirmButtonColor: "#ef4444",
-          });
+
+        MySwal.fire({
+          title: "Login Failed",
+          text: error.message || "Invalid credentials",
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
         });
-        setErrors(error.data.errors);
-    }
+      });
   };
 
   return (
@@ -70,7 +67,6 @@ const Login = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            error={errors.email}
           />
 
           <FormInput
@@ -78,15 +74,14 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
           />
 
-          <SubmitButton text="Login" />
+          <SubmitButton text={loading ? "Logging in..." : "Login"} disabled={loading} />
         </form>
 
-        {errors.general && (
+        {error && (
           <p className="text-red-500 text-sm mt-2 text-center">
-            {errors.general}
+            {error}
           </p>
         )}
 
