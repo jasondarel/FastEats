@@ -6,7 +6,7 @@ import BackButton from "../../components/BackButton";
 import CategoryFilter from "../../components/CategoryFilter";
 import MenuItemGrid from "./components/MenuItemGrid";
 import ErrorMessage from "./components/ErrorMessage";
-import LoadingIndicator from "./components/LoadingIndicator";
+import LoadingState from "../../components/LoadingState";
 import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
 import useMenuData from "./components/useMenuData";
 
@@ -52,7 +52,7 @@ const MenuPage = () => {
     });
 
   if (isLoading) {
-    return <LoadingIndicator message="Loading menu..." />;
+    return <LoadingState />;
   }
 
   return (

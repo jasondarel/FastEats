@@ -5,6 +5,7 @@ import getOrderHistoryService from "../../service/orderServices/ordersService";
 import SortButton from "../../components/SortButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";
+import LoadingState from "../../components/LoadingState";
 import YellowBackgroundLayout from "./components/Background";
 
 const Orders = () => {
@@ -143,7 +144,7 @@ const Orders = () => {
 
         {/* Scrollable Order List */}
         <div className="w-full max-h-[500px] overflow-y-auto pr-2 overflow-x-hidden">
-          {loading && <OrderStateMessage type="loading" />}
+          {loading && <LoadingState />}
 
           {error && <OrderStateMessage type="error" subMessage={error} />}
 

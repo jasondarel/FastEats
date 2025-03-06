@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import OrderCard from "./components/OrderCard";
 import OrderListHeader from "./components/OrderListHeader";
-import LoadingState from "./components/LoadingState";
+import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import EmptyState from "./components/EmptyState";
 import { Navigate } from "react-router-dom";

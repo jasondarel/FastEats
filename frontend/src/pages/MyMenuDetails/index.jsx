@@ -9,7 +9,7 @@ import MenuStats from "./components/MenuStats";
 import EditMenuForm from "./components/EditMenuForm";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import LoadingState from "./components/LoadingState";
+import LoadingState from "../../components/LoadingState";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();

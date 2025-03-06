@@ -1,6 +1,6 @@
 import React from "react";
 import { FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
-import { saveProfileService } from "../../../../service/userServices/profileService";
+import { saveProfileService } from "../../../service/userServices/profileService";
 import Swal from "sweetalert2";
 
 const ProfileForm = ({

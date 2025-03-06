@@ -1,5 +1,5 @@
 import React from "react";
-import LoadingState from "./LoadingState";
+import LoadingState from "../../../components/LoadingState";
 
 const OrderStateMessage = ({ type, message, subMessage }) => {
   switch (type) {
