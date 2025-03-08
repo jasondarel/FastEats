@@ -729,7 +729,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
             }
           }
         );
-        
         return {
           ...order,
           menu: menu.data.menu,
@@ -737,7 +736,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
         };
       })
     );
-
     return res.status(200).json({
       success: true,
       orders: ordersWithDetails,
