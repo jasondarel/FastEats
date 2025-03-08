@@ -1,11 +1,12 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const registerService = async (formData, userType = "user") => {
   // Adjust endpoint based on user type
   const endpoint =
     userType === "seller"
-      ? "http://localhost:5000/user/register/seller"
-      : "http://localhost:5000/user/register";
+      ? `${API_URL}/user/register/seller`
+      : `${API_URL}/user/register`;
 
   // Set proper headers for FormData
   const config = {

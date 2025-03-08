@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const cancelOrderService = async (orderId, token) => {
   const response = await axios.patch(
-    `http://localhost:5000/order/cancel-order/${orderId}`,
+    `${API_URL}/order/cancel-order/${orderId}`,
     {},
     {
       headers: {
@@ -21,7 +22,7 @@ const payConfirmationService = async (
   token
 ) => {
   const response = await axios.post(
-    "http://localhost:5000/order/pay-order-confirmation",
+    `${API_URL}/order/pay-order-confirmation`,
     {
       order_id: orderId,
       itemQuantity: itemQuantity,
@@ -39,7 +40,7 @@ const payConfirmationService = async (
 
 const saveSnapService = async (orderId, snapToken) => {
   const response = await axios.post(
-    "http://localhost:5000/order/save-snap-token",
+    `${API_URL}/order/save-snap-token`,
     {
       order_id: orderId,
       snap_token: snapToken,
@@ -50,14 +51,14 @@ const saveSnapService = async (orderId, snapToken) => {
 
 const checkMidtransStatusService = async (orderId) => {
   const statusResponse = await axios.get(
-    `http://localhost:5000/order/check-midtrans-status?order_id=${orderId}`
+    `${API_URL}/order/check-midtrans-status?order_id=${orderId}`
   );
   return statusResponse;
 };
 
 const getOrderDetailService = async (orderId, token) => {
   const response = await axios.get(
-    `http://localhost:5000/order/orders/${orderId}`,
+    `${API_URL}order/orders/${orderId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

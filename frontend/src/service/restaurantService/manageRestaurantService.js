@@ -1,7 +1,5 @@
-// services/restaurantService.js
 import axios from "axios";
-
-const API_URL = "http://localhost:5000/restaurant";
+import { API_URL } from "../../config/api";
 
 const getRestaurantData = async (token) => {
   return await axios.get(`${API_URL}/restaurant`, {

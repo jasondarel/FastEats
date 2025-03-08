@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const getOrderHistoryService = async (token) => {
-  const response = await axios.get("http://localhost:5000/order/orders", {
+  const response = await axios.get(`${API_URL}/order/orders`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",

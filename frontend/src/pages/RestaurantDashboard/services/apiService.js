@@ -1,6 +1,4 @@
-// services/apiService.js
-
-const API_BASE_URL = "http://localhost:5000";
+import { API_URL } from "../../../config/api";
 
 /**
  * Fetch restaurant information
@@ -9,7 +7,7 @@ const API_BASE_URL = "http://localhost:5000";
  */
 export const fetchRestaurantInfo = async (token) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/restaurant/restaurant`, {
+    const response = await fetch(`${API_URL}/restaurant/restaurant`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -34,7 +32,7 @@ export const fetchRestaurantInfo = async (token) => {
  */
 export const fetchOrderLists = async (token) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/order/restaurant-dashboard`, {
+    const response = await fetch(`${API_URL}/order/restaurant-dashboard`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

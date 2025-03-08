@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import RestaurantHeader from "./components/RestaurantHeader";
 import DashboardCharts from "./components/DashboardCharts";
 import Sidebar from "../../components/Sidebar";
@@ -22,7 +22,6 @@ const RestaurantDashboard = () => {
     const loadData = async () => {
       try {
         const restInfo = await fetchRestaurantInfo(token);
-        console.log(restInfo);
         setRestaurantName(restInfo.restaurant.restaurant_name);
         setRestaurantImage(restInfo.restaurant.restaurant_image);
 

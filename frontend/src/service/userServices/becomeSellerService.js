@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const becomeSellerService = async (formData, token) => {
   const response = await axios.post(
-    "http://localhost:5000/user/become-seller",
+    `${API_URL}/user/become-seller`,
     formData,
     {
       headers: {

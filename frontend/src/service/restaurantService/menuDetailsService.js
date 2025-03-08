@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const insertOrderService = async (menuId, quantity, token) => {
   const response = await axios.post(
-    "http://localhost:5000/order/order",
+    `${API_URL}/order/order`,
     {
       menuId: menuId,
       quantity: quantity,
