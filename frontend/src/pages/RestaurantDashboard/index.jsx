@@ -22,6 +22,7 @@ const RestaurantDashboard = () => {
     const loadData = async () => {
       try {
         const restInfo = await fetchRestaurantInfo(token);
+        console.log(restInfo);
         setRestaurantName(restInfo.restaurant.restaurant_name);
         setRestaurantImage(restInfo.restaurant.restaurant_image);
 
@@ -84,7 +85,8 @@ const RestaurantDashboard = () => {
       <div className="max-w-6xl mx-auto md:mt-10">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
           {/* Restaurant Header Component */}
-          <RestaurantHeader restaurantInfo={restaurantInfo} />
+          <RestaurantHeader 
+          restaurantInfo={restaurantInfo}/>
 
           {/* Charts Component */}
           <DashboardCharts

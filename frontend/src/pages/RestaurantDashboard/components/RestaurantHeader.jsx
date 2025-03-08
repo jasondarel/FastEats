@@ -1,16 +1,16 @@
 import React from "react";
 import { FileSpreadsheet, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const RestaurantHeader = ({ restaurantInfo }) => {
-  // Export handlers
-  const handleExportToPDF = () => {
-    console.log("Exporting to PDF...");
-    alert("Exporting dashboard data to PDF");
+  const navigate = useNavigate();
+
+  const handleManageRestaurant = () => {
+    navigate("../manage-restaurant");
   };
 
-  const handleExportToExcel = () => {
-    console.log("Exporting to Excel...");
-    alert("Exporting dashboard data to Excel");
+  const handleViewOrderHistory = () => {
+    navigate("../order-list");
   };
 
   return (
@@ -42,21 +42,20 @@ const RestaurantHeader = ({ restaurantInfo }) => {
           </div>
         </div>
 
-        {/* Export Buttons */}
         <div className="flex space-x-4 mt-6">
           <button
-            onClick={handleExportToPDF}
-            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
+            onClick={handleManageRestaurant}
+            className="flex items-center px-4 py-2 bg-sky-800 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
           >
             <FileText className="mr-2" size={18} />
-            Export to PDF
+            Manage Restaurant
           </button>
           <button
-            onClick={handleExportToExcel}
+            onClick={handleViewOrderHistory}
             className="flex items-center px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="mr-2" size={18} />
-            Export to Excel
+            View Order History
           </button>
         </div>
       </div>
