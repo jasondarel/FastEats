@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const updateMenuService = async (menuId, formData, token) => {
   const response = await axios.put(
-    `http://localhost:5000/restaurant/menu/${menuId}`,
+    `${API_URL}/restaurant/menu/${menuId}`,
     formData,
     {
       headers: {
@@ -16,7 +17,7 @@ const updateMenuService = async (menuId, formData, token) => {
 
 const deleteMenuService = async (menuId, token) => {
   const response = await axios.delete(
-    `http://localhost:5000/restaurant/menu/${menuId}`,
+    `${API_URL}/restaurant/menu/${menuId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

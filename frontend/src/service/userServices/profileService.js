@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const getProfileService = async (token) => {
-  const res = await axios.get("http://localhost:5002/profile", {
+  const res = await axios.get(`${API_URL}/user/profile`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res;
@@ -9,7 +10,7 @@ const getProfileService = async (token) => {
 
 const saveProfileService = async (profile, preview, token) => {
   const response = await axios.put(
-    "http://localhost:5002/profile",
+    `${API_URL}/user/profile`,
     { ...profile, profile_photo: preview },
     {
       headers: {

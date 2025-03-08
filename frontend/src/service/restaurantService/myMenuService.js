@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const createNewMenuService = async (formData, token) => {
   const response = await axios.post(
-    "http://localhost:5000/restaurant/menu",
+    `${API_URL}/restaurant/menu`,
     formData,
     {
       headers: {
