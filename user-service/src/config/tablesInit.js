@@ -1,9 +1,10 @@
 import pool from "./dbInit.js";
+import logger from "./loggerInit.js";
 
 const createTables = async () => {
   const client = await pool.connect();
   try {
-    console.log("Creating tables...");
+    logger.info("Creating tables...");
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -36,9 +37,9 @@ const createTables = async () => {
       );
     `);
 
-    console.log("✅ Tables created successfully!");
+    logger.info("✅ Tables created successfully!");
   } catch (error) {
-    console.error("❌ Error creating tables:", error);
+    logger.error("❌ Error creating tables:", error);
   } finally {
     client.release();
   }

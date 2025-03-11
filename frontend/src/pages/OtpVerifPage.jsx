@@ -3,6 +3,7 @@ import { ShieldCheck, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { API_URL } from "../config/api";
 
 const OtpVerification = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const OtpVerification = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/user/verify-token?token=${token}&email=${emailQuery}`,
+        `${API_URL}/user/verify-token?token=${token}&email=${emailQuery}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -72,7 +73,7 @@ const OtpVerification = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/user/verify-otp`, {
+      const response = await fetch(`${API_URL}/user/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

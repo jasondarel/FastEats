@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaShoppingBag, FaSync } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
 import image from "../../../assets/orderHistory-dummy.jpg";
+import { API_URL } from "../../../config/api";
 
 const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const formatDate = (dateString) => {
@@ -58,7 +59,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         <img
           src={
             order.menu?.menu?.menu_image
-              ? `http://localhost:5000/restaurant/uploads/menu/${order.menu.menu.menu_image}`
+              ? `${API_URL}/restaurant/uploads/menu/${order.menu.menu.menu_image}`
               : image
           }
           alt="product"

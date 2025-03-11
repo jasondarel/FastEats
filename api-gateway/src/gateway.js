@@ -1,30 +1,32 @@
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from "dotenv";
+import logger from "./config/loggerInit.js";
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
+dotenv.config({ path: envFile });
+logger.info(`Using ${envFile} file`);
+
 const app = express();
-
 // Debug logging
-console.log("Loaded Environment Variables:");
-console.log(`PORT: ${process.env.PORT}`);
-console.log(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
-console.log(`USER_SERVICE_URL: ${process.env.USER_SERVICE_URL}`);
-console.log(`ORDER_SERVICE_URL: ${process.env.ORDER_SERVICE_URL}`);
-console.log(`NOTIFICATION_SERVICE_URL: ${process.env.NOTIFICATION_SERVICE_URL}`);
+logger.info(`PORT: ${process.env.PORT}`);
+logger.info(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
+logger.info(`USER_SERVICE_URL: ${process.env.USER_SERVICE_URL}`);
+logger.info(`ORDER_SERVICE_URL: ${process.env.ORDER_SERVICE_URL}`);
+logger.info(`NOTIFICATION_SERVICE_URL: ${process.env.NOTIFICATION_SERVICE_URL}`);
 
 // Restaurant service proxy
 const restaurantProxy = createProxyMiddleware({
   target: process.env.RESTAURANT_SERVICE_URL || 'http://localhost:5003',
   changeOrigin: true,
   onProxyReq: (proxyReq, req) => {
-    console.log(`Restaurant Service - Proxying request: ${req.method} ${req.originalUrl}`);
+    logger.info(`Restaurant Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
   onProxyRes: (proxyRes, req) => {
-    console.log(`Restaurant Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+    logger.info(`Restaurant Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
   },
   onError: (err, req, res) => {
-    console.error(`Restaurant Service - Proxy error: ${err.message}`);
+    logger.error(`Restaurant Service - Proxy error: ${err.message}`);
     res.status(500).json({ error: "Restaurant Service Proxy error", details: err.message });
   },
 });
@@ -34,13 +36,13 @@ const userProxy = createProxyMiddleware({
   target: process.env.USER_SERVICE_URL || 'http://localhost:5002',
   changeOrigin: true,
   onProxyReq: (proxyReq, req) => {
-    console.log(`User Service - Proxying request: ${req.method} ${req.originalUrl}`);
+    logger.info(`User Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
   onProxyRes: (proxyRes, req) => {
-    console.log(`User Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+    logger.info(`User Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
   },
   onError: (err, req, res) => {
-    console.error(`User Service - Proxy error: ${err.message}`);
+    logger.error(`User Service - Proxy error: ${err.message}`);
     res.status(500).json({ error: "User Service Proxy error", details: err.message });
   },
 });
@@ -50,13 +52,13 @@ const orderProxy = createProxyMiddleware({
   target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
   changeOrigin: true,
   onProxyReq: (proxyReq, req) => {
-    console.log(`Order Service - Proxying request: ${req.method} ${req.originalUrl}`);
+    logger.info(`Order Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
   onProxyRes: (proxyRes, req) => {
-    console.log(`Order Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+    logger.info(`Order Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
   },
   onError: (err, req, res) => {
-    console.error(`Order Service - Proxy error: ${err.message}`);
+    logger.error(`Order Service - Proxy error: ${err.message}`);
     res.status(500).json({ error: "Order Service Proxy error", details: err.message });
   },
 })
@@ -65,13 +67,13 @@ const notificationProxy = createProxyMiddleware({
   target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5005',
   changeOrigin: true,
   onProxyReq: (proxyReq, req) => {
-    console.log(`Notification Service - Proxying request: ${req.method} ${req.originalUrl}`);
+    logger.info(`Notification Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
   onProxyRes: (proxyRes, req) => {
-    console.log(`Notification Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+    logger.info(`Notification Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
   },
   onError: (err, req, res) => {
-    console.error(`Notification Service - Proxy error: ${err.message}`);
+    logger.error(`Notification Service - Proxy error: ${err.message}`);
     res.status(500).json({ error: "Notification Service Proxy error", details: err.message });
   },
 })
@@ -98,11 +100,11 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`API Gateway running on port ${PORT}`);
-  console.log('Available routes:');
-  console.log('- /restaurant/* -> Restaurant Service');
-  console.log('- /user/* -> User Service');
-  console.log('- /order/* -> Order Service');
-  console.log('- /health -> Gateway Health Check');
-  console.log('- /notification/* -> Notification Service');
+  logger.info(`API Gateway running on port ${PORT}`);
+  logger.info('Available routes:');
+  logger.info('- /restaurant/* -> Restaurant Service');
+  logger.info('- /user/* -> User Service');
+  logger.info('- /order/* -> Order Service');
+  logger.info('- /health -> Gateway Health Check');
+  logger.info('- /notification/* -> Notification Service');
 });

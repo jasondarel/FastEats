@@ -17,6 +17,7 @@ import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
+import { API_URL } from "../../config/api";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -156,7 +157,7 @@ const OrderDetails = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/order/snap/${orderId}`
+        `${API_URL}/order/snap/${orderId}`
       );
       const data = await response.json();
 

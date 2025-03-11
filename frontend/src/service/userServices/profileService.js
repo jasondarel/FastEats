@@ -23,7 +23,7 @@ const saveProfileService = async (profile, preview, token) => {
 
 const changePasswordService = async (changePassword, token) => {
   const response = await axios.put(
-    "http://localhost:5002/change-password",
+    `${API_URL}/user/change-password`,
     changePassword,
     {
       headers: { Authorization: `Bearer ${token}` },

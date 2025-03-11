@@ -8,6 +8,7 @@ import MenuForm from "./components/MenuForm";
 import CategorySelector from "./components/CategorySelector";
 import ImageUploader from "./components/ImageUploader";
 import FormHeader from "./components/FormHeader";
+import { ROOT_URL } from "../../config/api";
 
 const UpdateMenu = () => {
   const { restaurantId } = useParams();
@@ -99,7 +100,7 @@ const UpdateMenu = () => {
         <div className="bg-gradient-to-br from-yellow-300 to-yellow-800 via-yellow-500 py-5 px-8 scale-90 rounded-md relative max-h-screen overflow-y-auto sm:min-w-lg sm:scale-[0.8] lg:min-w-xl lg:scale-95 xl:min-w-3xl">
           <FormHeader
             title="Update Menu Form"
-            backLink="http://localhost:5173/my-menu"
+            backLink={`${ROOT_URL}/my-menu`}
           />
 
           <div className="border border-yellow-200 p-4 bg-slate-100 rounded-md">

@@ -1,4 +1,5 @@
 import React from "react";
+import { API_URL } from "../../../config/api";
 
 const MenuItemCard = ({ item, onClick }) => {
   return (
@@ -11,7 +12,7 @@ const MenuItemCard = ({ item, onClick }) => {
       <img
         src={
           item.menu_image
-            ? `http://localhost:5000/restaurant/uploads/menu/${item.menu_image}`
+            ? `${API_URL}/restaurant/uploads/menu/${item.menu_image}`
             : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
         }
         alt={item.menu_name}

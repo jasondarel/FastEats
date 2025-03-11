@@ -25,6 +25,7 @@ import {
   getUserByIdService, 
   getUserDetailsByIdService, 
   getUserPaymentByIdService, 
+  getUsersService, 
   registerSellerService, 
   registerService, 
   updateUserDetailsService, 
@@ -32,6 +33,7 @@ import {
   validateUserService 
 } from "../service/userService.js";
 import { getRedisClient } from "../config/redisInit.js";
+import logger from "../config/loggerInit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +44,7 @@ export const registerController = async (req, res) => {
   try {
     const errors = await validateRegisterRequest(req.body);
     if(Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -76,14 +79,14 @@ export const registerController = async (req, res) => {
     }
 
     await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
-
+    logger.info("User registered successfully");
     return res.status(201).json({
       success: true,
       message: response.message,
       token: emailVerificationToken,
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({ 
       success: false,
       message: "Server error",
@@ -95,6 +98,7 @@ export const registerSellerController = async (req, res) => {
   try {
     const errors = await validateRegisterSellerRequest(req.body);
     if(Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -130,6 +134,7 @@ export const registerSellerController = async (req, res) => {
 
     if(response.role === "seller") {
       if (!req.files || !req.files.restaurantImage) {
+        logger.error("Restaurant image is required");
         return res.status(400).json({
           success: false,
           message: "Restaurant image is required",
@@ -160,13 +165,14 @@ export const registerSellerController = async (req, res) => {
       );
     }
     await createUserPaymentService(response.id);
+    logger.info("Seller registered successfully");
     return res.status(201).json({
       success: true,
       message: response.message,
       token: emailVerificationToken,
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({ 
       success: false,
       message: "Server error",
@@ -194,6 +200,7 @@ export const loginController = async (req, res) => {
       await redisClient.expire(redisKey, 300);
       
       if(!response) {
+        logger.error("Invalid credentials");
         return res.status(400).json({
           success: false,
           message: "Invalid credentials",
@@ -206,7 +213,7 @@ export const loginController = async (req, res) => {
         otp: otp,
       }
       await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
-
+      logger.error("Email is not verified");
       return res.status(401).json({
         success: false,
         message: "Email is not verified",
@@ -215,6 +222,7 @@ export const loginController = async (req, res) => {
     }
 
     if (Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -225,6 +233,7 @@ export const loginController = async (req, res) => {
 
     const user = await getUserByEmailService(req.body.email);
     if (!user) {
+      logger.error("Invalid credentials");
       return res.status(400).json({
         success: false,
         message: "Invalid credentials",
@@ -237,14 +246,15 @@ export const loginController = async (req, res) => {
       role: user.role,
     });
     
-    res.json({
+    logger.info("Login successful");
+    return res.status(200).json({
       success: true,
       message: "Login successful",
       token,
     })
 
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -254,10 +264,14 @@ export const loginController = async (req, res) => {
 
 export const getUsersController = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM users");
-    res.json(result.rows);
+    const result = await getUsersService();
+    logger.info("Users found");
+    return res.status(200).json({
+      success: true,
+      users: result,
+    })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -266,6 +280,7 @@ export const verifyTokenController = async (req, res) => {
   const {token, email} = req.query;
 
   if(!token) {
+    logger.error("Token not found");
     return res.status(401).json({
       success: false,
       message: "Token not found",
@@ -273,6 +288,7 @@ export const verifyTokenController = async (req, res) => {
   }
 
   if(!email) {
+    logger.error("Email not found");
     return res.status(401).json({
       success: false,
       message: "Email not found",
@@ -283,6 +299,7 @@ export const verifyTokenController = async (req, res) => {
   const redisData = await redisClient.hgetall(redisKey);
 
   if(!redisData) {
+    logger.error("Token expired");
     return res.status(401).json({
       success: false,
       message: "Token expired",
@@ -290,6 +307,7 @@ export const verifyTokenController = async (req, res) => {
   }
 
   if(redisData.token !== token) {
+    logger.error("Invalid token");
     return res.status(401).json({
       success: false,
       message: "Invalid token",
@@ -301,6 +319,7 @@ export const verifyOtpController = async (req, res) => {
   const { otp, token, email } = req.body;
   try {
     if(!otp) {
+      logger.error("OTP is required");
       return res.status(400).json({
         success: false,
         message: "OTP is required",
@@ -308,6 +327,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if(!token) {
+      logger.error("Token is required");
       return res.status(400).json({
         success: false,
         message: "Token is required",
@@ -315,6 +335,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if(!email) {
+      logger.error("Email is required");
       return res.status(400).json({
         success: false,
         message: "Email is required",
@@ -326,6 +347,7 @@ export const verifyOtpController = async (req, res) => {
     const user = await redisClient.hgetall(redisKey);
 
     if (!user) {
+      logger.error("Invalid email");
       return res.status(401).json({
         success: false,
         message: "Invalid email",
@@ -333,6 +355,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if (blackListedTokens.has(token)) {
+      logger.error("Token expired");
       return res.status(401).json({
         success: false,
         message: "Token expired",
@@ -340,6 +363,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if (user.otp !== otp) {
+      logger.error("Invalid OTP");
       return res.status(401).json({
         success: false,
         message: "Invalid OTP",
@@ -347,6 +371,7 @@ export const verifyOtpController = async (req, res) => {
     }
     
     if(user.token !== token) {
+      logger.error("Invalid token");
       return res.status(401).json({
         success: false,
         message: "Invalid token",
@@ -358,14 +383,14 @@ export const verifyOtpController = async (req, res) => {
 
     
     redisClient.del(redisKey);
-
+    logger.info("Token verified successfully");
     return res.status(200).json({
       success: true,
       message: "Token verified successfully",
       user,
     });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
+    logger.error("Internal server error", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -377,6 +402,7 @@ export const getUserController = async (req, res) => {
   const { id } = req.params;
 
   if (isNaN(id)) {
+    logger.error("User ID must be a number");
     return res.status(400).json({
       success: false,
       message: "user ID must be a number",
@@ -386,6 +412,7 @@ export const getUserController = async (req, res) => {
   try {
     const userQuery = await getUserByIdService(id);
     if (!userQuery) {
+      logger.error("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -394,12 +421,14 @@ export const getUserController = async (req, res) => {
 
     const userDetailsQuery = await getUserDetailsByIdService(id);
     if (!userDetailsQuery) {
+      logger.error("User details not found");
       return res.status(404).json({
         success: false,
         message: "User details not found",
       });
     }
 
+    logger.info("User found");
     return res.status(200).json({
       success: true,
       message: "User found",
@@ -409,7 +438,7 @@ export const getUserController = async (req, res) => {
       }
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -422,20 +451,22 @@ export const getCurrentUserController = async (req, res) => {
   try {
     const user = await getCurrentUserService(userId);
     if (!user) {
+      logger.error("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+    logger.info("User found");
     return res.status(200).json({
       success: true,
       user,
     })
   } catch(err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Internal server error",
     });
   }
 }
@@ -445,6 +476,7 @@ export const getProfileController = async (req, res) => {
   try {
     const userQuery = await getUserByIdService(userId);
     if (!userQuery) {
+      logger.error("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -453,12 +485,14 @@ export const getProfileController = async (req, res) => {
 
     const userDetailsQuery = await getUserDetailsByIdService(userId);
     if (!userDetailsQuery) {
+      logger.error("User details not found");
       return res.status(404).json({
         success: false,
         message: "User details not found",
       });
     }
 
+    logger.info("User found");
     return res.status(200).json({
       success: true,
       message: "User found",
@@ -468,10 +502,10 @@ export const getProfileController = async (req, res) => {
       }
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Internal server error",
     })
   }
 };
@@ -481,6 +515,7 @@ export const updateProfileController = async (req, res) => {
   try {
     const errors = await validateUpdateProfileRequest(req.body);
     if (Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -489,21 +524,23 @@ export const updateProfileController = async (req, res) => {
     }
 
     if(!req.body.address) {
+      logger.warn("Address is empty");
       req.body.address = "";
     }
 
     if(!req.body.phoneNumber) {
+      logger.warn("Phone number is empty");
       req.body.phoneNumber = "";
     }
 
     await updateUserDetailsService(req.body, userId);
-
+    logger.info("Profile updated successfully");
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -514,6 +551,7 @@ export const updateProfileController = async (req, res) => {
 export const updateUserPaymentController = async (req, res) => {
   const {userId, role} = req.user;
   if(role !== "seller") {
+    logger.error("Only sellers can update payment details");
     return res.status(400).json({
       success: false,
       message: "Only sellers can update payment details",
@@ -523,6 +561,7 @@ export const updateUserPaymentController = async (req, res) => {
   try {
     const errors = await validateUpdateUserPaymentRequest(req.body);
     if (Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -531,12 +570,13 @@ export const updateUserPaymentController = async (req, res) => {
     }
 
     await updateUserPaymentService(req.body, userId);
+    logger.info("Payment details updated successfully");
     return res.status(200).json({
       success: true,
       message: "Payment details updated successfully",
     })
   } catch(err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -549,17 +589,19 @@ export const getUserPaymentController = async (req, res) => {
   try {
     const user = await getUserPaymentByIdService(userId);
     if (!user) {
+      logger.error("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+    logger.info("User found");
     return res.status(200).json({
       success: true,
       user,
     })
   } catch(err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -574,6 +616,7 @@ export const changePasswordController = async (req, res) => {
   try {
     const errors = await validateChangePasswordRequest(req.body, userId);
     if (Object.keys(errors).length > 0) {
+      logger.error("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -583,12 +626,13 @@ export const changePasswordController = async (req, res) => {
     
     await changePasswordService(userId, hashPassword(newPassword));
 
+    logger.info("Password changed successfully");
     return res.status(200).json({
       success: true,
       message: "Password changed successfully",
     })
   } catch (err) {
-    console.error(err);
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -601,6 +645,7 @@ export const becomeSellerController = async (req, res) => {
 
   try {
     if (role !== "user") {
+      logger.error("Only users can become sellers");
       return res.status(400).json({
         success: false,
         message: "Only users can become sellers",
@@ -608,6 +653,7 @@ export const becomeSellerController = async (req, res) => {
     }
 
     if (!req.files || !req.files.restaurantImage) {
+      logger.error("Restaurant image is required");
       return res.status(400).json({
         success: false,
         message: "Restaurant image is required",
@@ -617,6 +663,7 @@ export const becomeSellerController = async (req, res) => {
     const uploadedFile = req.files.restaurantImage;
 
     if (!fs.existsSync(uploadDir)) {
+      logger.warn("Upload directory does not exist, creating one");
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
@@ -645,6 +692,7 @@ export const becomeSellerController = async (req, res) => {
 
     await becomeSellerService(userId);
     await createUserPaymentService(userId);
+    logger.info("User upgraded to seller");
     return res.status(200).json({
       success: true,
       message: "User upgraded to seller",
@@ -654,13 +702,14 @@ export const becomeSellerController = async (req, res) => {
   } catch (err) {
     if (err.response) {
       if (err.response.status === 401) {
+        logger.error("Unauthorized access");
         return res.status(401).json(err.response.data);
       } else if (err.response.status === 400) {
-        console.log(err.response.data);
+        logger.error("Bad request");
         return res.status(400).json(err.response.data);
       }
     }
-
+    logger.error("Internal server error", err);
     return res.status(500).json({
       success: false,
       message: "Server error",

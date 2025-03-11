@@ -10,6 +10,7 @@ import EditMenuForm from "./components/EditMenuForm";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import LoadingState from "../../components/LoadingState";
+import { API_URL } from "../../config/api";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();
@@ -39,7 +40,7 @@ const MyMenuDetails = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
+          `${API_URL}/restaurant/menu-by-id/${menuId}`,
           {
             method: "GET",
             headers: {
@@ -117,7 +118,7 @@ const MyMenuDetails = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/update-available/${menuId}`,
+        `${API_URL}/restaurant/update-available/${menuId}`,
         {
           method: "PUT",
           headers: {
@@ -176,7 +177,7 @@ const MyMenuDetails = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/menu/${menuId}`,
+        `${API_URL}/restaurant/menu/${menuId}`,
         {
           method: "PUT",
           headers: {
@@ -305,7 +306,7 @@ const MyMenuDetails = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/menu/${menuId}`,
+        `${API_URL}/restaurant/menu/${menuId}`,
         {
           method: "DELETE",
           headers: {

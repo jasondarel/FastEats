@@ -1,4 +1,5 @@
 import amqp from "amqplib";
+import logger from "./loggerInit.js"; // Import Winston Logger
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 export const EXCHANGE_NAME = "email_exchange";
@@ -20,16 +21,16 @@ export const rabbitMQInit = async () => {
 
     await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
-    console.log(`✅ RabbitMQ Connected & Exchange "${EXCHANGE_NAME}" Initialized`);
+    logger.info(`✅ RabbitMQ Connected & Exchange "${EXCHANGE_NAME}" Initialized`);
   } catch (error) {
-    console.error("❌ RabbitMQ Connection Failed:", error);
+    logger.error("❌ RabbitMQ Connection Failed:", error);
     setTimeout(rabbitMQInit, 5000);
   }
 };
 
 export const getChannel = async () => {
   if (!channel) {
-    console.log("⏳ Channel not initialized. Reconnecting...");
+    logger.warn("⏳ Channel not initialized. Reconnecting...");
     await rabbitMQInit();
   }
   return channel;
