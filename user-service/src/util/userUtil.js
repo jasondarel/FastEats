@@ -5,6 +5,7 @@ import {
   getChannel, 
   ROUTING_KEY
 } from "../config/rabbitMQInit.js";
+import logger from "../config/loggerInit.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -44,7 +45,7 @@ export const publishMessage = async(email, token, otp) => {
     persistent: true,
   });
 
-  console.log(`📨 Sent verification email to ${email}`);
+  logger.info(`📨 Sent verification email to ${email}`);
 };
 
 export const generateOtpCode = (len) => {

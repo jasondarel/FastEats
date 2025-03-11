@@ -9,6 +9,13 @@ export const registerService = async(userReq) => {
     return result.rows[0];
 }
 
+export const getUsersService = async() => {
+    const result = await pool.query(
+        "SELECT id, name, email, role FROM users"
+    );
+    return result.rows;
+}
+
 export const registerSellerService = async(userReq) => {
     const { name, email, password } = userReq;
     const result = await pool.query(

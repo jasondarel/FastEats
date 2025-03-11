@@ -58,7 +58,7 @@ const checkMidtransStatusService = async (orderId) => {
 
 const getOrderDetailService = async (orderId, token) => {
   const response = await axios.get(
-    `${API_URL}order/orders/${orderId}`,
+    `${API_URL}/order/orders/${orderId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
