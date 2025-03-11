@@ -1,4 +1,5 @@
 import React from "react";
+import { API_URL } from "../../../config/api";
 
 const EditMenuForm = ({
   showEditForm,
@@ -52,7 +53,7 @@ const EditMenuForm = ({
                 />
               ) : menu.menu_image ? (
                 <img
-                  src={`http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`}
+                  src={`${API_URL}/restaurant/uploads/menu/${menu.menu_image}`}
                   alt={menu.menu_name}
                   className="max-h-64 mx-auto mb-2 object-contain"
                 />

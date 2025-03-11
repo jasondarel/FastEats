@@ -2,7 +2,7 @@ import axios from "axios";
 import { API_URL } from "../../config/api";
 
 const getRestaurantData = async (token) => {
-  return await axios.get(`${API_URL}/restaurant`, {
+  return await axios.get(`${API_URL}/restaurant/restaurant`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -11,7 +11,7 @@ const getRestaurantData = async (token) => {
 };
 
 const updateRestaurant = async (token, formData) => {
-  return await axios.put(`${API_URL}/restaurant`, formData, {
+  return await axios.put(`${API_URL}/restaurant/restaurant`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
@@ -21,7 +21,7 @@ const updateRestaurant = async (token, formData) => {
 
 const toggleRestaurantStatus = async (token, isOpen) => {
   return await axios.patch(
-    `${API_URL}/is-open`,
+    `${API_URL}/restaurant/is-open`,
     { isOpen },
     {
       headers: {

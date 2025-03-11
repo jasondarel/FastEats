@@ -12,6 +12,7 @@ import RestaurantDetailsForm from "./components/RestaurantDetailsForm";
 import FloatingMenuButton from "./components/FloatingMenuButton";
 import { FaUtensils } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { API_URL } from "../../config/api";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -51,7 +52,7 @@ const ManageRestaurant = () => {
           setInitialIsOpen(restaurant.is_open || false);
 
           const imageUrl = restaurant.restaurant_image
-            ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
+            ? `${API_URL}/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
         } else {

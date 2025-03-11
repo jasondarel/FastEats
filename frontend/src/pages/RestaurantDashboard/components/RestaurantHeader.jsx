@@ -1,6 +1,7 @@
 import React from "react";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../../../config/api";
 
 const RestaurantHeader = ({ restaurantInfo }) => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const RestaurantHeader = ({ restaurantInfo }) => {
     <div className="flex flex-col md:flex-row p-6 border-b border-amber-200">
       <div className="md:w-1/3 mb-4 md:mb-0">
         <img
-          src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurantInfo.image}`}
+          src={`${API_URL}/restaurant/uploads/restaurant/${restaurantInfo.image}`}
           alt={restaurantInfo.name}
           className="rounded-lg shadow-md w-full h-64 object-cover"
         />

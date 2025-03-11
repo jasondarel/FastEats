@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CheckIcon } from "lucide-react";
 import { useParams } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import { API_URL } from "../config/api";
 
 const OrderSummary = () => {
   const [orderData, setOrderData] = useState(null);
@@ -14,7 +15,7 @@ const OrderSummary = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/order/restaurant-order/${order_id}`,
+          `${API_URL}/order/restaurant-order/${order_id}`,
           {
             method: "GET",
             headers: {
@@ -68,7 +69,7 @@ const OrderSummary = () => {
   const handleCompleteOrder = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/order/complete-order/${order_id}`,
+        `${API_URL}/order/complete-order/${order_id}`,
         {
           method: "PATCH",
           headers: {
@@ -220,7 +221,7 @@ const OrderSummary = () => {
             <img
               src={
                 menu.menu_image
-                  ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`
+                  ? `${API_URL}/restaurant/uploads/menu/${menu.menu_image}`
                   : "/api/placeholder/80/80"
               }
               alt={menu.menu_name}

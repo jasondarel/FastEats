@@ -12,6 +12,7 @@ import NotFoundState from "./components/NotFoundState";
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { API_URL } from "../../config/api";
 
 const MenuDetails = () => {
   const { menuId } = useParams();
@@ -27,7 +28,7 @@ const MenuDetails = () => {
     const fetchMenuDetails = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
+          `${API_URL}/restaurant/menu-by-id/${menuId}`,
           {
             method: "GET",
             headers: {

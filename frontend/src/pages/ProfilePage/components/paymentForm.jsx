@@ -5,6 +5,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { API_URL } from "../../../config/api";
 
 const PaymentForm = () => {
     const [bcaAccount, setBcaAccount] = useState("");
@@ -25,7 +26,7 @@ const PaymentForm = () => {
     useEffect(() => {
         const fetchPaymentData = async () => {
             try {
-                const response = await fetch("http://localhost:5000/user/user-payment", {
+                const response = await fetch(`${API_URL}/user/user-payment`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -95,7 +96,7 @@ const PaymentForm = () => {
         e.preventDefault();
         if (isFormValid) {
             try {
-                const response = await fetch("http://localhost:5000/user/user-payment", {
+                const response = await fetch(`${API_URL}/user/user-payment`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

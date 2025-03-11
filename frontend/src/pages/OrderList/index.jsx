@@ -1,12 +1,12 @@
 // src/pages/Orders/OrderList.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import OrderCard from "./components/OrderCard";
 import OrderListHeader from "./components/OrderListHeader";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import EmptyState from "./components/EmptyState";
-import { Navigate } from "react-router-dom";
+import { API_URL } from "../../config/api";
 
 const OrderList = () => {
   const token = localStorage.getItem("token");
@@ -18,7 +18,7 @@ const OrderList = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/order/orders-by-restaurant",
+        `${API_URL}/order/orders-by-restaurant` ,
         {
           headers: {
             Authorization: `Bearer ${token}`,

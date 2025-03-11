@@ -11,6 +11,7 @@ import CategoryFilter from "../../components/CategoryFilter";
 import AlphabetSort from "../../components/AlphabetSort";
 import LoadingState from "../../components/LoadingState"; // Import LoadingState
 import { handleApiError } from "./components/HandleAlert";
+import { API_URL } from "../../config/api";
 
 const MyMenuPage = () => {
   const { restaurantId } = useParams();
@@ -42,7 +43,7 @@ const MyMenuPage = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await fetch(`http://localhost:5000/restaurant/menus`, {
+        const response = await fetch(`${API_URL}/restaurant/menus`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
