@@ -79,22 +79,23 @@ const RestaurantDashboard = () => {
   };
 
   return (
-    <div className="bg-amber-50 min-h-screen p-6">
+    <div className="flex bg-amber-50 min-h-screen">
       <Sidebar />
-      <div className="max-w-6xl mx-auto md:mt-10">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-          {/* Restaurant Header Component */}
-          <RestaurantHeader 
-          restaurantInfo={restaurantInfo}/>
+      <div className="pl-[250px] flex-1 p-6">
+        <div className="max-w-6xl mx-auto md:mt-10">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            {/* Restaurant Header Component */}
+            <RestaurantHeader restaurantInfo={restaurantInfo} />
 
-          {/* Charts Component */}
-          <DashboardCharts
-            orders={orders}
-            viewMode={viewMode}
-            selectedMonth={selectedMonth}
-            toggleViewMode={toggleViewMode}
-            handleMonthChange={handleMonthChange}
-          />
+            {/* Charts Component */}
+            <DashboardCharts
+              orders={orders}
+              viewMode={viewMode}
+              selectedMonth={selectedMonth}
+              toggleViewMode={toggleViewMode}
+              handleMonthChange={handleMonthChange}
+            />
+          </div>
         </div>
       </div>
     </div>
