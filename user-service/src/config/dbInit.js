@@ -2,8 +2,8 @@ import pkg from "pg";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
 const { Pool } = pkg;
+import logger from "./loggerInit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,16 +18,14 @@ const pool = new Pool({
   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
 });
 
-console.log(process.env.DB_USER);
-
 const testDatabase = async () => {
   try {
     const client = await pool.connect();
     const res = await client.query("SELECT NOW()");
-    console.log("Database connected! Current time:", res.rows[0].now);
+    logger.info("Database connected! Current time:", res.rows[0].now);
     client.release();
   } catch (err) {
-    console.error("Database connection error:", err);
+    logger.error("Database connection error:", err);
   }
 };
 

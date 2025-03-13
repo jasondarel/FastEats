@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.js"
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "prod": "cross-env NODE_ENV=production nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -19,9 +20,12 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "midtrans-client": "^1.4.2",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.9"
   }
 }

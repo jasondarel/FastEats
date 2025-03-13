@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaShoppingBag, FaSync } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
@@ -58,8 +58,8 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
       <div className="flex">
         <img
           src={
-            order.menu?.menu?.menu_image
-              ? `${API_URL}/restaurant/uploads/menu/${order.menu.menu.menu_image}`
+            order.menu?.menu_image
+              ? `${API_URL}/restaurant/uploads/menu/${order.menu.menu_image}`
               : image
           }
           alt="product"
@@ -67,7 +67,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         />
         <div className="pt-2 pl-4 flex-1 min-w-0">
           <h2 className="font-bold truncate overflow-hidden text-ellipsis whitespace-nowrap text-base md:text-lg">
-            {order.menu?.menu?.menu_name || "Minuman Yang Sangat Mantap banget"}
+            {order.menu?.menu_name || "Minuman Yang Sangat Mantap banget"}
           </h2>
           <p className="text-slate-600">{order.item_quantity || 1} Item</p>
         </div>

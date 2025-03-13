@@ -15,105 +15,119 @@ import {
 } from "../service/orderService.js";
 import crypto from "crypto";
 import { createTransactionService, getTransactionByOrderIdService } from "../service/transactionService.js";
+import logger from "../config/loggerInit.js";
 
 export const createOrderController = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user?.userId;
     const authHeader = req.headers.authorization;
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      logger.warn("Unauthorized access attempt", { userId });
+      return res.status(401).json({ success: false, message: "Unauthorized: Missing or invalid token" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const orderReq = req.body;
+
+    if (!orderReq.menuId || !orderReq.quantity) {
+      logger.warn("Order creation failed: Missing required fields", { userId });
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    if (isNaN(orderReq.menuId)) {
+      logger.warn("Invalid menuId received", { menuId: orderReq.menuId, userId });
+      return res.status(400).json({ success: false, message: "Invalid menuId" });
+    }
+
+    orderReq.userId = userId;
+
+    let menuResponse;
+    try {
+      logger.info("Fetching menu data", { menuId: orderReq.menuId });
+      menuResponse = await axios.get(
+        `http://localhost:5000/restaurant/menu-by-Id/${orderReq.menuId}`,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
+    } catch (error) {
+      logger.error("Failed to fetch menu data", { menuId: orderReq.menuId, error: error.message });
+      return res.status(500).json({ success: false, message: "Failed to fetch menu data" });
+    }
+
+    let restaurantResponse;
+    try {
+      const restaurantId = menuResponse.data.menu.restaurant_id;
+      logger.info("Fetching restaurant data", { restaurantId });
+
+      restaurantResponse = await axios.get(
+        `http://localhost:5000/restaurant/restaurant/${restaurantId}`,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+      );
+    } catch (error) {
+      logger.error("Failed to fetch restaurant data", { error: error.message });
+      return res.status(500).json({ success: false, message: "Failed to fetch restaurant data" });
+    }
+
+    orderReq.restaurantId = restaurantResponse.data.restaurant.restaurant_id;
+
+    if (restaurantResponse.data.restaurant.owner_id === userId) {
+      logger.warn("User attempted to order from their own restaurant", { userId, restaurantId: orderReq.restaurantId });
+      return res.status(403).json({ success: false, message: "You cannot order from your own restaurant" });
+    }
+
+    try {
+      logger.info("Inserting order into database", { userId, restaurantId: orderReq.restaurantId });
+      const response = await createOrderService(orderReq);
+      
+      if (!response) {
+        logger.error("Failed to create order", { userId });
+        return res.status(500).json({ success: false, message: "Failed to create order" });
+      }
+
+      logger.info("Order created successfully", { orderId: response.id, userId });
+      return res.status(201).json({ success: true, message: "Order created successfully", order: response });
+
+    } catch (error) {
+      logger.error("Database error while creating order", { error: error.message });
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+
+  } catch (error) {
+    logger.error("Unexpected server error", { error: error.message });
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+export const getOrdersController = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      logger.error("Unauthorized: Missing or invalid token");
       return res.status(401).json({
         success: false,
         message: "Unauthorized: Missing or invalid token",
       });
     }
+    
     const token = authHeader.split(" ")[1];
 
-    const orderReq = req.body;
-    orderReq.userId = userId;
-    console.log(orderReq);
-    if (!orderReq.menuId || !orderReq.quantity) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing fields",
-      });
-    }
-
-    if (isNaN(orderReq.menuId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid restaurantId or menuId",
-      });
-    }
-
-    const menuResponse = await axios.get(
-      `http://localhost:5000/restaurant/menu-by-Id/${orderReq.menuId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    console.log("Fetching restaurant data...");
-    const restaurantResponse = await axios.get(
-      `http://localhost:5000/restaurant/restaurant/${menuResponse.data.menu.restaurant_id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    orderReq.restaurantId = restaurantResponse.data.restaurant.restaurant_id;
-
-    if (restaurantResponse.data.restaurant.owner_id === userId) {
-      return res.status(403).json({
-        success: false,
-        message: "You cannot order from your own restaurant",
-      });
-    }
-    console.log("Fetching menu data...");
-
-    console.log("Inserting order into database...");
-    const response = await createOrderService(orderReq);
-    if (!response) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to create order",
-      });
-    }
-
-    res.status(201).json({
-      success: true,
-      message: "Order created successfully",
-      order: response,
-    });
-  } catch (error) {
-    console.error("❌ Internal Server Error:", error.message);
-
-    if (error.response) {
-      return res.status(error.response.status).json(error.response.data);
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-export const getOrdersController = async (req, res) => {
-  const { userId } = req.user;
-  const token = req.headers.authorization?.split(" ")[1];
-
-  try {
+    logger.info("Fetching orders from database...");
     const orders = await getUserOrdersService(userId);
-    if (orders.length === 0) {
-      return res.status(404).json({ error: "No orders found" });
+    
+    if (!orders || orders.length === 0) {
+      logger.warn("No orders found for user:", userId);
+      return res.status(200).json({
+        success: true,
+        orders: [],
+        message: "No orders found",
+      });
     }
 
-    const ordersWithMenu = await Promise.all(
+    logger.info("Fetching menu data for orders...");
+    const ordersWithMenu = await Promise.allSettled(
       orders.map(async (order) => {
         try {
           const { data: menuData } = await axios.get(
@@ -125,136 +139,204 @@ export const getOrdersController = async (req, res) => {
               },
             }
           );
-          const totalPrice = order.item_quantity * menuData.menu.menu_price;
-          return { ...order, menu: menuData, total_price: totalPrice };
+
+          return { 
+            ...order, 
+            menu: menuData.menu, 
+            total_price: order.item_quantity * menuData.menu.menu_price 
+          };
         } catch (menuError) {
-          return {
-            ...order,
-            menu: null,
-            total_price: null,
-            menuError: "Failed to fetch menu data",
+          logger.error(`Failed to fetch menu data for menu_id ${order.menu_id}:`, menuError.message);
+          return { 
+            ...order, 
+            menu: null, 
+            total_price: null 
           };
         }
       })
     );
+
+    logger.info("Orders fetched successfully");
     return res.status(200).json({
       success: true,
-      orders: ordersWithMenu,
+      orders: ordersWithMenu.map(result => result.value || result.reason),
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    logger.error("Internal server error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Internal server error" 
+    });
   }
 };
 
 export const cancelOrderController = async (req, res) => {
-  const { userId } = req.user;
-  const order_id = req.params.order_id;
+  try {
+    const { userId } = req.user;
+    const order_id = req.params.order_id;
 
-  const order = await getOrderByIdService(order_id);
-
-  if (!order) {
-    return res.status(404).json({
-      success: false,
-      message: "Order not found",
-    });
-  }
-
-  if (order.user_id !== userId) {
-    return res.status(403).json({
-      success: false,
-      message: "You are not authorized to cancel this order",
-    });
-  }
-
-  if (order.status === "Cancelled") {
-    return res.status(400).json({
-      success: false,
-      message: "Order is already cancelled",
-    });
-  }
-
-  if (order.status !== "Waiting") {
-    return res.status(400).json({
-      success: false,
-      message: "Order cannot be cancelled",
-    });
-  }
-
-  const result = await cancelOrderService(order_id);
-  if (!result) {
-    return res.status(404).json({
-      success: false,
-      message: "Order not found",
-    });
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Order cancelled successfully",
-  });
-};
-export const completeOrderController = async (req, res) => {
-  const { userId } = req.user;
-  const order_id = req.params.order_id;
-  const order = await getOrderByIdService(order_id);
-
-  if (!order) {
-    return res.status(404).json({
-      success: false,
-      message: "Order not found",
-    });
-  }
-
-  const restaurant = await axios.get(
-    `http://localhost:5000/restaurant/restaurant/${order.restaurant_id}`,
-    {
-      headers: {
-        Authorization: req.headers.authorization,
-        "Content-Type": "application/json",
-      },
+    if (!order_id || isNaN(order_id)) {
+      logger.error("Invalid order_id provided");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
     }
-  )
 
-  if(!restaurant) {
-    return res.status(404).json({
+    logger.info(`Fetching order ${order_id} from database...`);
+    const order = await getOrderByIdService(order_id);
+
+    if (!order) {
+      logger.warn(`Order ${order_id} not found`);
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.user_id !== userId) {
+      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to cancel this order",
+      });
+    }
+
+    if (order.status === "Cancelled") {
+      logger.warn(`Order ${order_id} is already cancelled`);
+      return res.status(400).json({
+        success: false,
+        message: "Order is already cancelled",
+      });
+    }
+
+    if (order.status !== "Waiting") {
+      logger.warn(`Order ${order_id} cannot be cancelled (Current status: ${order.status})`);
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be cancelled",
+      });
+    }
+
+    logger.info(`Cancelling order ${order_id}...`);
+    const result = await cancelOrderService(order_id);
+    
+    if (!result) {
+      logger.error(`Failed to cancel order ${order_id}`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to cancel order",
+      });
+    }
+
+    logger.info(`Order ${order_id} cancelled successfully`);
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+    });
+
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    return res.status(500).json({
       success: false,
-      message: "Restaurant not found"
+      message: "Internal server error",
     });
   }
+};
 
-  if (restaurant.data.restaurant.owner_id !== userId) {
-    return res.status(403).json({
+export const completeOrderController = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const order_id = req.params.order_id;
+
+    if (!order_id || isNaN(order_id)) {
+      logger.error("Invalid order_id provided");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    logger.info(`Fetching order ${order_id}...`);
+    const order = await getOrderByIdService(order_id);
+
+    if (!order) {
+      logger.warn(`Order ${order_id} not found`);
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    let restaurant;
+    try {
+      logger.info(`Fetching restaurant ${order.restaurant_id}...`);
+      const response = await axios.get(
+        `http://localhost:5000/restaurant/restaurant/${order.restaurant_id}`,
+        {
+          headers: {
+            Authorization: req.headers.authorization,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      restaurant = response.data.restaurant;
+    } catch (err) {
+      logger.error(`Failed to fetch restaurant ${order.restaurant_id}: ${err.message}`);
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found",
+      });
+    }
+
+    if (restaurant.owner_id !== userId) {
+      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to complete this order",
+      });
+    }
+
+    if (order.status === "Completed") {
+      logger.warn(`Order ${order_id} is already completed`);
+      return res.status(400).json({
+        success: false,
+        message: "Order is already completed",
+      });
+    }
+
+    if (order.status !== "Preparing") {
+      logger.warn(`Order ${order_id} cannot be completed (Current status: ${order.status})`);
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be completed",
+      });
+    }
+
+    logger.info(`Completing order ${order_id}...`);
+    const result = await completeOrderService(order_id);
+
+    if (!result) {
+      logger.error(`Failed to complete order ${order_id}`);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to complete order",
+      });
+    }
+
+    logger.info(`Order ${order_id} completed successfully`);
+    return res.status(200).json({
+      success: true,
+      message: "Order completed successfully",
+    });
+
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    return res.status(500).json({
       success: false,
-      message: "You are not authorized to cancel this order",
+      message: "Internal server error",
     });
   }
-
-  if(order.status === "Completed") {
-    return res.status(400).json({
-      success: false,
-      message: "Order is already completed"
-    });
-  }
-
-  if (order.status !== "Preparing") {
-    return res.status(400).json({
-      success: false,
-      message: "Order cannot be Completed",
-    });
-  }
-
-  const result = await completeOrderService(order_id);
-  if (!result) {
-    return res.status(404).json({
-      success: false,
-      message: "Order not found",
-    });
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Order Completed successfully",
-  });
 };
 
 export const getOrderByIdController = async (req, res) => {
@@ -303,7 +385,6 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
-  console.log("Received payment confirmation:", req.body);
   try {
     const { userId } = req.user;
     const { order_id, itemPrice, itemQuantity } = req.body;
@@ -332,16 +413,15 @@ export const payOrderConfirmationController = async (req, res) => {
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
-    console.log("Sending payment request to Midtrans...");
-    console.log("Bae64Auth:", base64Auth);
     const response = await axios.post(
-      "https://app.sandbox.midtrans.com/snap/v1/transactions",
+      process.env.MIDTRANS_SNAP_URL,
       {
         transaction_details: {
           order_id,
           gross_amount: itemPrice * itemQuantity,
         },
         credit_card: { secure: true },
+        isProduction: process.env.IS_PRODUCTION,
       },
       {
         headers: {
@@ -351,7 +431,6 @@ export const payOrderConfirmationController = async (req, res) => {
         },
       }
     );
-    console.log("Payment response:", response.data);
     return res.status(200).json({ success: true, data: response.data });
   } catch (err) {
     console.error(err.response.data);
@@ -364,14 +443,10 @@ export const payOrderController = async (req, res) => {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
     if (!MIDTRANS_SERVER_KEY) {
-      console.error(
-        "MIDTRANS_SERVER_KEY is not defined in environment variables"
-      );
       return res
         .status(500)
         .json({ success: false, message: "Server configuration error" });
     }
-    console.log("Received payment notification:", req.body);
     const {
       order_id,
       transaction_status,
@@ -397,9 +472,9 @@ export const payOrderController = async (req, res) => {
       .createHash("sha512")
       .update(`${order_id}${status_code}${gross_amount}${MIDTRANS_SERVER_KEY}`)
       .digest("hex");
-
-    const signatureBuffer = Buffer.from(signature_key);
-    const expectedBuffer = Buffer.from(expectedSignature);
+      
+      const signatureBuffer = Buffer.from(signature_key);
+      const expectedBuffer = Buffer.from(expectedSignature);
 
     const isSignatureValid =
       signatureBuffer.length === expectedBuffer.length &&
@@ -447,6 +522,7 @@ export const payOrderController = async (req, res) => {
 
     if (transaction_status === "settlement") {
       try {
+        console.log("Processing payment for order:", order_id);
         const response = await payOrderService(order_id);
         console.log("Order paid successfully:", order_id);
         return res.status(200).json({
@@ -462,9 +538,6 @@ export const payOrderController = async (req, res) => {
         });
       }
     } else {
-      console.log(
-        `Order payment status: ${transaction_status} for order: ${order_id}`
-      );
       return res.status(200).json({
         success: false,
         message: `Payment ${transaction_status}`,
@@ -543,7 +616,7 @@ export const checkMidtransStatusController = async (req, res) => {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`;
 
-    const response = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+const response = await axios.get(`${process.env.MIDTRANS_CHECK_TRANSACTION_URL}/${order_id}/status`, {
       headers: { Authorization: base64Auth },
     });
 
@@ -589,7 +662,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       });
     }
     
-    // Get restaurant information
     const restaurant = await axios.get(
       `http://localhost:5000/restaurant/restaurant`,
       {
@@ -602,7 +674,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     
     const restaurant_id = restaurant.data.restaurant.restaurant_id;
     
-    // Verify restaurant ownership
     if (restaurant.data.restaurant.owner_id !== userId) {
       return res.status(403).json({
         success: false,
@@ -620,7 +691,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        // Get menu details
         const menu = await axios.get(
           `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
           {
@@ -631,7 +701,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
           }
         );
         
-        // Get user details
         const user = await axios.get(
           `http://localhost:5000/user/user/${order.user_id}`,
           {

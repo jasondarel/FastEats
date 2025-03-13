@@ -1,0 +1,656 @@
+2025-03-13T03:48:01.726Z [INFO]: Using .env.dev file 
+2025-03-13T03:48:01.733Z [INFO]: Order Service running on port 5004 
+2025-03-13T03:48:01.793Z [INFO]: Creating Table... 
+2025-03-13T03:48:01.804Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T03:48:01.805Z [INFO]: Database connected! Current time:  
+2025-03-13T04:07:59.612Z [INFO]: Using .env.dev file 
+2025-03-13T04:07:59.618Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:07:59.637Z [INFO]: Creating Table... 
+2025-03-13T04:07:59.641Z [INFO]: Database connected! Current time:  
+2025-03-13T04:07:59.643Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:08:05.737Z [INFO]: Using .env.prod file 
+2025-03-13T04:08:05.743Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:08:05.760Z [INFO]: Creating Table... 
+2025-03-13T04:08:05.764Z [INFO]: Database connected! Current time:  
+2025-03-13T04:08:05.765Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:11:16.013Z [INFO]: Using .env.prod file 
+2025-03-13T04:11:16.020Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:11:16.038Z [INFO]: Creating Table... 
+2025-03-13T04:11:16.040Z [INFO]: Database connected! Current time:  
+2025-03-13T04:11:16.051Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:00.422Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:00.428Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:00.450Z [INFO]: Creating Table... 
+2025-03-13T04:15:00.454Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:00.456Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:23.215Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:23.221Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:23.238Z [INFO]: Creating Table... 
+2025-03-13T04:15:23.242Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:23.244Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:25.906Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:25.915Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:25.937Z [INFO]: Creating Table... 
+2025-03-13T04:15:25.941Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:25.944Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:27.473Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:27.480Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:27.504Z [INFO]: Creating Table... 
+2025-03-13T04:15:27.506Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:27.509Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:48.250Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:48.256Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:48.278Z [INFO]: Creating Table... 
+2025-03-13T04:15:48.284Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:48.286Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:52.831Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:52.838Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:52.857Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:52.862Z [INFO]: Creating Table... 
+2025-03-13T04:15:52.867Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:15:54.024Z [INFO]: Using .env.prod file 
+2025-03-13T04:15:54.030Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:15:54.046Z [INFO]: Creating Table... 
+2025-03-13T04:15:54.050Z [INFO]: Database connected! Current time:  
+2025-03-13T04:15:54.053Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:06.699Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:06.706Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:06.723Z [INFO]: Creating Table... 
+2025-03-13T04:16:06.726Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:06.730Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:08.425Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:08.432Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:08.453Z [INFO]: Creating Table... 
+2025-03-13T04:16:08.455Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:08.458Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:11.006Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:11.012Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:11.032Z [INFO]: Creating Table... 
+2025-03-13T04:16:11.035Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:11.039Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:25.518Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:25.525Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:25.543Z [INFO]: Creating Table... 
+2025-03-13T04:16:25.546Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:25.550Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:26.670Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:26.677Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:26.700Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:26.704Z [INFO]: Creating Table... 
+2025-03-13T04:16:26.708Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:27.966Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:27.973Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:27.995Z [INFO]: Creating Table... 
+2025-03-13T04:16:27.997Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:28.002Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:30.020Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:30.026Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:30.045Z [INFO]: Creating Table... 
+2025-03-13T04:16:30.049Z [INFO]: Database connected! Current time:  
+2025-03-13T04:16:30.051Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:47.771Z [INFO]: Using .env.prod file 
+2025-03-13T04:16:47.776Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:16:47.793Z [INFO]: Creating Table... 
+2025-03-13T04:16:47.798Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:16:47.800Z [INFO]: Database connected! Current time:  
+2025-03-13T04:19:31.760Z [INFO]: Using .env.prod file 
+2025-03-13T04:19:31.772Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:19:31.804Z [INFO]: Creating Table... 
+2025-03-13T04:19:31.811Z [INFO]: Database connected! Current time:  
+2025-03-13T04:19:31.814Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:19:35.549Z [INFO]: Using .env.prod file 
+2025-03-13T04:19:35.556Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:19:35.574Z [INFO]: Creating Table... 
+2025-03-13T04:19:35.576Z [INFO]: Database connected! Current time:  
+2025-03-13T04:19:35.580Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:19:41.220Z [INFO]: Using .env.prod file 
+2025-03-13T04:19:41.226Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:19:41.245Z [INFO]: Creating Table... 
+2025-03-13T04:19:41.247Z [INFO]: Database connected! Current time:  
+2025-03-13T04:19:41.251Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:20:24.773Z [INFO]: Using .env.prod file 
+2025-03-13T04:20:24.780Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:20:24.798Z [INFO]: Creating Table... 
+2025-03-13T04:20:24.800Z [INFO]: Database connected! Current time:  
+2025-03-13T04:20:24.804Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:21:06.832Z [INFO]: Using .env.prod file 
+2025-03-13T04:21:06.838Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:21:06.856Z [INFO]: Creating Table... 
+2025-03-13T04:21:06.860Z [INFO]: Database connected! Current time:  
+2025-03-13T04:21:06.864Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:13.759Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:13.765Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:13.782Z [INFO]: Creating Table... 
+2025-03-13T04:22:13.785Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:13.788Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:19.594Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:19.602Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:19.628Z [INFO]: Creating Table... 
+2025-03-13T04:22:19.634Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:19.636Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:25.657Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:25.663Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:25.684Z [INFO]: Creating Table... 
+2025-03-13T04:22:25.686Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:25.689Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:30.009Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:30.016Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:30.038Z [INFO]: Creating Table... 
+2025-03-13T04:22:30.040Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:30.043Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:42.060Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:42.067Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:42.092Z [INFO]: Creating Table... 
+2025-03-13T04:22:42.094Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:42.099Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:52.081Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:52.090Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:52.109Z [INFO]: Creating Table... 
+2025-03-13T04:22:52.114Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:52.116Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:53.401Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:53.409Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:53.428Z [INFO]: Creating Table... 
+2025-03-13T04:22:53.431Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:53.435Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:22:57.281Z [INFO]: Using .env.prod file 
+2025-03-13T04:22:57.288Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:22:57.305Z [INFO]: Creating Table... 
+2025-03-13T04:22:57.307Z [INFO]: Database connected! Current time:  
+2025-03-13T04:22:57.311Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:24:50.419Z [INFO]: Using .env.prod file 
+2025-03-13T04:24:50.425Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:24:50.444Z [INFO]: Creating Table... 
+2025-03-13T04:24:50.446Z [INFO]: Database connected! Current time:  
+2025-03-13T04:24:50.450Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:25:21.754Z [INFO]: Using .env.prod file 
+2025-03-13T04:25:21.762Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:25:21.782Z [INFO]: Creating Table... 
+2025-03-13T04:25:21.784Z [INFO]: Database connected! Current time:  
+2025-03-13T04:25:21.787Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:26:06.419Z [INFO]: Using .env.prod file 
+2025-03-13T04:26:06.425Z [INFO]: Order Service running on port 5004 
+2025-03-13T04:26:06.529Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:22:20)
+2025-03-13T04:28:46.104Z [INFO]: Using .env.prod file 
+2025-03-13T04:28:46.110Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:28:46.126Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:22:20)
+2025-03-13T04:28:47.511Z [INFO]: Using .env.prod file 
+2025-03-13T04:28:47.517Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:28:47.529Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:22:20)
+2025-03-13T04:29:44.083Z [INFO]: Using .env.prod file 
+2025-03-13T04:29:44.090Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:29:44.105Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:21:20)
+2025-03-13T04:29:50.724Z [INFO]: Using .env.prod file 
+2025-03-13T04:29:50.731Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:29:50.746Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:20:20)
+2025-03-13T04:30:08.022Z [INFO]: Using .env.prod file 
+2025-03-13T04:30:08.030Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:30:37.724Z [INFO]: Using .env.prod file 
+2025-03-13T04:30:37.730Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:30:46.282Z [INFO]: Using .env.prod file 
+2025-03-13T04:30:46.288Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:30:48.927Z [INFO]: Using .env.prod file 
+2025-03-13T04:30:48.934Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:30:48.947Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:23:20)
+2025-03-13T04:30:54.137Z [INFO]: Using .env.prod file 
+2025-03-13T04:30:54.143Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:31:27.716Z [INFO]: Using .env.prod file 
+2025-03-13T04:31:27.722Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:31:27.737Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:31:30.275Z [INFO]: Using .env.prod file 
+2025-03-13T04:31:30.281Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:31:30.297Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:31:35.898Z [INFO]: Using .env.prod file 
+2025-03-13T04:31:35.904Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:31:44.055Z [INFO]: Using .env.prod file 
+2025-03-13T04:31:44.061Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:32:23.504Z [INFO]: Using .env.prod file 
+2025-03-13T04:32:23.510Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:34:21.397Z [INFO]: Using .env.prod file 
+2025-03-13T04:34:21.406Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:34:29.950Z [INFO]: Using .env.prod file 
+2025-03-13T04:34:29.957Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:34:29.970Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:36:03.093Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:36:03.108Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:36:10.031Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:36:10.043Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:36:15.330Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:36:15.345Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:25:20)
+2025-03-13T04:36:28.290Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:36:28.304Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:24:20)
+2025-03-13T04:36:38.390Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:38:17.919Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:38:29.851Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:38:29.867Z [ERROR]: Database connection error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at C:\Users\Andrean\Documents\Project\Project\FastEats\order-service\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async testDatabase (file:///C:/Users/Andrean/Documents/Project/Project/FastEats/order-service/config/db.js:26:20)
+2025-03-13T04:38:42.437Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:39:05.156Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:39:05.174Z [INFO]: Creating Table... 
+2025-03-13T04:39:05.184Z [INFO]: Database connected! Current time:  
+2025-03-13T04:39:05.189Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:39:13.078Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:39:13.097Z [INFO]: Creating Table... 
+2025-03-13T04:39:13.101Z [INFO]: Database connected! Current time:  
+2025-03-13T04:39:13.104Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:42:43.607Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:42:43.624Z [INFO]: Creating Table... 
+2025-03-13T04:42:43.628Z [INFO]: Database connected! Current time:  
+2025-03-13T04:42:43.631Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:44:45.396Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:44:45.416Z [INFO]: Creating Table... 
+2025-03-13T04:44:45.419Z [INFO]: Database connected! Current time:  
+2025-03-13T04:44:45.423Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:45:17.688Z [INFO]: Fetching menu data 
+2025-03-13T04:45:17.755Z [INFO]: Fetching restaurant data 
+2025-03-13T04:45:17.815Z [INFO]: Inserting order into database 
+2025-03-13T04:45:17.894Z [INFO]: Order created successfully 
+2025-03-13T04:45:24.843Z [INFO]: Fetching orders from database... 
+2025-03-13T04:45:24.892Z [INFO]: Fetching menu data for orders... 
+2025-03-13T04:45:25.001Z [INFO]: Orders fetched successfully 
+2025-03-13T04:45:25.008Z [INFO]: Fetching orders from database... 
+2025-03-13T04:45:25.052Z [INFO]: Fetching menu data for orders... 
+2025-03-13T04:45:25.137Z [INFO]: Orders fetched successfully 
+2025-03-13T04:51:40.490Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:51:40.511Z [INFO]: Creating Table... 
+2025-03-13T04:51:40.516Z [INFO]: Database connected! Current time:  
+2025-03-13T04:51:40.519Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:51:50.096Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:51:50.119Z [INFO]: Creating Table... 
+2025-03-13T04:51:50.124Z [INFO]: Database connected! Current time:  
+2025-03-13T04:51:50.130Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:51:52.552Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:51:52.577Z [INFO]: Creating Table... 
+2025-03-13T04:51:52.579Z [INFO]: Database connected! Current time:  
+2025-03-13T04:51:52.584Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T04:51:53.697Z [INFO]: Order_Service running on port 5004 
+2025-03-13T04:51:53.720Z [INFO]: Creating Table... 
+2025-03-13T04:51:53.722Z [INFO]: Database connected! Current time:  
+2025-03-13T04:51:53.726Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:20:48.631Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:20:48.652Z [INFO]: Creating Table... 
+2025-03-13T06:20:48.657Z [INFO]: Database connected! Current time:  
+2025-03-13T06:20:48.660Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:20:52.243Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:20:52.273Z [INFO]: Creating Table... 
+2025-03-13T06:20:52.275Z [INFO]: Database connected! Current time:  
+2025-03-13T06:20:52.280Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:20:54.032Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:20:54.059Z [INFO]: Creating Table... 
+2025-03-13T06:20:54.064Z [INFO]: Database connected! Current time:  
+2025-03-13T06:20:54.066Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:20:55.186Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:20:55.209Z [INFO]: Creating Table... 
+2025-03-13T06:20:55.211Z [INFO]: Database connected! Current time:  
+2025-03-13T06:20:55.215Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:20:58.307Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:20:58.329Z [INFO]: Database connected! Current time:  
+2025-03-13T06:20:58.330Z [INFO]: Creating Table... 
+2025-03-13T06:20:58.335Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:21:57.715Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:21:57.733Z [INFO]: Creating Table... 
+2025-03-13T06:21:57.735Z [INFO]: Database connected! Current time:  
+2025-03-13T06:21:57.739Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:22:49.681Z [INFO]: Fetching orders from database... 
+2025-03-13T06:22:49.737Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:22:49.824Z [INFO]: Orders fetched successfully 
+2025-03-13T06:22:49.830Z [INFO]: Fetching orders from database... 
+2025-03-13T06:22:49.876Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:22:49.948Z [INFO]: Orders fetched successfully 
+2025-03-13T06:22:59.935Z [INFO]: Fetching menu data 
+2025-03-13T06:22:59.998Z [INFO]: Fetching restaurant data 
+2025-03-13T06:23:00.048Z [INFO]: Inserting order into database 
+2025-03-13T06:23:00.111Z [INFO]: Order created successfully 
+2025-03-13T06:23:07.584Z [INFO]: Fetching orders from database... 
+2025-03-13T06:23:07.646Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:23:07.749Z [INFO]: Orders fetched successfully 
+2025-03-13T06:23:07.755Z [INFO]: Fetching orders from database... 
+2025-03-13T06:23:07.806Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:23:07.881Z [INFO]: Orders fetched successfully 
+2025-03-13T06:28:17.129Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:28:17.150Z [INFO]: Creating Table... 
+2025-03-13T06:28:17.153Z [INFO]: Database connected! Current time:  
+2025-03-13T06:28:17.155Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:28:25.408Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:28:25.427Z [INFO]: Creating Table... 
+2025-03-13T06:28:25.431Z [INFO]: Database connected! Current time:  
+2025-03-13T06:28:25.433Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:28:55.277Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:28:55.298Z [INFO]: Creating Table... 
+2025-03-13T06:28:55.300Z [INFO]: Database connected! Current time:  
+2025-03-13T06:28:55.303Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:28:59.376Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:28:59.397Z [INFO]: Database connected! Current time:  
+2025-03-13T06:28:59.398Z [INFO]: Creating Table... 
+2025-03-13T06:28:59.403Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:29:04.815Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:29:04.834Z [INFO]: Creating Table... 
+2025-03-13T06:29:04.838Z [INFO]: Database connected! Current time:  
+2025-03-13T06:29:04.841Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:29:07.108Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:29:07.129Z [INFO]: Creating Table... 
+2025-03-13T06:29:07.131Z [INFO]: Database connected! Current time:  
+2025-03-13T06:29:07.135Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:29:08.477Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:29:08.499Z [INFO]: Creating Table... 
+2025-03-13T06:29:08.501Z [INFO]: Database connected! Current time:  
+2025-03-13T06:29:08.505Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:32:45.224Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:32:45.243Z [INFO]: Creating Table... 
+2025-03-13T06:32:45.247Z [INFO]: Database connected! Current time:  
+2025-03-13T06:32:45.250Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:32:54.050Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:32:54.079Z [INFO]: Creating Table... 
+2025-03-13T06:32:54.084Z [INFO]: Database connected! Current time:  
+2025-03-13T06:32:54.087Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:37:19.870Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:37:19.892Z [INFO]: Creating Table... 
+2025-03-13T06:37:19.894Z [INFO]: Database connected! Current time:  
+2025-03-13T06:37:19.898Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:37:21.903Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:37:21.934Z [INFO]: Creating Table... 
+2025-03-13T06:37:21.937Z [INFO]: Database connected! Current time:  
+2025-03-13T06:37:21.943Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:38:00.766Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:38:00.788Z [INFO]: Creating Table... 
+2025-03-13T06:38:00.792Z [INFO]: Database connected! Current time:  
+2025-03-13T06:38:00.795Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:38:53.613Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:38:53.634Z [INFO]: Creating Table... 
+2025-03-13T06:38:53.636Z [INFO]: Database connected! Current time:  
+2025-03-13T06:38:53.639Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:38:54.847Z [INFO]: Order_Service running on port 5004 
+2025-03-13T06:38:54.868Z [INFO]: Creating Table... 
+2025-03-13T06:38:54.870Z [INFO]: Database connected! Current time:  
+2025-03-13T06:38:54.874Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T06:39:52.244Z [INFO]: Fetching orders from database... 
+2025-03-13T06:39:52.317Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:39:52.417Z [INFO]: Orders fetched successfully 
+2025-03-13T06:39:52.423Z [INFO]: Fetching orders from database... 
+2025-03-13T06:39:52.475Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:39:52.541Z [INFO]: Orders fetched successfully 
+2025-03-13T06:40:04.088Z [INFO]: Fetching menu data 
+2025-03-13T06:40:04.146Z [INFO]: Fetching restaurant data 
+2025-03-13T06:40:04.196Z [INFO]: Inserting order into database 
+2025-03-13T06:40:04.268Z [INFO]: Order created successfully 
+2025-03-13T06:40:12.177Z [INFO]: Fetching orders from database... 
+2025-03-13T06:40:12.224Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:40:12.328Z [INFO]: Orders fetched successfully 
+2025-03-13T06:40:12.333Z [INFO]: Fetching orders from database... 
+2025-03-13T06:40:12.394Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:40:12.476Z [INFO]: Orders fetched successfully 
+2025-03-13T06:40:26.230Z [INFO]: Fetching orders from database... 
+2025-03-13T06:40:26.294Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:40:26.390Z [INFO]: Orders fetched successfully 
+2025-03-13T06:40:26.394Z [INFO]: Fetching orders from database... 
+2025-03-13T06:40:26.444Z [INFO]: Fetching menu data for orders... 
+2025-03-13T06:40:26.516Z [INFO]: Orders fetched successfully 
+2025-03-13T07:03:17.852Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:03:17.870Z [INFO]: Creating Table... 
+2025-03-13T07:03:17.874Z [INFO]: Database connected! Current time:  
+2025-03-13T07:03:17.876Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:03:24.463Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:03:24.481Z [INFO]: Creating Table... 
+2025-03-13T07:03:24.485Z [INFO]: Database connected! Current time:  
+2025-03-13T07:03:24.487Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:05:52.093Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:05:52.113Z [INFO]: Creating Table... 
+2025-03-13T07:05:52.117Z [INFO]: Database connected! Current time:  
+2025-03-13T07:05:52.119Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:06.023Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:06.043Z [INFO]: Creating Table... 
+2025-03-13T07:06:06.045Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:06.050Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:08.284Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:08.305Z [INFO]: Creating Table... 
+2025-03-13T07:06:08.307Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:08.310Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:15.515Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:15.535Z [INFO]: Creating Table... 
+2025-03-13T07:06:15.539Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:15.541Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:28.122Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:28.143Z [INFO]: Creating Table... 
+2025-03-13T07:06:28.148Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:28.151Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:29.581Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:29.602Z [INFO]: Creating Table... 
+2025-03-13T07:06:29.607Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:29.609Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:06:41.978Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:06:41.999Z [INFO]: Creating Table... 
+2025-03-13T07:06:42.002Z [INFO]: Database connected! Current time:  
+2025-03-13T07:06:42.006Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:07:39.264Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:07:39.283Z [INFO]: Creating Table... 
+2025-03-13T07:07:39.286Z [INFO]: Database connected! Current time:  
+2025-03-13T07:07:39.290Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:07:44.994Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:07:45.014Z [INFO]: Creating Table... 
+2025-03-13T07:07:45.016Z [INFO]: Database connected! Current time:  
+2025-03-13T07:07:45.019Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:07:49.255Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:07:49.275Z [INFO]: Creating Table... 
+2025-03-13T07:07:49.279Z [INFO]: Database connected! Current time:  
+2025-03-13T07:07:49.281Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:07:52.330Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:07:52.351Z [INFO]: Creating Table... 
+2025-03-13T07:07:52.352Z [INFO]: Database connected! Current time:  
+2025-03-13T07:07:52.355Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:08:18.025Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:08:18.044Z [INFO]: Creating Table... 
+2025-03-13T07:08:18.047Z [INFO]: Database connected! Current time:  
+2025-03-13T07:08:18.050Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:10:06.895Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:10:06.915Z [INFO]: Creating Table... 
+2025-03-13T07:10:06.917Z [INFO]: Database connected! Current time:  
+2025-03-13T07:10:06.922Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:10:12.855Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:10:12.872Z [INFO]: Creating Table... 
+2025-03-13T07:10:12.876Z [INFO]: Database connected! Current time:  
+2025-03-13T07:10:12.878Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:10:29.416Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:10:29.438Z [INFO]: Creating Table... 
+2025-03-13T07:10:29.443Z [INFO]: Database connected! Current time:  
+2025-03-13T07:10:29.446Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:10:32.897Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:10:32.917Z [INFO]: Creating Table... 
+2025-03-13T07:10:32.921Z [INFO]: Database connected! Current time:  
+2025-03-13T07:10:32.923Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:14:45.055Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:14:45.074Z [INFO]: Creating Table... 
+2025-03-13T07:14:45.076Z [INFO]: Database connected! Current time:  
+2025-03-13T07:14:45.080Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:14:57.653Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:14:57.677Z [INFO]: Creating Table... 
+2025-03-13T07:14:57.680Z [INFO]: Database connected! Current time:  
+2025-03-13T07:14:57.685Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:03.217Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:03.236Z [INFO]: Creating Table... 
+2025-03-13T07:15:03.239Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:03.243Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:08.945Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:08.966Z [INFO]: Creating Table... 
+2025-03-13T07:15:08.970Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:08.975Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:47.949Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:47.968Z [INFO]: Creating Table... 
+2025-03-13T07:15:47.972Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:47.974Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:52.016Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:52.035Z [INFO]: Creating Table... 
+2025-03-13T07:15:52.041Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:52.045Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:54.079Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:54.102Z [INFO]: Creating Table... 
+2025-03-13T07:15:54.104Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:54.108Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:15:59.157Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:15:59.183Z [INFO]: Creating Table... 
+2025-03-13T07:15:59.185Z [INFO]: Database connected! Current time:  
+2025-03-13T07:15:59.189Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:16:05.532Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:16:05.551Z [INFO]: Creating Table... 
+2025-03-13T07:16:05.555Z [INFO]: Database connected! Current time:  
+2025-03-13T07:16:05.557Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:16:07.062Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:16:07.080Z [INFO]: Creating Table... 
+2025-03-13T07:16:07.085Z [INFO]: Database connected! Current time:  
+2025-03-13T07:16:07.087Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:16:46.739Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:16:46.758Z [INFO]: Creating Table... 
+2025-03-13T07:16:46.761Z [INFO]: Database connected! Current time:  
+2025-03-13T07:16:46.765Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:17:00.341Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:17:00.361Z [INFO]: Creating Table... 
+2025-03-13T07:17:00.365Z [INFO]: Database connected! Current time:  
+2025-03-13T07:17:00.368Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:17:05.948Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:17:05.972Z [INFO]: Creating Table... 
+2025-03-13T07:17:05.974Z [INFO]: Database connected! Current time:  
+2025-03-13T07:17:05.979Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:17:15.354Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:17:15.372Z [INFO]: Creating Table... 
+2025-03-13T07:17:15.377Z [INFO]: Database connected! Current time:  
+2025-03-13T07:17:15.379Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:17:18.409Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:17:18.431Z [INFO]: Creating Table... 
+2025-03-13T07:17:18.432Z [INFO]: Database connected! Current time:  
+2025-03-13T07:17:18.435Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:17:25.125Z [INFO]: Order_Service running on port 5004 
+2025-03-13T07:17:25.143Z [INFO]: Creating Table... 
+2025-03-13T07:17:25.147Z [INFO]: Database connected! Current time:  
+2025-03-13T07:17:25.150Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:19:06.516Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:19:06.536Z [INFO]: Creating Table... 
+2025-03-13T07:19:06.540Z [INFO]: Database connected! Current time:  
+2025-03-13T07:19:06.545Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:19:25.114Z [INFO]: Fetching menu data 
+2025-03-13T07:19:25.177Z [INFO]: Fetching restaurant data 
+2025-03-13T07:19:25.236Z [INFO]: Inserting order into database 
+2025-03-13T07:19:25.311Z [INFO]: Order created successfully 
+2025-03-13T07:19:29.758Z [INFO]: Fetching orders from database... 
+2025-03-13T07:19:29.804Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:19:29.946Z [INFO]: Orders fetched successfully 
+2025-03-13T07:19:29.954Z [INFO]: Fetching orders from database... 
+2025-03-13T07:19:30.003Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:19:30.146Z [INFO]: Orders fetched successfully 
+2025-03-13T07:20:16.056Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:20:16.077Z [INFO]: Creating Table... 
+2025-03-13T07:20:16.080Z [INFO]: Database connected! Current time:  
+2025-03-13T07:20:16.084Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:20:56.193Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:20:56.216Z [INFO]: Creating Table... 
+2025-03-13T07:20:56.221Z [INFO]: Database connected! Current time:  
+2025-03-13T07:20:56.225Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:20:58.763Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:20:58.781Z [INFO]: Creating Table... 
+2025-03-13T07:20:58.785Z [INFO]: Database connected! Current time:  
+2025-03-13T07:20:58.789Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:21:01.626Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:21:01.651Z [INFO]: Creating Table... 
+2025-03-13T07:21:01.653Z [INFO]: Database connected! Current time:  
+2025-03-13T07:21:01.659Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:21:09.640Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:21:09.662Z [INFO]: Creating Table... 
+2025-03-13T07:21:09.667Z [INFO]: Database connected! Current time:  
+2025-03-13T07:21:09.669Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:21:14.650Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:21:14.672Z [INFO]: Creating Table... 
+2025-03-13T07:21:14.675Z [INFO]: Database connected! Current time:  
+2025-03-13T07:21:14.679Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:21:15.738Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:21:15.759Z [INFO]: Creating Table... 
+2025-03-13T07:21:15.763Z [INFO]: Database connected! Current time:  
+2025-03-13T07:21:15.766Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:21:49.639Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:21:49.660Z [INFO]: Creating Table... 
+2025-03-13T07:21:49.664Z [INFO]: Database connected! Current time:  
+2025-03-13T07:21:49.666Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:22:40.052Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:22:40.073Z [INFO]: Creating Table... 
+2025-03-13T07:22:40.078Z [INFO]: Database connected! Current time:  
+2025-03-13T07:22:40.080Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:22:45.243Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:22:45.263Z [INFO]: Creating Table... 
+2025-03-13T07:22:45.266Z [INFO]: Database connected! Current time:  
+2025-03-13T07:22:45.269Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:22:57.144Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:22:57.168Z [INFO]: Creating Table... 
+2025-03-13T07:22:57.171Z [INFO]: Database connected! Current time:  
+2025-03-13T07:22:57.175Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:23:58.579Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:23:58.599Z [INFO]: Creating Table... 
+2025-03-13T07:23:58.603Z [INFO]: Database connected! Current time:  
+2025-03-13T07:23:58.608Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:24:30.282Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:24:30.302Z [INFO]: Creating Table... 
+2025-03-13T07:24:30.307Z [INFO]: Database connected! Current time:  
+2025-03-13T07:24:30.310Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:27:26.015Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:27:26.035Z [INFO]: Creating Table... 
+2025-03-13T07:27:26.039Z [INFO]: Database connected! Current time:  
+2025-03-13T07:27:26.041Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:27:51.315Z [INFO]: Order Service running on port 5004 
+2025-03-13T07:27:51.344Z [INFO]: Creating Table... 
+2025-03-13T07:27:51.347Z [INFO]: Database connected! Current time:  
+2025-03-13T07:27:51.352Z [INFO]: ✅ Tables created successfully! 
+2025-03-13T07:28:19.020Z [INFO]: Fetching orders from database... 
+2025-03-13T07:28:19.079Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:28:19.220Z [INFO]: Orders fetched successfully 
+2025-03-13T07:28:19.226Z [INFO]: Fetching orders from database... 
+2025-03-13T07:28:19.279Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:28:19.390Z [INFO]: Orders fetched successfully 
+2025-03-13T07:30:48.927Z [INFO]: Fetching orders from database... 
+2025-03-13T07:30:48.992Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:30:49.134Z [INFO]: Orders fetched successfully 
+2025-03-13T07:30:49.140Z [INFO]: Fetching orders from database... 
+2025-03-13T07:30:49.192Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:30:49.303Z [INFO]: Orders fetched successfully 
+2025-03-13T07:31:27.679Z [INFO]: Fetching orders from database... 
+2025-03-13T07:31:27.751Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:31:27.902Z [INFO]: Orders fetched successfully 
+2025-03-13T07:31:27.908Z [INFO]: Fetching orders from database... 
+2025-03-13T07:31:27.961Z [INFO]: Fetching menu data for orders... 
+2025-03-13T07:31:28.082Z [INFO]: Orders fetched successfully 
