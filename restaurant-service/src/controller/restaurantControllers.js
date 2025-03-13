@@ -10,13 +10,14 @@ import jwt from 'jsonwebtoken';
 import logger from "../config/loggerInit.js";
 
 export const createRestaurantController = async(req, res) => {
+    logger.info("CREATE RESTAURANT CONTROLLER");
     const restaurantReq = req.body;
     restaurantReq.ownerId = restaurantReq.ownerId
     try {
         const errors = await validateCreateRestaurantRequest(restaurantReq);
         const errorLen = Object.keys(errors).length;
         if(errorLen > 0) {
-            logger.error("Validation failed", errors);
+            logger.warn("Validation failed", errors);
             return res.status(400).json({
                 success: false,
                 message: 'Validation failed',
@@ -34,13 +35,12 @@ export const createRestaurantController = async(req, res) => {
         })
     } catch(err) {
         if (err.code === "23505") { 
-            logger.error("Restaurant name or owner already exists", err);
+            logger.warn("Restaurant name or owner already exists", err);
             return res.status(400).json({
                 success: false,
                 message: "Restaurant name or owner already exists"
             });
         }
-
         logger.error("Internal Server Error", err);
         return res.status(500).json({
             success: false,
@@ -51,10 +51,11 @@ export const createRestaurantController = async(req, res) => {
 }
 
 export const updateRestaurantController = async (req, res) => {
+    logger.info("UPDATE RESTAURANT CONTROLLER");
     const { role, userId } = req.user;
     try {
         if (role !== "seller") {
-            logger.error("Only sellers can update a restaurant");
+            logger.warn("Only sellers can update a restaurant");
             return res.status(403).json({
                 success: false,
                 message: "Only sellers can update a restaurant",
@@ -62,7 +63,7 @@ export const updateRestaurantController = async (req, res) => {
         }
         const restaurant = await getRestaurantByOwnerIdService(userId);
         if (!restaurant) {
-            logger.error("Restaurant not found for this owner");
+            logger.warn("Restaurant not found for this owner");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found for this owner",
@@ -78,7 +79,7 @@ export const updateRestaurantController = async (req, res) => {
 
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
-            logger.error("Validation failed", errors);
+            logger.warn("Validation failed", errors);
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
@@ -127,7 +128,7 @@ export const deleteRestaurantController = async (req, res) => {
         const deletedRestaurant = await deleteRestaurantService(restaurantId);
 
         if (!deletedRestaurant) {
-            logger.error("Restaurant not found");
+            logger.warn("Restaurant not found");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found"
@@ -150,6 +151,7 @@ export const deleteRestaurantController = async (req, res) => {
 };
 
 export const getRestaurantsController = async(req, res) => {
+    logger.info("GET RESTAURANTS CONTROLLER");
     const userId = req.user.userId;
     try {
         const result = await getRestaurantsService(userId);
@@ -170,12 +172,13 @@ export const getRestaurantsController = async(req, res) => {
 
 
 export const getRestaurantByOwnerIdController = async (req, res) => {
+    logger.info("GET RESTAURANT BY OWNER ID CONTROLLER");
     const { ownerId } = req.params;
     try {
         const result = await getRestaurantByOwnerIdService(ownerId);
 
         if (!result) {
-            logger.error("Restaurant not found");
+            logger.warn("Restaurant not found");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found"
@@ -197,10 +200,11 @@ export const getRestaurantByOwnerIdController = async (req, res) => {
 };
 
 export const getRestaurantByRestaurantIdController = async (req, res) => {
+    logger.info("GET RESTAURANT BY RESTAURANT ID CONTROLLER");
     const { restaurantId } = req.params;
     try {
         if (!restaurantId || isNaN(restaurantId)) {
-            logger.error("Invalid restaurantId");
+            logger.warn("Invalid restaurantId");
             return res.status(400).json({
                 success: false,
                 message: "Invalid restaurantId"
@@ -210,7 +214,7 @@ export const getRestaurantByRestaurantIdController = async (req, res) => {
         const result = await getRestaurantByRestaurantIdService(restaurantId);
 
         if (!result) {
-            logger.error("Restaurant not found");
+            logger.warn("Restaurant not found");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found"
@@ -233,13 +237,13 @@ export const getRestaurantByRestaurantIdController = async (req, res) => {
 
 
 export const getRestaurantController = async (req, res) => {
+    logger.info("GET RESTAURANT CONTROLLER");
     const userId = req.user.userId;
     try {
-
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
-            logger.error("Restaurant not found for this owner");
+            logger.warn("Restaurant not found for this owner");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found for this owner"
@@ -270,12 +274,13 @@ export const getRestaurantController = async (req, res) => {
 };
 
 export const updateOpenRestaurantController = async (req, res) => {
+    logger.info("UPDATE OPEN RESTAURANT CONTROLLER");
     const {userId, role} = req.user;
     const isOpen = req.body.isOpen;
     try {
 
         if (role !== "seller") {
-            logger.error("Only sellers can open a restaurant");
+            logger.warn("Only sellers can open a restaurant");
             return res.status(403).json({
                 success: false,
                 message: "Only sellers can open a restaurant"
@@ -283,7 +288,7 @@ export const updateOpenRestaurantController = async (req, res) => {
         }
 
         if(isOpen === undefined) {
-            logger.error("isOpen field is required");
+            logger.warn("isOpen field is required");
             return res.status(400).json({
                 success: false,
                 message: "isOpen field is required"
@@ -293,7 +298,7 @@ export const updateOpenRestaurantController = async (req, res) => {
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
-            logger.error("Restaurant not found for this owner");
+            logger.warn("Restaurant not found for this owner");
             return res.status(404).json({
                 success: false,
                 message: "Restaurant not found for this owner"
@@ -303,7 +308,7 @@ export const updateOpenRestaurantController = async (req, res) => {
         const restaurantId = restaurant.restaurant_id;
 
         if(restaurant.owner_id !== userId) {
-            logger.error("You are not authorized to open this restaurant");
+            logger.warn("You are not authorized to open this restaurant");
             return res.status(403).json({
                 success: false,
                 message: "You are not authorized to open this restaurant"

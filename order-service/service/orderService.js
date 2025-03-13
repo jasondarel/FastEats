@@ -32,12 +32,28 @@ const getOrdersByRestaurantIdService = async(restaurantId) => {
     return result.rows;
 }
 
+export const deleteOrderService = async(orderId) => {
+    const result = await pool.query(
+        "DELETE FROM orders WHERE order_id = $1 RETURNING *",
+        [orderId]
+    );
+    return result.rows[0];
+}
+
 export const getCompletedOrdersByRestaurantIdService = async(restaurantId) => {
     const result = await pool.query(
         "SELECT * FROM orders WHERE restaurant_id = $1 AND status = 'Completed'",
         [restaurantId]
     );
     return result.rows;
+}
+
+export const updateOrderStatusService = async(orderId, status) => {
+    const result = await pool.query(
+        "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
+        [status, orderId]
+    );
+    return result.rows[0];
 }
 
 const payOrderService = async(orderId) => {

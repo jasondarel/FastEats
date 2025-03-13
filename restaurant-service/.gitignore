@@ -12,3 +12,5 @@ node_modules/
 !/src/uploads/menu/.gitkeep
 !/src/uploads/.gitkeep
 !/src/uploads/restaurant/.gitkeep
+
+./logs
