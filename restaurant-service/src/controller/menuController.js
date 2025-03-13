@@ -15,12 +15,13 @@ import {
 import logger from "../config/loggerInit.js";
 
 export const createMenuController = async (req, res) => {
+  logger.info("CREATE MENU CONTROLLER");
   const menuReq = req.body;
   const userId = req.user.userId;
   const role = req.user.role;
 
   if (role !== "seller") {
-    logger.error("Only sellers can create a menu");
+    logger.warn("Only sellers can create a menu");
     return res.status(403).json({
       success: false,
       message: "Only sellers can create a menu",
@@ -30,7 +31,7 @@ export const createMenuController = async (req, res) => {
   try {
     const restaurant = await getRestaurantByOwnerIdService(userId);
     if (!restaurant) {
-      logger.error("Restaurant not found for this owner");
+      logger.warn("Restaurant not found for this owner");
       return res.status(404).json({
         success: false,
         message: "Restaurant not found for this owner",
@@ -44,7 +45,7 @@ export const createMenuController = async (req, res) => {
 
     const errors = await validateCreateMenuRequest(menuReq);
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed:", errors);
+      logger.warn("Validation failed:", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -62,7 +63,7 @@ export const createMenuController = async (req, res) => {
     });
   } catch (err) {
     if (err.code === "23505") {
-      logger.error("Menu name already exists"); 
+      logger.warn("Menu name already exists"); 
       return res.status(400).json({
         success: false,
         message: "Menu name already exists",
@@ -77,11 +78,12 @@ export const createMenuController = async (req, res) => {
 };
 
 export const getMenusController = async (req, res) => {
+  logger.info("GET MENUS CONTROLLER");
   const userId = req.user.userId;
   const role = req.user.role;
 
   if (role !== "seller") {
-    logger.error("Only sellers can get menus");
+    logger.warn("Only sellers can get menus");
     return res.status(403).json({
       success: false,
       message: "Only sellers can get menus",
@@ -90,7 +92,7 @@ export const getMenusController = async (req, res) => {
 
   const restaurant = await getRestaurantByOwnerIdService(userId);
   if (!restaurant) {
-    logger.error("Restaurant not found for this owner");
+    logger.warn("Restaurant not found for this owner");
     return res.status(404).json({
       success: false,
       message: "Restaurant not found for this owner",
@@ -115,11 +117,12 @@ export const getMenusController = async (req, res) => {
 };
 
 export const getMenuByRestoIdController = async (req, res) => {
+  logger.info("GET MENU BY RESTAURANT ID CONTROLLER");
   const restaurantId = req.params.restaurantId;
   try {
     const result = await getMenuByRestaurantIdService(restaurantId);
     if (!result) {
-      logger.error("Menu not found");
+      logger.warn("Menu not found");
       return res.status(404).json({
         success: false,
         message: "Menu not found",
@@ -141,11 +144,11 @@ export const getMenuByRestoIdController = async (req, res) => {
 };
 
 export const getMenuByMenuIdController = async (req, res) => {
+  logger.info("GET MENU BY MENU ID CONTROLLER");
   try {
     const { menuId } = req.params;
-
     if (!menuId || isNaN(menuId)) {
-      logger.error("Invalid menuId");
+      logger.warn("Invalid menuId");
       return res.status(400).json({
         success: false,
         message: "Invalid menuId",
@@ -153,9 +156,8 @@ export const getMenuByMenuIdController = async (req, res) => {
     }
 
     const result = await getMenuByMenuIdService(menuId);
-
     if (!result) {
-      logger.error("Menu not found");
+      logger.warn("Menu not found");
       return res.status(404).json({
         success: false,
         message: "Menu not found",
@@ -177,9 +179,10 @@ export const getMenuByMenuIdController = async (req, res) => {
 };
 
 export const updateMenuController = async (req, res) => {
+  logger.info("UPDATE MENU CONTROLLER");
   const { role, userId } = req.user;
   if (role !== "seller") {
-    logger.error("Only seller can update restaurant");
+    logger.warn("Only seller can update restaurant");
     return res.status(403).json({
       success: false,
       message: "Only seller can update restaurant",
@@ -195,7 +198,7 @@ export const updateMenuController = async (req, res) => {
   try {
     const menu = await getMenuByMenuIdService(req.params.menuId);
     if (!menu) {
-      logger.error("Menu not found");
+      logger.warn("Menu not found");
       return res.status(404).json({
         success: false,
         message: "Menu not found",
@@ -205,7 +208,7 @@ export const updateMenuController = async (req, res) => {
     const restaurant = await getRestaurantByOwnerIdService(userId);
 
     if (!restaurant) {
-      logger.error("Restaurant not found for this owner");
+      logger.warn("Restaurant not found for this owner");
       return res.status(404).json({
         success: false,
         message: "Restaurant not found for this owner",
@@ -215,7 +218,7 @@ export const updateMenuController = async (req, res) => {
     const restaurantId = restaurant.restaurant_id;
 
     if (menu.restaurant_id !== restaurantId) {
-      logger.error("You are not allowed to update this menu");
+      logger.warn("You are not allowed to update this menu");
       return res.status(403).json({
         success: false,
         message: "You are not allowed to update this menu",
@@ -229,7 +232,7 @@ export const updateMenuController = async (req, res) => {
     menuReq.restaurantId = restaurantId;
     const errors = await validateUpdateMenuRequest(menuReq);
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed:",
+      logger.warn("Validation failed:",
       errors);
       return res.status(400).json({
         success: false,
@@ -240,7 +243,7 @@ export const updateMenuController = async (req, res) => {
 
     const updatedMenu = await updateMenuService(menuReq, menuId);
     if (!updatedMenu) {
-      logger.error("Menu update failed");
+      logger.warn("Menu update failed");
       return res.status(404).json({
         success: false,
         message: "Menu update failed",
@@ -263,10 +266,12 @@ export const updateMenuController = async (req, res) => {
 };
 
 export const deleteMenuController = async (req, res) => {
+  logger.info("DELETE MENU CONTROLLER");
   const { role, userId } = req.user;
   const menuId = req.params.menuId;
+
   if (role !== "seller") {
-    logger.error("Only seller can delete menu");
+    logger.warn("Only seller can delete menu");
     return res.status(403).json({
       success: false,
       message: "Only seller can delete menu",
@@ -276,7 +281,7 @@ export const deleteMenuController = async (req, res) => {
   try {
     const menu = await getMenuByMenuIdService(req.params.menuId);
     if (!menu) {
-      logger.error("Menu not found");
+      logger.warn("Menu not found");
       return res.status(404).json({
         success: false,
         message: "Menu not found",
@@ -284,9 +289,8 @@ export const deleteMenuController = async (req, res) => {
     }
 
     const restaurant = await getRestaurantByOwnerIdService(userId);
-
     if (!restaurant) {
-      logger.error("Restaurant not found for this owner");
+      logger.warn("Restaurant not found for this owner");
       return res.status(404).json({
         success: false,
         message: "Restaurant not found for this owner",
@@ -294,9 +298,8 @@ export const deleteMenuController = async (req, res) => {
     }
 
     const restaurantId = restaurant.restaurant_id;
-
     if (menu.restaurant_id !== restaurantId) {
-      logger.error("You are not allowed to update this menu");
+      logger.warn("You are not allowed to update this menu");
       return res.status(403).json({
         success: false,
         message: "You are not allowed to update this menu",
@@ -305,7 +308,7 @@ export const deleteMenuController = async (req, res) => {
 
     const deletedMenu = await deleteMenuService(menuId);
     if (!deletedMenu) {
-      logger.error("Menu delete failed");
+      logger.warn("Menu delete failed");
       return res.status(404).json({
         success: false,
         message: "Menu delete failed",
@@ -328,9 +331,10 @@ export const deleteMenuController = async (req, res) => {
 };
 
 export const updateAvailableMenuController = async(req, res) => {
+  logger.info("UPDATE MENU AVAILABILITY CONTROLLER");
   const { role, userId } = req.user;
   if(role !== "seller") {
-    logger.error("Only seller can update menu availability");
+    logger.warn("Only seller can update menu availability");
     return res.status(403).json({
       success: false,
       message: "Only seller can update menu availability"
@@ -338,59 +342,58 @@ export const updateAvailableMenuController = async(req, res) => {
   }
   try {
     const restaurant = await getRestaurantByOwnerIdService(userId);
-  
-      if (!restaurant) {
-        logger.error("Restaurant not found for this owner");
-        return res.status(404).json({
-          success: false,
-          message: "Restaurant not found for this owner",
-        });
-      }
-
-      const menuId = req.params.menuId;
-      const { isAvailable } = req.body;
-
-      if(isAvailable === undefined) {
-        logger.error("isAvailable field is required");
-        return res.status(400).json({
-          success: false,
-          message: "isAvailable field is required",
-        });
-      }
-
-      const menu = await getMenuByMenuIdService(menuId);
-      if (!menu) {
-        logger.error("Menu not found");
-        return res.status(404).json({
-          success: false,
-          message: "Menu not found",
-        });
-      }
-
-      const restaurantId = restaurant.restaurant_id;
-      if(menu.restaurant_id !== restaurantId) {
-        logger.error("You are not allowed to update this menu");
-        return res.status(403).json({
-          success: false,
-          message: "You are not allowed to update this menu",
-        });
-      }
-
-      const response = await updateAvailableMenuService(menuId, isAvailable);
-      if(!response) {
-        logger.error("Menu update failed");
-        return res.status(404).json({
-          success: false,
-          message: "Menu update failed",
-        });
-      }
-
-      logger.info("Menu availability updated successfully");
-      return res.status(200).json({
-        success: true,
-        message: "Menu availability updated successfully",
-        dataMenu: response
+    if (!restaurant) {
+      logger.warn("Restaurant not found for this owner");
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found for this owner",
       });
+    }
+
+    const menuId = req.params.menuId;
+    const { isAvailable } = req.body;
+
+    if(isAvailable === undefined) {
+      logger.warn("isAvailable field is required");
+      return res.status(400).json({
+        success: false,
+        message: "isAvailable field is required",
+      });
+    }
+
+    const menu = await getMenuByMenuIdService(menuId);
+    if (!menu) {
+      logger.warn("Menu not found");
+      return res.status(404).json({
+        success: false,
+        message: "Menu not found",
+      });
+    }
+
+    const restaurantId = restaurant.restaurant_id;
+    if(menu.restaurant_id !== restaurantId) {
+      logger.warn("You are not allowed to update this menu");
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to update this menu",
+      });
+    }
+
+    const response = await updateAvailableMenuService(menuId, isAvailable);
+    if(!response) {
+      logger.warn("Menu update failed");
+      return res.status(404).json({
+        success: false,
+        message: "Menu update failed",
+      });
+    }
+
+    logger.info("Menu availability updated successfully");
+    return res.status(200).json({
+      success: true,
+      message: "Menu availability updated successfully",
+      dataMenu: response
+    });
   } catch(err) {
     logger.error("Internal server error", err);
     return res.status(500).json({
@@ -398,5 +401,4 @@ export const updateAvailableMenuController = async(req, res) => {
       message: "Internal server error",
     });
   }
-  
 }

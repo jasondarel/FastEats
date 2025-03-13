@@ -41,10 +41,11 @@ const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploa
 const blackListedTokens = new Set();
 
 export const registerController = async (req, res) => {
+  logger.info("REGISTER CONTROLLER");
   try {
     const errors = await validateRegisterRequest(req.body);
     if(Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -95,10 +96,11 @@ export const registerController = async (req, res) => {
 };
 
 export const registerSellerController = async (req, res) => {
+  logger.info("REGISTER SELLER CONTROLLER");
   try {
     const errors = await validateRegisterSellerRequest(req.body);
     if(Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -134,7 +136,7 @@ export const registerSellerController = async (req, res) => {
 
     if(response.role === "seller") {
       if (!req.files || !req.files.restaurantImage) {
-        logger.error("Restaurant image is required");
+        logger.warn("Restaurant image is required");
         return res.status(400).json({
           success: false,
           message: "Restaurant image is required",
@@ -181,12 +183,12 @@ export const registerSellerController = async (req, res) => {
 };
 
 export const loginController = async (req, res) => {
+  logger.info("LOGIN CONTROLLER");
   try {
     const errors = await validateLoginRequest(req.body);
 
     if(errors.email === "Email is not verified") {
       const emailVerificationToken = generateRandomToken(50);
-
       const redisKey = `email_verification:${req.body.email}`;
       const redisClient = getRedisClient();
       const response = await getUserByEmailService(req.body.email);
@@ -200,7 +202,7 @@ export const loginController = async (req, res) => {
       await redisClient.expire(redisKey, 300);
       
       if(!response) {
-        logger.error("Invalid credentials");
+        logger.warn("Invalid credentials");
         return res.status(400).json({
           success: false,
           message: "Invalid credentials",
@@ -213,7 +215,7 @@ export const loginController = async (req, res) => {
         otp: otp,
       }
       await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
-      logger.error("Email is not verified");
+      logger.warn("Email is not verified");
       return res.status(401).json({
         success: false,
         message: "Email is not verified",
@@ -222,7 +224,7 @@ export const loginController = async (req, res) => {
     }
 
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -233,7 +235,7 @@ export const loginController = async (req, res) => {
 
     const user = await getUserByEmailService(req.body.email);
     if (!user) {
-      logger.error("Invalid credentials");
+      logger.warn("Invalid credentials");
       return res.status(400).json({
         success: false,
         message: "Invalid credentials",
@@ -263,6 +265,7 @@ export const loginController = async (req, res) => {
 };
 
 export const getUsersController = async (req, res) => {
+  logger.info("GET USERS CONTROLLER");
   try {
     const result = await getUsersService();
     logger.info("Users found");
@@ -277,10 +280,11 @@ export const getUsersController = async (req, res) => {
 };
 
 export const verifyTokenController = async (req, res) => {
+  logger.info("VERIFY TOKEN CONTROLLER");
   const {token, email} = req.query;
 
   if(!token) {
-    logger.error("Token not found");
+    logger.warn("Token not found");
     return res.status(401).json({
       success: false,
       message: "Token not found",
@@ -288,7 +292,7 @@ export const verifyTokenController = async (req, res) => {
   }
 
   if(!email) {
-    logger.error("Email not found");
+    logger.warn("Email not found");
     return res.status(401).json({
       success: false,
       message: "Email not found",
@@ -299,7 +303,7 @@ export const verifyTokenController = async (req, res) => {
   const redisData = await redisClient.hgetall(redisKey);
 
   if(!redisData) {
-    logger.error("Token expired");
+    logger.warn("Token expired");
     return res.status(401).json({
       success: false,
       message: "Token expired",
@@ -307,7 +311,7 @@ export const verifyTokenController = async (req, res) => {
   }
 
   if(redisData.token !== token) {
-    logger.error("Invalid token");
+    logger.warn("Invalid token");
     return res.status(401).json({
       success: false,
       message: "Invalid token",
@@ -316,10 +320,11 @@ export const verifyTokenController = async (req, res) => {
 }
 
 export const verifyOtpController = async (req, res) => {
+  logger.info("VERIFY OTP CONTROLLER");
   const { otp, token, email } = req.body;
   try {
     if(!otp) {
-      logger.error("OTP is required");
+      logger.warn("OTP is required");
       return res.status(400).json({
         success: false,
         message: "OTP is required",
@@ -327,7 +332,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if(!token) {
-      logger.error("Token is required");
+      logger.warn("Token is required");
       return res.status(400).json({
         success: false,
         message: "Token is required",
@@ -335,7 +340,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if(!email) {
-      logger.error("Email is required");
+      logger.warn("Email is required");
       return res.status(400).json({
         success: false,
         message: "Email is required",
@@ -347,7 +352,7 @@ export const verifyOtpController = async (req, res) => {
     const user = await redisClient.hgetall(redisKey);
 
     if (!user) {
-      logger.error("Invalid email");
+      logger.warn("Invalid email");
       return res.status(401).json({
         success: false,
         message: "Invalid email",
@@ -355,7 +360,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if (blackListedTokens.has(token)) {
-      logger.error("Token expired");
+      logger.warn("Token expired");
       return res.status(401).json({
         success: false,
         message: "Token expired",
@@ -363,7 +368,7 @@ export const verifyOtpController = async (req, res) => {
     }
 
     if (user.otp !== otp) {
-      logger.error("Invalid OTP");
+      logger.warn("Invalid OTP");
       return res.status(401).json({
         success: false,
         message: "Invalid OTP",
@@ -371,7 +376,7 @@ export const verifyOtpController = async (req, res) => {
     }
     
     if(user.token !== token) {
-      logger.error("Invalid token");
+      logger.warn("Invalid token");
       return res.status(401).json({
         success: false,
         message: "Invalid token",
@@ -399,10 +404,11 @@ export const verifyOtpController = async (req, res) => {
 };
 
 export const getUserController = async (req, res) => {
+  logger.info("GET USER CONTROLLER");
   const { id } = req.params;
 
   if (isNaN(id)) {
-    logger.error("User ID must be a number");
+    logger.warn("User ID must be a number");
     return res.status(400).json({
       success: false,
       message: "user ID must be a number",
@@ -412,7 +418,7 @@ export const getUserController = async (req, res) => {
   try {
     const userQuery = await getUserByIdService(id);
     if (!userQuery) {
-      logger.error("User not found");
+      logger.warn("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -421,7 +427,7 @@ export const getUserController = async (req, res) => {
 
     const userDetailsQuery = await getUserDetailsByIdService(id);
     if (!userDetailsQuery) {
-      logger.error("User details not found");
+      logger.warn("User details not found");
       return res.status(404).json({
         success: false,
         message: "User details not found",
@@ -447,11 +453,12 @@ export const getUserController = async (req, res) => {
 };
 
 export const getCurrentUserController = async (req, res) => {
+  logger.info("GET CURRENT USER CONTROLLER");
   const {userId} = req.user;
   try {
     const user = await getCurrentUserService(userId);
     if (!user) {
-      logger.error("User not found");
+      logger.warn("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -472,11 +479,12 @@ export const getCurrentUserController = async (req, res) => {
 }
 
 export const getProfileController = async (req, res) => {
+  logger.info("GET PROFILE CONTROLLER");
   const {userId} = req.user;
   try {
     const userQuery = await getUserByIdService(userId);
     if (!userQuery) {
-      logger.error("User not found");
+      logger.warn("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -485,7 +493,7 @@ export const getProfileController = async (req, res) => {
 
     const userDetailsQuery = await getUserDetailsByIdService(userId);
     if (!userDetailsQuery) {
-      logger.error("User details not found");
+      logger.warn("User details not found");
       return res.status(404).json({
         success: false,
         message: "User details not found",
@@ -511,11 +519,12 @@ export const getProfileController = async (req, res) => {
 };
 
 export const updateProfileController = async (req, res) => {
+  logger.info("UPDATE PROFILE CONTROLLER");
   const { userId } = req.user;
   try {
     const errors = await validateUpdateProfileRequest(req.body);
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -549,9 +558,10 @@ export const updateProfileController = async (req, res) => {
 };
 
 export const updateUserPaymentController = async (req, res) => {
+  logger.info("UPDATE USER PAYMENT CONTROLLER");
   const {userId, role} = req.user;
   if(role !== "seller") {
-    logger.error("Only sellers can update payment details");
+    logger.warn("Only sellers can update payment details");
     return res.status(400).json({
       success: false,
       message: "Only sellers can update payment details",
@@ -561,7 +571,7 @@ export const updateUserPaymentController = async (req, res) => {
   try {
     const errors = await validateUpdateUserPaymentRequest(req.body);
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -585,11 +595,12 @@ export const updateUserPaymentController = async (req, res) => {
 };
 
 export const getUserPaymentController = async (req, res) => {
+  logger.info("GET USER PAYMENT CONTROLLER");
   const {userId} = req.user;
   try {
     const user = await getUserPaymentByIdService(userId);
     if (!user) {
-      logger.error("User not found");
+      logger.warn("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -610,13 +621,14 @@ export const getUserPaymentController = async (req, res) => {
 };
 
 export const changePasswordController = async (req, res) => {
+  logger.info("CHANGE PASSWORD CONTROLLER");
   const { newPassword } = req.body;
   const { userId } = req.user;
 
   try {
     const errors = await validateChangePasswordRequest(req.body, userId);
     if (Object.keys(errors).length > 0) {
-      logger.error("Validation failed", errors);
+      logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -641,11 +653,12 @@ export const changePasswordController = async (req, res) => {
 };
 
 export const becomeSellerController = async (req, res) => {
-  const { userId, role } = req.user;
+  logger.info("BECOME SELLER CONTROLLER");
 
+  const { userId, role } = req.user;
   try {
     if (role !== "user") {
-      logger.error("Only users can become sellers");
+      logger.warn("Only users can become sellers");
       return res.status(400).json({
         success: false,
         message: "Only users can become sellers",
@@ -653,7 +666,7 @@ export const becomeSellerController = async (req, res) => {
     }
 
     if (!req.files || !req.files.restaurantImage) {
-      logger.error("Restaurant image is required");
+      logger.warn("Restaurant image is required");
       return res.status(400).json({
         success: false,
         message: "Restaurant image is required",

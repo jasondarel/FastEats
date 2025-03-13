@@ -4,6 +4,7 @@ import {
   cancelOrderService,
   completeOrderService,
   createOrderService,
+  deleteOrderService,
   getCompletedOrdersByRestaurantIdService,
   getOrderByIdService,
   getOrdersByRestaurantIdService,
@@ -12,6 +13,7 @@ import {
   payOrderService,
   pendingOrderService,
   saveSnapTokenService,
+  updateOrderStatusService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import { createTransactionService, getTransactionByOrderIdService } from "../service/transactionService.js";
@@ -347,12 +349,14 @@ export const getOrderByIdController = async (req, res) => {
     const result = await getOrderByIdService(order_id);
 
     if (!result) {
+      logger.warn(`Order ${order_id} not found`);
       return res.status(404).json({
         error: "Order Not Found",
       });
     }
 
     if (result.user_id !== userId) {
+      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view this order",
@@ -373,11 +377,13 @@ export const getOrderByIdController = async (req, res) => {
       menu: menu.data.menu,
     };
 
+    logger.info(`Order ${order_id} fetched successfully`);
     return res.status(200).json({
       success: true,
       order,
     });
   } catch (error) {
+    logger.error("Internal server error:", error);
     res.status(500).json({
       error: error.message,
     });
@@ -385,18 +391,21 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
+  logger.info("PAY ORDER CONFIRMATION CONTROLLER");
   try {
     const { userId } = req.user;
     const { order_id, itemPrice, itemQuantity } = req.body;
 
     const order = await getOrderByIdService(order_id);
     if (!order) {
+      logger.warn(`Order ${order_id} not found`);
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
     }
 
     if (order.user_id !== userId) {
+      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
       return res.status(403).json({
         success: false,
         message: "Unauthorized to pay for this order",
@@ -404,6 +413,7 @@ export const payOrderConfirmationController = async (req, res) => {
     }
 
     if (order.status !== "Waiting") {
+      logger.warn(`Order ${order_id} cannot be paid (Current status: ${order.status})`);
       return res
         .status(400)
         .json({ success: false, message: "Order cannot be paid" });
@@ -431,18 +441,23 @@ export const payOrderConfirmationController = async (req, res) => {
         },
       }
     );
+    logger.info("Payment token generated successfully");
     return res.status(200).json({ success: true, data: response.data });
   } catch (err) {
-    console.error(err.response.data);
-    return res.status(500).json({ success: false, message: err.message });
+    logger.error("Error generating payment token:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: err.message 
+    });
   }
 };
 
 export const payOrderController = async (req, res) => {
+  logger.info("PAY ORDER CONTROLLER");
   try {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-
     if (!MIDTRANS_SERVER_KEY) {
+      logger.error("Server configuration error");
       return res
         .status(500)
         .json({ success: false, message: "Server configuration error" });
@@ -461,7 +476,7 @@ export const payOrderController = async (req, res) => {
     } = req.body;
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
-      console.log("Missing required fields in payment notification");
+      logger.warn("Missing required payment information");
       return res.status(400).json({
         success: false,
         message: "Missing required payment information",
@@ -481,6 +496,7 @@ export const payOrderController = async (req, res) => {
       crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
 
     if (!isSignatureValid) {
+      logger.warn("Invalid signature key");
       return res
         .status(403)
         .json({ success: false, message: "Invalid signature key" });
@@ -513,31 +529,31 @@ export const payOrderController = async (req, res) => {
         };
       }
 
-      const transactionResponse = await createTransactionService(
+      await createTransactionService(
         newTransaction
       );
 
-      const orderResponse = await pendingOrderService(order_id);
+      await pendingOrderService(order_id);
     }
 
     if (transaction_status === "settlement") {
       try {
-        console.log("Processing payment for order:", order_id);
         const response = await payOrderService(order_id);
-        console.log("Order paid successfully:", order_id);
+        logger.info("Order paid successfully");
         return res.status(200).json({
           success: true,
           message: "Order paid successfully",
           order: response,
         });
       } catch (error) {
-        console.error("Error processing payment for order:", order_id, error);
+        logger.error("Error processing payment:", error);
         return res.status(500).json({
           success: false,
           message: "Error processing payment",
         });
       }
     } else {
+      logger.info(`Payment ${transaction_status}`);
       return res.status(200).json({
         success: false,
         message: `Payment ${transaction_status}`,
@@ -545,7 +561,7 @@ export const payOrderController = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Unexpected error in payment controller:", error);
+    logger.error("Internal server error:", error);
     return res.status(500).json({
       success: false,
       message: "An unexpected error occurred",
@@ -554,108 +570,133 @@ export const payOrderController = async (req, res) => {
 };
 
 export const updateOrder = async (req, res) => {
+  logger.info("UPDATE ORDER CONTROLLER");
   try {
     const { order_id } = req.params;
     const { status } = req.body;
     const validStatuses = ["pending", "preparing", "delivered"];
 
     if (!validStatuses.includes(status)) {
+      logger.warn("Invalid status value");
       return res.status(400).json({ error: "Invalid status value" });
     }
 
-    const result = await pool.query(
-      "UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *",
-      [status, order_id]
-    );
-
+    const result = await updateOrderStatusService(order_id, status);
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Order Not Found" });
+      logger.warn(`Order ${order_id} not found`);
+      return res.status(404).json({ 
+        error: "Order Not Found" 
+      });
     }
-
-    res.json(result.rows[0]);
+    logger.info(`Order ${order_id} updated successfully`);
+    return res.json(result.rows[0]);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    logger.error("Internal server error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 export const deleteOrder = async (req, res) => {
+  logger.info("DELETE ORDER CONTROLLER");
   try {
     const { order_id } = req.params;
-    const result = await pool.query(
-      "DELETE FROM orders WHERE order_id = $1 RETURNING *",
-      [order_id]
-    );
+    const result = await deleteOrderService(order_id);
 
     if (result.rows.length === 0) {
+      logger.warn(`Order ${order_id} not found`);
       return res.status(404).json({ error: "Order Not Found" });
     }
-
-    res.json({ message: "Order deleted successfully" });
+    logger.info(`Order ${order_id} deleted successfully`);
+    return res.json({ message: "Order deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    logger.error("Internal server error:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
 export const thanksController = async (req, res) => {
+  logger.info("THANKS CONTROLLER");
   const { order_id, status_code, transaction_status } = req.query;
 
   if (!order_id || !status_code || !transaction_status) {
+    logger.warn("Missing required parameters");
     return res.status(400).json({ message: "Missing required parameters" });
   }
-
-  res.redirect(
+  logger.info("Redirecting to thanks page");
+  return res.redirect(
     `http://localhost:5173/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`
   );
 };
 
 export const checkMidtransStatusController = async (req, res) => {
+  logger.info("CHECK MIDTRANS STATUS CONTROLLER");
   try {
     const { order_id } = req.query;
-    
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`;
 
-const response = await axios.get(`${process.env.MIDTRANS_CHECK_TRANSACTION_URL}/${order_id}/status`, {
+    const response = await axios.get(`${process.env.MIDTRANS_CHECK_TRANSACTION_URL}/${order_id}/status`, {
       headers: { Authorization: base64Auth },
     });
-
+    logger.info("Midtrans status check successful");
     return res.status(200).json(response.data);
   } catch (err) {
-    console.error("Midtrans status check error:", err.response?.data || err.message);
-    return res.status(500).json({ success: false, message: err.message });
+    logger.error("Error checking Midtrans status:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: err.message 
+    });
   }
 }
 
 export const saveSnapTokenController = async (req, res) => {
+  logger.info("SAVE SNAP TOKEN CONTROLLER");
   const { order_id, snap_token } = req.body;
   const response = await saveSnapTokenService(order_id, snap_token);
   if (!response) {
-    return res.status(500).json({ success: false, message: "Failed to save snap token" });
+    logger.error("Failed to save snap token");
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to save snap token" });
   }
+  logger.info("Snap token saved successfully");
   return res.status(200).json({ success: true, message: "Snap token saved successfully" });
 }
 
 export const getSnapTokenController = async (req, res) => {
+  logger.info("GET SNAP TOKEN CONTROLLER");
   const { order_id } = req.params;
   try {
     const response = await getSnapTokenService(order_id);
     if (!response) {
-      return res.status(404).json({ success: false, message: "Snap token not found" });
+      logger.warn(`Snap token not found for order ${order_id}`);
+      return res.status(404).json({ 
+        success: false, 
+        message: "Snap token not found" 
+      });
     }
-    return res.status(200).json({ success: true, snap_token: response.snap_token });
+    logger.info("Snap token fetched successfully");
+    return res.status(200).json({ 
+      success: true, 
+      snap_token: response.snap_token 
+    });
   } catch(err) {
-
+    logger.error("Error fetching snap token:", err);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 }
 
 export const getOrdersByRestaurantIdController = async (req, res) => {
+  logger.info("GET ORDERS BY RESTAURANT ID CONTROLLER");
   const { userId, role } = req.user;
   const token = req.headers.authorization;
 
   try {
-    // Check user role
     if (role !== "seller") {
+      logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view these orders",
@@ -675,6 +716,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     const restaurant_id = restaurant.data.restaurant.restaurant_id;
     
     if (restaurant.data.restaurant.owner_id !== userId) {
+      logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view these orders",
@@ -683,6 +725,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     
     const orders = await getOrdersByRestaurantIdService(restaurant_id);
     if (orders.length === 0) {
+      logger.warn("No orders found");
       return res.status(404).json({ 
         success: false, 
         message: "No orders found" 
@@ -710,7 +753,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
             }
           }
         );
-        
         return {
           ...order,
           menu: menu.data.menu,
@@ -718,14 +760,14 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
         };
       })
     );
-
+    logger.info("Orders fetched successfully");
     return res.status(200).json({
       success: true,
       orders: ordersWithDetails,
     });
     
   } catch (error) {
-    console.error("Error fetching restaurant orders:", error);
+    logger.error("Error fetching restaurant orders:", error);
     return res.status(500).json({ 
       success: false, 
       message: "Failed to retrieve orders", 
@@ -733,20 +775,21 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     });
   }
 };
+
 export const getRestaurantDashboardByRestaurantIdController = async (req, res) => {
+  logger.info("GET RESTAURANT DASHBOARD BY RESTAURANT ID CONTROLLER");
   const { userId, role } = req.user;
   const token = req.headers.authorization;
 
   try {
-    // Check user role
     if (role !== "seller") {
+      logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view these orders",
       });
     }
     
-    // Get restaurant information
     const restaurant = await axios.get(
       `http://localhost:5000/restaurant/restaurant`,
       {
@@ -759,8 +802,8 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
     
     const restaurant_id = restaurant.data.restaurant.restaurant_id;
     
-    // Verify restaurant ownership
     if (restaurant.data.restaurant.owner_id !== userId) {
+      logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view these orders",
@@ -769,6 +812,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
     
     const orders = await getCompletedOrdersByRestaurantIdService(restaurant_id);
     if (orders.length === 0) {
+      logger.warn("No orders found");
       return res.status(404).json({ 
         success: false, 
         message: "No orders found" 
@@ -777,7 +821,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
     
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        // Get menu details
         const menu = await axios.get(
           `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
           {
@@ -788,7 +831,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
           }
         );
         
-        // Get user details
         const user = await axios.get(
           `http://localhost:5000/user/user/${order.user_id}`,
           {
@@ -805,13 +847,13 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
         };
       })
     );
+    logger.info("Orders fetched successfully");
     return res.status(200).json({
       success: true,
       orders: ordersWithDetails,
     });
-    
   } catch (error) {
-    console.error("Error fetching restaurant orders:", error);
+    logger.error("Error fetching restaurant orders:", error);
     return res.status(500).json({ 
       success: false, 
       message: "Failed to retrieve orders", 
@@ -821,11 +863,13 @@ export const getRestaurantDashboardByRestaurantIdController = async (req, res) =
 };
 
 export const getRestaurantOrderController = async (req, res) => {
-  const { userId, role } = req.user;
+  logger.info("GET RESTAURANT ORDER CONTROLLER");
+  const { role } = req.user;
   const {order_id} = req.params;
   const token = req.headers.authorization;
 
   if(role !== "seller") {
+    logger.warn("Unauthorized access attempt by user");
     return res.status(403).json({
       success: false,
       message: "You are not authorized to view this order"
@@ -833,6 +877,7 @@ export const getRestaurantOrderController = async (req, res) => {
   }
 
   if(!order_id) {
+    logger.warn("Missing order_id");
     return res.status(400).json({
       success: false,
       message: "Missing order_id"
@@ -842,6 +887,7 @@ export const getRestaurantOrderController = async (req, res) => {
   try {
     const order = await getOrderByIdService(order_id);
     if(!order) {
+      logger.warn("Order not found");
       return res.status(404).json({
         success: false,
         message: "Order not found"
@@ -859,6 +905,7 @@ export const getRestaurantOrderController = async (req, res) => {
     );
     
     if(order.restaurant_id !== menu.data.menu.restaurant_id) {
+      logger.warn("Unauthorized access attempt by user");
       return res.status(403).json({
         success: false,
         message: "You are not authorized to view this order"
@@ -876,21 +923,23 @@ export const getRestaurantOrderController = async (req, res) => {
     );
 
     const transaction = await getTransactionByOrderIdService(order_id);
-
     if(!transaction) {
-
+      logger.warn("Transaction not found");
+      return res.status(404).json({
+        success: false,
+        message: "Transaction not found"
+      });
     }
 
-    console.log("User:", user);
-    console.log("Menu:", menu);
-
     if(!user) {
+      logger.warn("User not found");
       return res.status(404).json({
         success: false,
         message: "User not found"
       });
     }
 
+    logger.info("Order fetched successfully");
     return res.status(200).json({
       success: true,
       order: {
@@ -901,6 +950,10 @@ export const getRestaurantOrderController = async (req, res) => {
       }
     });
   } catch(err) {
-
+    logger.error("Error fetching order:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 }
