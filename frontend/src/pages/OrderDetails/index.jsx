@@ -6,7 +6,7 @@ import {
   saveSnapService,
   checkMidtransStatusService,
   getOrderDetailService,
-} from "../../../service/orderServices/orderDetails";
+} from "../../service/orderServices/orderDetails";
 import Sidebar from "../../components/Sidebar";
 import BackButton from "../../components/BackButton";
 import StatusBadge from "../../components/StatusBadge";
@@ -15,8 +15,10 @@ import OrderDateInfo from "./components/OrderDateInfo";
 import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
-import LoadingScreen from "./components/LoadingScreen";
 import Swal from "sweetalert2";
+import LoadingState from "../../components/LoadingState";
+import { API_URL } from "../../config/api";
+import { MIDTRANS_SNAP_URL } from "../../config/api";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -64,7 +66,7 @@ const OrderDetails = () => {
   };
 
   useEffect(() => {
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
+    const snapScript = MIDTRANS_SNAP_URL;
     const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
     const script = document.createElement("script");
     script.src = snapScript;
@@ -156,7 +158,7 @@ const OrderDetails = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/order/snap/${orderId}`
+        `${API_URL}/order/snap/${orderId}`
       );
       const data = await response.json();
 
@@ -205,7 +207,7 @@ const OrderDetails = () => {
   }, [orderId]);
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingState />;
   }
 
   return (

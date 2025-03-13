@@ -4,7 +4,7 @@ import {
   getRestaurantData,
   updateRestaurant,
   toggleRestaurantStatus,
-} from "../../../service/restaurantServices/manageRestaurantService";
+} from "../../service/restaurantService/manageRestaurantService";
 import Sidebar from "../../components/Sidebar";
 import RestaurantStatusToggle from "./components/RestaurantStatusToggle";
 import RestaurantImageUploader from "./components//RestaurantImageUploader";
@@ -12,6 +12,7 @@ import RestaurantDetailsForm from "./components/RestaurantDetailsForm";
 import FloatingMenuButton from "./components/FloatingMenuButton";
 import { FaUtensils } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { API_URL } from "../../config/api";
 
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
@@ -51,7 +52,7 @@ const ManageRestaurant = () => {
           setInitialIsOpen(restaurant.is_open || false);
 
           const imageUrl = restaurant.restaurant_image
-            ? `http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
+            ? `${API_URL}/restaurant/uploads/restaurant/${restaurant.restaurant_image}`
             : null;
           setImagePreview(imageUrl);
         } else {
@@ -232,7 +233,7 @@ const ManageRestaurant = () => {
       }}
     >
       <Sidebar />
-      <main className="md:ml-20 flex-1 flex justify-center items-center p-5">
+      <main className="md:ml-20 flex-1 flex justify-center items-center p-5 min-w-[300px]">
         <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
           <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
             <FaUtensils className="mr-2" /> Manage Your Restaurant

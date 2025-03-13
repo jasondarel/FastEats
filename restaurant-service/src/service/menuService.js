@@ -1,6 +1,6 @@
 import pool from "../config/dbInit.js";
 
-const createMenuService = async (menuReq) => {
+export const createMenuService = async (menuReq) => {
   const result = await pool.query(
     `INSERT INTO menu_item (menu_name, menu_description, menu_price, menu_category, restaurant_id, menu_image) 
         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
@@ -17,7 +17,7 @@ const createMenuService = async (menuReq) => {
   return result.rows[0];
 };
 
-const updateAvailableMenuService = async (menuId, isAvailable) => {
+export const updateAvailableMenuService = async (menuId, isAvailable) => {
   const result = await pool.query(
     `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
     [isAvailable, menuId]
@@ -26,7 +26,7 @@ const updateAvailableMenuService = async (menuId, isAvailable) => {
   return result.rows[0];
 }
 
-const getMenusService = async (restaurantId) => {
+export const getMenusService = async (restaurantId) => {
   try {
     const result = await pool.query(
       "SELECT * FROM menu_item  WHERE restaurant_id = $1",
@@ -39,7 +39,7 @@ const getMenusService = async (restaurantId) => {
   }
 };
 
-const getMenuByRestaurantIdService = async (restaurantId) => {
+export const getMenuByRestaurantIdService = async (restaurantId) => {
   try {
     const result = await pool.query(
       "SELECT * FROM menu_item WHERE restaurant_id = $1",
@@ -52,7 +52,7 @@ const getMenuByRestaurantIdService = async (restaurantId) => {
   }
 };
 
-const getMenuByMenuIdService = async (menuId) => {
+export const getMenuByMenuIdService = async (menuId) => {
   try {
     const result = await pool.query(
       "SELECT * FROM menu_item WHERE menu_id = $1",
@@ -65,9 +65,7 @@ const getMenuByMenuIdService = async (menuId) => {
   }
 };
 
-const getMenuService = async (menuId) => {};
-
-const updateMenuService = async (menuReq, menuId) => {
+export const updateMenuService = async (menuReq, menuId) => {
   const result = await pool.query(
     `UPDATE menu_item 
     SET menu_name = $1, 
@@ -91,7 +89,7 @@ const updateMenuService = async (menuReq, menuId) => {
   return result.rows[0];
 };
 
-const deleteMenuService = async (menuId) => {
+export const deleteMenuService = async (menuId) => {
   const result = await pool.query(
     `DELETE FROM menu_item WHERE menu_id = $1 RETURNING *`,
     [menuId]
@@ -99,22 +97,10 @@ const deleteMenuService = async (menuId) => {
   return result.rows[0];
 };
 
-const isMenuAvailable = async (menuName, restaurantId) => {
+export const isMenuAvailable = async (menuName, restaurantId) => {
   const result = await pool.query(
     "SELECT 1 FROM menu_item WHERE menu_name ILIKE $1 AND restaurant_id = $2",
     [menuName, restaurantId]
   );
   return result.rowCount > 0;
-};
-
-export {
-  createMenuService,
-  getMenusService,
-  getMenuService,
-  updateMenuService,
-  deleteMenuService,
-  isMenuAvailable,
-  getMenuByRestaurantIdService,
-  getMenuByMenuIdService,
-  updateAvailableMenuService
 };

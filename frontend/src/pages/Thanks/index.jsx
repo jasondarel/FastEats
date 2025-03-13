@@ -8,6 +8,7 @@ import {
   FaArrowLeft,
   FaCreditCard,
 } from "react-icons/fa";
+import { API_URL } from "../../config/api";
 
 const Thanks = () => {
   const [searchParams] = useSearchParams();
@@ -90,7 +91,7 @@ const Thanks = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/order/snap/${orderId}`
+        `${API_URL}/order/snap/${orderId}`
       );
       const data = await response.json();
 

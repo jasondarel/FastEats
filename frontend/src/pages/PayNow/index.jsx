@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PaymentButton from "./components/PaymentButton";
 import PaymentLayout from "./components/PaymentLayout";
+import { API_URL } from "../../config/api";
 
 const PayNow = () => {
   const [snapToken, setSnapToken] = useState(null);
@@ -26,7 +27,7 @@ const PayNow = () => {
     const fetchSnapToken = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/order/snap/${orderId}`
+          `${API_URL}/order/snap/${orderId}`
         );
         const data = await response.json();
         setSnapToken(data.snap_token);

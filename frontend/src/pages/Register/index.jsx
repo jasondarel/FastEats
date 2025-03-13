@@ -1,57 +1,139 @@
 import { useState } from "react";
-import registerUser from "../../../service/userServices/registerService";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import RegisterForm from "./components/RegisterForm";
+import RegisterForm from "../Register/components/RegisterForm";
 import AuthLayout from "./components/AuthLayout";
+import registerService from "../../service/userServices/registerService";
 
 const Register = () => {
   const [errors, setErrors] = useState({});
+  const [userType, setUserType] = useState("user"); // Default to user registration
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
-  const handleRegister = async (name, email, password) => {
-    setErrors({}); // Reset errors before validation
+  const handleRegister = async (
+    name,
+    email,
+    password,
+    confirmPassword,
+    additionalData = {},
+    customErrors = null
+  ) => {
+    // If custom errors are provided (like image validation), use them
+    if (customErrors) {
+      setErrors(customErrors);
+
+      // Show the first error
+      const firstError = Object.values(customErrors)[0];
+      if (firstError) {
+        MySwal.fire({
+          title: "Error",
+          text: firstError,
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
+      }
+      return;
+    }
+
+    // Clear previous errors
+    setErrors({});
 
     try {
-      await registerUser(name, email, password);
+      // Create FormData for handling file uploads when registering as seller
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("confirmPassword", confirmPassword);
+      formData.append("role", userType);
+
+      // Add seller-specific data if present
+      if (userType === "seller" && additionalData) {
+        formData.append("restaurantName", additionalData.restaurantName);
+        formData.append("restaurantAddress", additionalData.restaurantAddress);
+
+        if (additionalData.restaurantImage) {
+          formData.append("restaurantImage", additionalData.restaurantImage);
+        }
+      }
+
+      const otpToken = await registerService(formData, userType);
+
       Swal.fire({
-        title: "Sucessfully Registered",
-        text: "Registration successful! Please login.",
+        title: "Successfully Registered",
+        text: `${
+          userType.charAt(0).toUpperCase() + userType.slice(1)
+        } registration successful! Check your email to validate your account.`,
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
       }).then((result) => {
         if (result.isConfirmed) {
-          navigate("/login");
+          navigate(
+            `/otp-verification?token=${otpToken.data.token}&email=${email}`
+          );
         }
       });
     } catch (error) {
-      const errMsg = error.response?.data?.error || "An error occurred";
+      const errors = error.response?.data.errors || {
+        general: "An error occurred",
+      };
+      setErrors(errors);
 
-      if (errMsg.toLowerCase().includes("name")) {
-        setErrors((prev) => ({ ...prev, name: errMsg }));
-      }
-      if (errMsg.toLowerCase().includes("email")) {
-        setErrors((prev) => ({ ...prev, email: errMsg }));
-      }
-      if (errMsg.toLowerCase().includes("password")) {
-        setErrors((prev) => ({ ...prev, password: errMsg }));
-      }
-      if (
-        !errMsg.toLowerCase().includes("name") &&
-        !errMsg.toLowerCase().includes("email") &&
-        !errMsg.toLowerCase().includes("password")
-      ) {
-        setErrors((prev) => ({ ...prev, general: errMsg }));
+      // Show first error in the list
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        MySwal.fire({
+          title: "Error",
+          text: firstError,
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
       }
     }
   };
 
+  const toggleUserType = (type) => {
+    setUserType(type);
+    setErrors({}); // Clear errors when switching types
+  };
+
   return (
-    <AuthLayout>
-      <RegisterForm onRegister={handleRegister} errors={errors} />
+    <AuthLayout isSellerRegister={userType === "seller"}>
+      <div className="mb-6">
+        <div className="flex border-b">
+          <button
+            className={`flex-1 py-2 font-medium ${
+              userType === "user"
+                ? "text-yellow-500 border-b-2 border-yellow-500"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => toggleUserType("user")}
+          >
+            Register as Customer
+          </button>
+          <button
+            className={`flex-1 py-2 font-medium ${
+              userType === "seller"
+                ? "text-yellow-500 border-b-2 border-yellow-500"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => toggleUserType("seller")}
+          >
+            Register as Seller
+          </button>
+        </div>
+      </div>
+
+      <RegisterForm
+        onRegister={handleRegister}
+        errors={errors}
+        userType={userType}
+      />
     </AuthLayout>
   );
 };

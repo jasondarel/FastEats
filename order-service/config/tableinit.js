@@ -1,9 +1,10 @@
 import pool from "./db.js";
+import logger from "./loggerInit.js";
 
 const createTable = async () => {
   const client = await pool.connect();
   try {
-    console.log("Creating Table...");
+    logger.info("Creating Table...");
 
     await client.query(`
         CREATE TABLE IF NOT EXISTS orders (
@@ -45,9 +46,9 @@ const createTable = async () => {
             FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
         );`)
 
-    console.log("✅ Tables created successfully!");
+    logger.info("✅ Tables created successfully!");
   } catch (error) {
-    console.error("❌ Error creating tables:", error);
+    logger.error("❌ Error creating tables:", error);
   } finally {
     client.release();
   }

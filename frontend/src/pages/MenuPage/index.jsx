@@ -6,7 +6,7 @@ import BackButton from "../../components/BackButton";
 import CategoryFilter from "../../components/CategoryFilter";
 import MenuItemGrid from "./components/MenuItemGrid";
 import ErrorMessage from "./components/ErrorMessage";
-import LoadingIndicator from "./components/LoadingIndicator";
+import LoadingState from "../../components/LoadingState";
 import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
 import useMenuData from "./components/useMenuData";
 
@@ -52,7 +52,7 @@ const MenuPage = () => {
     });
 
   if (isLoading) {
-    return <LoadingIndicator message="Loading menu..." />;
+    return <LoadingState />;
   }
 
   return (
@@ -64,7 +64,7 @@ const MenuPage = () => {
         {error && <ErrorMessage message={error} />}
 
         <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
-          <div className="flex-grow max-w-2xl flex justify-center right-0">
+          <div className="flex-grow max-w-2xl flex justify-center right-0 mr-5">
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

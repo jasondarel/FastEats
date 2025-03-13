@@ -2,6 +2,7 @@ import pkg from "pg";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import logger from "./loggerInit.js";
 
 const { Pool } = pkg;
 
@@ -23,10 +24,10 @@ const testDatabase = async () => {
   try {
     const client = await pool.connect();
     const res = await client.query("SELECT NOW()");
-    console.log("Database connected! Current time:", res.rows[0].now);
+    logger.info("Database connected! Current time:", res.rows[0].now);
     client.release();
   } catch (err) {
-    console.error("Database connection error:", err);
+    logger.error("Database connection error:", err);
   }
 };
 

@@ -15,6 +15,13 @@ const Carousel = ({ images, intervalTime = 5000 }) => {
     );
   };
 
+  //Image positions
+  const positions = [
+    "object-[50%_50%]",
+    "object-[50%_15%]",
+    "object-[50%_20%]",
+  ];
+
   // Auto Slide Effect
   useEffect(() => {
     const interval = setInterval(nextSlide, intervalTime);
@@ -23,7 +30,7 @@ const Carousel = ({ images, intervalTime = 5000 }) => {
 
   return (
     <div className="flex justify-center">
-      <div className="relative w-full md:w-[90%] lg:w-[90%] xl:w-[1200px] overflow-hidden rounded-md">
+      <div className="relative w-full overflow-hidden rounded-md">
         {/* Carousel Wrapper */}
         <div
           className="flex transition-transform duration-1500 will-change-transform ease-in-out rounded-md"
@@ -34,7 +41,9 @@ const Carousel = ({ images, intervalTime = 5000 }) => {
               key={index}
               src={image}
               alt={`Slide ${index + 1}`}
-              className="w-full flex-shrink-0 rounded-md h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] object-cover"
+              className={`w-full flex-shrink-0 rounded-md h-48 sm:h-70 md:h-80 lg:h-[480px] xl:h-[600px] object-cover ${
+                positions[index % positions.length]
+              }`}
             />
           ))}
         </div>

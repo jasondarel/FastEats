@@ -1,11 +1,12 @@
 import React from "react";
+import { API_URL } from "../../../config/api";
 
 const MenuImage = ({ menu }) => {
   return (
     <img
       src={
         menu.menu_image
-          ? `http://localhost:5000/restaurant/uploads/menu/${menu.menu_image}`
+          ? `${API_URL}/restaurant/uploads/menu/${menu.menu_image}`
           : "https://www.pngall.com/wp-content/uploads/7/Dessert-PNG-Photo.png"
       }
       alt={menu.menu_name || "Menu item"}

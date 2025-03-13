@@ -1,5 +1,4 @@
 import express from 'express';
-const router = express.Router();
 import authMiddleware from '../middleware/authMiddleware.js';
 import { 
     createRestaurantController,
@@ -18,10 +17,12 @@ const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/restaurant";
 const upload = multerUpload(__filename, uploadLocation);
 
+const router = express.Router();
+
 router.get("/", (req, res) => {
     res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"}`);
 });
-router.post("/restaurant", authMiddleware,  createRestaurantController);
+router.post("/restaurant",  createRestaurantController);
 router.put("/restaurant", authMiddleware, upload.single("restaurantImage"), updateRestaurantController)
 router.delete("/restaurant/:restaurantId", authMiddleware, deleteRestaurantController)
 router.get("/restaurants", authMiddleware, getRestaurantsController);

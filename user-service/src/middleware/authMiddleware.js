@@ -1,18 +1,44 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/loggerInit.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.header("Authorization");
 
-function authenticateToken(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip}`);
+        return res.status(401).json({
+            success: false,     
+            message: "Access Unauthorized: No Token Provided"
+        });
+    }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Forbidden" });
-    req.user = user;
-    next();
-  });
-}
+    const token = authHeader.split(" ")[1];
 
-export {
-    authenticateToken
-}
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            logger.warn(`[AUTH] Expired token from ${req.ip}`);
+            return res.status(401).json({
+                success: false,
+                message: "Access Unauthorized: Token Expired"
+            });
+        } else if (error.name === "JsonWebTokenError") {
+            logger.warn(`[AUTH] Invalid token from ${req.ip}`);
+            return res.status(401).json({
+                success: false,
+                message: "Access Unauthorized: Invalid Token"
+            });
+        } else {
+            logger.error(`[AUTH] Unexpected error: ${error.message}`);
+            return res.status(500).json({
+                success: false,
+                message: "Internal Server Error"
+            });
+        }
+    }
+};
+
+export default authMiddleware;

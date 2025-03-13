@@ -5,9 +5,7 @@ const FilterButton = ({
   minPrice,
   setMinPrice,
   maxPrice,
-  setMaxPrice,
-  showUnavailable = false,
-  setShowUnavailable = null,
+  setMaxPrice
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const filterRef = useRef(null);
@@ -15,7 +13,6 @@ const FilterButton = ({
   // Calculate active filter count
   const activeFilterCount = [
     minPrice || maxPrice ? 1 : 0,
-    showUnavailable ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   // Handle click outside to close filter dropdown
@@ -39,21 +36,11 @@ const FilterButton = ({
   const clearFilters = () => {
     setMinPrice("");
     setMaxPrice("");
-    if (setShowUnavailable) {
-      setShowUnavailable(false);
-    }
   };
 
   // Handle price range input
   const handleMinPriceChange = (e) => setMinPrice(e.target.value);
   const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
-
-  // Handle availability toggle
-  const handleAvailabilityToggle = (e) => {
-    if (setShowUnavailable) {
-      setShowUnavailable(e.target.checked);
-    }
-  };
 
   return (
     <div className="relative" ref={filterRef}>
@@ -123,21 +110,6 @@ const FilterButton = ({
                 />
               </div>
             </div>
-
-            {/* Availability Toggle (Only show if setShowUnavailable is provided) */}
-            {setShowUnavailable && (
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={showUnavailable}
-                    onChange={handleAvailabilityToggle}
-                    className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
-                  />
-                  Show unavailable items
-                </label>
-              </div>
-            )}
           </div>
         </div>
       )}

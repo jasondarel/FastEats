@@ -7,8 +7,11 @@ import createTables from "./config/tablesInit.js";
 import { menuRoutes } from "./route/menuRoutes.js";import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
+import logger from "./config/loggerInit.js";
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
+dotenv.config({ path: envFile });
+logger.info(`Using ${envFile} file`);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,7 +24,7 @@ const PORT = process.env.PORT;
 createTables();
 
 app.use(cors({
-  origin: ["http://localhost:5173"], 
+  origin: [process.env.CLIENT_URL], 
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
@@ -36,5 +39,5 @@ app.use("/", menuRoutes);
 
 
 app.listen(PORT, () => {
-  console.log(`${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`);
+  logger.info(`${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`);
 });
