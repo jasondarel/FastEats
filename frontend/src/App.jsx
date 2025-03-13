@@ -35,7 +35,14 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
 
-          {/* User-only Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requiredRoles={["user"]}>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/home"
             element={

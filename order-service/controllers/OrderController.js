@@ -385,7 +385,6 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
-  console.log("Received payment confirmation:", req.body);
   try {
     const { userId } = req.user;
     const { order_id, itemPrice, itemQuantity } = req.body;
@@ -414,16 +413,15 @@ export const payOrderConfirmationController = async (req, res) => {
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
-    console.log("Sending payment request to Midtrans...");
-    console.log("Bae64Auth:", base64Auth);
     const response = await axios.post(
-      "https://app.sandbox.midtrans.com/snap/v1/transactions",
+      process.env.MIDTRANS_SNAP_URL,
       {
         transaction_details: {
           order_id,
           gross_amount: itemPrice * itemQuantity,
         },
         credit_card: { secure: true },
+        isProduction: process.env.IS_PRODUCTION,
       },
       {
         headers: {
@@ -433,7 +431,6 @@ export const payOrderConfirmationController = async (req, res) => {
         },
       }
     );
-    console.log("Payment response:", response.data);
     return res.status(200).json({ success: true, data: response.data });
   } catch (err) {
     console.error(err.response.data);
@@ -446,14 +443,10 @@ export const payOrderController = async (req, res) => {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
     if (!MIDTRANS_SERVER_KEY) {
-      console.error(
-        "MIDTRANS_SERVER_KEY is not defined in environment variables"
-      );
       return res
         .status(500)
         .json({ success: false, message: "Server configuration error" });
     }
-    console.log("Received payment notification:", req.body);
     const {
       order_id,
       transaction_status,
@@ -479,9 +472,9 @@ export const payOrderController = async (req, res) => {
       .createHash("sha512")
       .update(`${order_id}${status_code}${gross_amount}${MIDTRANS_SERVER_KEY}`)
       .digest("hex");
-
-    const signatureBuffer = Buffer.from(signature_key);
-    const expectedBuffer = Buffer.from(expectedSignature);
+      
+      const signatureBuffer = Buffer.from(signature_key);
+      const expectedBuffer = Buffer.from(expectedSignature);
 
     const isSignatureValid =
       signatureBuffer.length === expectedBuffer.length &&
@@ -529,6 +522,7 @@ export const payOrderController = async (req, res) => {
 
     if (transaction_status === "settlement") {
       try {
+        console.log("Processing payment for order:", order_id);
         const response = await payOrderService(order_id);
         console.log("Order paid successfully:", order_id);
         return res.status(200).json({
@@ -544,9 +538,6 @@ export const payOrderController = async (req, res) => {
         });
       }
     } else {
-      console.log(
-        `Order payment status: ${transaction_status} for order: ${order_id}`
-      );
       return res.status(200).json({
         success: false,
         message: `Payment ${transaction_status}`,
@@ -625,7 +616,7 @@ export const checkMidtransStatusController = async (req, res) => {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString("base64")}`;
 
-    const response = await axios.get(`https://api.sandbox.midtrans.com/v2/${order_id}/status`, {
+const response = await axios.get(`${process.env.MIDTRANS_CHECK_TRANSACTION_URL}/${order_id}/status`, {
       headers: { Authorization: base64Auth },
     });
 
@@ -671,7 +662,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       });
     }
     
-    // Get restaurant information
     const restaurant = await axios.get(
       `http://localhost:5000/restaurant/restaurant`,
       {
@@ -684,7 +674,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     
     const restaurant_id = restaurant.data.restaurant.restaurant_id;
     
-    // Verify restaurant ownership
     if (restaurant.data.restaurant.owner_id !== userId) {
       return res.status(403).json({
         success: false,
@@ -702,7 +691,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        // Get menu details
         const menu = await axios.get(
           `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
           {
@@ -713,7 +701,6 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
           }
         );
         
-        // Get user details
         const user = await axios.get(
           `http://localhost:5000/user/user/${order.user_id}`,
           {

@@ -18,6 +18,7 @@ import OrderTimestamp from "./components/OrderTimestamp";
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
 import { API_URL } from "../../config/api";
+import { MIDTRANS_SNAP_URL } from "../../config/api";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -65,7 +66,7 @@ const OrderDetails = () => {
   };
 
   useEffect(() => {
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
+    const snapScript = MIDTRANS_SNAP_URL;
     const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
     const script = document.createElement("script");
     script.src = snapScript;
