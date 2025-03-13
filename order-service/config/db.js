@@ -1,15 +1,12 @@
 import dotenv from "dotenv";
-import pkg from "pg"; // Import default
+import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
+import logger from "./loggerInit.js";
 
-const { Pool } = pkg; // Ambil Pool dari import default
-
-// Konversi __dirname agar bisa digunakan di ES Module
+const { Pool } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Load file .env
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const pool = new Pool({
@@ -25,10 +22,10 @@ const testDatabase = async () => {
     const client = await pool.connect();
     const res = await client.query("SELECT NOW()");
 
-    console.log("Database connected! Current time: ", res.rows[0].now);
+    logger.info("Database connected! Current time: ", res.rows[0].now);
     client.release();
   } catch (error) {
-    console.error("Database connection error:", error);
+    logger.error("Database connection error:", error);
   }
 };
 

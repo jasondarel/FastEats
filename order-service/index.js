@@ -1,19 +1,19 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import createTable from "./config/tableinit.js";
-
-// Routes
 import OrderRoutes from "./routes/OrderRoutes.js";
+import logger from "./config/loggerInit.js";
 
-//middleware
-import apiKeyAuth from "./middleware/authMiddleware.js";
+const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
+dotenv.config({ path: envFile });
+logger.info(`Using ${envFile} file`);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.CLIENT_URL,
 }));
 
 app.use(express.json());
@@ -23,20 +23,7 @@ app.use(OrderRoutes);
 createTable();
 
 app.listen(PORT, () => {
-  console.log(
+  logger.info(
     `${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`
   );
 });
-
-// Middleware to verify token
-// app.use((req, res, next) => {
-//   if (req.path === "/") return next(); // Allow health check
-
-//   const token = req.headers.authorization?.split(" ")[1];
-//   const user = token ? verifyToken(token) : null;
-
-//   if (!user) return res.status(401).json({ error: "Unauthorized" });
-
-//   req.user = user;
-//   next();
-// });
