@@ -81,7 +81,7 @@ const RestaurantDashboard = () => {
   return (
     <div className="flex bg-amber-50 min-h-screen">
       <Sidebar />
-      <div className="pl-[250px] flex-1 p-6">
+      <div className="lg:pl-[250px] xl:pl-[250px]  flex-1 p-6">
         <div className="max-w-6xl mx-auto md:mt-10">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
             {/* Restaurant Header Component */}
