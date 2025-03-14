@@ -1,5 +1,8 @@
 import amqp from "amqplib";
-import logger from "./loggerInit.js"; // Import Winston Logger
+import logger from "./loggerInit.js";
+import envInit from "./envInit.js";
+
+envInit();
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 export const EXCHANGE_NAME = "email_exchange";

@@ -1,0 +1,13 @@
+2025-03-14T02:38:10.261Z [INFO]: Using .env.dev file 
+2025-03-14T02:38:11.060Z [INFO]: Using .env.dev file 
+2025-03-14T02:38:11.065Z [INFO]: Order Service running on port 5004 
+2025-03-14T02:38:11.096Z [INFO]: Creating Table... 
+2025-03-14T02:38:11.104Z [INFO]: Database connected! Current time:  
+2025-03-14T02:38:11.105Z [INFO]: ✅ Tables created successfully! 
+2025-03-14T02:47:35.405Z [INFO]: Using .env.dev file 
+2025-03-14T02:47:35.483Z [INFO]: Using .env.dev file 
+2025-03-14T02:47:35.483Z [INFO]: Using development mode 
+2025-03-14T02:47:35.488Z [INFO]: Order Service running on port 5004 
+2025-03-14T02:47:35.506Z [INFO]: Creating Table... 
+2025-03-14T02:47:35.510Z [INFO]: Database connected! Current time:  
+2025-03-14T02:47:35.512Z [INFO]: ✅ Tables created successfully! 

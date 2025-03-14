@@ -1,14 +1,9 @@
 import pkg from "pg";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 const { Pool } = pkg;
 import logger from "./loggerInit.js";
+import envInit from "./envInit.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+envInit();
 
 const pool = new Pool({
   user: process.env.DB_USER,

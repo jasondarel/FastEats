@@ -1,21 +1,19 @@
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import dotenv from "dotenv";
 import logger from "./config/loggerInit.js";
+import envInit from "./config/envInit.js";
 
-const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
-dotenv.config({ path: envFile });
-logger.info(`Using ${envFile} file`);
+envInit();
+logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
-// Debug logging
+
 logger.info(`PORT: ${process.env.PORT}`);
 logger.info(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
 logger.info(`USER_SERVICE_URL: ${process.env.USER_SERVICE_URL}`);
 logger.info(`ORDER_SERVICE_URL: ${process.env.ORDER_SERVICE_URL}`);
 logger.info(`NOTIFICATION_SERVICE_URL: ${process.env.NOTIFICATION_SERVICE_URL}`);
 
-// Restaurant service proxy
 const restaurantProxy = createProxyMiddleware({
   target: process.env.RESTAURANT_SERVICE_URL || 'http://localhost:5003',
   changeOrigin: true,
@@ -31,7 +29,6 @@ const restaurantProxy = createProxyMiddleware({
   },
 });
 
-// User service proxy
 const userProxy = createProxyMiddleware({
   target: process.env.USER_SERVICE_URL || 'http://localhost:5002',
   changeOrigin: true,
@@ -47,7 +44,6 @@ const userProxy = createProxyMiddleware({
   },
 });
 
-// Order service proxy
 const orderProxy = createProxyMiddleware({
   target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
   changeOrigin: true,
@@ -78,13 +74,11 @@ const notificationProxy = createProxyMiddleware({
   },
 })
 
-// Apply proxy middleware for each service
 app.use('/restaurant', restaurantProxy);
 app.use('/user', userProxy);
 app.use('/order', orderProxy);
 app.use('/notification', notificationProxy);
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK',

@@ -1,13 +1,20 @@
 import amqp from "amqplib";
 import nodemailer from "nodemailer";
+import envInit from "../../config/envInit.js";
+import logger from "../../config/loggerInit.js";
+
+envInit();
+
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 const EXCHANGE_NAME = "email_exchange";
 const EXCHANGE_TYPE = "direct";
 const QUEUE_NAME = "email_verification_queue";
 const ROUTING_KEY = "email_verification";
 
+logger.info("EMAIL VALIDATION CONSUMER SERVICE");
+
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-  console.error("❌ ERROR: Missing EMAIL_USER or EMAIL_PASSWORD in .env");
+  logger.error("❌ ERROR: Missing EMAIL_USER or EMAIL_PASSWORD in .env");
   process.exit(1);
 }
 
@@ -41,45 +48,44 @@ const sendVerificationEmail = async (email, token, otpCode) => {
   };
 
   await transporter.sendMail(mailOptions);
-  console.log(`📧 Verification email sent to ${email}`);
+  logger.info(`📧 Verification email sent to ${email}`);
 };
 
 const startConsumer = async () => {
   try {
-    console.log("⏳ Connecting to RabbitMQ...");
-    console.log(`🔗 RabbitMQ URL: ${RABBITMQ_URL}`);
+    logger.info("⏳ Connecting to RabbitMQ...");
+    logger.info(`🔗 RabbitMQ URL: ${RABBITMQ_URL}`);
     const connection = await amqp.connect(RABBITMQ_URL);
     const channel = await connection.createChannel();
 
-    console.log("✅ Connected to RabbitMQ");
+    logger.info("✅ Connected to RabbitMQ");
 
     await channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, { durable: true });
     await channel.assertQueue(QUEUE_NAME, { durable: true });
     await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
-    console.log(`📩 Waiting for messages in "${QUEUE_NAME}"`);
+    logger.info(`📩 Waiting for messages in "${QUEUE_NAME}"`);
 
     channel.consume(QUEUE_NAME, async (msg) => {
       if (msg !== null) {
         try {
           const { email, token, otp } = JSON.parse(msg.content.toString());
-
           await sendVerificationEmail(email, token, otp);
           channel.ack(msg);
         } catch (error) {
-          console.error(`❌ Error processing message: ${error.message}`);
+          logger.error(`❌ Error processing message: ${error.message}`);
         }
       }
     });
 
     process.on("SIGINT", async () => {
-      console.log("\n🔌 Closing RabbitMQ connection...");
+      logger.info("\n🔌 Closing RabbitMQ connection...");
       await channel.close();
       await connection.close();
       process.exit(0);
     });
   } catch (error) {
-    console.error("❌ RabbitMQ Connection Failed:", error);
+    logger.error("❌ RabbitMQ Connection Failed:", error);
     setTimeout(startConsumer, 5000);
   }
 };
