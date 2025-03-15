@@ -1,4 +1,4 @@
-import pool from "../config/db.js";
+import pool from "../config/dbInit.js";
 
 const createTransactionService = async (transaction) => {
     console.log("transaction", transaction);

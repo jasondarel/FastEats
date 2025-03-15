@@ -1,10 +1,10 @@
-import logger from "./config/loggerInit.js";
+import logger from "./src/config/loggerInit.js";
 import express from "express";
 import cors from "cors";
-import createTable from "./config/tableinit.js";
-import OrderRoutes from "./routes/OrderRoutes.js";
-import pool from "./config/db.js";
-import envInit from "./config/envInit.js";
+import OrderRoutes from "./src/routes/orderRoutes.js";
+import envInit from "./src/config/envInit.js";
+import createTables from "./src/config/tablesInit.js";
+import { createDatabase, testDatabase } from "./src/config/dbInit.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -15,9 +15,20 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(express.json());
 app.use(OrderRoutes);
-createTable();
 
 
-app.listen(PORT, () => {
-  logger.info(`${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`);
-});
+(async () => {
+  try {
+    await createDatabase();
+    await testDatabase();
+    await createTables();
+    
+    logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
+
+    app.listen(PORT, () => {
+      logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    logger.error("❌ Error initializing services:", error);
+  }
+})();
