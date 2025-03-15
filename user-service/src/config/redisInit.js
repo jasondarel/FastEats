@@ -1,5 +1,8 @@
 import Redis from "ioredis";
-import logger from "./loggerInit.js"; // Gunakan logger
+import logger from "./loggerInit.js";
+import envInit from "./envInit.js";
+
+envInit();
 
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;

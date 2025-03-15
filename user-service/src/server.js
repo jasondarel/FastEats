@@ -1,16 +1,15 @@
 import express from "express";
 import cors from "cors";
-import createTables from "./config/tablesinit.js";
-import dotenv from "dotenv";
+import createTables from "./config/tablesInit.js";
 import userRoutes from "./route/userRoute.js";
 import fileUpload from "express-fileupload";
 import { rabbitMQInit } from "./config/rabbitMQInit.js";
 import { redisInit } from "./config/redisInit.js";
 import logger from "./config/loggerInit.js";
+import envInit from "./config/envInit.js";
 
-const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
-dotenv.config({ path: envFile });
-logger.info(`Using ${envFile} file`);
+envInit();
+logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
 const PORT = process.env.PORT || 5002;

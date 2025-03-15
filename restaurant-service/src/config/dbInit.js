@@ -1,17 +1,10 @@
 import pkg from "pg";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 import logger from "./loggerInit.js";
+import envInit from "./envInit.js";
+
+envInit();
 
 const { Pool } = pkg;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -32,6 +25,5 @@ const testDatabase = async () => {
 };
 
 testDatabase();
-// createTables();
 
 export default pool;

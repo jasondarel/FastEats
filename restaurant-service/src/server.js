@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import pool from "./config/dbInit.js";
 import { restaurantRoutes } from "./route/restaurantRoutes.js";
 import createTables from "./config/tablesInit.js";
@@ -8,10 +7,10 @@ import { menuRoutes } from "./route/menuRoutes.js";import { fileURLToPath } from
 import { dirname } from 'path';
 import path from 'path';
 import logger from "./config/loggerInit.js";
+import envInit from "./config/envInit.js";
 
-const envFile = process.env.NODE_ENV === "production" ? ".env.prod" : ".env.dev";
-dotenv.config({ path: envFile });
-logger.info(`Using ${envFile} file`);
+envInit();
+logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
