@@ -1,7 +1,6 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-// Function to initialize logger
 const initLogger = () => {
   return winston.createLogger({
     level: "info",

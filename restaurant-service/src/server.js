@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
-import pool from "./config/dbInit.js";
 import { restaurantRoutes } from "./route/restaurantRoutes.js";
 import createTables from "./config/tablesInit.js";
+import { createDatabase, testDatabase } from "./config/dbInit.js";
 import { menuRoutes } from "./route/menuRoutes.js";import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
@@ -20,7 +20,6 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT;
-createTables();
 
 app.use(cors({
   origin: [process.env.CLIENT_URL], 
@@ -37,6 +36,18 @@ app.use("/", restaurantRoutes);
 app.use("/", menuRoutes);
 
 
-app.listen(PORT, () => {
-  logger.info(`${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`);
-});
+(async () => {
+  try {
+    await createDatabase();
+    await testDatabase();
+    await createTables();
+    
+    logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
+
+    app.listen(PORT, () => {
+      logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    logger.error("❌ Error initializing services:", error);
+  }
+})();
