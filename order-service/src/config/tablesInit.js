@@ -1,7 +1,7 @@
-import pool from "./db.js";
+import pool from "./dbInit.js";
 import logger from "./loggerInit.js";
 
-const createTable = async () => {
+const createTables = async () => {
   const client = await pool.connect();
   try {
     logger.info("Creating Table...");
@@ -54,4 +54,4 @@ const createTable = async () => {
   }
 };
 
-export default createTable;
+export default createTables;

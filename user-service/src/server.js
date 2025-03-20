@@ -7,6 +7,7 @@ import { rabbitMQInit } from "./config/rabbitMQInit.js";
 import { redisInit } from "./config/redisInit.js";
 import logger from "./config/loggerInit.js";
 import envInit from "./config/envInit.js";
+import { createDatabase, testDatabase } from "./config/dbInit.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -27,15 +28,21 @@ app.use("/", userRoutes);
 
 logger.info(`${process.env.SERVICE_NAME || "User/Auth Service"} running on port ${PORT}`);
 
-try {
-  createTables();
-  redisInit();
-  rabbitMQInit();
-  logger.info("Database, Redis, and RabbitMQ initialized successfully");
-} catch (error) {
-  logger.error("Error initializing services:", error);
-}
+(async () => {
+  try {
+    await createDatabase();
+    await testDatabase();
+    await createTables();
 
-app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
-});
+    await redisInit();
+    await rabbitMQInit();
+    
+    logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
+
+    app.listen(PORT, () => {
+      logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    logger.error("❌ Error initializing services:", error);
+  }
+})();
