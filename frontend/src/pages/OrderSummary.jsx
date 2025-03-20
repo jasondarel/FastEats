@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { CheckIcon } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
 import { API_URL } from "../config/api";
+import Swal from "sweetalert2";
 
 const OrderSummary = () => {
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { order_id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrderSummary = async () => {
@@ -78,9 +81,30 @@ const OrderSummary = () => {
           },
         }
       );
-      alert("Order completed successfully!");
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Success!",
+          text: "Order completed successfully!",
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#d97706",
+        });
+        const updatedOrderData = await response.json();
+        setOrderData(updatedOrderData);
+        navigate("/order-list");
+      } else {
+        throw new Error("Failed to complete order");
+      }
     } catch (err) {
       console.error("Error completing order:", err);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to complete the order. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d97706", // amber-600
+      });
     }
   };
 
