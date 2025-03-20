@@ -21,7 +21,6 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     return jakartaDate;
   };
 
-  // Show "Order again" button for Completed OR Cancelled status
   const showOrderAgainButton =
     order.status === "Completed" || order.status === "Cancelled";
 

@@ -82,7 +82,7 @@ const MenuDetails = () => {
         confirmButtonColor: "#efb100",
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.reload();
+          navigate("/orders");
         }
       });
     } catch (error) {
