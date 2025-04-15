@@ -25,6 +25,8 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import OrderSummary from "./pages/OrderSummary";
 import OtpVerifPage from "./pages/OtpVerifPage";
 import ForgotPassword from "./pages/ForgotPassword";
+import NewPassword from "./pages/NewPassword";
+import ForgotPasswordOtp from "./pages/ForgotPasswordOtp";
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/forgot-password-otp" element={<ForgotPasswordOtp />} />
+          <Route path="/new-password" element={<NewPassword />} />
 
           <Route
             path="/"

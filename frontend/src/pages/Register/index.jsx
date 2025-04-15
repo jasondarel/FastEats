@@ -8,7 +8,7 @@ import registerService from "../../service/userServices/registerService";
 
 const Register = () => {
   const [errors, setErrors] = useState({});
-  const [userType, setUserType] = useState("user"); // Default to user registration
+  const [userType, setUserType] = useState("user");
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
@@ -20,11 +20,9 @@ const Register = () => {
     additionalData = {},
     customErrors = null
   ) => {
-    // If custom errors are provided (like image validation), use them
     if (customErrors) {
       setErrors(customErrors);
 
-      // Show the first error
       const firstError = Object.values(customErrors)[0];
       if (firstError) {
         MySwal.fire({
@@ -38,11 +36,9 @@ const Register = () => {
       return;
     }
 
-    // Clear previous errors
     setErrors({});
 
     try {
-      // Create FormData for handling file uploads when registering as seller
       const formData = new FormData();
       formData.append("name", name);
       formData.append("email", email);
@@ -50,7 +46,6 @@ const Register = () => {
       formData.append("confirmPassword", confirmPassword);
       formData.append("role", userType);
 
-      // Add seller-specific data if present
       if (userType === "seller" && additionalData) {
         formData.append("restaurantName", additionalData.restaurantName);
         formData.append("restaurantAddress", additionalData.restaurantAddress);
@@ -83,7 +78,6 @@ const Register = () => {
       };
       setErrors(errors);
 
-      // Show first error in the list
       const firstError = Object.values(errors)[0];
       if (firstError) {
         MySwal.fire({
@@ -99,7 +93,7 @@ const Register = () => {
 
   const toggleUserType = (type) => {
     setUserType(type);
-    setErrors({}); // Clear errors when switching types
+    setErrors({});
   };
 
   return (
