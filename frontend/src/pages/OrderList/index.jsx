@@ -17,22 +17,17 @@ const OrderList = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `${API_URL}/order/orders-by-restaurant` ,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/order/orders-by-restaurant`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       const data = await response.json();
 
       if (data.success) {
-        // Process orders to calculate total price for each order
         const processedOrders = data.orders.map((order) => {
-          // Calculate total price from menu price and item quantity
           const menuPrice = parseFloat(order.menu?.menu_price || 0);
           const quantity = order.item_quantity || 1;
           const calculatedTotalPrice = menuPrice * quantity;

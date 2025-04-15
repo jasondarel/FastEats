@@ -24,6 +24,7 @@ import PayNow from "./pages/PayNow";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import OrderSummary from "./pages/OrderSummary";
 import OtpVerifPage from "./pages/OtpVerifPage";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route
             path="/"
@@ -142,7 +144,6 @@ function App() {
             }
           />
 
-          {/* Routes accessible to both roles */}
           <Route
             path="/profile"
             element={

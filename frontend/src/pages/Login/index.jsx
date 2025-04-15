@@ -34,17 +34,12 @@ const Login = () => {
           confirmButtonColor: "#efb100",
         });
 
-        // Decode the JWT token to get user info
-        // JWT tokens have 3 parts separated by periods
-        // The middle part (payload) is what we need
         if (response.token) {
           try {
-            // Extract and decode the payload part of the JWT
             const payload = response.token.split(".")[1];
             const decodedPayload = JSON.parse(atob(payload));
             console.log("Decoded token payload:", decodedPayload);
 
-            // Check if user is a seller
             if (decodedPayload && decodedPayload.role === "seller") {
               console.log(
                 "Seller detected, navigating to restaurant dashboard"
@@ -57,12 +52,10 @@ const Login = () => {
           }
         }
 
-        // Default navigation if not a seller or if there was an error
         console.log("Navigating to home");
         navigate("/home");
       })
       .catch((error) => {
-        // Error handling remains the same
         if (error.status === 401) {
           MySwal.fire({
             title: "Error",
@@ -106,6 +99,15 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <div className="text-center">
+            <a
+              href="/forgot-password"
+              className="text-yellow-500 hover:text-yellow-600"
+            >
+              Forgot Password?
+            </a>
+          </div>
 
           <SubmitButton
             text={loading ? "Logging in..." : "Login"}
