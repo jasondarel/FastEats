@@ -310,6 +310,17 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </li>
               )}
 
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/cart"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Cart
+                  </Link>
+                </li>
+              )}
+
               {role === "seller" && (
                 <li>
                   <Link
