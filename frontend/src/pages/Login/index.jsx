@@ -56,20 +56,39 @@ const Login = () => {
         navigate("/home");
       })
       .catch((error) => {
-        if (error.status === 401) {
-          MySwal.fire({
-            title: "Error",
-            text: "Your Email is not verified yet. Please verify your email first.",
-            icon: "error",
-            confirmButtonText: "Ok",
-            confirmButtonColor: "#ef4444",
-          });
-          navigate(
-            `/otp-verification?token=${error.data.token}&email=${email}`
-          );
+        console.log("Login error:", error);
+        console.log("Error status:", error.status);
+        if (
+          error.status === 401 || 
+          (error && error.message && error.message.includes("not verified"))
+        ) {
+          if (error && error.token) {
+            console.log("Token found, redirecting to verification page");
+            MySwal.fire({
+              title: "Email Not Verified",
+              text: "Your email is not verified yet. You will be redirected to verification page.",
+              icon: "warning",
+              showCancelButton: false,
+              confirmButtonColor: "#efb100",
+              confirmButtonText: "Proceed to Verification"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                navigate(`/otp-verification?token=${error.token}&email=${email}`);
+              }
+            });
+          } else {
+            MySwal.fire({
+              title: "Verification Error",
+              text: "Unable to proceed with email verification. Please contact support.",
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#ef4444",
+            });
+          }
           return;
         }
-
+        console.log("Invalid credentials or other error");
+        // Handle other errors
         MySwal.fire({
           title: "Login Failed",
           text: error.message || "Invalid credentials",
