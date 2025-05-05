@@ -14,6 +14,8 @@ import {
   saveSnapTokenService,
   updateOrderStatusService,
   getUserCartService,
+  createCartService,
+  deleteCartExceptionService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -261,32 +263,42 @@ export const getUserCartController = async (req, res) => {
   }
 };
 
-export const insertToCartController = async (req, res) => {
+export const createCartController = async (req, res) => {
   try {
-    const { cartId, menuId, quantity, note } = req.body;
+    const { userId, role } = req.user;
+    const { restaurantId  } = req.body;
 
-    if (!cartId || !menuId || !quantity) {
-      return res.status(400).json({
+    if (role !== "user") {
+      logger.warn("Unauthorized access attempt");
+      return res.status(403).json({
         success: false,
-        message: "cartId, menuId, and quantity are required",
+        message: "You are not authorized to create a cart",
       });
     }
 
-    const cartItem = await insertToCartService(
-      cartId,
-      menuId,
-      quantity,
-      note || ""
-    );
+    if (!restaurantId) {
+      return res.status(400).json({
+        success: false,
+        message: "restaurantId are required",
+      });
+    }
+
+    logger.info(`Clearing previous carts for user ${userId} and restaurant ${restaurantId}...`);
+    await deleteCartExceptionService(restaurantId, userId);
+    logger.info("Previous cart cleared successfully");
+
+    logger.info(`Creating cart for user ${userId} and restaurant ${restaurantId}...`);
+    const cartItem = await createCartService(userId, restaurantId);
+
+    logger.info(`Cart created: ${cartItem?.cart_id}...`);
 
     return res.status(201).json({
       success: true,
-      message: "Item added to cart",
+      message: "Add cart successfully",
       cartItem,
     });
   } catch (error) {
-    console.error("Error in insertToCartController:", error);
-    console.error("Error stack:", error.stack);
+    logger.error("Internal server error:", error);
 
     return res.status(500).json({
       success: false,
