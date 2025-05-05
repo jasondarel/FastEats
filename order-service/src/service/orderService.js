@@ -101,18 +101,23 @@ const getSnapTokenService = async (orderId) => {
   return result.rows[0];
 };
 
-const getUserCartService = async (cartId) => {
+const getUserCartService = async (userId) => {
   const result = await pool.query(
-    "SELECT * FROM cart_items WHERE cart_id = $1 AND status = 'active'",
-    [cartId]
+    `SELECT ci.*
+       FROM cart_items ci
+       JOIN carts c ON ci.cart_id = c.cart_id
+       WHERE c.user_id = $1 AND c.status = 'active'`,
+    [userId]
   );
-  return result.rows[0];
+  return result.rows;
 };
 
 const insertToCartService = async (cartId, menuId, quantity, note) => {
   const result = await pool.query(
-    "INSERT INTO cart_items (cart_id, menu_id, quantity, note, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *",
-    [cartId, menuId, quantity, note, NOW(), NOW()]
+    `INSERT INTO cart_items (cart_id, menu_id, quantity, note, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, NOW(), NOW())
+       RETURNING *`,
+    [cartId, menuId, quantity, note]
   );
   return result.rows[0];
 };

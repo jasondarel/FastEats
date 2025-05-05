@@ -261,6 +261,40 @@ export const getUserCartController = async (req, res) => {
   }
 };
 
+export const insertToCartController = async (req, res) => {
+  try {
+    const { cartId, menuId, quantity, note } = req.body;
+
+    if (!cartId || !menuId || !quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "cartId, menuId, and quantity are required",
+      });
+    }
+
+    const cartItem = await insertToCartService(
+      cartId,
+      menuId,
+      quantity,
+      note || ""
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Item added to cart",
+      cartItem,
+    });
+  } catch (error) {
+    console.error("Error in insertToCartController:", error);
+    console.error("Error stack:", error.stack);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const cancelOrderController = async (req, res) => {
   try {
     const { userId } = req.user;
