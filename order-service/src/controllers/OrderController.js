@@ -17,6 +17,7 @@ import {
   createCartService,
   deleteCartExceptionService,
   createCartItemService,
+  deleteCartItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -336,6 +337,54 @@ export const createCartItemController = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Add cart item successfully",
+      cartItem,
+    });
+  } catch (error) {
+    logger.error("Internal server error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const deleteCartItemController = async (req, res) => {
+  try {
+    const { userId, role } = req.user;
+    const {cart_item_id} = req.params;
+
+    if (role !== "user") {
+      logger.warn("Unauthorized access attempt");
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to create a cart",
+      });
+    }
+
+    if (!cart_item_id) {
+      return res.status(400).json({
+        success: false,
+        message: "cart_item_id are required",
+      });
+    }
+
+    logger.info(`Deleting cart item for user ${userId} and cart item ${cart_item_id}...`);
+    const cartItem = await deleteCartItemService(cart_item_id);
+
+    if (!cartItem) {
+      logger.warn(`Cart item ${cart_item_id} not found`);
+      return res.status(404).json({
+        success: false,
+        message: "Cart item not found",
+      });
+    }
+
+    logger.info(`Cart item deleted: ${cartItem?.cart_item_id}...`);
+    
+    return res.status(201).json({
+      success: true,
+      message: "Deleting cart item successfully",
       cartItem,
     });
   } catch (error) {

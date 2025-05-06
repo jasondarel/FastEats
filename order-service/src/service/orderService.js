@@ -133,6 +133,14 @@ export const createCartItemService = async (cartId, menuId, quantity, note="") =
   return result.rows[0];
 };
 
+export const deleteCartItemService = async (cartItemId) => {
+  const result = await pool.query(
+    `DELETE FROM cart_items WHERE cart_item_id = $1 RETURNING *`,
+    [cartItemId]
+  );
+  return result.rows[0];
+};
+
 export const deleteCartExceptionService = async (userId) => {
   const result = await pool.query(
     `DELETE FROM carts WHERE user_id = $1 RETURNING *`,
