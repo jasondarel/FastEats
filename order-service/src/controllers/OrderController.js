@@ -13,11 +13,12 @@ import {
   pendingOrderService,
   saveSnapTokenService,
   updateOrderStatusService,
-  getUserCartService,
   createCartService,
   deleteCartExceptionService,
   createCartItemService,
   deleteCartItemService,
+  getCartsService,
+  getCartService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -230,24 +231,43 @@ export const getOrdersController = async (req, res) => {
   }
 };
 
-export const getUserCartController = async (req, res) => {
-  try {
-    const { userId } = req.user;
-    const authHeader = req.headers.authorization;
+export const getCartsController = async (req, res) => {
+  const { userId } = req.user;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      logger.error("Unauthorized: Missing or invalid token");
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Missing or invalid token",
+  try {
+    logger.info("Fetching carts from database...");
+    const carts = await getCartsService(userId);
+
+    if (!carts || carts.length === 0) {
+      logger.warn("Cart is empty for user:", userId);
+      return res.status(200).json({
+        success: true,
+        cart: [],
+        message: "Carts is Empty",
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    logger.info("Fetching menu data for carts...");
+    return res.status(200).json({
+      success: true,
+      cart: carts,
+    })
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
-    logger.info("Fetching cart from database...");
-    const cart = await getUserCartService(userId);
+export const getCartController = async (req, res) => {
+  const { userId } = req.user;
+  const { cart_id } = req.params;
 
+  try {
+    logger.info("Fetching carts from database...");
+    const cart = await getCartService(cart_id, userId);
     if (!cart || cart.length === 0) {
       logger.warn("Cart is empty for user:", userId);
       return res.status(200).json({
@@ -256,6 +276,12 @@ export const getUserCartController = async (req, res) => {
         message: "Cart is Empty",
       });
     }
+
+    logger.info("Fetching menu data for carts...");
+    return res.status(200).json({
+      success: true,
+      cart: cart,
+    })
   } catch (error) {
     logger.error("Internal server error:", error);
     res.status(500).json({
@@ -319,6 +345,23 @@ export const createCartItemController = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to create a cart",
+      });
+    }
+
+    const cart = await getCartService(cartId, userId);
+    if (!cart) {
+      logger.warn("Cart not found for user:", userId);
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+
+    if (cart.user_id !== userId) {
+      logger.warn("Unauthorized access attempt to cart", { userId, cartId });
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to create a cart item",
       });
     }
 
