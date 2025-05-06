@@ -101,15 +101,23 @@ const getSnapTokenService = async (orderId) => {
   return result.rows[0];
 };
 
-const getUserCartService = async (userId) => {
+export const getCartsService = async (userId) => {
   const result = await pool.query(
-    `SELECT ci.*
-       FROM cart_items ci
-       JOIN carts c ON ci.cart_id = c.cart_id
-       WHERE c.user_id = $1 AND c.status = 'active'`,
+    `SELECT * FROM carts c
+    WHERE c.user_id = $1`,
     [userId]
-  );
+  )
+
   return result.rows;
+};
+
+export const getCartService = async (cartId, userId) => {
+  const result = await pool.query(
+    `SELECT * FROM carts c
+    WHERE c.cart_id = $1 AND c.user_id = $2`,
+    [cartId, userId]
+  );
+  return result.rows[0];
 };
 
 export const createCartService = async (userId, restaurantId) => {
@@ -133,6 +141,14 @@ export const createCartItemService = async (cartId, menuId, quantity, note="") =
   return result.rows[0];
 };
 
+export const deleteCartItemService = async (cartItemId) => {
+  const result = await pool.query(
+    `DELETE FROM cart_items WHERE cart_item_id = $1 RETURNING *`,
+    [cartItemId]
+  );
+  return result.rows[0];
+};
+
 export const deleteCartExceptionService = async (userId) => {
   const result = await pool.query(
     `DELETE FROM carts WHERE user_id = $1 RETURNING *`,
@@ -152,5 +168,4 @@ export {
   getSnapTokenService,
   getOrdersByRestaurantIdService,
   completeOrderService,
-  getUserCartService,
 };
