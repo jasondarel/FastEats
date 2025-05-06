@@ -16,6 +16,7 @@ import {
   getUserCartService,
   createCartService,
   deleteCartExceptionService,
+  createCartItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -295,6 +296,46 @@ export const createCartController = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Add cart successfully",
+      cartItem,
+    });
+  } catch (error) {
+    logger.error("Internal server error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const createCartItemController = async (req, res) => {
+  try {
+    const { userId, role } = req.user;
+    const { cartId, menuId, quantity, note  } = req.body;
+
+    if (role !== "user") {
+      logger.warn("Unauthorized access attempt");
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to create a cart",
+      });
+    }
+
+    if (!cartId || !menuId || !quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "cartId, menuId, and quantity are required",
+      });
+    }
+
+    logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
+    const cartItem = await createCartItemService(cartId, menuId, quantity, note);
+
+    logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
+
+    return res.status(201).json({
+      success: true,
+      message: "Add cart item successfully",
       cartItem,
     });
   } catch (error) {

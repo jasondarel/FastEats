@@ -17,7 +17,8 @@ import {
   getRestaurantOrderController,
   getRestaurantDashboardByRestaurantIdController,
   getUserCartController,
-  createCartController
+  createCartController,
+  createCartItemController
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -63,5 +64,6 @@ router.delete("/orders/:order_id", deleteOrder);
 
 router.get("/cart/:user_id", authMiddleware, getUserCartController);
 router.post("/cart", authMiddleware, createCartController);
+router.post("/cart-item", authMiddleware, createCartItemController);
 
 export default router;
