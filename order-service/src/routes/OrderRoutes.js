@@ -17,7 +17,8 @@ import {
   getRestaurantOrderController,
   getRestaurantDashboardByRestaurantIdController,
   getUserCartController,
-  insertToCartController,
+  createCartController,
+  createCartItemController
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -59,7 +60,10 @@ router.get("/check-midtrans-status", checkMidtransStatusController);
 router.post("/save-snap-token", saveSnapTokenController);
 router.get("/snap/:order_id", getSnapTokenController);
 router.delete("/orders/:order_id", deleteOrder);
+
+
 router.get("/cart/:user_id", authMiddleware, getUserCartController);
-router.post("/cart/add", authMiddleware, insertToCartController);
+router.post("/cart", authMiddleware, createCartController);
+router.post("/cart-item", authMiddleware, createCartItemController);
 
 export default router;

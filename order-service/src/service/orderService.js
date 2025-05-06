@@ -112,7 +112,18 @@ const getUserCartService = async (userId) => {
   return result.rows;
 };
 
-const insertToCartService = async (cartId, menuId, quantity, note) => {
+export const createCartService = async (userId, restaurantId) => {
+  const result = await pool.query(
+    `INSERT INTO carts (user_id, restaurant_id, status, created_at, updated_at)
+      VALUES ($1, $2, 'active', NOW(), NOW())
+        ON CONFLICT (user_id, restaurant_id) DO NOTHING
+      RETURNING *`,
+    [userId, restaurantId]
+  );
+  return result.rows[0];
+}
+
+export const createCartItemService = async (cartId, menuId, quantity, note="") => {
   const result = await pool.query(
     `INSERT INTO cart_items (cart_id, menu_id, quantity, note, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -121,6 +132,14 @@ const insertToCartService = async (cartId, menuId, quantity, note) => {
   );
   return result.rows[0];
 };
+
+export const deleteCartExceptionService = async (userId) => {
+  const result = await pool.query(
+    `DELETE FROM carts WHERE user_id = $1 RETURNING *`,
+    [userId]
+  );
+  return result.rows[0];
+}
 
 export {
   createOrderService,
@@ -134,5 +153,4 @@ export {
   getOrdersByRestaurantIdService,
   completeOrderService,
   getUserCartService,
-  insertToCartService,
 };

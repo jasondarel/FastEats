@@ -13,7 +13,8 @@ const createTables = async () => {
           restaurant_id INT NOT NULL,
           status TEXT DEFAULT 'active', -- active, checked_out, abandoned, deleted
           created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW()
+          updated_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE (user_id, restaurant_id)
       );
     `);
 
