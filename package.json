@@ -1,0 +1,23 @@
+{
+  "name": "fasteats",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix api-gateway run dev\" \"npm --prefix user-service run dev\" \"npm --prefix restaurant-service run dev\" \"npm --prefix order-service run dev\" \"npm --prefix notification-service run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreanDjabbar/FastEats.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AndreanDjabbar/FastEats/issues"
+  },
+  "homepage": "https://github.com/AndreanDjabbar/FastEats#readme",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
