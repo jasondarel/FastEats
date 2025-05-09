@@ -49,7 +49,6 @@ const MenuPage = () => {
   };
 
   const createCartService = async (restaurantId) => {
-
     try {
       const token = localStorage.getItem("token");
 
@@ -74,12 +73,14 @@ const MenuPage = () => {
 
       // Get current user ID
       const userId = getUserIdFromToken(token);
-
       // Save cart info to localStorage to track active cart
       localStorage.setItem(
         "activeCart",
         JSON.stringify({
-          cartId: response.data.cartId || response.data._id || response.data.id,
+          cartId:
+            response.data.cartItem?.cart_id ||
+            response.data._id ||
+            response.data.id,
           restaurantId: restaurantId,
           userId: userId, // Store user ID with cart info
           createdAt: new Date().toISOString(),

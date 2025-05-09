@@ -111,11 +111,20 @@ export const getCartsService = async (userId) => {
   return result.rows;
 };
 
-export const getCartService = async (userId) => {
+export const getCartService = async (cartId, userId) => {
   const result = await pool.query(
     `SELECT * FROM carts c
-    WHERE c.user_id = $1`,
-    [userId]
+    WHERE c.cart_id = $1 AND c.user_id = $2`,
+    [cartId, userId]
+  );
+  return result.rows[0];
+};
+
+export const getCartServiceByRestaurantId = async (userId, restaurantId) => {
+  const result = await pool.query(
+    `SELECT * FROM carts c
+    WHERE c.user_id = $1 AND c.restaurant_id = $2`,
+    [userId, restaurantId]
   );
   return result.rows[0];
 };

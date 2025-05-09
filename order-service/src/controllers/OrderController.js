@@ -19,6 +19,7 @@ import {
   deleteCartItemService,
   getCartsService,
   getCartService,
+  getCartServiceByRestaurantId,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -321,7 +322,25 @@ export const createCartController = async (req, res) => {
       `Creating cart for user ${userId} and restaurant ${restaurantId}...`
     );
     const cartItem = await createCartService(userId, restaurantId);
-
+    if (!cartItem) {
+      const existingCart = await getCartServiceByRestaurantId(
+        userId,
+        restaurantId
+      );
+      if (!existingCart) {
+        logger.error("Failed to create cart");
+        return res.status(500).json({
+          success: false,
+          message: "Failed to create cart",
+        });
+      }
+      logger.info("Cart already exists, using existing cart");
+      return res.status(200).json({
+        success: true,
+        message: "Cart already exists",
+        cartItem: existingCart,
+      });
+    }
     logger.info(`Cart created: ${cartItem?.cart_id}...`);
 
     return res.status(201).json({
@@ -361,7 +380,7 @@ export const deleteCartController = async (req, res) => {
 
     logger.info(
       `Deleting cart for user ${userId} and restaurant ${restaurant_id}...`
-    )
+    );
     const deletedCart = await deleteCartExceptionService(userId, restaurant_id);
     if (!deletedCart) {
       logger.warn("Cart not found for user:", userId);
@@ -374,7 +393,7 @@ export const deleteCartController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Cart deleted successfully",
-    })
+    });
   } catch (error) {
     logger.error("Internal server error:", error);
     return res.status(500).json({
@@ -382,13 +401,13 @@ export const deleteCartController = async (req, res) => {
       message: "Internal server error",
     });
   }
-}
+};
 
 export const createCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { cartId, menuId, quantity, note } = req.body;
-
+    console.log("req.body", req.body);
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       return res.status(403).json({

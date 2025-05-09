@@ -20,7 +20,7 @@ import {
   createCartItemController,
   deleteCartItemController,
   getCartController,
-  deleteCartController
+  deleteCartController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 

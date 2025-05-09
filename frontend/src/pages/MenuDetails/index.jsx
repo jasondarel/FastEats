@@ -95,22 +95,23 @@ const MenuDetails = () => {
         },
       });
 
-      // First, check for an active cart in localStorage
       let activeCartId = null;
       const activeCart = localStorage.getItem("activeCart");
+      console.log("activeCart from localStorage:", activeCart);
+      console.log("activeCartId:", activeCart.cartId);
 
       if (activeCart) {
         try {
           const parsedCart = JSON.parse(activeCart);
-          const currentUserId = getUserIdFromToken(token);
+          console.log("parsedCart:", parsedCart);
 
-          // Verify cart belongs to current user and restaurant
+          const currentUserId = getUserIdFromToken(token);
+          console.log("parsedCart.cartId:", parsedCart.cartId);
           if (
             parsedCart.userId === currentUserId &&
-            parsedCart.restaurantId === menu.restaurant_id
+            parsedCart.restaurantId.toString() === menu.restaurant_id.toString()
           ) {
-            activeCartId = parsedCart.cartId;
-            console.log("Found active cart in localStorage:", activeCartId);
+            activeCartId = parsedCart.cartId; //ada
           }
         } catch (e) {
           console.error("Error parsing activeCart from localStorage:", e);
@@ -154,6 +155,7 @@ const MenuDetails = () => {
           token
         );
         activeCartId = createResponse.data.cartItem.cart_id;
+        console.log("active cart created:", activeCartId);
 
         const userId = getUserIdFromToken(token);
         localStorage.setItem(
@@ -168,7 +170,7 @@ const MenuDetails = () => {
       }
 
       await createCartItemService(activeCartId, menuId, quantity, "", token);
-
+      console.log("Item being added to cart :", activeCartId, menuId, quantity);
       Swal.close();
       Swal.fire({
         title: "Added to cart!",
