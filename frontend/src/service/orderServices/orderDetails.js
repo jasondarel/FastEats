@@ -39,13 +39,10 @@ const payConfirmationService = async (
 };
 
 const saveSnapService = async (orderId, snapToken) => {
-  const response = await axios.post(
-    `${API_URL}/order/save-snap-token`,
-    {
-      order_id: orderId,
-      snap_token: snapToken,
-    }
-  );
+  const response = await axios.post(`${API_URL}/order/save-snap-token`, {
+    order_id: orderId,
+    snap_token: snapToken,
+  });
   return response;
 };
 
@@ -57,8 +54,86 @@ const checkMidtransStatusService = async (orderId) => {
 };
 
 const getOrderDetailService = async (orderId, token) => {
-  const response = await axios.get(
-    `${API_URL}/order/orders/${orderId}`,
+  const response = await axios.get(`${API_URL}/order/orders/${orderId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  return response;
+};
+
+const getCartService = async (cartId, token) => {
+  try {
+    const response = await axios.get(`${API_URL}/cart/${cartId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    throw error;
+  }
+};
+
+const createCartService = async (restaurantId, token) => {
+  const response = await axios.post(
+    `${API_URL}/order/cart`,
+    {
+      restaurantId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  console.log("createCartService response:", response.data);
+  return response;
+};
+
+const createCartItemService = async (cartId, menuId, quantity, note, token) => {
+  const response = await axios.post(
+    `${API_URL}/order/cart-item`,
+    {
+      cartId,
+      menuId,
+      quantity,
+      note: note || "",
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  console.log("createCartItemService response:", response.data);
+  return response;
+};
+
+const deleteCartItemService = async (cartItemId, token) => {
+  const response = await axios.delete(
+    `${API_URL}/order/cart-item/${cartItemId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response;
+};
+
+const updateCartItemQuantityService = async (cartItemId, quantity, token) => {
+  const response = await axios.put(
+    `${API_URL}/order/cart-item/${cartItemId}`,
+    {
+      quantity: quantity,
+    },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -74,5 +149,10 @@ export {
   payConfirmationService,
   saveSnapService,
   checkMidtransStatusService,
-  getOrderDetailService
+  getOrderDetailService,
+  getCartService,
+  createCartService,
+  createCartItemService,
+  deleteCartItemService,
+  updateCartItemQuantityService,
 };

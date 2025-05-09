@@ -231,7 +231,7 @@ export const getOrdersController = async (req, res) => {
   }
 };
 
-export const getCartsController = async (req, res) => {
+export const getCartController = async (req, res) => {
   const { userId } = req.user;
 
   try {
@@ -251,7 +251,7 @@ export const getCartsController = async (req, res) => {
     return res.status(200).json({
       success: true,
       cart: carts,
-    })
+    });
   } catch (error) {
     logger.error("Internal server error:", error);
     res.status(500).json({
@@ -261,40 +261,40 @@ export const getCartsController = async (req, res) => {
   }
 };
 
-export const getCartController = async (req, res) => {
-  const { userId } = req.user;
-  const { cart_id } = req.params;
+// export const getCartController = async (req, res) => {
+//   const { userId } = req.user;
+//   const { cart_id } = req.params;
 
-  try {
-    logger.info("Fetching carts from database...");
-    const cart = await getCartService(cart_id, userId);
-    if (!cart || cart.length === 0) {
-      logger.warn("Cart is empty for user:", userId);
-      return res.status(200).json({
-        success: true,
-        cart: [],
-        message: "Cart is Empty",
-      });
-    }
+//   try {
+//     logger.info("Fetching carts from database...");
+//     const cart = await getCartService(cart_id, userId);
+//     if (!cart || cart.length === 0) {
+//       logger.warn("Cart is empty for user:", userId);
+//       return res.status(200).json({
+//         success: true,
+//         cart: [],
+//         message: "Cart is Empty",
+//       });
+//     }
 
-    logger.info("Fetching menu data for carts...");
-    return res.status(200).json({
-      success: true,
-      cart: cart,
-    })
-  } catch (error) {
-    logger.error("Internal server error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
+//     logger.info("Fetching menu data for carts...");
+//     return res.status(200).json({
+//       success: true,
+//       cart: cart,
+//     });
+//   } catch (error) {
+//     logger.error("Internal server error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
 
 export const createCartController = async (req, res) => {
   try {
     const { userId, role } = req.user;
-    const { restaurantId  } = req.body;
+    const { restaurantId } = req.body;
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -311,11 +311,15 @@ export const createCartController = async (req, res) => {
       });
     }
 
-    logger.info(`Clearing previous carts for user ${userId} and restaurant ${restaurantId}...`);
+    logger.info(
+      `Clearing previous carts for user ${userId} and restaurant ${restaurantId}...`
+    );
     await deleteCartExceptionService(restaurantId, userId);
     logger.info("Previous cart cleared successfully");
 
-    logger.info(`Creating cart for user ${userId} and restaurant ${restaurantId}...`);
+    logger.info(
+      `Creating cart for user ${userId} and restaurant ${restaurantId}...`
+    );
     const cartItem = await createCartService(userId, restaurantId);
 
     logger.info(`Cart created: ${cartItem?.cart_id}...`);
@@ -338,7 +342,7 @@ export const createCartController = async (req, res) => {
 export const createCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
-    const { cartId, menuId, quantity, note  } = req.body;
+    const { cartId, menuId, quantity, note } = req.body;
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -373,7 +377,12 @@ export const createCartItemController = async (req, res) => {
     }
 
     logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
-    const cartItem = await createCartItemService(cartId, menuId, quantity, note);
+    const cartItem = await createCartItemService(
+      cartId,
+      menuId,
+      quantity,
+      note
+    );
 
     logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
@@ -395,7 +404,7 @@ export const createCartItemController = async (req, res) => {
 export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
-    const {cart_item_id} = req.params;
+    const { cart_item_id } = req.params;
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -412,7 +421,9 @@ export const deleteCartItemController = async (req, res) => {
       });
     }
 
-    logger.info(`Deleting cart item for user ${userId} and cart item ${cart_item_id}...`);
+    logger.info(
+      `Deleting cart item for user ${userId} and cart item ${cart_item_id}...`
+    );
     const cartItem = await deleteCartItemService(cart_item_id);
 
     if (!cartItem) {
@@ -424,7 +435,7 @@ export const deleteCartItemController = async (req, res) => {
     }
 
     logger.info(`Cart item deleted: ${cartItem?.cart_item_id}...`);
-    
+
     return res.status(201).json({
       success: true,
       message: "Deleting cart item successfully",

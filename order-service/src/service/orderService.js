@@ -106,16 +106,16 @@ export const getCartsService = async (userId) => {
     `SELECT * FROM carts c
     WHERE c.user_id = $1`,
     [userId]
-  )
+  );
 
   return result.rows;
 };
 
-export const getCartService = async (cartId, userId) => {
+export const getCartService = async (userId) => {
   const result = await pool.query(
     `SELECT * FROM carts c
-    WHERE c.cart_id = $1 AND c.user_id = $2`,
-    [cartId, userId]
+    WHERE c.user_id = $1`,
+    [userId]
   );
   return result.rows[0];
 };
@@ -129,9 +129,14 @@ export const createCartService = async (userId, restaurantId) => {
     [userId, restaurantId]
   );
   return result.rows[0];
-}
+};
 
-export const createCartItemService = async (cartId, menuId, quantity, note="") => {
+export const createCartItemService = async (
+  cartId,
+  menuId,
+  quantity,
+  note = ""
+) => {
   const result = await pool.query(
     `INSERT INTO cart_items (cart_id, menu_id, quantity, note, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -155,7 +160,7 @@ export const deleteCartExceptionService = async (userId) => {
     [userId]
   );
   return result.rows[0];
-}
+};
 
 export {
   createOrderService,

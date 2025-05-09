@@ -10,6 +10,10 @@ import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
+import {
+  createCartService,
+  createCartItemService,
+} from "../../service/orderServices/orderDetails";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { API_URL } from "../../config/api";
@@ -20,6 +24,7 @@ const MenuDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [cartId, setCartId] = useState(null);
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
@@ -62,9 +67,174 @@ const MenuDetails = () => {
     setQuantity((prev) => Math.max(1, prev + change));
   };
 
-  const handleAddToCart = () => {
-    // Implement your cart logic here
-    console.log(`Adding ${quantity} ${menu.menu_name} to cart`);
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        title: "Not logged in!",
+        text: "Please log in to add items to your cart",
+        icon: "warning",
+        confirmButtonText: "Go to Login",
+        confirmButtonColor: "#efb100",
+        showCancelButton: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
+      return;
+    }
+
+    try {
+      Swal.fire({
+        title: "Adding to cart...",
+        text: "Please wait",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // First, check for an active cart in localStorage
+      let activeCartId = null;
+      const activeCart = localStorage.getItem("activeCart");
+
+      if (activeCart) {
+        try {
+          const parsedCart = JSON.parse(activeCart);
+          const currentUserId = getUserIdFromToken(token);
+
+          // Verify cart belongs to current user and restaurant
+          if (
+            parsedCart.userId === currentUserId &&
+            parsedCart.restaurantId === menu.restaurant_id
+          ) {
+            activeCartId = parsedCart.cartId;
+            console.log("Found active cart in localStorage:", activeCartId);
+          }
+        } catch (e) {
+          console.error("Error parsing activeCart from localStorage:", e);
+        }
+      }
+
+      if (!activeCartId) {
+        try {
+          console.log("Checking for existing carts via API...");
+          const cartsResponse = await createCartItemService();
+          const userCarts = cartsResponse.data.carts || [];
+
+          const restaurantCart = userCarts.find(
+            (cart) => cart.restaurant_id === menu.restaurant_id
+          );
+
+          if (restaurantCart) {
+            activeCartId = restaurantCart.cart_id;
+            console.log("Found existing cart via API:", activeCartId);
+
+            const userId = getUserIdFromToken(token);
+            localStorage.setItem(
+              "activeCart",
+              JSON.stringify({
+                cartId: activeCartId,
+                restaurantId: menu.restaurant_id,
+                userId: userId,
+                createdAt: new Date().toISOString(),
+              })
+            );
+          }
+        } catch (error) {
+          console.log("Error fetching carts:", error);
+        }
+      }
+
+      if (!activeCartId) {
+        console.log("No existing cart found, creating new cart...");
+        const createResponse = await createCartService(
+          menu.restaurant_id,
+          token
+        );
+        activeCartId = createResponse.data.cartItem.cart_id;
+
+        const userId = getUserIdFromToken(token);
+        localStorage.setItem(
+          "activeCart",
+          JSON.stringify({
+            cartId: activeCartId,
+            restaurantId: menu.restaurant_id,
+            userId: userId,
+            createdAt: new Date().toISOString(),
+          })
+        );
+      }
+
+      await createCartItemService(activeCartId, menuId, quantity, "", token);
+
+      Swal.close();
+      Swal.fire({
+        title: "Added to cart!",
+        text: `${quantity} ${menu.menu_name} added to your cart`,
+        icon: "success",
+        confirmButtonText: "View Cart",
+        confirmButtonColor: "#efb100",
+        showCancelButton: true,
+        cancelButtonText: "Continue Shopping",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/cart");
+        }
+      });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      Swal.close();
+      let errorMessage = "Failed to add item to cart";
+      if (error.response) {
+        const { status, data } = error.response;
+        if (status === 401) {
+          errorMessage = "Your session has expired. Please log in again.";
+          localStorage.removeItem("token");
+          setTimeout(() => navigate("/login"), 2000);
+        } else if (data && data.message) {
+          errorMessage = data.message;
+        } else if (status === 400) {
+          errorMessage =
+            "Please check your input. Some required information is missing.";
+        } else if (status === 403) {
+          errorMessage = "You don't have permission to add items to cart.";
+        } else if (status === 404) {
+          errorMessage = "The restaurant or menu item could not be found.";
+        }
+      }
+      Swal.fire({
+        title: "Error!",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      });
+    }
+  };
+
+  // Helper function to extract user ID from JWT token
+  const getUserIdFromToken = (token) => {
+    try {
+      // Simple JWT parsing (assumes token has 3 parts separated by dots)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+
+      const payload = JSON.parse(jsonPayload);
+      return payload.userId || payload.sub || payload.id || null;
+    } catch (error) {
+      console.error("Error extracting user ID from token:", error);
+      return null;
+    }
   };
 
   const handleOrderNow = async () => {

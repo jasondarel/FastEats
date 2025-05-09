@@ -2,63 +2,75 @@ import React from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
 const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
+  const {
+    menu_name = item.name || "Menu Item",
+    price = item.price || 0,
+    quantity = item.quantity || 1,
+    note = item.note || "",
+    menu_image_url = item.menu_image_url || "/placeholder-food.png",
+    menu_size = item.menu_size || "",
+  } = item;
+
   return (
-    <div className="my-3 px-4 py-4 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow">
-      <div className="flex">
+    <div className="flex items-start p-3 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition">
+      <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
         <img
-          src={item.image}
-          alt={item.name}
-          className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-gray-200"
+          src={menu_image_url}
+          alt={menu_name}
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/placeholder-food.png";
+          }}
         />
-        <div className="pt-2 pl-4 flex-1 min-w-0">
-          <h2 className="font-bold truncate overflow-hidden text-ellipsis whitespace-nowrap text-base md:text-lg">
-            {item.name}
-          </h2>
-          <p className="text-slate-600">{item.size}</p>
-        </div>
       </div>
 
-      <div className="flex justify-between mt-3">
-        <div className="flex flex-col">
-          <h2 className="text-sm text-gray-600">Price</h2>
-          <p className="font-bold text-yellow-600">
-            Rp {item.price.toLocaleString()}
-          </p>
+      <div className="flex-1 ml-3">
+        <h3 className="font-medium">{menu_name}</h3>
+        {menu_size && (
+          <div className="flex text-sm text-gray-600">{menu_size}</div>
+        )}
+        {note && (
+          <div className="text-xs text-gray-500 mt-1 italic">Note: {note}</div>
+        )}
+      </div>
+
+      <div className="flex flex-col items-end">
+        <div className="font-semibold text-yellow-600">
+          Rp {(price * quantity).toLocaleString()}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center mt-2">
           <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-            className="bg-gray-200 hover:bg-gray-300 h-8 w-8 rounded-full flex items-center justify-center transition-colors"
-            disabled={item.quantity <= 1}
-          >
-            <FaMinus className="text-gray-700 text-xs" />
-          </button>
-
-          <span className="font-semibold w-8 text-center">{item.quantity}</span>
-
-          <button
-            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-            className="bg-gray-200 hover:bg-gray-300 h-8 w-8 rounded-full flex items-center justify-center transition-colors"
-          >
-            <FaPlus className="text-gray-700 text-xs" />
-          </button>
-
-          <button
-            onClick={() => onRemoveItem(item.id)}
-            className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+            onClick={onRemoveItem}
+            className="text-red-500 hover:text-red-700 mr-3"
+            aria-label="Remove item"
           >
             <FaTrash />
           </button>
-        </div>
-      </div>
 
-      <div className="flex justify-end mt-2">
-        <div className="text-right">
-          <h2 className="text-sm text-gray-600">Subtotal</h2>
-          <p className="font-bold">
-            Rp {(item.price * item.quantity).toLocaleString()}
-          </p>
+          <div className="flex items-center border border-gray-300 rounded-md">
+            <button
+              onClick={() => onUpdateQuantity(quantity - 1)}
+              className="px-2 py-1 text-gray-500 hover:bg-gray-100"
+              disabled={quantity <= 1}
+              aria-label="Decrease quantity"
+            >
+              <FaMinus size={10} />
+            </button>
+
+            <span className="px-2 text-sm font-medium min-w-[24px] text-center">
+              {quantity}
+            </span>
+
+            <button
+              onClick={() => onUpdateQuantity(quantity + 1)}
+              className="px-2 py-1 text-gray-500 hover:bg-gray-100"
+              aria-label="Increase quantity"
+            >
+              <FaPlus size={10} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
