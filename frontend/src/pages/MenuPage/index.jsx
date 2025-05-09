@@ -25,46 +25,9 @@ const MenuPage = () => {
 
   const { menuItems, error, isLoading } = useMenuData(restaurantId);
 
-  // Check if cart exists for this restaurant and handle different restaurant scenarios
-  const checkExistingCart = () => {
-    const activeCart = localStorage.getItem("activeCart");
-    // Get current user ID to verify cart ownership
-    const token = localStorage.getItem("token");
-    const currentUserId = token ? getUserIdFromToken(token) : null;
-
-    if (activeCart && currentUserId) {
-      try {
-        const parsedCart = JSON.parse(activeCart);
-
-        // Check if cart belongs to current user
-        if (parsedCart.userId !== currentUserId) {
-          // This cart belongs to a different user, ignore it
-          return { exists: false };
-        }
-
-        if (parsedCart.restaurantId === restaurantId) {
-          // Cart for this restaurant already exists for current user
-          setCartCreated(true);
-          return { exists: true, sameRestaurant: true };
-        } else {
-          // Cart exists but for a different restaurant (same user)
-          return {
-            exists: true,
-            sameRestaurant: false,
-            cartId: parsedCart.cartId,
-          };
-        }
-      } catch (e) {
-        console.error("Error parsing activeCart from localStorage:", e);
-      }
-    }
-    return { exists: false };
-  };
-
   // Helper function to extract user ID from JWT token
   const getUserIdFromToken = (token) => {
     try {
-      // Simple JWT parsing (assumes token has 3 parts separated by dots)
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = decodeURIComponent(
@@ -85,56 +48,7 @@ const MenuPage = () => {
     }
   };
 
-  // Delete existing cart
-  const deleteExistingCart = async (cartId) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error(
-          "Authentication token not found. Cannot delete previous cart."
-        );
-        return false;
-      }
-
-      await axios.delete(`http://localhost:5000/order/cart/${cartId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Previous cart deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Error deleting previous cart:", error);
-      return false;
-    }
-  };
-
   const createCartService = async (restaurantId) => {
-    // Check if we already have a cart and if it's for the same restaurant
-    const cartStatus = checkExistingCart();
-
-    if (cartStatus.exists) {
-      if (cartStatus.sameRestaurant) {
-        // Cart for this restaurant already exists, no need to create a new one
-        return;
-      } else {
-        // Cart exists but for a different restaurant, delete it first
-        setIsCreatingCart(true);
-        const deleted = await deleteExistingCart(cartStatus.cartId);
-        if (!deleted) {
-          setCartError(
-            "Failed to delete previous cart. Please try refreshing the page."
-          );
-          setIsCreatingCart(false);
-          return null;
-        }
-        // Continue to create a new cart below
-      }
-    } else {
-      setIsCreatingCart(true);
-    }
 
     try {
       const token = localStorage.getItem("token");
