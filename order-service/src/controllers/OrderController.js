@@ -314,7 +314,7 @@ export const createCartController = async (req, res) => {
     logger.info(
       `Clearing previous carts for user ${userId} and restaurant ${restaurantId}...`
     );
-    await deleteCartExceptionService(restaurantId, userId);
+    await deleteCartExceptionService(userId, restaurantId);
     logger.info("Previous cart cleared successfully");
 
     logger.info(
@@ -338,6 +338,51 @@ export const createCartController = async (req, res) => {
     });
   }
 };
+
+export const deleteCartController = async (req, res) => {
+  const { userId, role } = req.user;
+  const { restaurant_id } = req.params;
+  try {
+    if (role !== "user") {
+      logger.warn("Unauthorized access attempt");
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete a cart",
+      });
+    }
+
+    if (!restaurant_id) {
+      logger.warn("Restaurant ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "restaurant_id are required",
+      });
+    }
+
+    logger.info(
+      `Deleting cart for user ${userId} and restaurant ${restaurant_id}...`
+    )
+    const deletedCart = await deleteCartExceptionService(userId, restaurant_id);
+    if (!deletedCart) {
+      logger.warn("Cart not found for user:", userId);
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+    logger.info(`Cart deleted: ${deletedCart?.cart_id}...`);
+    return res.status(200).json({
+      success: true,
+      message: "Cart deleted successfully",
+    })
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
 
 export const createCartItemController = async (req, res) => {
   try {
