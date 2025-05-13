@@ -22,6 +22,7 @@ import {
   getCartController,
   deleteCartController,
   checkoutCartController,
+  getCartItemsController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -69,6 +70,7 @@ router.get("/cart/:cart_id", authMiddleware, getCartController);
 router.post("/cart", authMiddleware, createCartController);
 router.delete("/cart/:restaurant_id", authMiddleware, deleteCartController);
 router.post("/cart-item", authMiddleware, createCartItemController);
+router.get("/cart-item", authMiddleware, getCartItemsController);
 router.delete(
   "/cart-item/:cart_item_id",
   authMiddleware,
