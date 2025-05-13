@@ -141,7 +141,7 @@ export const getCartItemsService = async (cartId) => {
 export const createCartService = async (userId, restaurantId) => {
   const result = await pool.query(
     `INSERT INTO carts (user_id, restaurant_id, created_at, updated_at)
-      VALUES ($1, $2, 'active', NOW(), NOW())
+      VALUES ($1, $2, NOW(), NOW())
         ON CONFLICT (user_id, restaurant_id) DO NOTHING
       RETURNING *`,
     [userId, restaurantId]
