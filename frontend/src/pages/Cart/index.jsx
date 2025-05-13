@@ -147,13 +147,13 @@ const Cart = () => {
     }
   };
 
-  const removeItem = async (cartItemId) => {
+  const removeItem = async (menuId) => {
     try {
       const token = getToken();
-      await deleteCartItemService(cartItemId, token);
+      await deleteCartItemService(menuId, token);
 
       setCartItems((prevItems) =>
-        prevItems.filter((item) => item.cart_item_id !== cartItemId)
+        prevItems.filter((item) => item.menu_id !== menuId)
       );
     } catch (err) {
       setError("Error removing item. Please try again.");
@@ -164,8 +164,11 @@ const Cart = () => {
   const removeAllItems = async () => {
     try {
       const token = getToken();
-      const deletePromises = cartItems.map((item) =>
-        deleteCartItemService(item.cart_item_id, token)
+      console.log("Removing all items from cart:", cartItems);
+      const deletePromises = cartItems.map(
+        (item) =>
+          console.log("Deleting item:", item) ||
+          deleteCartItemService(item.menu_id, token)
       );
 
       await Promise.all(deletePromises);
@@ -180,9 +183,13 @@ const Cart = () => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
 
     const total = cartItems.reduce((total, item) => {
-      const itemQuantity = parseInt(item.quantity);
+      const itemQuantity = parseInt(item.total_quantity);
       return total + itemQuantity;
     }, 0);
+    console.log(
+      "Quantity of each item:",
+      cartItems.map((item) => item.quantity)
+    );
     console.log("Total items:", total);
     return total;
   };
@@ -199,8 +206,8 @@ const Cart = () => {
     return cartItems.reduce((total, item) => {
       const price = item.menu ? item.menu.menu_price : item.menu_price || 0;
       return (
-        parseInt(total) + parseInt(price) * parseInt(item.quantity) ||
-        price * (parseInt(item.quantity) || 1)
+        parseInt(total) + parseInt(price) * parseInt(item.total_quantity) ||
+        price * (parseInt(item.total_quantity) || 1)
       );
     }, 0);
   };
@@ -290,7 +297,7 @@ const Cart = () => {
                       item.note
                     )
                   }
-                  onRemoveItem={() => removeItem(item.cart_item_id)}
+                  onRemoveItem={() => removeItem(item.menu_id)}
                 />
               ))
             )}

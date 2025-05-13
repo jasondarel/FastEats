@@ -125,22 +125,19 @@ const getCartItemsService = async (cartId, token) => {
   return response;
 };
 
-const deleteCartItemService = async (cartItemId, token) => {
-  const response = await axios.delete(
-    `${API_URL}/order/cart-item/${cartItemId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+const deleteCartItemService = async (menuId, token) => {
+  const response = await axios.delete(`${API_URL}/order/cart-item/${menuId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
   return response;
 };
 
-const updateCartItemQuantityService = async (cartItemId, quantity, token) => {
+const updateCartItemQuantityService = async (menuId, quantity, token) => {
   const response = await axios.put(
-    `${API_URL}/order/cart-item/${cartItemId}`,
+    `${API_URL}/order/cart-item/${menuId}`,
     {
       quantity: quantity,
     },

@@ -8,7 +8,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
   const {
     menu_name = menu.menu_name || item.name || "Menu Item",
     menu_price = menu.menu_price || item.menu_price || 0,
-    quantity = item.quantity || 1,
+    quantity = item.total_quantity || 1,
     note = item.note || "",
     menu_image_url = menu.menu_image ||
       item.menu_image_url ||

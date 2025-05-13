@@ -71,11 +71,7 @@ router.post("/cart", authMiddleware, createCartController);
 router.delete("/cart/:restaurant_id", authMiddleware, deleteCartController);
 router.post("/cart-item", authMiddleware, createCartItemController);
 router.get("/cart-item", authMiddleware, getCartItemsController);
-router.delete(
-  "/cart-item/:cart_item_id",
-  authMiddleware,
-  deleteCartItemController
-);
+router.delete("/cart-item/:menu_id", authMiddleware, deleteCartItemController);
 router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);
 
 export default router;
