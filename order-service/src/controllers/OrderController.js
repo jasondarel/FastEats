@@ -1358,10 +1358,33 @@ export const getCartItemsController = async (req, res) => {
       });
     }
 
+    const groupedCartItems = cartItems.reduce((acc, item) => {
+      const { cart_id, menu_id, quantity } = item;
+      const key = `${cart_id}-${menu_id}`; // gabungan cart_id dan menu_id sebagai key unik
+
+      if (!acc[key]) {
+        acc[key] = {
+          cart_id,
+          menu_id,
+          total_quantity: 0,
+          note: item.note || "",
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          // tambahkan informasi menu jika ada
+          menu: item.menu || null,
+        };
+      }
+
+      acc[key].total_quantity += quantity;
+      return acc;
+    }, {});
+
+    const finalCartItems = Object.values(groupedCartItems);
+
     logger.info("Cart items fetched successfully");
 
     const cartItemsWithMenu = await Promise.all(
-      cartItems.map(async (item) => {
+      finalCartItems.map(async (item) => {
         try {
           const response = await axios.get(
             `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
