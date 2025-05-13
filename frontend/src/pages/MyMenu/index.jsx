@@ -9,7 +9,7 @@ import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
 import CategoryFilter from "../../components/CategoryFilter";
 import AlphabetSort from "../../components/AlphabetSort";
-import LoadingState from "../../components/LoadingState"; // Import LoadingState
+import LoadingState from "../../components/LoadingState";
 import { handleApiError } from "./components/HandleAlert";
 import { API_URL } from "../../config/api";
 
@@ -20,16 +20,14 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
-  // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [sortOption, setSortOption] = useState("nameAsc"); // Default sort: A to Z
+  const [sortOption, setSortOption] = useState("nameAsc");
 
   const navigate = useNavigate();
 
-  // Handle navigation to menu details page
   const handleMenuItemClick = (menuId) => {
     navigate(`/my-menu/${menuId}/details`);
   };
@@ -73,7 +71,6 @@ const MyMenuPage = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
-      // Add restaurantId to the form data
       formData.append("restaurantId", restaurantId);
 
       const response = await createNewMenuService(formData, token);
@@ -97,7 +94,6 @@ const MyMenuPage = () => {
     }
   };
 
-  // Filter and sort logic
   const filteredAndSortedMenu = menuItems
     .filter((item) => {
       const matchesSearch = item.menu_name
@@ -113,7 +109,6 @@ const MyMenuPage = () => {
       return matchesSearch && matchesCategory && matchesPrice;
     })
     .sort((a, b) => {
-      // Only sort by name ascending or descending
       return sortOption === "nameAsc"
         ? a.menu_name.localeCompare(b.menu_name)
         : b.menu_name.localeCompare(a.menu_name);
