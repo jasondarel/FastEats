@@ -2,20 +2,25 @@ import React from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
 const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
+  const menu = item.menu || {};
+  console.log("Menu props:", menu);
+
   const {
-    menu_name = item.name || "Menu Item",
-    price = item.price || 0,
+    menu_name = menu.menu_name || item.name || "Menu Item",
+    menu_price = menu.menu_price || item.menu_price || 0,
     quantity = item.quantity || 1,
     note = item.note || "",
-    menu_image_url = item.menu_image_url || "/placeholder-food.png",
-    menu_size = item.menu_size || "",
+    menu_image_url = menu.menu_image ||
+      item.menu_image_url ||
+      "/placeholder-food.png",
+    menu_size = menu.size || item.menu_size || "",
   } = item;
 
   return (
     <div className="flex items-start p-3 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition">
       <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
         <img
-          src={menu_image_url}
+          src={`http://localhost:5000/restaurant/uploads/menu/${menu_image_url}`}
           alt={menu_name}
           className="h-full w-full object-cover"
           onError={(e) => {
@@ -37,7 +42,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
 
       <div className="flex flex-col items-end">
         <div className="font-semibold text-yellow-600">
-          Rp {(price * quantity).toLocaleString()}
+          Rp {(menu_price * quantity).toLocaleString()}
         </div>
 
         <div className="flex items-center mt-2">

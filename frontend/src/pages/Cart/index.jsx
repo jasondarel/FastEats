@@ -1,85 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { FaShoppingCart, FaTrash, FaPlus, FaMinus } from "react-icons/fa";
-import axios from "axios";
-import Sidebar from "../../components/Sidebar";
+import { FaShoppingCart, FaTrash } from "react-icons/fa";
 import CartItem from "./components/CartItem";
 import YellowBackgroundLayout from "./components/Background";
+import {
+  getCartService,
+  createCartService,
+  createCartItemService,
+  deleteCartItemService,
+} from "../../service/orderServices/orderDetails";
 import { API_URL } from "../../config/api";
-
-const getCartService = async (cartId, token) => {
-  try {
-    const response = await axios.get(`${API_URL}/cart/${cartId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching cart:", error);
-    throw error;
-  }
-};
-
-const createCartService = async (restaurantId, token) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/cart`,
-      {
-        restaurantId: restaurantId,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error creating cart:", error);
-    throw error;
-  }
-};
-
-const createCartItemService = async (cartId, menuId, quantity, note, token) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/cart-item`,
-      {
-        cartId,
-        menuId,
-        quantity,
-        note,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error adding item to cart:", error);
-    throw error;
-  }
-};
-
-const deleteCartItemService = async (cartItemId, token) => {
-  try {
-    const response = await axios.delete(`${API_URL}/cart-item/${cartItemId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error deleting cart item:", error);
-    throw error;
-  }
-};
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -92,53 +21,80 @@ const Cart = () => {
     return localStorage.getItem("token") || "";
   };
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const cartIdFromUrl = urlParams.get("cartId");
-    const storedCartId = localStorage.getItem("cartId");
-    const currentCartId = cartIdFromUrl || storedCartId;
-
-    if (currentCartId) {
-      setCartId(currentCartId);
-      fetchCartItems(currentCartId);
-    } else {
-      setLoading(false);
-    }
-
-    const restaurantIdFromUrl = urlParams.get("restaurantId");
-    if (restaurantIdFromUrl) {
-      setRestaurantId(restaurantIdFromUrl);
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  const fetchCartItems = async (cartIdToFetch) => {
+  const fetchCartItems = async () => {
+    const token = getToken();
     try {
       setLoading(true);
-      const token = getToken();
-      console.log("Fetching cart with ID:", cartIdToFetch);
-      const response = await getCartService(cartIdToFetch, token);
-      console.log("Cart API response:", response);
+      const response = await fetch(`${API_URL}/order/cart-item`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (response.success) {
-        setCartItems(response.cart || []);
-        console.log("Cart items set:", response.cart);
+      const data = await response.json();
+      console.log("fetchCartItems response:", data);
+
+      if (response.status === 404) {
+        console.log("Cart is empty:", data.message);
+        setCartItems([]);
+      } else if (!response.ok) {
+        throw new Error(
+          `API request failed with status ${response.status}: ${
+            data.message || "Unknown error"
+          }`
+        );
+      } else if (
+        data &&
+        data.success === true &&
+        Array.isArray(data.cartItems)
+      ) {
+        setCartItems(data.cartItems);
+        // If we have cart items, make sure to set the cartId from the first item
+        if (data.cartItems.length > 0 && data.cartItems[0].cart_id) {
+          setCartId(data.cartItems[0].cart_id);
+          localStorage.setItem("cartId", data.cartItems[0].cart_id);
+        }
+      } else if (data && data.success === true && Array.isArray(data.cart)) {
+        setCartItems(data.cart);
+      } else if (Array.isArray(data)) {
+        setCartItems(data);
       } else {
-        setError(response.message || "Failed to fetch cart");
-        console.error("API returned error:", response.message);
+        console.log("Unexpected data structure:", data);
+        setCartItems([]);
       }
-    } catch (err) {
-      setError("Error loading cart items. Please try again.");
-      console.error("Error fetching cart items:", err);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+      setError(`Failed to load cart items: ${error.message}`);
+      setCartItems([]);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const storedCartId = localStorage.getItem("cartId");
+    if (storedCartId) {
+      setCartId(storedCartId);
+    }
+
+    const storedRestaurantId = localStorage.getItem("restaurantId");
+    if (storedRestaurantId) {
+      setRestaurantId(storedRestaurantId);
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramRestaurantId = urlParams.get("restaurantId");
+      if (paramRestaurantId) {
+        setRestaurantId(paramRestaurantId);
+        localStorage.setItem("restaurantId", paramRestaurantId);
+      }
+    }
+
+    setTimeout(() => {
+      fetchCartItems();
+    }, 100);
+  }, []);
 
   const createNewCart = async () => {
     if (!restaurantId) {
@@ -151,12 +107,18 @@ const Cart = () => {
       const token = getToken();
       const response = await createCartService(restaurantId, token);
 
-      if (response.success && response.cartItem) {
-        setCartId(response.cartItem.cart_id);
-        localStorage.setItem("cartId", response.cartItem.cart_id);
-        await fetchCartItems(response.cartItem.cart_id);
+      if (response.data && response.data.success) {
+        const newCartId =
+          response.data.cartItem?.cart_id || response.data.cart?.id;
+        if (newCartId) {
+          setCartId(newCartId);
+          localStorage.setItem("cartId", newCartId);
+          await fetchCartItems(newCartId);
+        } else {
+          setError("Cart created but no cart ID returned");
+        }
       } else {
-        setError(response.message || "Failed to create cart");
+        setError(response.data?.message || "Failed to create cart");
       }
     } catch (err) {
       setError("Error creating cart. Please try again.");
@@ -214,15 +176,36 @@ const Cart = () => {
     }
   };
 
-  const totalItems = cartItems.reduce(
-    (total, item) => total + (item.quantity || 1),
-    0
+  const calculateTotalItems = () => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
+
+    const total = cartItems.reduce((total, item) => {
+      const itemQuantity = parseInt(item.quantity);
+      return total + itemQuantity;
+    }, 0);
+    console.log("Total items:", total);
+    return total;
+  };
+  console.log(
+    "Quantity of each item:",
+    cartItems.map((item) => item.quantity)
   );
 
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * (item.quantity || 1),
-    0
-  );
+  const totalItems = calculateTotalItems();
+
+  const calculateSubtotal = () => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
+
+    return cartItems.reduce((total, item) => {
+      const price = item.menu ? item.menu.menu_price : item.menu_price || 0;
+      return (
+        parseInt(total) + parseInt(price) * parseInt(item.quantity) ||
+        price * (parseInt(item.quantity) || 1)
+      );
+    }, 0);
+  };
+
+  const subtotal = calculateSubtotal();
 
   const handleCheckout = () => {
     window.location.href = `/checkout?cartId=${cartId}`;
@@ -238,6 +221,11 @@ const Cart = () => {
         {error && (
           <div className="mb-4 bg-red-100 p-3 rounded-lg border border-red-200 text-red-700">
             {error}
+            {!restaurantId && (
+              <div className="mt-2 font-medium">
+                Please select a restaurant first to create a cart.
+              </div>
+            )}
           </div>
         )}
 
@@ -254,7 +242,7 @@ const Cart = () => {
                 </p>
               </div>
             </div>
-            {cartItems.length > 0 && (
+            {Array.isArray(cartItems) && cartItems.length > 0 && (
               <button
                 onClick={removeAllItems}
                 className="text-red-500 text-sm font-medium hover:text-red-700 flex items-center"
@@ -271,26 +259,25 @@ const Cart = () => {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto pr-2 overflow-x-hidden min-h-0">
-            {!cartId && restaurantId && (
-              <div className="text-center py-8">
-                <p className="font-medium mb-4">No cart found</p>
-                <button
-                  onClick={createNewCart}
-                  className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition"
-                >
-                  Create New Cart
-                </button>
-              </div>
-            )}
-
-            {cartId && cartItems.length === 0 ? (
+            {cartId && (!Array.isArray(cartItems) || cartItems.length === 0) ? (
               <div className="text-center py-8 text-gray-500">
                 <p className="font-medium mb-2">Your cart is empty</p>
                 <p className="text-sm">
                   Add items from the menu to get started
                 </p>
+                {restaurantId && (
+                  <button
+                    onClick={() =>
+                      (window.location.href = `/restaurant/${restaurantId}`)
+                    }
+                    className="mt-4 px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition"
+                  >
+                    Browse Menu
+                  </button>
+                )}
               </div>
             ) : (
+              Array.isArray(cartItems) &&
               cartItems.map((item) => (
                 <CartItem
                   key={item.cart_item_id}
@@ -310,7 +297,7 @@ const Cart = () => {
           </div>
         )}
 
-        {cartId && cartItems.length > 0 && (
+        {cartId && Array.isArray(cartItems) && cartItems.length > 0 && (
           <>
             <hr className="my-4 border-gray-300" />
             <div className="flex justify-between items-center mb-4">

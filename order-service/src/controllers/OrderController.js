@@ -1363,19 +1363,25 @@ export const getCartItemsController = async (req, res) => {
     const cartItemsWithMenu = await Promise.all(
       cartItems.map(async (item) => {
         try {
-          const response = await axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
-            headers: {
-              Authorization: req.headers.authorization,
-              "Content-Type": "application/json",
-            },
-          });
+          const response = await axios.get(
+            `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
+            {
+              headers: {
+                Authorization: req.headers.authorization,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           return {
             ...item,
             menu: response.data.menu,
           };
         } catch (err) {
-          logger.error(`Failed to fetch menu for menu_id ${item.menu_id}:`, err.message);
+          logger.error(
+            `Failed to fetch menu for menu_id ${item.menu_id}:`,
+            err.message
+          );
           return {
             ...item,
             menu: null,
@@ -1397,7 +1403,7 @@ export const getCartItemsController = async (req, res) => {
   }
 };
 
-export const checkoutCartController = async(req, res) => {
+export const checkoutCartController = async (req, res) => {
   logger.info("CHECKOUT CART CONTROLLER");
   const { userId, role } = req.user;
   const { cart_id } = req.params;
@@ -1432,7 +1438,7 @@ export const checkoutCartController = async(req, res) => {
 
     const groupedCartItems = cartItems.reduce((acc, item) => {
       const { cart_id, quantity } = item;
-      
+
       if (!acc[cart_id]) {
         acc[cart_id] = {
           cart_id: cart_id,
@@ -1451,7 +1457,7 @@ export const checkoutCartController = async(req, res) => {
       menuId: finalCartItems[0].menu_id,
       restaurantId: cart.restaurant_id,
       quantity: finalCartItems[0].total_quantity,
-    })
+    });
     if (!order) {
       logger.error("Failed to create order from cart");
       return res.status(500).json({
@@ -1468,12 +1474,12 @@ export const checkoutCartController = async(req, res) => {
       success: true,
       message: "Order created successfully",
       order: order,
-    })
-  } catch(err) {
+    });
+  } catch (err) {
     logger.error("Error fetching cart:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
-}
+};

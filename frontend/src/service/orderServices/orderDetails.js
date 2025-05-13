@@ -65,7 +65,7 @@ const getOrderDetailService = async (orderId, token) => {
 
 const getCartService = async (cartId, token) => {
   try {
-    const response = await axios.get(`${API_URL}/cart/${cartId}`, {
+    const response = await axios.get(`${API_URL}/order/cart/${cartId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -115,6 +115,16 @@ const createCartItemService = async (cartId, menuId, quantity, note, token) => {
   return response;
 };
 
+const getCartItemsService = async (cartId, token) => {
+  const response = await axios.get(`${API_URL}/order/cart-item`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  return response;
+};
+
 const deleteCartItemService = async (cartItemId, token) => {
   const response = await axios.delete(
     `${API_URL}/order/cart-item/${cartItemId}`,
@@ -151,6 +161,7 @@ export {
   checkMidtransStatusService,
   getOrderDetailService,
   getCartService,
+  getCartItemsService,
   createCartService,
   createCartItemService,
   deleteCartItemService,
