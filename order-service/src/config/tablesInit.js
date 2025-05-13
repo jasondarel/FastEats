@@ -11,7 +11,6 @@ const createTables = async () => {
           cart_id SERIAL PRIMARY KEY,
           user_id INT NOT NULL,
           restaurant_id INT NOT NULL,
-          status TEXT DEFAULT 'active', -- active, checked_out, abandoned, deleted
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW(),
           UNIQUE (user_id, restaurant_id)
@@ -24,7 +23,6 @@ const createTables = async () => {
           cart_id INT NOT NULL,
           menu_id INT NOT NULL,
           quantity INT DEFAULT 1,
-          note TEXT,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW(),
           FOREIGN KEY (cart_id) REFERENCES carts(cart_id) ON DELETE CASCADE
