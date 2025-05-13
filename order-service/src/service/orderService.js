@@ -129,6 +129,15 @@ export const getCartServiceByRestaurantId = async (userId, restaurantId) => {
   return result.rows[0];
 };
 
+export const getCartItemsService = async (cartId) => {
+  const result = await pool.query(
+    `SELECT * FROM cart_items ci
+    WHERE ci.cart_id = $1`,
+    [cartId]
+  );
+  return result.rows;
+}
+
 export const createCartService = async (userId, restaurantId) => {
   const result = await pool.query(
     `INSERT INTO carts (user_id, restaurant_id, status, created_at, updated_at)
@@ -170,6 +179,14 @@ export const deleteCartExceptionService = async (userId, restaurantId) => {
   );
   return result.rows[0];
 };
+
+export const deleteUserCartService = async (userId) => {
+  const result = await pool.query(
+    `DELETE FROM carts WHERE user_id = $1 RETURNING *`,
+    [userId]
+  );
+  return result.rows[0];
+}
 
 export {
   createOrderService,

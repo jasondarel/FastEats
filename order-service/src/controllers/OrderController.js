@@ -20,6 +20,8 @@ import {
   getCartsService,
   getCartService,
   getCartServiceByRestaurantId,
+  getCartItemsService,
+  deleteUserCartService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -1322,3 +1324,84 @@ export const getRestaurantOrderController = async (req, res) => {
     });
   }
 };
+
+export const checkoutCartController = async(req, res) => {
+  logger.info("CHECKOUT CART CONTROLLER");
+  const { userId, role } = req.user;
+  const { cart_id } = req.params;
+  const token = req.headers.authorization;
+
+  if (role !== "user") {
+    logger.warn("Unauthorized access attempt by user");
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to view this order",
+    });
+  }
+
+  if (!cart_id) {
+    logger.warn("Missing cart_id");
+    return res.status(400).json({
+      success: false,
+      message: "Missing cart_id",
+    });
+  }
+  try {
+    const cart = await getCartService(cart_id, userId);
+    if (!cart) {
+      logger.warn("Cart not found");
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+    }
+
+    const cartItems = await getCartItemsService(cart_id);
+
+    const groupedCartItems = cartItems.reduce((acc, item) => {
+      const { cart_id, quantity } = item;
+      
+      if (!acc[cart_id]) {
+        acc[cart_id] = {
+          cart_id: cart_id,
+          total_quantity: 0,
+          menu_id: item.menu_id,
+        };
+      }
+      acc[cart_id].total_quantity += quantity;
+      return acc;
+    }, {});
+    const finalCartItems = Object.values(groupedCartItems);
+
+    logger.info("Creating order from cart id:", cart_id);
+    const order = await createOrderService({
+      userId: userId,
+      menuId: finalCartItems[0].menu_id,
+      restaurantId: cart.restaurant_id,
+      quantity: finalCartItems[0].total_quantity,
+    })
+    if (!order) {
+      logger.error("Failed to create order from cart");
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create order from cart",
+      });
+    }
+
+    logger.info("Resetting cart");
+    await deleteUserCartService(userId);
+
+    logger.info("Order created successfully:", order);
+    return res.status(200).json({
+      success: true,
+      message: "Order created successfully",
+      order: order,
+    })
+  } catch(err) {
+    logger.error("Error fetching cart:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}

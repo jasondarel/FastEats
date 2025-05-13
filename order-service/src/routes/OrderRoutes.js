@@ -21,6 +21,7 @@ import {
   deleteCartItemController,
   getCartController,
   deleteCartController,
+  checkoutCartController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -73,5 +74,6 @@ router.delete(
   authMiddleware,
   deleteCartItemController
 );
+router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);
 
 export default router;
