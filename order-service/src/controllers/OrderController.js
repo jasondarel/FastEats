@@ -16,7 +16,7 @@ import {
   createCartService,
   deleteCartExceptionService,
   createCartItemService,
-  deleteCartItemService,
+  deleteCartItemServiceByMenuId,
   getCartsService,
   getCartService,
   getCartServiceByRestaurantId,
@@ -470,7 +470,7 @@ export const createCartItemController = async (req, res) => {
 export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
-    const { cart_item_id } = req.params;
+    const { menu_id } = req.params;
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -480,20 +480,20 @@ export const deleteCartItemController = async (req, res) => {
       });
     }
 
-    if (!cart_item_id) {
+    if (!menu_id) {
       return res.status(400).json({
         success: false,
-        message: "cart_item_id are required",
+        message: "menu_id are required",
       });
     }
 
     logger.info(
-      `Deleting cart item for user ${userId} and cart item ${cart_item_id}...`
+      `Deleting cart item for user ${userId} and menu id ${menu_id}...`
     );
-    const cartItem = await deleteCartItemService(cart_item_id);
+    const cartItem = await deleteCartItemServiceByMenuId(menu_id);
 
     if (!cartItem) {
-      logger.warn(`Cart item ${cart_item_id} not found`);
+      logger.warn(`Cart item ${menu_id} not found`);
       return res.status(404).json({
         success: false,
         message: "Cart item not found",
@@ -1357,20 +1357,18 @@ export const getCartItemsController = async (req, res) => {
         message: "Cart is Empty",
       });
     }
-
     const groupedCartItems = cartItems.reduce((acc, item) => {
       const { cart_id, menu_id, quantity } = item;
-      const key = `${cart_id}-${menu_id}`; // gabungan cart_id dan menu_id sebagai key unik
-
+      const key = `${cart_id}-${menu_id}`;
       if (!acc[key]) {
         acc[key] = {
           cart_id,
+          cart_item_id: item.cart_item_id,
           menu_id,
           total_quantity: 0,
           note: item.note || "",
           created_at: item.created_at,
           updated_at: item.updated_at,
-          // tambahkan informasi menu jika ada
           menu: item.menu || null,
         };
       }

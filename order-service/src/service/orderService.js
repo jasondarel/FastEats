@@ -163,10 +163,18 @@ export const createCartItemService = async (
   return result.rows[0];
 };
 
-export const deleteCartItemService = async (cartItemId) => {
+export const deleteCartItemServiceByCartItemId = async (cartItemId) => {
   const result = await pool.query(
     `DELETE FROM cart_items WHERE cart_item_id = $1 RETURNING *`,
     [cartItemId]
+  );
+  return result.rows[0];
+};
+
+export const deleteCartItemServiceByMenuId = async (menu_id) => {
+  const result = await pool.query(
+    `DELETE FROM cart_items WHERE menu_id = $1 RETURNING *`,
+    [menu_id]
   );
   return result.rows[0];
 };
