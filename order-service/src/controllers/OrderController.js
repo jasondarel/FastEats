@@ -1357,20 +1357,45 @@ export const getCartItemsController = async (req, res) => {
         message: "Cart is Empty",
       });
     }
+
     logger.info("Cart items fetched successfully");
+
+    const cartItemsWithMenu = await Promise.all(
+      cartItems.map(async (item) => {
+        try {
+          const response = await axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+            headers: {
+              Authorization: req.headers.authorization,
+              "Content-Type": "application/json",
+            },
+          });
+
+          return {
+            ...item,
+            menu: response.data.menu,
+          };
+        } catch (err) {
+          logger.error(`Failed to fetch menu for menu_id ${item.menu_id}:`, err.message);
+          return {
+            ...item,
+            menu: null,
+          };
+        }
+      })
+    );
 
     return res.status(200).json({
       success: true,
-      cartItems: cartItems,
-    })
-  } catch(err) {
+      cartItems: cartItemsWithMenu,
+    });
+  } catch (err) {
     logger.error("Error fetching cart items:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
-}
+};
 
 export const checkoutCartController = async(req, res) => {
   logger.info("CHECKOUT CART CONTROLLER");
