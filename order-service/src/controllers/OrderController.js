@@ -1325,6 +1325,53 @@ export const getRestaurantOrderController = async (req, res) => {
   }
 };
 
+export const getCartItemsController = async (req, res) => {
+  logger.info("GET CART ITEMS CONTROLLER");
+  const { userId, role } = req.user;
+
+  if (role !== "user") {
+    logger.warn("Unauthorized access attempt by user");
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to view this order",
+    });
+  }
+
+  try {
+    const carts = await getCartsService(userId);
+    if (!carts || carts.length === 0) {
+      logger.warn("Carts not found");
+      return res.status(404).json({
+        success: false,
+        cart: [],
+        message: "Carts is Empty",
+      });
+    }
+
+    const cartItems = await getCartItemsService(carts[0].cart_id);
+    if (!cartItems || cartItems.length === 0) {
+      logger.warn("Cart items not found");
+      return res.status(404).json({
+        success: false,
+        cart: [],
+        message: "Cart is Empty",
+      });
+    }
+    logger.info("Cart items fetched successfully");
+
+    return res.status(200).json({
+      success: true,
+      cartItems: cartItems,
+    })
+  } catch(err) {
+    logger.error("Error fetching cart items:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
 export const checkoutCartController = async(req, res) => {
   logger.info("CHECKOUT CART CONTROLLER");
   const { userId, role } = req.user;
