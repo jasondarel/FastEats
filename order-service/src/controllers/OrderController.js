@@ -22,6 +22,7 @@ import {
   getCartServiceByRestaurantId,
   getCartItemsService,
   deleteUserCartService,
+  createOrderItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -45,6 +46,7 @@ export const createOrderController = async (req, res) => {
 
     const token = authHeader.split(" ")[1];
     const orderReq = req.body;
+    orderReq.orderType = "CHECKOUT";
 
     if (!orderReq.menuId || !orderReq.quantity) {
       logger.warn("Order creation failed: Missing required fields", { userId });
@@ -1428,7 +1430,6 @@ export const checkoutCartController = async (req, res) => {
   logger.info("CHECKOUT CART CONTROLLER");
   const { userId, role } = req.user;
   const { cart_id } = req.params;
-  const token = req.headers.authorization;
 
   if (role !== "user") {
     logger.warn("Unauthorized access attempt by user");
@@ -1456,28 +1457,31 @@ export const checkoutCartController = async (req, res) => {
     }
 
     const cartItems = await getCartItemsService(cart_id);
+    console.log("cartItems", cartItems);
 
     const groupedCartItems = cartItems.reduce((acc, item) => {
-      const { cart_id, quantity } = item;
+      const { cart_id, quantity, menu_id } = item;
+      const key = `${cart_id}-${menu_id}`;
 
-      if (!acc[cart_id]) {
-        acc[cart_id] = {
-          cart_id: cart_id,
+      if (!acc[key]) {
+        acc[key] = {
+          cart_id,
+          menu_id,
           total_quantity: 0,
-          menu_id: item.menu_id,
         };
       }
-      acc[cart_id].total_quantity += quantity;
+
+      acc[key].total_quantity += quantity;
       return acc;
     }, {});
-    const finalCartItems = Object.values(groupedCartItems);
 
+    const finalCartItems = Object.values(groupedCartItems);
+    console.log("finalCartItems", finalCartItems);
     logger.info("Creating order from cart id:", cart_id);
     const order = await createOrderService({
       userId: userId,
-      menuId: finalCartItems[0].menu_id,
       restaurantId: cart.restaurant_id,
-      quantity: finalCartItems[0].total_quantity,
+      orderType: "CART"
     });
     if (!order) {
       logger.error("Failed to create order from cart");
@@ -1486,6 +1490,11 @@ export const checkoutCartController = async (req, res) => {
         message: "Failed to create order from cart",
       });
     }
+
+    await Promise.all(
+      finalCartItems.map(item => createOrderItemService(order.order_id, item.menu_id, item.total_quantity))
+    );
+    logger.info("Order items created successfully");
 
     logger.info("Resetting cart");
     await deleteUserCartService(userId);
