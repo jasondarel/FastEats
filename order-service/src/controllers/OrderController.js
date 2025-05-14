@@ -23,6 +23,7 @@ import {
   getCartItemsService,
   deleteUserCartService,
   createOrderItemService,
+  getAllOrdersWithItemsService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -233,6 +234,16 @@ export const getOrdersController = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const getAllOrdersWithItemsController = async (req, res) => {
+  try {
+    const orders = await getAllOrdersWithItemsService();
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -1481,7 +1492,7 @@ export const checkoutCartController = async (req, res) => {
     const order = await createOrderService({
       userId: userId,
       restaurantId: cart.restaurant_id,
-      orderType: "CART"
+      orderType: "CART",
     });
     if (!order) {
       logger.error("Failed to create order from cart");
@@ -1492,7 +1503,13 @@ export const checkoutCartController = async (req, res) => {
     }
 
     await Promise.all(
-      finalCartItems.map(item => createOrderItemService(order.order_id, item.menu_id, item.total_quantity))
+      finalCartItems.map((item) =>
+        createOrderItemService(
+          order.order_id,
+          item.menu_id,
+          item.total_quantity
+        )
+      )
     );
     logger.info("Order items created successfully");
 

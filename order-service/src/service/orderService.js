@@ -3,7 +3,13 @@ import pool from "../config/dbInit.js";
 const createOrderService = async (order) => {
   const result = await pool.query(
     "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [order.userId, order.menuId, order.restaurantId, order.quantity, order.orderType]
+    [
+      order.userId,
+      order.menuId,
+      order.restaurantId,
+      order.quantity,
+      order.orderType,
+    ]
   );
   return result.rows[0];
 };
@@ -14,7 +20,7 @@ export const createOrderItemService = async (orderId, menuId, quantity) => {
     [orderId, menuId, quantity]
   );
   return result.rows[0];
-}
+};
 
 const getUserOrdersService = async (userId) => {
   const result = await pool.query("SELECT * FROM orders WHERE user_id = $1", [
@@ -144,7 +150,7 @@ export const getCartItemsService = async (cartId) => {
     [cartId]
   );
   return result.rows;
-}
+};
 
 export const createCartService = async (userId, restaurantId) => {
   const result = await pool.query(
@@ -157,11 +163,7 @@ export const createCartService = async (userId, restaurantId) => {
   return result.rows[0];
 };
 
-export const createCartItemService = async (
-  cartId,
-  menuId,
-  quantity,
-) => {
+export const createCartItemService = async (cartId, menuId, quantity) => {
   const result = await pool.query(
     `INSERT INTO cart_items (cart_id, menu_id, quantity, created_at, updated_at)
        VALUES ($1, $2, $3, NOW(), NOW())
@@ -201,6 +203,29 @@ export const deleteUserCartService = async (userId) => {
     [userId]
   );
   return result.rows[0];
+};
+
+async function getAllOrdersWithItemsService() {
+  const result = await pool.query(
+    `SELECT 
+            o.order_id,
+            o.user_id,
+            o.restaurant_id,
+            o.status,
+            o.order_type,
+            o.created_at,
+            o.updated_at,
+            json_agg(json_build_object(
+                'order_item_id', oi.order_item_id,
+                'menu_id', oi.menu_id,
+                'item_quantity', oi.item_quantity
+            )) AS items
+        FROM orders o
+        LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        GROUP BY o.order_id
+        ORDER BY o.created_at DESC;`
+  );
+  return result.rows[0];
 }
 
 export {
@@ -214,4 +239,5 @@ export {
   getSnapTokenService,
   getOrdersByRestaurantIdService,
   completeOrderService,
+  getAllOrdersWithItemsService,
 };

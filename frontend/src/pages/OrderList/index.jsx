@@ -64,19 +64,15 @@ const OrderList = () => {
       <div className="flex flex-col flex-grow items-center w-full overflow-auto md:px-6 lg:px-8">
         <OrderListHeader />
 
-        {/* Error state */}
         {error && !loading && <ErrorState message={error} />}
 
-        {/* Empty state */}
         {!loading && !error && orders.length === 0 && (
           <EmptyState message="No orders found" />
         )}
 
-        {/* Order cards container */}
         {!loading && !error && orders.length > 0 && (
           <div className="w-full max-w-6xl flex flex-col lg:flex-row lg:flex-wrap lg:justify-between gap-4 mt-6">
             {orders.map((order) => {
-              // Create a reliable unique key using order_id
               const orderKey =
                 order.order_id ||
                 `order-${Math.random().toString(36).substr(2, 9)}`;

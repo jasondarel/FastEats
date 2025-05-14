@@ -51,7 +51,6 @@ const Cart = () => {
         Array.isArray(data.cartItems)
       ) {
         setCartItems(data.cartItems);
-        // If we have cart items, make sure to set the cartId from the first item
         if (data.cartItems.length > 0 && data.cartItems[0].cart_id) {
           setCartId(data.cartItems[0].cart_id);
           localStorage.setItem("cartId", data.cartItems[0].cart_id);
