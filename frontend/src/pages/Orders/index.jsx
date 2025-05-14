@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
-import getAllOrdersWithItemsService from "../../service/orderServices/ordersService";
 import SortButton from "../../components/SortButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";
 import LoadingState from "../../components/LoadingState";
 import YellowBackgroundLayout from "./components/Background";
+import getAllOrdersWithItems from "../../service/orderServices/ordersService";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -44,10 +44,9 @@ const Orders = () => {
   const fetchOrderHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await getAllOrdersWithItemsService(token);
-
-      setOrders(response.data.orders || []);
+      const response = await getAllOrdersWithItems(token);
       console.log("Fetched orders:", response.data.orders);
+      setOrders(response.data.data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
 

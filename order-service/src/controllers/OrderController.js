@@ -129,23 +129,50 @@ export const createOrderController = async (req, res) => {
         userId,
         restaurantId: orderReq.restaurantId,
       });
-      const response = await createOrderService(orderReq);
+      const order = await createOrderService(orderReq);
 
-      if (!response) {
+      if (!order) {
         logger.error("Failed to create order", { userId });
         return res
           .status(500)
           .json({ success: false, message: "Failed to create order" });
       }
 
-      logger.info("Order created successfully", {
-        orderId: response.id,
+      // Create order item after successfully creating the order
+      logger.info("Creating order item", {
+        orderId: order.order_id,
+        menuId: orderReq.menuId,
+        quantity: orderReq.quantity,
+      });
+
+      const orderItem = await createOrderItemService(
+        order.order_id,
+        orderReq.menuId,
+        orderReq.quantity
+      );
+
+      if (!orderItem) {
+        logger.error("Failed to create order item", {
+          orderId: order.order_id,
+          menuId: orderReq.menuId,
+        });
+
+        // Consider whether to roll back the order in case of item creation failure
+        // This depends on your specific business requirements
+      }
+
+      logger.info("Order and order item created successfully", {
+        orderId: order.order_id,
         userId,
       });
+
       return res.status(201).json({
         success: true,
         message: "Order created successfully",
-        order: response,
+        order: {
+          ...order,
+          items: orderItem ? [orderItem] : [],
+        },
       });
     } catch (error) {
       logger.error("Database error while creating order", {
