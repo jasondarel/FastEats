@@ -37,8 +37,19 @@ const createTables = async () => {
             restaurant_id INT,
             item_quantity INT DEFAULT 1,
             status TEXT DEFAULT 'Waiting', -- 'Waiting', 'Pending', 'Preparing', 'Completed', 'Cancelled'
+            order_type TEXT DEFAULT 'CHECKOUT', -- 'CHECKOUT', 'CART'
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
+        );
+    `);
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS order_items (
+            order_item_id SERIAL PRIMARY KEY,
+            order_id INT NOT NULL,
+            menu_id INT,
+            item_quantity INT DEFAULT 1,
+            FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
         );
     `);
 

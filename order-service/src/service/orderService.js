@@ -2,11 +2,19 @@ import pool from "../config/dbInit.js";
 
 const createOrderService = async (order) => {
   const result = await pool.query(
-    "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity) VALUES ($1, $2, $3, $4) RETURNING *",
-    [order.userId, order.menuId, order.restaurantId, order.quantity]
+    "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    [order.userId, order.menuId, order.restaurantId, order.quantity, order.orderType]
   );
   return result.rows[0];
 };
+
+export const createOrderItemService = async (orderId, menuId, quantity) => {
+  const result = await pool.query(
+    "INSERT INTO order_items (order_id, menu_id, item_quantity) VALUES ($1, $2, $3) RETURNING *",
+    [orderId, menuId, quantity]
+  );
+  return result.rows[0];
+}
 
 const getUserOrdersService = async (userId) => {
   const result = await pool.query("SELECT * FROM orders WHERE user_id = $1", [
