@@ -1,4 +1,5 @@
 import React from "react";
+import { API_URL } from "../../../config/api";
 
 const OrderMenuDetails = ({ order }) => {
   return (
@@ -7,7 +8,7 @@ const OrderMenuDetails = ({ order }) => {
       {order.menu.menu_image && (
         <div className="mb-6 p-4 bg-amber-50 rounded-lg">
           <img
-            src={`http://localhost:5000/restaurant/uploads/menu/${order.menu.menu_image}`}
+            src={`${API_URL}/restaurant/uploads/menu/${order.menu.menu_image}`}
             alt={order.menu.menu_name}
             className="w-full h-64 object-cover rounded-lg"
           />

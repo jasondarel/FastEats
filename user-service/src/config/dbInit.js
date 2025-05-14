@@ -1,38 +1,56 @@
 import pkg from "pg";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+const { Client, Pool } = pkg;
+import logger from "./loggerInit.js";
+import envInit from "./envInit.js";
 
-const { Pool } = pkg;
+envInit();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-
-const pool = new Pool({
+const dbName = process.env.DB_NAME;
+const client = new Client({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
+  database: "postgres",
   password: process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD) : "",
   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
 });
 
-console.log(process.env.DB_USER);
+const createDatabase = async () => {
+  try {
+    await client.connect();
+    const checkDbQuery = `SELECT 1 FROM pg_database WHERE datname='${dbName}'`;
+    const res = await client.query(checkDbQuery);
+    
+    if (res.rowCount === 0) {
+      await client.query(`CREATE DATABASE "${dbName}"`);
+      console.log(`Database "${dbName}" created successfully.`);
+    } else {
+      console.log(`Database "${dbName}" already exists.`);
+    }
+  } catch (err) {
+    console.error("Error creating database:", err);
+  } finally {
+    await client.end();
+  }
+};
+
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: dbName,
+  password: process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD) : "",
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+});
 
 const testDatabase = async () => {
   try {
     const client = await pool.connect();
     const res = await client.query("SELECT NOW()");
-    console.log("Database connected! Current time:", res.rows[0].now);
+    logger.info("Database connected! Current time:", res.rows[0].now);
     client.release();
   } catch (err) {
-    console.error("Database connection error:", err);
+    logger.error("Database connection error:", err);
   }
 };
 
-testDatabase();
-// createTables();
-
 export default pool;
+export { createDatabase, testDatabase };

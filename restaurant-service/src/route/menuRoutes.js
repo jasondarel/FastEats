@@ -1,6 +1,5 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
-const router = express.Router();
 import {
     createMenuController,
     getMenusController,
@@ -16,6 +15,8 @@ import multerUpload from "../config/multerInit.js";
 const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/menu";
 const upload = multerUpload(__filename, uploadLocation);
+
+const router = express.Router();
 
 router.post("/menu", authMiddleware, upload.single("menuImage"), createMenuController);
 router.get("/menus", authMiddleware, getMenusController);

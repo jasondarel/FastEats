@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Carousel from "./components/Carousel";
-import LoadingState from "./components/LoadingState";
+import LoadingState from "../../components/LoadingState";
 import ErrorAlert from "./components/ErrorAlert";
 import WelcomeHeader from "./components/WelcomeHeader";
 import RestaurantGrid from "./components/RestaurantGrid";

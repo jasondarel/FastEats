@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home/index";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Register from "./pages/register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
@@ -11,7 +11,7 @@ import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant/ManageRestaurant";
 import MyMenuPage from "./pages/MyMenu";
 import Cart from "./pages/Cart";
-import MenuDetails from "./pages/MenuDetails/MenuDetails";
+import MenuDetails from "./pages/MenuDetails";
 import MyMenuDetails from "./pages/MyMenuDetails";
 import UpdateMenu from "./pages/UpdateMenu";
 import Orders from "./pages/Orders";
@@ -23,102 +23,68 @@ import Thanks from "./pages/Thanks/index";
 import PayNow from "./pages/PayNow";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import OrderSummary from "./pages/OrderSummary";
+import OtpVerifPage from "./pages/OtpVerifPage";
+import ForgotPassword from "./pages/ForgotPassword";
+import NewPassword from "./pages/NewPassword";
+import ForgotPasswordOtp from "./pages/ForgotPasswordOtp";
 
 function App() {
   return (
     <div className="flex">
       <div className="flex-1">
         <Routes>
-          {/* Redirect "/" to "/home" */}
-          <Route path="/" element={<Navigate to="/home" />} />
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          {/* Protected Routes (Require Login) */}
+          <Route path="/otp-verification" element={<OtpVerifPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/forgot-password-otp" element={<ForgotPasswordOtp />} />
+          <Route path="/new-password" element={<NewPassword />} />
+
           <Route
-            path="/home"
+            path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user"]}>
                 <Home />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/profile"
+            path="/home"
             element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/restaurant/:restaurantId/menu"
-            element={
-              <ProtectedRoute>
-                <MenuPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-menu"
-            element={
-              <ProtectedRoute>
-                <MyMenuPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/become-seller"
-            element={
-              <ProtectedRoute>
-                <BecomeSeller />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/manage-restaurant"
-            element={
-              <ProtectedRoute>
-                <ManageRestaurant />
+              <ProtectedRoute requiredRoles={["user"]}>
+                <Home />
               </ProtectedRoute>
             }
           />
           <Route
             path="/cart"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user"]}>
                 <Cart />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/restaurant/:restaurantId/menu"
+            element={
+              <ProtectedRoute requiredRoles={["user"]}>
+                <MenuPage />
               </ProtectedRoute>
             }
           />
           <Route
             path="/menu-details/:menuId"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user"]}>
                 <MenuDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-menu/:menuId/details"
-            element={
-              <ProtectedRoute>
-                <MyMenuDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/update-menu"
-            element={
-              <ProtectedRoute>
-                <UpdateMenu />
               </ProtectedRoute>
             }
           />
           <Route
             path="/orders"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user"]}>
                 <Orders />
               </ProtectedRoute>
             }
@@ -126,40 +92,92 @@ function App() {
           <Route
             path="/order/:orderId"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user"]}>
                 <OrderDetails />
               </ProtectedRoute>
             }
           />
 
-          <Route path="/thanks" element={<Thanks />} />
+          {/* Seller-only Routes */}
+          <Route
+            path="/my-menu"
+            element={
+              <ProtectedRoute requiredRoles={["seller"]}>
+                <MyMenuPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manage-restaurant"
+            element={
+              <ProtectedRoute requiredRoles={["seller"]}>
+                <ManageRestaurant />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-menu/:menuId/details"
+            element={
+              <ProtectedRoute requiredRoles={["seller"]}>
+                <MyMenuDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/update-menu"
+            element={
+              <ProtectedRoute requiredRoles={["seller"]}>
+                <UpdateMenu />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/order-list"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["seller"]}>
                 <OrderList />
               </ProtectedRoute>
             }
           />
-          <Route path="/pay-now/:orderId" element={<PayNow />} />
-
           <Route
             path="/restaurant-dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["seller"]}>
                 <RestaurantDashboard />
               </ProtectedRoute>
             }
           />
 
           <Route
+            path="/profile"
+            element={
+              <ProtectedRoute requiredRoles={["user", "seller"]}>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/order-summary/:order_id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["user", "seller"]}>
                 <OrderSummary />
               </ProtectedRoute>
             }
           />
+
+          {/* Special case: User becoming a seller */}
+          <Route
+            path="/become-seller"
+            element={
+              <ProtectedRoute requiredRoles={["user"]}>
+                <BecomeSeller />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payment routes - potentially public with validation */}
+          <Route path="/thanks" element={<Thanks />} />
+          <Route path="/pay-now/:orderId" element={<PayNow />} />
         </Routes>
       </div>
     </div>

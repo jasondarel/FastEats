@@ -1,8 +1,10 @@
 // src/components/Orders/OrderCard.jsx
 import React from "react";
 import { ChevronRightIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const OrderCard = ({ order }) => {
+  const navigate = useNavigate();
   // Format date function embedded in the component
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -24,7 +26,8 @@ const OrderCard = ({ order }) => {
   };
 
   return (
-    <div className="flex-col border-yellow-300 bg-white shadow-xl rounded-xl px-6 py-4 cursor-pointer mb-4 lg:w-[48%] hover:shadow-2xl transition-all duration-300 hover:bg-yellow-50 hover:border-yellow-400">
+    <div className="flex-col border-yellow-300 bg-white shadow-xl rounded-xl px-6 py-4 cursor-pointer mb-4 lg:w-[48%] hover:shadow-2xl transition-all duration-300 hover:bg-yellow-50 hover:border-yellow-400"
+    onClick={() => navigate(`/order-summary/${order.order_id}`)}>
       <div className="flex justify-between gap-8 lg:gap-4">
         <div>
           <h2 className="text-2xl font-bold text-yellow-600">

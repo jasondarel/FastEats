@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
-import getOrderHistoryService from "../../../service/orderServices/ordersService";
+import getOrderHistoryService from "../../service/orderServices/ordersService";
 import SortButton from "../../components/SortButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";
+import LoadingState from "../../components/LoadingState";
 import YellowBackgroundLayout from "./components/Background";
 
 const Orders = () => {
@@ -112,12 +113,12 @@ const Orders = () => {
 
   return (
     <YellowBackgroundLayout>
-      <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
-        <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
+      <div className="w-full max-w-xl p-6 bg-white shadow-xl rounded-xl flex flex-col max-h-[90vh]">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-yellow-600 mb-4 flex items-center justify-center">
           <FaHistory className="mr-3" /> My Orders
         </h2>
 
-        <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <FaList className="text-yellow-500 text-xl mr-3" />
             <div>
@@ -129,9 +130,9 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Sort Button - now using the reusable component */}
+        {/* Sort Button */}
         {!loading && !error && orders.length > 0 && (
-          <div className="mb-4 flex justify-end items-center">
+          <div className="mb-3 flex justify-end items-center">
             <SortButton
               sortBy={sortBy}
               sortOrder={sortOrder}
@@ -141,9 +142,9 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Scrollable Order List */}
-        <div className="w-full max-h-[500px] overflow-y-auto pr-2 overflow-x-hidden">
-          {loading && <OrderStateMessage type="loading" />}
+        {/* Scrollable Order List - dynamic height calculation */}
+        <div className="flex-1 overflow-y-auto pr-2 overflow-x-hidden min-h-0">
+          {loading && <LoadingState />}
 
           {error && <OrderStateMessage type="error" subMessage={error} />}
 

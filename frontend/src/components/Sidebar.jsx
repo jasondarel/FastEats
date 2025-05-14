@@ -3,15 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
+import { useDispatch } from "react-redux"; // Add this import
+import { logout } from "../app/auth/authSlice"; // Add this import - adjust path if needed
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Add this
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   // Changed to include medium screens (width < 1024px)
   const [isMobileOrMedium, setIsMobileOrMedium] = useState(
     window.innerWidth < 1024
   );
+  const [role, setRole] = useState("");
   const [isProfileDropupOpen, setIsProfileDropupOpen] = useState(false);
 
   const MySwal = withReactContent(Swal);
@@ -81,6 +85,31 @@ const Sidebar = ({ isTaskbarOpen }) => {
         console.error("Error fetching profile data:", error);
       }
     };
+
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch("http://localhost:5000/user/user", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user profile. Status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        setRole(data.user.role);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
     fetchUserProfile();
   }, []);
 
@@ -108,7 +137,9 @@ const Sidebar = ({ isTaskbarOpen }) => {
       cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.removeItem("token");
+        // Use Redux action to logout
+        dispatch(logout());
+
         setIsProfileDropupOpen(false);
         MySwal.fire({
           title: "Logged out!",
@@ -257,30 +288,71 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
           <nav className="flex-grow">
             <ul className="space-y-2">
-              <li>
-                <Link
-                  to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  My Restaurant
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/orders"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
-                >
-                  My Orders
-                </Link>
-              </li>
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/home"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Home
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/orders"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    My Orders
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/cart"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Cart
+                  </Link>
+                </li>
+              )}
+
+              {role === "seller" && (
+                <li>
+                  <Link
+                    to="/restaurant-dashboard"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+              )}
+
+              {role == "seller" && (
+                <li>
+                  <Link
+                    to="/manage-restaurant"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Manage Restaurant
+                  </Link>
+                </li>
+              )}
+
+              {role === "seller" && (
+                <li>
+                  <Link
+                    to="/order-list"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Order List
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
 
@@ -334,7 +406,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
             {/* Profile dropdown menu */}
             {isProfileDropupOpen && (
-              <div className="absolute bottom-full left-0 w-full mb-2 bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
+              <div className="absolute bottom-full left-0 w-full bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
                 <Link
                   to="/profile"
                   onClick={() => setIsProfileDropupOpen(false)}
