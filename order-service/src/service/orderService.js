@@ -208,24 +208,30 @@ export const deleteUserCartService = async (userId) => {
 async function getAllOrdersWithItemsService() {
   const result = await pool.query(
     `SELECT 
-            o.order_id,
-            o.user_id,
-            o.restaurant_id,
-            o.status,
-            o.order_type,
-            o.created_at,
-            o.updated_at,
-            json_agg(json_build_object(
+    o.order_id,
+    o.user_id,
+    o.restaurant_id,
+    o.status,
+    o.order_type,
+    o.created_at,
+    o.updated_at,
+    COALESCE(
+        json_agg(
+            json_build_object(
                 'order_item_id', oi.order_item_id,
                 'menu_id', oi.menu_id,
                 'item_quantity', oi.item_quantity
-            )) AS items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.order_id = oi.order_id
-        GROUP BY o.order_id
-        ORDER BY o.created_at DESC;`
+            )
+        ) FILTER (WHERE oi.order_item_id IS NOT NULL),
+        '[]'
+    ) AS items
+FROM orders o
+LEFT JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY o.order_id
+ORDER BY o.created_at DESC;
+`
   );
-  return result.rows[0];
+  return result.rows;
 }
 
 export {
