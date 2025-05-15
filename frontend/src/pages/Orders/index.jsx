@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
-import getOrderHistoryService from "../../service/orderServices/ordersService";
 import SortButton from "../../components/SortButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";
 import LoadingState from "../../components/LoadingState";
 import YellowBackgroundLayout from "./components/Background";
+import getAllOrdersWithItems from "../../service/orderServices/ordersService";
 
 const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortBy, setSortBy] = useState("date"); // Default sort by date
-  const [sortOrder, setSortOrder] = useState("desc"); // Default newest first
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
 
-  // Sort options configuration for the SortButton
   const sortOptions = [
     {
       label: "Date",
@@ -34,12 +33,9 @@ const Orders = () => {
     },
   ];
 
-  // Add CSS to prevent scrolling on page load
   useEffect(() => {
-    // Disable scrolling on body
     document.body.style.overflow = "hidden";
 
-    // Cleanup function to restore scrolling when component unmounts
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -48,16 +44,14 @@ const Orders = () => {
   const fetchOrderHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await getOrderHistoryService(token);
-
-      // Check if orders exist; otherwise, set an empty array
-      setOrders(response.data.orders || []);
+      const response = await getAllOrdersWithItems(token);
+      console.log("Fetched orders:", response.data.orders);
+      setOrders(response.data.data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
 
-      // If the error is a 404, treat it as "no orders" instead of a failure
       if (error.response && error.response.status === 404) {
-        setOrders([]); // No orders found
+        setOrders([]);
       } else {
         setError(error.message || "Failed to fetch orders");
       }
@@ -76,16 +70,13 @@ const Orders = () => {
 
   const handleOrderAgain = async (order) => {
     console.log("Ordering again:", order);
-    // Add your order again logic here
   };
 
-  // Handle sort change from SortButton component
   const handleSortChange = (field, direction) => {
     setSortBy(field);
     setSortOrder(direction);
   };
 
-  // Function to sort orders based on criteria
   const getSortedOrders = () => {
     if (!orders || orders.length === 0) return [];
 
@@ -108,7 +99,6 @@ const Orders = () => {
     return sortedOrders;
   };
 
-  // Get sorted orders
   const sortedOrders = getSortedOrders();
 
   return (
@@ -130,7 +120,6 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Sort Button */}
         {!loading && !error && orders.length > 0 && (
           <div className="mb-3 flex justify-end items-center">
             <SortButton
@@ -142,7 +131,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Scrollable Order List - dynamic height calculation */}
         <div className="flex-1 overflow-y-auto pr-2 overflow-x-hidden min-h-0">
           {loading && <LoadingState />}
 
@@ -165,7 +153,6 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Floating My Menu Button */}
       <a
         href="../home"
         className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"

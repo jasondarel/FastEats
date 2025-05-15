@@ -23,13 +23,14 @@ import {
   deleteCartController,
   checkoutCartController,
   getCartItemsController,
+  getAllOrdersWithItemsController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/order", authMiddleware, createOrderController);
-router.get("/orders", authMiddleware, getOrdersController);
+router.get("/orders", authMiddleware, getAllOrdersWithItemsController);
 router.patch("/cancel-order/:order_id", authMiddleware, cancelOrderController);
 router.patch(
   "/complete-order/:order_id",
