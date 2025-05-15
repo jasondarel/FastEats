@@ -1,4 +1,5 @@
 import axios from "axios";
+import pool from "../config/dbInit.js";
 import {
   cancelOrderService,
   completeOrderService,
@@ -758,25 +759,67 @@ export const getOrderByIdController = async (req, res) => {
       });
     }
 
-    const menu = await axios.get(
-      `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const order = {
-      ...result,
-      menu: menu.data.menu,
-    };
+    if (result.order_type === "CHECKOUT") {
+      // For CHECKOUT type, fetch single menu
+      const menu = await axios.get(
+        `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const order = {
+        ...result,
+        menu: menu.data.menu,
+      };
+      logger.info(`Order ${order_id} fetched successfully`);
+      return res.status(200).json({
+        success: true,
+        order,
+      });
+    } else if (result.order_type === "CART") {
+      const orderItems = await pool.query(
+        "SELECT * FROM order_items WHERE order_id = $1",
+        [order_id]
+      );
 
-    logger.info(`Order ${order_id} fetched successfully`);
-    return res.status(200).json({
-      success: true,
-      order,
-    });
+      const orderItemsWithMenu = await Promise.all(
+        orderItems.rows.map(async (item) => {
+          const menu = await axios.get(
+            `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          return {
+            ...item,
+            menu: menu.data.menu,
+          };
+        })
+      );
+
+      const order = {
+        ...result,
+        items: orderItemsWithMenu,
+      };
+
+      logger.info(`Cart order ${order_id} fetched successfully`);
+      return res.status(200).json({
+        success: true,
+        order,
+      });
+    } else {
+      logger.warn(`Invalid order type: ${result.order_type}`);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order type",
+      });
+    }
   } catch (error) {
     logger.error("Internal server error:", error);
     res.status(500).json({

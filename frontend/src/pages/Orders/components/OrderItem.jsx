@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaShoppingBag, FaSync } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
-// Import a placeholder image from a public folder instead
-// Note: Make sure you have a placeholder.jpg in your public folder
-// If not using a public folder approach, we can use a data URI as fallback
 import { API_URL } from "../../../config/api";
 import axios from "axios";
 
