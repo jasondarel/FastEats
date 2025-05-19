@@ -205,6 +205,15 @@ export const deleteUserCartService = async (userId) => {
   return result.rows[0];
 }
 
+export const getOrderItemsByOrderIdService = async (orderId) => {
+  const result = await pool.query(
+    `SELECT * FROM order_items oi
+    WHERE oi.order_id = $1`,
+    [orderId]
+  );
+  return result.rows;
+};
+
 export const getAllOrdersWithItemsService = async() => {
   const result = await pool.query(
     `SELECT 

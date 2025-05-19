@@ -25,6 +25,7 @@ import {
   deleteUserCartService,
   createOrderItemService,
   getAllOrdersWithItemsService,
+  getOrderItemsByOrderIdService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -1150,8 +1151,15 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       });
     }
 
+    let ordersInfo = [];
+    if (orders[0].order_type === "CART") {
+      ordersInfo = await getOrderItemsByOrderIdService(orders[0].order_id);
+    } else {
+      ordersInfo = orders;
+    }   
+    
     const ordersWithDetails = await Promise.all(
-      orders.map(async (order) => {
+      ordersInfo.map(async (order) => {
         const menu = await axios.get(
           `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
           {
@@ -1163,7 +1171,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
         );
 
         const user = await axios.get(
-          `http://localhost:5000/user/user/${order.user_id}`,
+          `http://localhost:5000/user/user/${orders[0].user_id}`,
           {
             headers: {
               Authorization: token,
