@@ -1,4 +1,3 @@
-// src/pages/Orders/OrderList.jsx
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import OrderCard from "./components/OrderCard";
@@ -26,15 +25,32 @@ const OrderList = () => {
 
       const data = await response.json();
       console.log("Fetched orders:", data);
+
       if (data.success) {
+        // Process each order to calculate total price from items and menu data
         const processedOrders = data.orders.map((order) => {
-          const menuPrice = parseFloat(order.menu?.menu_price || 0);
-          const quantity = order.item_quantity || 1;
-          const calculatedTotalPrice = menuPrice * quantity;
+          // Calculate total price by summing up all items
+          const calculatedTotalPrice =
+            order.items?.reduce((total, item) => {
+              // Find matching menu item from the order.menu array
+              const menuItem = order.menu?.find(
+                (menu) => menu.menu_id === item.menu_id
+              );
+              const menuPrice = parseFloat(menuItem?.menu_price || 0);
+              const quantity = item.item_quantity || 1;
+              return total + menuPrice * quantity;
+            }, 0) || 0;
+
+          // Calculate total item quantity
+          const totalItemQuantity =
+            order.items?.reduce((total, item) => {
+              return total + (item.item_quantity || 0);
+            }, 0) || 0;
 
           return {
             ...order,
             calculatedTotalPrice,
+            item_quantity: totalItemQuantity,
           };
         });
 
@@ -55,7 +71,15 @@ const OrderList = () => {
   }, []);
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 h-screen bg-yellow-50">
+        <Sidebar />
+        <div className="flex flex-col flex-grow items-center w-full overflow-auto md:px-6 lg:px-8">
+          <OrderListHeader />
+          <LoadingState />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -72,13 +96,9 @@ const OrderList = () => {
 
         {!loading && !error && orders.length > 0 && (
           <div className="w-full max-w-6xl flex flex-col lg:flex-row lg:flex-wrap lg:justify-between gap-4 mt-6">
-            {orders.map((order) => {
-              const orderKey =
-                order.order_id ||
-                `order-${Math.random().toString(36).substr(2, 9)}`;
-
-              return <OrderCard key={orderKey} order={order} />;
-            })}
+            {orders.map((order) => (
+              <OrderCard key={order.order_id} order={order} />
+            ))}
           </div>
         )}
       </div>
