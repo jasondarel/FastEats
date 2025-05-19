@@ -1,4 +1,5 @@
 import axios from "axios";
+import pool from "../config/dbInit.js";
 import {
   cancelOrderService,
   completeOrderService,
@@ -23,6 +24,7 @@ import {
   getCartItemsService,
   deleteUserCartService,
   createOrderItemService,
+  getAllOrdersWithItemsService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -128,23 +130,50 @@ export const createOrderController = async (req, res) => {
         userId,
         restaurantId: orderReq.restaurantId,
       });
-      const response = await createOrderService(orderReq);
+      const order = await createOrderService(orderReq);
 
-      if (!response) {
+      if (!order) {
         logger.error("Failed to create order", { userId });
         return res
           .status(500)
           .json({ success: false, message: "Failed to create order" });
       }
 
-      logger.info("Order created successfully", {
-        orderId: response.id,
+      // Create order item after successfully creating the order
+      logger.info("Creating order item", {
+        orderId: order.order_id,
+        menuId: orderReq.menuId,
+        quantity: orderReq.quantity,
+      });
+
+      const orderItem = await createOrderItemService(
+        order.order_id,
+        orderReq.menuId,
+        orderReq.quantity
+      );
+
+      if (!orderItem) {
+        logger.error("Failed to create order item", {
+          orderId: order.order_id,
+          menuId: orderReq.menuId,
+        });
+
+        // Consider whether to roll back the order in case of item creation failure
+        // This depends on your specific business requirements
+      }
+
+      logger.info("Order and order item created successfully", {
+        orderId: order.order_id,
         userId,
       });
+
       return res.status(201).json({
         success: true,
         message: "Order created successfully",
-        order: response,
+        order: {
+          ...order,
+          items: orderItem ? [orderItem] : [],
+        },
       });
     } catch (error) {
       logger.error("Database error while creating order", {
@@ -233,6 +262,16 @@ export const getOrdersController = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const getAllOrdersWithItemsController = async (req, res) => {
+  try {
+    const orders = await getAllOrdersWithItemsService();
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -690,25 +729,67 @@ export const getOrderByIdController = async (req, res) => {
       });
     }
 
-    const menu = await axios.get(
-      `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const order = {
-      ...result,
-      menu: menu.data.menu,
-    };
+    if (result.order_type === "CHECKOUT") {
+      // For CHECKOUT type, fetch single menu
+      const menu = await axios.get(
+        `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const order = {
+        ...result,
+        menu: menu.data.menu,
+      };
+      logger.info(`Order ${order_id} fetched successfully`);
+      return res.status(200).json({
+        success: true,
+        order,
+      });
+    } else if (result.order_type === "CART") {
+      const orderItems = await pool.query(
+        "SELECT * FROM order_items WHERE order_id = $1",
+        [order_id]
+      );
 
-    logger.info(`Order ${order_id} fetched successfully`);
-    return res.status(200).json({
-      success: true,
-      order,
-    });
+      const orderItemsWithMenu = await Promise.all(
+        orderItems.rows.map(async (item) => {
+          const menu = await axios.get(
+            `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          return {
+            ...item,
+            menu: menu.data.menu,
+          };
+        })
+      );
+
+      const order = {
+        ...result,
+        items: orderItemsWithMenu,
+      };
+
+      logger.info(`Cart order ${order_id} fetched successfully`);
+      return res.status(200).json({
+        success: true,
+        order,
+      });
+    } else {
+      logger.warn(`Invalid order type: ${result.order_type}`);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order type",
+      });
+    }
   } catch (error) {
     logger.error("Internal server error:", error);
     res.status(500).json({
@@ -1451,7 +1532,7 @@ export const checkoutCartController = async (req, res) => {
     const order = await createOrderService({
       userId: userId,
       restaurantId: cart.restaurant_id,
-      orderType: "CART"
+      orderType: "CART",
     });
     if (!order) {
       logger.error("Failed to create order from cart");
@@ -1462,7 +1543,13 @@ export const checkoutCartController = async (req, res) => {
     }
 
     await Promise.all(
-      finalCartItems.map(item => createOrderItemService(order.order_id, item.menu_id, item.total_quantity))
+      finalCartItems.map((item) =>
+        createOrderItemService(
+          order.order_id,
+          item.menu_id,
+          item.total_quantity
+        )
+      )
     );
     logger.info("Order items created successfully");
 
