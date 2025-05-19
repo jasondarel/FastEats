@@ -23,8 +23,35 @@ const OrderCard = ({ order }) => {
     }).format(price);
   };
 
-  // Get the total items count
-  const totalItems = order.items?.length || 0;
+  // Calculate items and total price based on order type
+  let itemCount = 0;
+  let totalPrice = 0;
+
+  if (order.order_type === "CART" && order.items) {
+    // For CART orders, get count from items array
+    itemCount = order.items.reduce(
+      (total, item) => total + (item.item_quantity || 0),
+      0
+    );
+
+    // Calculate price from items and menu data
+    totalPrice = order.items.reduce((total, item) => {
+      const menuItem = order.menu?.find(
+        (menu) => menu.menu_id === item.menu_id
+      );
+      const menuPrice = parseFloat(menuItem?.menu_price || 0);
+      const quantity = item.item_quantity || 0;
+      return total + menuPrice * quantity;
+    }, 0);
+  } else if (order.order_type === "CHECKOUT") {
+    // For CHECKOUT orders, use the direct properties
+    itemCount = order.item_quantity || 1;
+
+    // Price is menu_price * item_quantity
+    const menuItem = order.menu?.[0];
+    const menuPrice = parseFloat(menuItem?.menu_price || 0);
+    totalPrice = menuPrice * itemCount;
+  }
 
   return (
     <div
@@ -41,7 +68,7 @@ const OrderCard = ({ order }) => {
           </p>
         </div>
         <div className="flex font-semibold text-yellow-700 items-center bg-yellow-100 px-3 rounded-full">
-          {order.item_quantity || totalItems} items{" "}
+          {itemCount} items{" "}
           <ChevronRightIcon className="ml-1 text-yellow-500" />
         </div>
       </div>
@@ -51,7 +78,7 @@ const OrderCard = ({ order }) => {
       <div className="flex justify-between text-slate-800 bg-yellow-100 p-3 rounded-lg">
         <p className="py-1 text-2xl font-bold text-yellow-800">Total Price </p>
         <p className="py-1 text-2xl font-bold text-yellow-800">
-          {formatPrice(order.calculatedTotalPrice || 0)}
+          {formatPrice(totalPrice)}
         </p>
       </div>
     </div>

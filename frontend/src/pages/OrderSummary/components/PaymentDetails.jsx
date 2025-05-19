@@ -1,25 +1,31 @@
 import React from "react";
 
 const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
-  const isCartOrder =
-    order.order_type === "CART" &&
-    Array.isArray(menuItems) &&
-    menuItems.length > 0;
-
   const calculateSubtotal = () => {
-    if (isCartOrder) {
+    if (
+      order.order_type === "CART" &&
+      Array.isArray(menuItems) &&
+      menuItems.length > 0
+    ) {
       return menuItems.reduce(
         (total, item) => total + parseFloat(item.menu_price),
         0
       );
-    } else if (order.menu && order.item_quantity) {
-      return parseFloat(order.menu.menu_price) * order.item_quantity;
+    } else if (
+      order.order_type === "CHECKOUT" &&
+      order.menu_id &&
+      order.item_quantity
+    ) {
+      if (Array.isArray(order.menu) && order.menu.length > 0) {
+        return parseFloat(order.menu[0].menu_price) * order.item_quantity;
+      } else if (order.menu && order.menu.menu_price) {
+        return parseFloat(order.menu.menu_price) * order.item_quantity;
+      }
     }
     return 0;
   };
 
   const subtotal = calculateSubtotal();
-
   const totalAmount = subtotal;
 
   const paymentItems = [

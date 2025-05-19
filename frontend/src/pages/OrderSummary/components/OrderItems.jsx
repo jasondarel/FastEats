@@ -1,18 +1,18 @@
 import React from "react";
 
 const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
-  const isCartOrder =
+  if (
     order.order_type === "CART" &&
     Array.isArray(menuItems) &&
-    menuItems.length > 0;
-
-  return (
-    <div className="mb-8">
-      <h2 className="text-lg font-semibold mb-4 text-amber-900">Order Items</h2>
-
-      {isCartOrder ? (
+    menuItems.length > 0
+  ) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4 text-amber-900">
+          Order Items
+        </h2>
         <div className="space-y-4">
-          {menuItems.map((menuItem, index) => (
+          {menuItems.map((menuItem) => (
             <div
               key={menuItem.menu_id}
               className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-amber-100"
@@ -43,27 +43,41 @@ const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
             </div>
           ))}
         </div>
-      ) : (
+      </div>
+    );
+  } else if (order.order_type === "CHECKOUT") {
+    let menuItem;
+    if (Array.isArray(order.menu) && order.menu.length > 0) {
+      menuItem = order.menu[0];
+    } else {
+      menuItem = order.menu;
+    }
+
+    return (
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4 text-amber-900">
+          Order Items
+        </h2>
         <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-amber-100">
           <img
             src={
-              order.menu?.menu_image
-                ? `${API_URL}/restaurant/uploads/menu/${order.menu.menu_image}`
+              menuItem?.menu_image
+                ? `${API_URL}/restaurant/uploads/menu/${menuItem.menu_image}`
                 : "/api/placeholder/80/80"
             }
-            alt={order.menu?.menu_name || "Menu Item"}
+            alt={menuItem?.menu_name || "Menu Item"}
             className="w-20 h-20 object-cover rounded-lg"
           />
           <div className="flex-1">
             <div className="text-lg font-semibold text-amber-900">
-              {order.menu?.menu_name || "Menu Item"}
+              {menuItem?.menu_name || "Menu Item"}
             </div>
             <div className="text-sm text-amber-700 mb-2">
-              {order.menu?.menu_description || ""}
+              {menuItem?.menu_description || ""}
             </div>
             <div className="text-amber-900 font-semibold">
-              {order.menu?.menu_price
-                ? formatCurrency(order.menu.menu_price)
+              {menuItem?.menu_price
+                ? formatCurrency(menuItem.menu_price)
                 : "N/A"}
             </div>
           </div>
@@ -71,9 +85,20 @@ const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
             x{order.item_quantity || 1}
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  } else {
+    return (
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4 text-amber-900">
+          Order Items
+        </h2>
+        <div className="p-4 bg-white rounded-lg shadow-sm border border-amber-100">
+          <p className="text-amber-700">No order items available</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default OrderItems;

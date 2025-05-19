@@ -27,34 +27,7 @@ const OrderList = () => {
       console.log("Fetched orders:", data);
 
       if (data.success) {
-        // Process each order to calculate total price from items and menu data
-        const processedOrders = data.orders.map((order) => {
-          // Calculate total price by summing up all items
-          const calculatedTotalPrice =
-            order.items?.reduce((total, item) => {
-              // Find matching menu item from the order.menu array
-              const menuItem = order.menu?.find(
-                (menu) => menu.menu_id === item.menu_id
-              );
-              const menuPrice = parseFloat(menuItem?.menu_price || 0);
-              const quantity = item.item_quantity || 1;
-              return total + menuPrice * quantity;
-            }, 0) || 0;
-
-          // Calculate total item quantity
-          const totalItemQuantity =
-            order.items?.reduce((total, item) => {
-              return total + (item.item_quantity || 0);
-            }, 0) || 0;
-
-          return {
-            ...order,
-            calculatedTotalPrice,
-            item_quantity: totalItemQuantity,
-          };
-        });
-
-        setOrders(processedOrders);
+        setOrders(data.orders);
       } else {
         setError(data.message || "Failed to fetch orders");
       }
