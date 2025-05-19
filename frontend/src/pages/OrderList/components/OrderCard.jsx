@@ -3,6 +3,7 @@ import React from "react";
 import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+// eslint-disable-next-line react/prop-types
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
   // Format date function embedded in the component
