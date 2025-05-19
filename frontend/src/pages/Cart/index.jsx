@@ -16,6 +16,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [restaurantId, setRestaurantId] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const getToken = () => {
     return localStorage.getItem("token") || "";
@@ -213,8 +214,49 @@ const Cart = () => {
 
   const subtotal = calculateSubtotal();
 
-  const handleCheckout = () => {
-    window.location.href = `/checkout?cartId=${cartId}`;
+  const handleCheckout = async () => {
+    if (!cartId) {
+      setError("No cart found for checkout");
+      return;
+    }
+
+    setCheckoutLoading(true);
+    setError(null);
+
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/order/checkout-cart/${cartId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          cartId: cartId,
+          restaurantId: restaurantId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Checkout failed with status ${response.status}`
+        );
+      }
+
+      if (data.success) {
+        window.location.href = `/orders`;
+      } else {
+        setError(data.message || "Checkout process failed");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError(`Checkout failed: ${err.message}`);
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (
