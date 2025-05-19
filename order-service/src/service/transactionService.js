@@ -1,7 +1,6 @@
 import pool from "../config/dbInit.js";
 
-const createTransactionService = async (transaction) => {
-    console.log("transaction", transaction);
+export const createTransactionService = async (transaction) => {
     const result = await pool.query(
         `INSERT INTO transactions 
             (order_id, currency, transaction_time, expiry_time, amount, bank, va_number, payment_type) 
@@ -22,16 +21,11 @@ const createTransactionService = async (transaction) => {
     return result.rows[0];
 };
 
-const getTransactionByOrderIdService = async (orderId) => {
+export const getTransactionByOrderIdService = async (orderId) => {
     const result = await pool.query(
         "SELECT * FROM transactions WHERE order_id = $1",
         [orderId]
     );
 
     return result.rows[0];
-}
-
-export {
-    createTransactionService,
-    getTransactionByOrderIdService
 }

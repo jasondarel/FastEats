@@ -266,36 +266,6 @@ export const getCartController = async (req, res) => {
   }
 };
 
-// export const getCartController = async (req, res) => {
-//   const { userId } = req.user;
-//   const { cart_id } = req.params;
-
-//   try {
-//     logger.info("Fetching carts from database...");
-//     const cart = await getCartService(cart_id, userId);
-//     if (!cart || cart.length === 0) {
-//       logger.warn("Cart is empty for user:", userId);
-//       return res.status(200).json({
-//         success: true,
-//         cart: [],
-//         message: "Cart is Empty",
-//       });
-//     }
-
-//     logger.info("Fetching menu data for carts...");
-//     return res.status(200).json({
-//       success: true,
-//       cart: cart,
-//     });
-//   } catch (error) {
-//     logger.error("Internal server error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
-
 export const createCartController = async (req, res) => {
   try {
     const { userId, role } = req.user;
