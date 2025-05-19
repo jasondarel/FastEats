@@ -25,7 +25,7 @@ const OrderList = () => {
       });
 
       const data = await response.json();
-
+      console.log("Fetched orders:", data);
       if (data.success) {
         const processedOrders = data.orders.map((order) => {
           const menuPrice = parseFloat(order.menu?.menu_price || 0);

@@ -9,31 +9,37 @@ const OrderActions = ({
   onPayment,
   onOrderAgain,
 }) => {
-  console.log("OrderActions", order);
   if (!order) return null;
 
   const totalQuantity = () => {
     let total = 0;
-    if (order && order.items && Array.isArray(order.items)) {
-      order.items.forEach((item) => {
-        if (item && item.item_quantity) {
-          total += item.item_quantity;
-        }
-      });
+    if (order.order_type === "CHECKOUT") {
+      total = order.item_quantity || 0;
+    }  else {
+      if (order && order.items && Array.isArray(order.items)) {
+        order.items.forEach((item) => {
+          if (item && item.item_quantity) {
+            total += item.item_quantity;
+          }
+        });
+      }
     }
     return total;
   }
 
   const totalPrice = () => {
   let total = 0;
-  
-  if (order && order.items && Array.isArray(order.items)) {
-    order.items.forEach((item) => {
-      if (item && item.menu && item.menu.menu_price && item.item_quantity) {
-        const price = item.menu.menu_price * item.item_quantity;
-        total += price;
-      }
-    });
+  if (order.order_type === "CHECKOUT") {
+    total = order.menu.menu_price * (order.item_quantity || 0);
+  } else {
+    if (order && order.items && Array.isArray(order.items)) {
+      order.items.forEach((item) => {
+        if (item && item.menu && item.menu.menu_price && item.item_quantity) {
+          const price = item.menu.menu_price * item.item_quantity;
+          total += price;
+        }
+      });
+    }
   }
   return total;
 };
