@@ -1,134 +1,126 @@
-import React, { useEffect, useRef } from "react";
-import Chart from "chart.js/auto";
-import { processOrdersData } from "../utils/chartDataUtils";
+import { useMemo } from "react";
+/* eslint-disable react/prop-types */
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const MonthlyCharts = ({ orders }) => {
-  // References for charts
-  const monthlyOrdersChartRef = useRef(null);
-  const monthlyRevenueChartRef = useRef(null);
-
-  // References for chart instances
-  const ordersChartInstance = useRef(null);
-  const revenueChartInstance = useRef(null);
-
-  // Create charts when orders data changes
-  useEffect(() => {
-    if (
-      !monthlyOrdersChartRef.current ||
-      !monthlyRevenueChartRef.current ||
-      !orders.length
-    ) {
-      return;
+  // Process orders data to create monthly statistics
+  const monthlyData = useMemo(() => {
+    // Initialize data structure for all months
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    
+    const initialData = months.map(month => ({
+      name: month,
+      orders: 0,
+      revenue: 0
+    }));
+    
+    // If there are no orders, return the empty data structure
+    if (!Array.isArray(orders) || orders.length === 0) {
+      return initialData;
     }
-
-    // Destroy existing charts
-    if (ordersChartInstance.current) {
-      ordersChartInstance.current.destroy();
-      ordersChartInstance.current = null;
-    }
-
-    if (revenueChartInstance.current) {
-      revenueChartInstance.current.destroy();
-      revenueChartInstance.current = null;
-    }
-
-    // Process data for charts
-    const { monthlyData } = processOrdersData(orders);
-    const monthlyLabels = monthlyData.map((item) => item.month);
-    const monthlyOrdersData = monthlyData.map((item) => item.orders);
-    const monthlyRevenueData = monthlyData.map((item) => item.revenue);
-
-    // Create monthly orders chart
-    ordersChartInstance.current = new Chart(monthlyOrdersChartRef.current, {
-      type: "bar",
-      data: {
-        labels: monthlyLabels,
-        datasets: [
-          {
-            label: "Orders",
-            data: monthlyOrdersData,
-            backgroundColor: "#3B82F6",
-            borderColor: "#2563EB",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-          },
-        },
-      },
-    });
-
-    // Create monthly revenue chart
-    revenueChartInstance.current = new Chart(monthlyRevenueChartRef.current, {
-      type: "line",
-      data: {
-        labels: monthlyLabels,
-        datasets: [
-          {
-            label: "Revenue",
-            data: monthlyRevenueData,
-            backgroundColor: "rgba(16, 185, 129, 0.2)",
-            borderColor: "#10B981",
-            borderWidth: 2,
-            tension: 0.1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function (value) {
-                return "$" + value;
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Cleanup function
-    return () => {
-      if (ordersChartInstance.current) {
-        ordersChartInstance.current.destroy();
-        ordersChartInstance.current = null;
+    
+    // Calculate order counts and revenue by month
+    orders.forEach(order => {
+      // Extract month from order date
+      const orderDate = new Date(order.created_at);
+      const monthIndex = orderDate.getMonth();
+      const monthName = months[monthIndex];
+      
+      // Find the corresponding month in our data array
+      const monthData = initialData.find(item => item.name === monthName);
+      if (!monthData) return;
+      
+      // Process orders based on type
+      if (order.order_type === "CART" && Array.isArray(order.items)) {
+        // Handle cart orders with multiple items
+        order.items.forEach((item, index) => {
+          const quantity = item.item_quantity || 0;
+          monthData.orders += quantity;
+          
+          // Calculate revenue from menu prices
+          const menuItem = order.menu && Array.isArray(order.menu) && order.menu[index];
+          const price = menuItem ? parseFloat(menuItem.menu_price) || 0 : 0;
+          monthData.revenue += price * quantity;
+        });
+      } else {
+        // Handle single item orders
+        const quantity = order.item_quantity || 1;
+        monthData.orders += quantity;
+        
+        // Calculate revenue
+        let price = 0;
+        if (order.menu) {
+          if (Array.isArray(order.menu) && order.menu.length > 0) {
+            price = parseFloat(order.menu[0].menu_price) || 0;
+          } else if (order.menu.menu_price) {
+            price = parseFloat(order.menu.menu_price) || 0;
+          }
+        }
+        monthData.revenue += price * quantity;
       }
-
-      if (revenueChartInstance.current) {
-        revenueChartInstance.current.destroy();
-        revenueChartInstance.current = null;
-      }
-    };
+    });
+    
+    // Format revenue as currency and round to 2 decimal places
+    initialData.forEach(item => {
+      item.revenue = parseFloat(item.revenue.toFixed(2));
+    });
+    
+    return initialData;
   }, [orders]);
+  
+  // Custom tooltip to display order count and revenue
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+          <p className="font-medium text-amber-800">{payload[0].payload.name}</p>
+          <p className="text-sm">
+            <span className="font-medium text-blue-600">Orders:</span> {payload[0].value}
+          </p>
+          <p className="text-sm">
+            <span className="font-medium text-green-600">Revenue:</span> ${payload[1].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Orders Chart */}
-      <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
-        <h3 className="text-lg font-medium text-amber-900 mb-2">
-          Monthly Orders
-        </h3>
-        <div className="h-64">
-          <canvas ref={monthlyOrdersChartRef}></canvas>
-        </div>
-      </div>
-
-      {/* Revenue Chart */}
-      <div className="bg-white p-4 rounded-lg border border-amber-100 shadow-sm">
-        <h3 className="text-lg font-medium text-amber-900 mb-2">
-          Monthly Revenue
-        </h3>
-        <div className="h-64">
-          <canvas ref={monthlyRevenueChartRef}></canvas>
+    <div>
+      <div className="bg-white rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Monthly Performance</h3>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={monthlyData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis yAxisId="left" orientation="left" stroke="#3b82f6" />
+              <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Bar 
+                yAxisId="left" 
+                dataKey="orders" 
+                name="Orders" 
+                fill="#3b82f6" 
+                radius={[4, 4, 0, 0]} 
+              />
+              <Bar 
+                yAxisId="right" 
+                dataKey="revenue" 
+                name="Revenue ($)" 
+                fill="#10b981" 
+                radius={[4, 4, 0, 0]} 
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

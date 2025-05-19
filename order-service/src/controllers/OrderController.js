@@ -1240,6 +1240,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
   const token = req.headers.authorization;
 
   try {
+    // Verify seller role
     if (role !== "seller") {
       logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
@@ -1248,7 +1249,8 @@ export const getRestaurantDashboardByRestaurantIdController = async (
       });
     }
 
-    const restaurant = await axios.get(
+    // Get restaurant details
+    const restaurantResponse = await axios.get(
       `http://localhost:5000/restaurant/restaurant`,
       {
         headers: {
@@ -1258,9 +1260,11 @@ export const getRestaurantDashboardByRestaurantIdController = async (
       }
     );
 
-    const restaurant_id = restaurant.data.restaurant.restaurant_id;
+    const restaurant = restaurantResponse.data.restaurant;
+    const restaurant_id = restaurant.restaurant_id;
 
-    if (restaurant.data.restaurant.owner_id !== userId) {
+    // Verify restaurant ownership
+    if (restaurant.owner_id !== userId) {
       logger.warn("Unauthorized access attempt by user", { userId });
       return res.status(403).json({
         success: false,
@@ -1279,39 +1283,76 @@ export const getRestaurantDashboardByRestaurantIdController = async (
 
     const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        const menu = await axios.get(
-          `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        try {
+          let orderItems = [];
+          let menuItems = [];
+          let userInfo = null;
 
-        const user = await axios.get(
-          `http://localhost:5000/user/user/${order.user_id}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
+          if (order.order_type === "CART") {
+            orderItems = await getOrderItemsByOrderIdService(order.order_id);
+
+            const menuPromises = orderItems.map(item => 
+              axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+                headers: {
+                  Authorization: token,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
+            
+            const menuResponses = await Promise.all(menuPromises);
+            menuItems = menuResponses.map(response => response.data.menu);
+          } else {
+            orderItems = [order];
+            
+            const menuResponse = await axios.get(
+              `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+              {
+                headers: {
+                  Authorization: token,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            
+            menuItems = [menuResponse.data.menu];
           }
-        );
-        return {
-          ...order,
-          menu: menu.data.menu,
-          user: user.data.user,
-        };
+
+          const userResponse = await axios.get(
+            `http://localhost:5000/user/user/${order.user_id}`,
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          
+          userInfo = userResponse.data.user;
+
+          return {
+            ...order,
+            items: order.order_type === "CART" ? orderItems : null,
+            menu: menuItems,
+            user: userInfo,
+          };
+        } catch (err) {
+          logger.error(`Error processing order ${order.order_id}:`, err.message);
+          return {
+            ...order,
+            error: "Failed to fetch complete details for this order",
+          };
+        }
       })
     );
+
     logger.info("Orders fetched successfully");
     return res.status(200).json({
       success: true,
       orders: ordersWithDetails,
     });
   } catch (error) {
-    logger.error("Error fetching restaurant orders:", error);
+    logger.error("Error fetching restaurant orders:", error.message);
     return res.status(500).json({
       success: false,
       message: "Failed to retrieve orders",
