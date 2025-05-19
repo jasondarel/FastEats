@@ -1322,17 +1322,46 @@ export const getRestaurantOrderController = async (req, res) => {
       });
     }
 
-    const menu = await axios.get(
-      `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
-      {
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    let ordersInfo = [];
+    let menu = [];
 
-    if (order.restaurant_id !== menu.data.menu.restaurant_id) {
+    if (order.order_type === "CART") {
+      ordersInfo = await getOrderItemsByOrderIdService(order.order_id);
+      
+      const menuPromises = ordersInfo.map(item => 
+        axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      
+      const menuResponses = await Promise.all(menuPromises);
+      menu = menuResponses.map(response => response.data.menu);
+      
+    } else {
+      ordersInfo = order;
+      
+      const menuResponse = await axios.get(
+        `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      menu.push(menuResponse.data.menu);
+    }
+
+    logger.info("Order items and menu fetched");
+    
+    const restaurantId = order.restaurant_id;
+    const isAuthorized = menu.some(menuItem => menuItem.restaurant_id === restaurantId);
+    
+    if (!isAuthorized) {
       logger.warn("Unauthorized access attempt by user");
       return res.status(403).json({
         success: false,
@@ -1340,7 +1369,7 @@ export const getRestaurantOrderController = async (req, res) => {
       });
     }
 
-    const user = await axios.get(
+    const userResponse = await axios.get(
       `http://localhost:5000/user/user/${order.user_id}`,
       {
         headers: {
@@ -1349,6 +1378,14 @@ export const getRestaurantOrderController = async (req, res) => {
         },
       }
     );
+
+    if (!userResponse || !userResponse.data || !userResponse.data.user) {
+      logger.warn("User not found");
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const transaction = await getTransactionByOrderIdService(order_id);
     if (!transaction) {
@@ -1359,26 +1396,19 @@ export const getRestaurantOrderController = async (req, res) => {
       });
     }
 
-    if (!user) {
-      logger.warn("User not found");
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
     logger.info("Order fetched successfully");
     return res.status(200).json({
       success: true,
       order: {
         ...order,
-        menu: menu.data.menu,
-        user: user.data.user,
-        transaction: transaction,
+        menu,
+        user: userResponse.data.user,
+        transaction,
       },
     });
+    
   } catch (err) {
-    logger.error("Error fetching order:", err);
+    logger.error("Error fetching order:", err.message);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
