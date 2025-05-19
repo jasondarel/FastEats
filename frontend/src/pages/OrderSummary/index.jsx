@@ -145,7 +145,7 @@ const OrderSummary = () => {
   }
 
   const order = orderData.order;
-  const menu = order.menu;
+  const menuItems = order.menu;
   const user = order.user;
   const transaction = order.transaction;
   const currentStep = getStepStatus(order.status);
@@ -161,13 +161,13 @@ const OrderSummary = () => {
           formatDate={formatDate}
         />
         <OrderItems
-          menu={menu}
+          menuItems={menuItems}
           order={order}
           formatCurrency={formatCurrency}
           API_URL={API_URL}
         />
         <PaymentDetails
-          menu={menu}
+          menuItems={menuItems}
           order={order}
           transaction={transaction}
           formatCurrency={formatCurrency}
