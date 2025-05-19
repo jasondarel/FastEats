@@ -1,6 +1,6 @@
 import pool from "../config/dbInit.js";
 
-const createOrderService = async (order) => {
+export const createOrderService = async (order) => {
   const result = await pool.query(
     "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     [
@@ -22,21 +22,21 @@ export const createOrderItemService = async (orderId, menuId, quantity) => {
   return result.rows[0];
 };
 
-const getUserOrdersService = async (userId) => {
+export const getUserOrdersService = async (userId) => {
   const result = await pool.query("SELECT * FROM orders WHERE user_id = $1", [
     userId,
   ]);
   return result.rows;
 };
 
-const getOrderByIdService = async (orderId) => {
+export const getOrderByIdService = async (orderId) => {
   const result = await pool.query("SELECT * FROM orders WHERE order_id = $1", [
     orderId,
   ]);
   return result.rows[0];
 };
 
-const getOrdersByRestaurantIdService = async (restaurantId) => {
+export const getOrdersByRestaurantIdService = async (restaurantId) => {
   const result = await pool.query(
     "SELECT * FROM orders WHERE restaurant_id = $1 AND (status = 'Preparing' OR status = 'Completed')",
     [restaurantId]
@@ -68,7 +68,7 @@ export const updateOrderStatusService = async (orderId, status) => {
   return result.rows[0];
 };
 
-const payOrderService = async (orderId) => {
+export const payOrderService = async (orderId) => {
   const result = await pool.query(
     "update orders set status = 'Preparing' where order_id = $1 RETURNING *",
     [orderId]
@@ -76,7 +76,7 @@ const payOrderService = async (orderId) => {
   return result.rows[0];
 };
 
-const cancelOrderService = async (orderId) => {
+export const cancelOrderService = async (orderId) => {
   const result = await pool.query(
     "update orders set status = 'Cancelled' where order_id = $1 RETURNING *",
     [orderId]
@@ -84,7 +84,7 @@ const cancelOrderService = async (orderId) => {
   return result.rows[0];
 };
 
-const completeOrderService = async (orderId) => {
+export const completeOrderService = async (orderId) => {
   const result = await pool.query(
     "update orders set status = 'Completed' where order_id = $1 RETURNING *",
     [orderId]
@@ -92,7 +92,7 @@ const completeOrderService = async (orderId) => {
   return result.rows[0];
 };
 
-const pendingOrderService = async (orderId) => {
+export const pendingOrderService = async (orderId) => {
   const result = await pool.query(
     "update orders set status = 'Pending' where order_id = $1 RETURNING *",
     [orderId]
@@ -100,7 +100,7 @@ const pendingOrderService = async (orderId) => {
   return result.rows[0];
 };
 
-const saveSnapTokenService = async (orderId, snapToken) => {
+export const saveSnapTokenService = async (orderId, snapToken) => {
   const result = await pool.query(
     "INSERT INTO snaps (order_id, snap_token) VALUES ($1, $2) RETURNING *",
     [orderId, snapToken]
@@ -108,7 +108,7 @@ const saveSnapTokenService = async (orderId, snapToken) => {
   return result.rows[0];
 };
 
-const getSnapTokenService = async (orderId) => {
+export const getSnapTokenService = async (orderId) => {
   const result = await pool.query("SELECT * FROM snaps WHERE order_id = $1", [
     orderId,
   ]);
@@ -203,9 +203,18 @@ export const deleteUserCartService = async (userId) => {
     [userId]
   );
   return result.rows[0];
+}
+
+export const getOrderItemsByOrderIdService = async (orderId) => {
+  const result = await pool.query(
+    `SELECT * FROM order_items oi
+    WHERE oi.order_id = $1`,
+    [orderId]
+  );
+  return result.rows;
 };
 
-async function getAllOrdersWithItemsService() {
+export const getAllOrdersWithItemsService = async() => {
   const result = await pool.query(
     `SELECT 
     o.order_id,
@@ -233,17 +242,3 @@ ORDER BY o.created_at DESC;
   );
   return result.rows;
 }
-
-export {
-  createOrderService,
-  getUserOrdersService,
-  getOrderByIdService,
-  cancelOrderService,
-  payOrderService,
-  pendingOrderService,
-  saveSnapTokenService,
-  getSnapTokenService,
-  getOrdersByRestaurantIdService,
-  completeOrderService,
-  getAllOrdersWithItemsService,
-};

@@ -1,4 +1,5 @@
-import React from "react";
+/* eslint-disable react/prop-types */
+// import React from "react";
 
 const OrderActions = ({
   order,
@@ -8,7 +9,34 @@ const OrderActions = ({
   onPayment,
   onOrderAgain,
 }) => {
+  console.log("OrderActions", order);
   if (!order) return null;
+
+  const totalQuantity = () => {
+    let total = 0;
+    if (order && order.items && Array.isArray(order.items)) {
+      order.items.forEach((item) => {
+        if (item && item.item_quantity) {
+          total += item.item_quantity;
+        }
+      });
+    }
+    return total;
+  }
+
+  const totalPrice = () => {
+  let total = 0;
+  
+  if (order && order.items && Array.isArray(order.items)) {
+    order.items.forEach((item) => {
+      if (item && item.menu && item.menu.menu_price && item.item_quantity) {
+        const price = item.menu.menu_price * item.item_quantity;
+        total += price;
+      }
+    });
+  }
+  return total;
+};
 
   switch (order.status) {
     case "Waiting":
@@ -26,8 +54,8 @@ const OrderActions = ({
             onClick={() =>
               onPayConfirmation(
                 order.order_id,
-                order.item_quantity,
-                order.menu.menu_price
+                totalQuantity(),
+                totalPrice()
               )
             }
           >

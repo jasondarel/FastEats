@@ -25,6 +25,7 @@ import {
   deleteUserCartService,
   createOrderItemService,
   getAllOrdersWithItemsService,
+  getOrderItemsByOrderIdService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -304,36 +305,6 @@ export const getCartController = async (req, res) => {
     });
   }
 };
-
-// export const getCartController = async (req, res) => {
-//   const { userId } = req.user;
-//   const { cart_id } = req.params;
-
-//   try {
-//     logger.info("Fetching carts from database...");
-//     const cart = await getCartService(cart_id, userId);
-//     if (!cart || cart.length === 0) {
-//       logger.warn("Cart is empty for user:", userId);
-//       return res.status(200).json({
-//         success: true,
-//         cart: [],
-//         message: "Cart is Empty",
-//       });
-//     }
-
-//     logger.info("Fetching menu data for carts...");
-//     return res.status(200).json({
-//       success: true,
-//       cart: cart,
-//     });
-//   } catch (error) {
-//     logger.error("Internal server error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
 
 export const createCartController = async (req, res) => {
   try {
@@ -1180,8 +1151,15 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       });
     }
 
+    let ordersInfo = [];
+    if (orders[0].order_type === "CART") {
+      ordersInfo = await getOrderItemsByOrderIdService(orders[0].order_id);
+    } else {
+      ordersInfo = orders;
+    }   
+    
     const ordersWithDetails = await Promise.all(
-      orders.map(async (order) => {
+      ordersInfo.map(async (order) => {
         const menu = await axios.get(
           `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
           {
@@ -1193,7 +1171,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
         );
 
         const user = await axios.get(
-          `http://localhost:5000/user/user/${order.user_id}`,
+          `http://localhost:5000/user/user/${orders[0].user_id}`,
           {
             headers: {
               Authorization: token,
