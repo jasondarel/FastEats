@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaLock } from "react-icons/fa";
 import { changePasswordService } from "../../../service/userServices/profileService";
+import Swal from "sweetalert2";
 
 const PasswordForm = () => {
   const [changePassword, setChangePassword] = useState({
@@ -31,21 +32,39 @@ const PasswordForm = () => {
     e.preventDefault();
 
     if (!isValidPassword(changePassword.newPassword)) {
-      alert(
-        "Password harus minimal 8 karakter dengan kombinasi huruf dan angka!"
-      );
+      Swal.fire({
+        title: "Invalid Password",
+        text: "Password harus minimal 8 karakter dengan kombinasi huruf dan angka!",
+        icon: "error",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#ef4444",
+      });
       return;
     }
 
     if (changePassword.newPassword !== changePassword.confirmPassword) {
-      alert("New passwords do not match!");
+      Swal.fire({
+        title: "Password Mismatch",
+        text: "New passwords do not match!",
+        icon: "error",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#ef4444",
+      });
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
       await changePasswordService(changePassword, token);
-      alert("Password updated successfully!");
+      
+      Swal.fire({
+        title: "Success!",
+        text: "Password updated successfully!",
+        icon: "success",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      });
+      
       setChangePassword({
         currentPassword: "",
         newPassword: "",
@@ -53,7 +72,48 @@ const PasswordForm = () => {
       });
       setIsPasswordChanged(false);
     } catch (error) {
-      alert(error.response?.data?.error || "Failed to update password");
+      let errorMessages = [];
+      
+      if (error.response?.data?.errors) {
+        if (typeof error.response.data.errors === 'object' && !Array.isArray(error.response.data.errors)) {
+          Object.values(error.response.data.errors).forEach(errArray => {
+            if (Array.isArray(errArray)) {
+              errorMessages = [...errorMessages, ...errArray];
+            } else if (typeof errArray === 'string') {
+              errorMessages.push(errArray);
+            }
+          });
+        } else if (Array.isArray(error.response.data.errors)) {
+          errorMessages = error.response.data.errors;
+        } else if (typeof error.response.data.errors === 'string') {
+          errorMessages = [error.response.data.errors];
+        }
+      }
+      
+      if (errorMessages.length === 0) {
+        errorMessages = ["Failed to update password"];
+      }
+      
+      const htmlContent = `
+        <div class="text-left">
+          <ul style="list-style-type: none; padding: 0; margin: 0;">
+            ${errorMessages.map(msg => `
+              <li style="margin-bottom: 8px; display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; height: 24px; border-radius: 50%; background-color: #ef4444; margin-right: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: bold;">!</div>
+                <span>${msg}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+      
+      Swal.fire({
+        title: "Error",
+        html: htmlContent,
+        icon: "error",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#ef4444",
+      });      
     }
   };
 
@@ -93,7 +153,7 @@ const PasswordForm = () => {
       <button
         type="submit"
         disabled={!isPasswordChanged}
-        className={`w-full p-3 rounded-lg transition ${
+        className={`w-full p-3 rounded-lg transition font-semibold ${
           isPasswordChanged
             ? "bg-red-500 text-white hover:bg-red-600 hover:cursor-pointer"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
