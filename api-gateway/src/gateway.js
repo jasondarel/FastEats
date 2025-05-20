@@ -74,10 +74,26 @@ const notificationProxy = createProxyMiddleware({
   },
 })
 
+const chatProxy = createProxyMiddleware({
+  target: process.env.CHAT_SERVICE_URL || 'http://localhost:5005',
+  changeOrigin: true,
+  onProxyReq: (proxyReq, req) => {
+    logger.info(`Chat Service - Proxying request: ${req.method} ${req.originalUrl}`);
+  },
+  onProxyRes: (proxyRes, req) => {
+    logger.info(`Chat Service - Response received: ${req.originalUrl} -> Status ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    logger.error(`Chat Service - Proxy error: ${err.message}`);
+    res.status(500).json({ error: "Chat Service Proxy error", details: err.message });
+  },
+})
+
 app.use('/restaurant', restaurantProxy);
 app.use('/user', userProxy);
 app.use('/order', orderProxy);
 app.use('/notification', notificationProxy);
+app.use('/chat', chatProxy);
 
 app.get('/health', (req, res) => {
   res.json({ 
@@ -88,6 +104,7 @@ app.get('/health', (req, res) => {
       user: process.env.USER_SERVICE_URL || 'http://localhost:5002',
       order: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
       notification: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5005',
+      chat: process.env.CHAT_SERVICE_URL || 'http://localhost:5006',
     }
   });
 });
@@ -101,4 +118,5 @@ app.listen(PORT, () => {
   logger.info('- /order/* -> Order Service');
   logger.info('- /health -> Gateway Health Check');
   logger.info('- /notification/* -> Notification Service');
+  logger.info('- /chat/* -> Chat Service');
 });

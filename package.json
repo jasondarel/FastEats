@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix api-gateway run dev\" \"npm --prefix user-service run dev\" \"npm --prefix restaurant-service run dev\" \"npm --prefix order-service run dev\" \"npm --prefix notification-service run dev\""
+    "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix api-gateway run dev\" \"npm --prefix user-service run dev\" \"npm --prefix restaurant-service run dev\" \"npm --prefix order-service run dev\" \"npm --prefix notification-service run dev\" \"npm --prefix chat-service run dev\""
   },
   "repository": {
     "type": "git",
