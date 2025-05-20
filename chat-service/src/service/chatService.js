@@ -1,5 +1,5 @@
 import axios from "axios";
-import pool from "../config/dbInit.js";
+import { Chat } from "../config/schema.js";
 
 // export const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
 //     const result = await pool.query(
@@ -8,3 +8,24 @@ import pool from "../config/dbInit.js";
 //     );
 //     return result.rowCount > 0;
 // };
+
+export const getChatsService = async (userId) => {
+    try {
+        const numericUserId = Number(userId);
+        
+        const chats = await Chat.find({ userId: numericUserId })
+        .sort({ updatedAt: -1 })
+        .exec();
+        
+        return {
+        success: true,
+        data: chats
+        };
+    } catch (error) {
+        console.error('Error retrieving user chats:', error);
+        return {
+        success: false,
+        error: error.message
+        };
+    }
+};

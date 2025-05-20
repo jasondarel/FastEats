@@ -1,5 +1,5 @@
 import { 
-    
+    getChatsService
 } from "../service/chatService.js";
 import { 
 
@@ -47,3 +47,24 @@ import logger from "../config/loggerInit.js";
 //     }
     
 // }
+
+export const getChatsController = async (req, res) => {
+    logger.info("GET CHATS CONTROLLER");
+    const { userId } = req.user;
+    
+    try {
+        const chats = await getChatsService(userId);
+        logger.info(`Get chats success: ${chats.length} chats found`);
+        return res.status(200).json({
+            success: true,
+            message: "Get chats success",
+            dataChats: chats
+        });
+    } catch (err) {
+        logger.error("Internal Server Error", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+}
