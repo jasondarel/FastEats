@@ -27,13 +27,14 @@ import OtpVerifPage from "./pages/OtpVerifPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import NewPassword from "./pages/NewPassword";
 import ForgotPasswordOtp from "./pages/ForgotPasswordOtp";
+import ChatsList from "./pages/ChatsList";
+import ChatRoom from "./pages/ChatRoom";
 
 function App() {
   return (
     <div className="flex">
       <div className="flex-1">
         <Routes>
-          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
@@ -86,6 +87,22 @@ function App() {
             element={
               <ProtectedRoute requiredRoles={["user"]}>
                 <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute requiredRoles={["user"]}>
+                <ChatsList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/:chatId"
+            element={
+              <ProtectedRoute requiredRoles={["user"]}>
+                <ChatRoom />
               </ProtectedRoute>
             }
           />
@@ -165,7 +182,6 @@ function App() {
             }
           />
 
-          {/* Special case: User becoming a seller */}
           <Route
             path="/become-seller"
             element={
@@ -175,7 +191,6 @@ function App() {
             }
           />
 
-          {/* Payment routes - potentially public with validation */}
           <Route path="/thanks" element={<Thanks />} />
           <Route path="/pay-now/:orderId" element={<PayNow />} />
         </Routes>

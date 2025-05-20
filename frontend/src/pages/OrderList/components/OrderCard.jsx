@@ -2,6 +2,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaShoppingBag } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
+import ChatButton from "../../../components/ChatButton";
 import { API_URL } from "../../../config/api";
 
 const OrderCard = ({ order }) => {
@@ -27,15 +28,18 @@ const OrderCard = ({ order }) => {
     }).format(price);
   };
 
+  // Calculate items and total price based on order type
   let itemCount = 0;
   let totalPrice = 0;
 
   if (order.order_type === "CART" && order.items) {
+    // For CART orders, get count from items array
     itemCount = order.items.reduce(
       (total, item) => total + (item.item_quantity || 0),
       0
     );
 
+    // Calculate price from items and menu data
     totalPrice = order.items.reduce((total, item) => {
       const menuItem = order.menu?.find(
         (menu) => menu.menu_id === item.menu_id
@@ -45,8 +49,10 @@ const OrderCard = ({ order }) => {
       return total + menuPrice * quantity;
     }, 0);
   } else if (order.order_type === "CHECKOUT") {
+    // For CHECKOUT orders, use the direct properties
     itemCount = order.item_quantity || 1;
 
+    // Price is menu_price * item_quantity
     const menuItem = order.menu?.[0];
     const menuPrice = parseFloat(menuItem?.menu_price || 0);
     totalPrice = menuPrice * itemCount;
@@ -69,15 +75,21 @@ const OrderCard = ({ order }) => {
     return null;
   };
 
+  // Check if order has a status
   const status = order.status || "Pending";
   const isCompleted = status === "Completed" || status === "Cancelled";
   const firstItemImage = getFirstItemImage();
+
+  // Handle order card click (exclude chat button area)
+  const handleCardClick = () => {
+    navigate(`/order-summary/${order.order_id}`);
+  };
 
   return (
     <div
       className="flex flex-col bg-white shadow-md hover:shadow-xl rounded-lg border-l-4 transition-all duration-300 cursor-pointer"
       style={{ borderLeftColor: isCompleted ? "#9CA3AF" : "#FBBF24" }}
-      onClick={() => navigate(`/order-summary/${order.order_id}`)}
+      onClick={handleCardClick}
     >
       <div className="flex justify-between items-center p-4 border-b border-gray-100">
         <div className="flex items-center">
@@ -93,10 +105,13 @@ const OrderCard = ({ order }) => {
             </p>
           </div>
         </div>
-        <StatusBadge
-          status={status}
-          className="px-3 py-1 rounded-full text-xs font-medium"
-        />
+        <div className="flex items-center space-x-2">
+          <ChatButton order={order} variant="icon-only" size="sm" />
+          <StatusBadge
+            status={status}
+            className="px-3 py-1 rounded-full text-xs font-medium"
+          />
+        </div>
       </div>
 
       <div className="p-4 flex">
@@ -120,6 +135,15 @@ const OrderCard = ({ order }) => {
           </div>
         </div>
       </div>
+
+      {/* Action buttons section - visible only on active orders */}
+      {!isCompleted && (
+        <div className="px-4 pb-4">
+          <div className="flex justify-end space-x-2">
+            <ChatButton order={order} variant="secondary" size="sm" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

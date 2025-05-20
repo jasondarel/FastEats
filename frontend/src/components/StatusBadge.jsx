@@ -1,24 +1,21 @@
 import React from "react";
 
-// StatusBadge component for consistent order status styling
 const StatusBadge = ({ status, className = "" }) => {
-  // Function to determine status colors based on order status
   const getStatusStyles = (status) => {
     switch (status) {
       case "Waiting":
-        return "bg-yellow-200 text-yellow-800"; // Yellow for waiting
+        return "bg-yellow-200 text-yellow-800";
       case "Preparing":
-        return "bg-blue-200 text-blue-800"; // Blue for preparing
+        return "bg-blue-200 text-blue-800";
       case "Completed":
-        return "bg-green-300 text-green-800"; // Green for completed
+        return "bg-green-300 text-green-800";
       case "Cancelled":
-        return "bg-red-200 text-red-800"; // Red for cancelled
-      //   case "Delivering":
-      //     return "bg-amber-200 text-amber-800"; // Amber for delivering
+        return "bg-red-200 text-red-800";
+
       case "Pending":
-        return "bg-purple-200 text-purple-800"; // Purple for pending
+        return "bg-purple-200 text-purple-800";
       default:
-        return "bg-gray-200 text-gray-800"; // Gray for any other status
+        return "bg-gray-200 text-gray-800";
     }
   };
 
