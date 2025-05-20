@@ -16,6 +16,20 @@ services:
     networks:
       - fasteats_network
 
+  fasteats_mongodb:
+    image: mongo:latest
+    container_name: fasteats_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - fasteats_mongodb_data:/data/db
+    networks:
+      - fasteats_network
+
   fasteats_rabbitmq:
     image: rabbitmq:management
     container_name: fasteats_rabbitmq
@@ -49,3 +63,4 @@ volumes:
   fasteats_pgdata:
   fasteats_rabbitmq_data:
   fasteats_redis_data:
+  fasteats_mongodb_data:
