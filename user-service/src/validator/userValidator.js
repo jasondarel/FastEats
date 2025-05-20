@@ -103,16 +103,16 @@ export const validateLoginRequest = async(userReq) => {
         const user = await getUserByEmailService(email);
         const hashedPassword = hashPassword(password);
         if(!user) {
-            errors.password = 'Invalid credentials';
+            errors.password = 'Invalid email or password';
         } else if(user.password_hash !== hashedPassword) {
-            errors.password = 'Invalid credentials';
+            errors.password = 'Incorrect password';
         }
 
         if(!user.is_verified) {
             errors.email = 'Email is not verified';
         }
     } catch(err) {
-        errors.general = 'Invalid credentials';
+        errors.general = 'Invalid email or password';
     }
 
 

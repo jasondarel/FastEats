@@ -224,6 +224,7 @@ export const loginController = async (req, res) => {
     }
 
     if (Object.keys(errors).length > 0) {
+      console.log(errors);
       logger.warn("Validation failed", errors);
       return res.status(400).json({
         success: false,
@@ -627,6 +628,7 @@ export const changePasswordController = async (req, res) => {
 
   try {
     const errors = await validateChangePasswordRequest(req.body, userId);
+    console.log(errors);
     if (Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
       return res.status(400).json({
