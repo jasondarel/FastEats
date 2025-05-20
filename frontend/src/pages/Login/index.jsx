@@ -63,10 +63,11 @@ const Login = () => {
           (error && error.message && error.message.includes("not verified"))
         ) {
           if (error && error.token) {
+            const errorMsg = error.data?.errors || error.data?.message || "Email not verified";
             console.log("Token found, redirecting to verification page");
             MySwal.fire({
               title: "Email Not Verified",
-              text: "Your email is not verified yet. You will be redirected to verification page.",
+              text: errorMsg,
               icon: "warning",
               showCancelButton: false,
               confirmButtonColor: "#efb100",
@@ -76,10 +77,50 @@ const Login = () => {
                 navigate(`/otp-verification?token=${error.token}&email=${email}`);
               }
             });
+          } else if (error.status === 400) {
+            let errorMessage = "Unable to proceed with email verification. Please contact support.";
+            
+            if (error.data?.errors) {
+              if (typeof error.data.errors === 'object' && !Array.isArray(error.data.errors)) {
+                // Get first error from object
+                errorMessage = Object.values(error.data.errors).flat()[0] || errorMessage;
+              } else if (typeof error.data.errors === 'string') {
+                errorMessage = error.data.errors;
+              }
+            }
+            
+            const htmlContent = `
+              <div class="text-center flex flex-col items-center justify-center">
+                <div style="display: flex; align-items: center;">
+                  <div style="min-width: 24px; height: 24px; border-radius: 50%; background-color: #ef4444; margin-right: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 14px;">•</div>
+                  <span>${errorMessage}</span>
+                </div>
+              </div>
+            `;
+            
+            MySwal.fire({
+              title: "Incorrect Credentials",
+              html: htmlContent,
+              icon: "error",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#ef4444",
+            });
+            return;
           } else {
+            const errorMsg = error.data?.errors || error.data?.message || "Email not verified";
+            
+            const htmlContent = `
+              <div class="text-center flex flex-col items-center justify-center">
+                <div style="display: flex; align-items: center;">
+                  <div style="min-width: 24px; height: 24px; border-radius: 50%; background-color: #ef4444; margin-right: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 14px;">•</div>
+                  <span>${errorMsg}</span>
+                </div>
+              </div>
+            `;
+            
             MySwal.fire({
               title: "Verification Error",
-              text: "Unable to proceed with email verification. Please contact support.",
+              html: htmlContent,
               icon: "error",
               confirmButtonText: "Ok",
               confirmButtonColor: "#ef4444",
@@ -88,10 +129,28 @@ const Login = () => {
           return;
         }
         console.log("Invalid credentials or other error");
-        // Handle other errors
+        let errorMessage = "Invalid credentials";
+        
+        if (error.data?.errors) {
+          if (typeof error.data.errors === 'object' && !Array.isArray(error.data.errors)) {
+            errorMessage = Object.values(error.data.errors).flat()[0] || errorMessage;
+          } else if (typeof error.data.errors === 'string') {
+            errorMessage = error.data.errors;
+          }
+        }
+        
+        const htmlContent = `
+          <div class="text-center flex flex-col items-center justify-center">
+            <div style="display: flex; align-items: center;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background-color: #ef4444; margin-right: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 14px;">•</div>
+              <span>${errorMessage}</span>
+            </div>
+          </div>
+        `;
+        
         MySwal.fire({
           title: "Login Failed",
-          text: error.message || "Invalid credentials",
+          html: htmlContent,
           icon: "error",
           confirmButtonText: "Ok",
           confirmButtonColor: "#ef4444",
