@@ -3,15 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
-import { useDispatch } from "react-redux"; // Add this import
-import { logout } from "../app/auth/authSlice"; // Add this import - adjust path if needed
+import { useDispatch } from "react-redux";
+import { logout } from "../app/auth/authSlice";
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // Add this
+  const dispatch = useDispatch();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
-  // Changed to include medium screens (width < 1024px)
   const [isMobileOrMedium, setIsMobileOrMedium] = useState(
     window.innerWidth < 1024
   );
@@ -44,7 +43,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
   useEffect(() => {
     const updateSidebarState = () => {
-      // Changed to check for medium screens (width < 1024px)
       const newIsMobileOrMedium = window.innerWidth < 1024;
       setIsMobileOrMedium(newIsMobileOrMedium);
 
@@ -114,7 +112,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
   }, []);
 
   useEffect(() => {
-    // Handle clicks outside the dropup menu to close it
     const handleClickOutside = (event) => {
       if (dropupRef.current && !dropupRef.current.contains(event.target)) {
         setIsProfileDropupOpen(false);
@@ -137,7 +134,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
       cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        // Use Redux action to logout
         dispatch(logout());
 
         setIsProfileDropupOpen(false);
@@ -154,12 +150,11 @@ const Sidebar = ({ isTaskbarOpen }) => {
   };
 
   const toggleSidebar = () => {
-    // Only toggle if it wasn't dragged
     if (!wasDraggedRef.current && isMobileOrMedium) {
       setIsSidebarOpen(!isSidebarOpen);
       setShowHamburger(!isSidebarOpen);
     }
-    // Reset the dragged state
+
     wasDraggedRef.current = false;
   };
 
@@ -173,26 +168,24 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
     e.preventDefault();
     isDraggingRef.current = true;
-    wasDraggedRef.current = false; // Reset drag state on mouse down
+    wasDraggedRef.current = false;
 
     let startX = e.clientX - button.offsetLeft;
     let startY = e.clientY - button.offsetTop;
-    let hasMoved = false; // Track if any movement occurred
+    let hasMoved = false;
 
     function onMouseMove(e) {
       if (!isDraggingRef.current) return;
 
-      hasMoved = true; // Movement detected
-      wasDraggedRef.current = true; // Set drag state
+      hasMoved = true;
+      wasDraggedRef.current = true;
 
       let left = e.clientX - startX;
       let top = e.clientY - startY;
 
-      // Constrain to viewport
       left = Math.max(20, Math.min(window.innerWidth - 70, left));
       top = Math.max(20, Math.min(window.innerHeight - 70, top));
 
-      // Disable transition during drag for smooth movement
       button.style.transition = "none";
       button.style.left = `${left}px`;
       button.style.top = `${top}px`;
@@ -203,13 +196,11 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
       isDraggingRef.current = false;
 
-      // Only snap if actually dragged
       if (hasMoved) {
         const currentX = button.offsetLeft;
         const snappedX =
           currentX < window.innerWidth / 2 ? 20 : window.innerWidth - 70;
 
-        // Re-enable transition for smooth snapping
         button.style.transition = "left 0.3s ease";
         button.style.left = `${snappedX}px`;
         setInitialPosition({
@@ -238,7 +229,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
             left: `${initialPosition.x}px`,
             top: `${initialPosition.y}px`,
             touchAction: "none",
-            transition: "left 0.3s ease", // Add transition for smooth snapping
+            transition: "left 0.3s ease",
           }}
         >
           <svg
@@ -321,6 +312,17 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </li>
               )}
 
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/chat"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Chats
+                  </Link>
+                </li>
+              )}
+
               {role === "seller" && (
                 <li>
                   <Link
@@ -353,17 +355,25 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   </Link>
                 </li>
               )}
+
+              {role == "seller" && (
+                <li>
+                  <Link
+                    to="/chat"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Chats
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
 
-          {/* Profile section with dropdown */}
           <div ref={dropupRef} className="relative">
-            {/* Profile button that toggles the dropdown */}
             <div
               onClick={toggleProfileDropup}
               className="flex items-center p-2 rounded-lg hover:bg-black hover:bg-opacity-30 transition cursor-pointer"
             >
-              {/* Profile Picture - Added min-width to prevent squeezing */}
               <div className="bg-white w-12 h-12 min-w-[3rem] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 <img
                   src={
@@ -375,7 +385,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 />
               </div>
 
-              {/* Profile Info - Improved width management */}
               <div className="flex flex-col ml-2 flex-grow min-w-0">
                 <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
                   {profile.name || "guest"}
@@ -385,7 +394,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </h2>
               </div>
 
-              {/* Dropdown indicator arrow - Made it flex-shrink-0 */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ml-1 transform transition-transform flex-shrink-0 ${
@@ -404,7 +412,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </svg>
             </div>
 
-            {/* Profile dropdown menu */}
             {isProfileDropupOpen && (
               <div className="absolute bottom-full left-0 w-full bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
                 <Link
