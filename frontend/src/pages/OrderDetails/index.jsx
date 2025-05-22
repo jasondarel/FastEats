@@ -66,6 +66,10 @@ const OrderDetails = () => {
     });
   };
 
+  const handleChatWithRestaurant = () => {
+    navigate(`/chat/${orderId}`);
+  };
+
   useEffect(() => {
     const snapScript = MIDTRANS_SNAP_URL;
     const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -158,9 +162,7 @@ const OrderDetails = () => {
     if (!orderId) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/order/snap/${orderId}`
-      );
+      const response = await fetch(`${API_URL}/order/snap/${orderId}`);
       const data = await response.json();
 
       if (data?.snap_token) {
@@ -225,14 +227,38 @@ const OrderDetails = () => {
               <h1 className="text-2xl font-bold text-amber-900">
                 Order #{order.order_id}
               </h1>
-              <StatusBadge
-                status={order.status}
-                className="px-4 py-2 rounded-full text-sm font-medium"
-              />
+              <div className="flex items-center gap-3">
+                <StatusBadge
+                  status={order.status}
+                  className="px-4 py-2 rounded-full text-sm font-medium"
+                />
+              </div>
             </div>
 
             <OrderStatusAnimation status={order.status} />
-
+            {order.status?.toLowerCase() === "preparing" && (
+              <div className="flex justify-center gap-2 mb-4">
+                <button
+                  onClick={handleChatWithRestaurant}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white rounded-lg transition-colors duration-200 font-medium text-sm"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  Chat with Restaurant
+                </button>
+              </div>
+            )}
             <OrderDateInfo
               createdAt={order.created_at}
               updatedAt={order.updated_at}

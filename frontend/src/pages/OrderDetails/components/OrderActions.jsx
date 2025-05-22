@@ -1,6 +1,3 @@
-/* eslint-disable react/prop-types */
-// import React from "react";
-
 const OrderActions = ({
   order,
   paymentLoading,
@@ -15,7 +12,7 @@ const OrderActions = ({
     let total = 0;
     if (order.order_type === "CHECKOUT") {
       total = order.item_quantity || 0;
-    }  else {
+    } else {
       if (order && order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
           if (item && item.item_quantity) {
@@ -25,24 +22,24 @@ const OrderActions = ({
       }
     }
     return total;
-  }
+  };
 
   const totalPrice = () => {
-  let total = 0;
-  if (order.order_type === "CHECKOUT") {
-    total = order.menu.menu_price * (order.item_quantity || 0);
-  } else {
-    if (order && order.items && Array.isArray(order.items)) {
-      order.items.forEach((item) => {
-        if (item && item.menu && item.menu.menu_price && item.item_quantity) {
-          const price = item.menu.menu_price * item.item_quantity;
-          total += price;
-        }
-      });
+    let total = 0;
+    if (order.order_type === "CHECKOUT") {
+      total = order.menu.menu_price * (order.item_quantity || 0);
+    } else {
+      if (order && order.items && Array.isArray(order.items)) {
+        order.items.forEach((item) => {
+          if (item && item.menu && item.menu.menu_price && item.item_quantity) {
+            const price = item.menu.menu_price * item.item_quantity;
+            total += price;
+          }
+        });
+      }
     }
-  }
-  return total;
-};
+    return total;
+  };
 
   switch (order.status) {
     case "Waiting":
@@ -58,11 +55,7 @@ const OrderActions = ({
           <button
             className="w-1/2 py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition cursor-pointer"
             onClick={() =>
-              onPayConfirmation(
-                order.order_id,
-                totalQuantity(),
-                totalPrice()
-              )
+              onPayConfirmation(order.order_id, totalQuantity(), totalPrice())
             }
           >
             Pay
