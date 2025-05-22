@@ -137,7 +137,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
       cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        // Use Redux action to logout
+        console.log("Logging out...");
         dispatch(logout());
 
         setIsProfileDropupOpen(false);

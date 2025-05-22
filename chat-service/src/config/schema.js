@@ -102,7 +102,8 @@ messageSchema.index({ 'sender.id': 1, 'sender.type': 1 });
 messageSchema.index({ createdAt: 1 });
 
 // Compound unique index to ensure one conversation per user-restaurant pair
-chatSchema.index({ userId: 1, restaurantId: 1 }, { unique: true });
+chatSchema.index({ userId: 1, restaurantId: 1 }, { unique: false });
+chatSchema.index({orderIdId: 1, restaurantId: 1, userId: 1}, { unique: true });
 
 // Export models
 export const Chat = mongoose.model('Chat', chatSchema);

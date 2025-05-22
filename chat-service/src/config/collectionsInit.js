@@ -39,7 +39,7 @@ const initializeCollections = async () => {
     
 //     // Create dummy IDs
 //     const restaurantIds = [1, 2, 3];
-//     const userIds = [2, 3, 4, 5];
+//     const userIds = [2, 1, 4, 5];
 //     const orderIds = [84, 85, 86];
     
 //     // Create dummy chats
