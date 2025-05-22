@@ -1,9 +1,14 @@
+/* eslint-disable react/prop-types */
 import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FaStore, FaComment, FaLock } from "react-icons/fa";
+import { FaStore, FaComment, FaLock} from "react-icons/fa";
+import { IoMdPerson } from "react-icons/io";
 import StatusBadge from "../../../components/StatusBadge";
+import { API_URL } from "../../../config/api";
 
-const ChatCard = ({ chat }) => {
+const ChatCard = ({ chat, role="seller" }) => {
+  console.log("ChatCard props:", chat);
+  console.log("Role in ChatCard:", role);
   const navigate = useNavigate();
   const isCompleted = chat.status === "Completed";
 
@@ -80,7 +85,11 @@ const ChatCard = ({ chat }) => {
   };
 
   const getRestaurantImage = () => {
-    return chat.restaurant?.restaurant_image || null;
+    if (role === "seller") {
+      return chat.user?.profile_photo || null;
+    } else {
+      return chat.restaurant?.restaurant_image || null;
+    }
   };
 
   const restaurantImage = getRestaurantImage();
@@ -104,22 +113,50 @@ const ChatCard = ({ chat }) => {
                 isCompleted ? "bg-gray-100" : "bg-yellow-100"
               }`}
             >
-              {restaurantImage ? (
-                <img
-                  src={restaurantImage}
-                  alt={chat.restaurant?.restaurant_name}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
-                />
-              ) : null}
-              <FaStore
-                className={`text-lg ${restaurantImage ? "hidden" : "flex"} ${
-                  isCompleted ? "text-gray-500" : "text-yellow-600"
-                }`}
-              />
+              {
+                role === "seller"
+                ? (
+                  <>
+                    {restaurantImage ? (
+                      <img
+                        src={restaurantImage}
+                        alt={chat.user?.name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <IoMdPerson
+                      className={`text-lg ${
+                        restaurantImage ? "hidden" : "flex"
+                      } ${isCompleted ? "text-gray-500" : "text-yellow-600"}`}
+                    />
+                  </>
+                )
+                
+                : (
+                  <>
+                    {restaurantImage ? (
+                      <img
+                        src={`${API_URL}/restaurant/uploads/restaurant/${restaurantImage}`}
+                        alt={chat.restaurant?.restaurant_name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <FaStore
+                      className={`text-lg ${
+                        restaurantImage ? "hidden" : "flex"
+                      } ${isCompleted ? "text-gray-500" : "text-yellow-600"}`}
+                    />
+                  </>
+                )
+              }
             </div>
 
             {/* Restaurant Details */}
@@ -130,7 +167,12 @@ const ChatCard = ({ chat }) => {
                     isCompleted ? "text-gray-600" : "text-gray-800"
                   }`}
                 >
-                  {chat.restaurant?.restaurant_name || "Restaurant"}
+                  {
+                    role === "seller" 
+                    ? (chat.user?.name || "Customer")
+                    : (chat.restaurant?.restaurant_name || "Restaurant")
+                  }
+                  
                 </h4>
                 <div className="flex items-center space-x-2 flex-shrink-0">
                   {chat.unreadCount > 0 && !isCompleted && (

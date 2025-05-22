@@ -93,7 +93,7 @@ function App() {
           <Route
             path="/chat"
             element={
-              <ProtectedRoute requiredRoles={["user"]}>
+              <ProtectedRoute requiredRoles={["user", "seller"]}>
                 <ChatsList />
               </ProtectedRoute>
             }
@@ -101,7 +101,7 @@ function App() {
           <Route
             path="/chat/:chatId"
             element={
-              <ProtectedRoute requiredRoles={["user"]}>
+              <ProtectedRoute requiredRoles={["user", "seller"]}>
                 <ChatRoom />
               </ProtectedRoute>
             }
