@@ -242,3 +242,44 @@ ORDER BY o.created_at DESC;
   );
   return result.rows;
 }
+
+export const getAllOrderWithItemsByOrderIdService = async(orderId) => {
+  const result = await pool.query(
+    `SELECT 
+    o.order_id,
+    o.user_id,
+    o.restaurant_id,
+    o.status,
+    o.order_type,
+    o.created_at,
+    o.updated_at,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'order_item_id', oi.order_item_id,
+                'menu_id', oi.menu_id,
+                'item_quantity', oi.item_quantity
+            )
+        ) FILTER (WHERE oi.order_item_id IS NOT NULL),
+        '[]'
+    ) AS items
+  FROM orders o
+  LEFT JOIN order_items oi ON o.order_id = oi.order_id
+  WHERE o.order_id = $1
+  GROUP BY o.order_id
+  ORDER BY o.created_at DESC;`,
+    [orderId]
+  );
+  const rawOrder = result.rows[0];
+  const formattedOrder = {
+    order_id: rawOrder.order_id,
+    user_id: rawOrder.user_id,
+    restaurant_id: rawOrder.restaurant_id,
+    status: rawOrder.status,
+    order_type: rawOrder.order_type,
+    created_at: rawOrder.created_at,
+    updated_at: rawOrder.updated_at,
+    items: rawOrder.items
+  };
+  return formattedOrder;
+};

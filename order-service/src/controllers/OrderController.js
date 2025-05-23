@@ -1,3 +1,6 @@
+import envInit from "../config/envInit.js";
+envInit();
+
 import axios from "axios";
 import pool from "../config/dbInit.js";
 import {
@@ -26,6 +29,7 @@ import {
   createOrderItemService,
   getAllOrdersWithItemsService,
   getOrderItemsByOrderIdService,
+  getAllOrderWithItemsByOrderIdService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -33,6 +37,8 @@ import {
   getTransactionByOrderIdService,
 } from "../service/transactionService.js";
 import logger from "../config/loggerInit.js";
+
+const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 
 export const createOrderController = async (req, res) => {
   try {
@@ -139,8 +145,6 @@ export const createOrderController = async (req, res) => {
           .status(500)
           .json({ success: false, message: "Failed to create order" });
       }
-
-      // Create order item after successfully creating the order
       logger.info("Creating order item", {
         orderId: order.order_id,
         menuId: orderReq.menuId,
@@ -158,9 +162,6 @@ export const createOrderController = async (req, res) => {
           orderId: order.order_id,
           menuId: orderReq.menuId,
         });
-
-        // Consider whether to roll back the order in case of item creation failure
-        // This depends on your specific business requirements
       }
 
       logger.info("Order and order item created successfully", {
@@ -275,6 +276,63 @@ export const getAllOrdersWithItemsController = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+export const getOrderWithItemsByOrderIdController = async (req, res) => {
+  logger.info("GET ALL ORDERS WITH ITEMS BY ORDER ID CONTROLLER");
+  const { order_id } = req.params;
+  const { userId, role } = req.user;
+  
+  try {
+    const order = await getAllOrderWithItemsByOrderIdService(order_id);
+    if (!order) {
+      logger.warn("Order not found:", order_id);
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    } 
+
+    if (role === "seller" || role === "Seller") {
+      const restaurant = await axios.get(
+        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${order.restaurant_id}`,
+        {
+          headers: {
+            Authorization: req.headers.authorization,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      if (restaurant.data.restaurant.owner_id !== userId) {
+        logger.warn("Unauthorized access attempt by user:", userId);
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to view this order",
+        });
+      }
+    } else {
+      if (order.user_id !== userId) {
+        logger.warn("Unauthorized access attempt by user:", userId);
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to view this order",
+        });
+      }
+    }
+
+    logger.info("Fetching menu data for order items...");
+    return res.status(200).json({
+      success: true,
+      order,
+    })
+  } catch(err) {
+    logger.error("Error fetching order with items:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
 
 export const getCartController = async (req, res) => {
   const { userId } = req.user;

@@ -14,7 +14,8 @@ const chatSchema = new mongoose.Schema({
     orderId: {
         type: Number,
         ref: 'Order',
-        required: true
+        required: true,
+        unique: true
     },
     orderReference: { type: String, default: null },
     
@@ -25,7 +26,7 @@ const chatSchema = new mongoose.Schema({
     
     lastMessage: {
         text: { type: String, default: '' },
-        sender: { type: String, enum: ['user', 'restaurant'], required: true },
+        sender: { type: String, enum: ['user', 'restaurant']},
         timestamp: { type: Date, default: Date.now }
     },
     
@@ -91,19 +92,14 @@ const messageSchema = new mongoose.Schema({
     deliveredAt: { type: Date, default: null }
 }, { timestamps: true });
 
-// Create indexes for performance
 chatSchema.index({ restaurantId: 1, updatedAt: -1 });
 chatSchema.index({ userId: 1, updatedAt: -1 });
-chatSchema.index({ orderId: 1 });
+chatSchema.index({ orderId: 1 }, { unique: true });
 chatSchema.index({ status: 1, updatedAt: -1 });
 
 messageSchema.index({ chatId: 1, createdAt: 1 });
 messageSchema.index({ 'sender.id': 1, 'sender.type': 1 });
 messageSchema.index({ createdAt: 1 });
-
-// Compound unique index to ensure one conversation per user-restaurant pair
-chatSchema.index({ userId: 1, restaurantId: 1 }, { unique: false });
-chatSchema.index({orderIdId: 1, restaurantId: 1, userId: 1}, { unique: true });
 
 // Export models
 export const Chat = mongoose.model('Chat', chatSchema);

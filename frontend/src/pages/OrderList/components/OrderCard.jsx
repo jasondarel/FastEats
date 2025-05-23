@@ -1,9 +1,9 @@
+/* eslint-disable react/prop-types */
 import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaShoppingBag } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
 import ChatButton from "../../../components/ChatButton";
-import { API_URL } from "../../../config/api";
 
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
@@ -58,27 +58,27 @@ const OrderCard = ({ order }) => {
     totalPrice = menuPrice * itemCount;
   }
 
-  const getFirstItemImage = () => {
-    if (order.order_type === "CART" && order.items && order.items.length > 0) {
-      const firstItem = order.items[0];
-      const menuItem = order.menu?.find(
-        (menu) => menu.menu_id === firstItem.menu_id
-      );
-      return menuItem?.menu_image || null;
-    } else if (
-      order.order_type === "CHECKOUT" &&
-      order.menu &&
-      order.menu.length > 0
-    ) {
-      return order.menu[0].menu_image || null;
-    }
-    return null;
-  };
+  // const getFirstItemImage = () => {
+  //   if (order.order_type === "CART" && order.items && order.items.length > 0) {
+  //     const firstItem = order.items[0];
+  //     const menuItem = order.menu?.find(
+  //       (menu) => menu.menu_id === firstItem.menu_id
+  //     );
+  //     return menuItem?.menu_image || null;
+  //   } else if (
+  //     order.order_type === "CHECKOUT" &&
+  //     order.menu &&
+  //     order.menu.length > 0
+  //   ) {
+  //     return order.menu[0].menu_image || null;
+  //   }
+  //   return null;
+  // };
 
   // Check if order has a status
   const status = order.status || "Pending";
   const isCompleted = status === "Completed" || status === "Cancelled";
-  const firstItemImage = getFirstItemImage();
+  // const firstItemImage = getFirstItemImage();
 
   // Handle order card click (exclude chat button area)
   const handleCardClick = () => {
@@ -106,7 +106,6 @@ const OrderCard = ({ order }) => {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <ChatButton order={order} variant="icon-only" size="sm" />
           <StatusBadge
             status={status}
             className="px-3 py-1 rounded-full text-xs font-medium"
