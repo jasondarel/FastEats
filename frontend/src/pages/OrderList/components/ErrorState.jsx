@@ -1,5 +1,6 @@
+/* eslint-disable react/prop-types */
 // src/components/UI/ErrorState.jsx
-import React from "react";
+// import React from "react";
 
 const ErrorState = ({ message = "An error occurred" }) => {
   return (
