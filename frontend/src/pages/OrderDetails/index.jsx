@@ -8,6 +8,7 @@ import {
   checkMidtransStatusService,
   getOrderDetailService,
 } from "../../service/orderServices/orderDetails";
+import { createChatService } from "../../service/chatServices/chatsListService";
 import Sidebar from "../../components/Sidebar";
 import BackButton from "../../components/BackButton";
 import StatusBadge from "../../components/StatusBadge";
@@ -102,12 +103,23 @@ const OrderDetails = () => {
           skipOrderSummary: true,
           showOrderId: true,
 
-          onSuccess: function (result) {
+          onSuccess: async function (result) {
             console.log("success", result);
-            alert("Pembayaran berhasil!");
 
-            window.location.href = "/payment-success?order_id=" + orderId;
+            try {
+              // ✅ Now passing orderId as parameter
+              const chatResult = await createChatService(orderId, token);
+              console.log("Chat created:", chatResult);
+              alert("Pembayaran berhasil!");
+            } catch (chatError) {
+              console.error("Failed to create chat:", chatError);
+
+              alert(
+                "Pembayaran berhasil! Namun terjadi masalah saat membuat chat."
+              );
+            }
           },
+
           onPending: async function (result) {
             try {
               const response = await saveSnapService(orderId, snapToken);
@@ -119,11 +131,13 @@ const OrderDetails = () => {
               console.error("Error saving snap token:", err);
             }
           },
+
           onError: function (result) {
             console.log("error", result);
             alert("Terjadi kesalahan dalam proses pembayaran.");
             setPaymentLoading(false);
           },
+
           onClose: async function () {
             try {
               const statusResponse = await checkMidtransStatusService(orderId);
