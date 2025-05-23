@@ -1,7 +1,8 @@
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { 
-    getChatsController
+    getChatsController,
+    createChatController,
 } from '../controller/chatControllers.js';
 import { fileURLToPath } from 'url';
 import multerUpload from '../config/multerInit.js';
@@ -17,5 +18,6 @@ router.get("/", (req, res) => {
 });
 
 router.get("/chats", authMiddleware, getChatsController);
+router.post("/chat", authMiddleware, createChatController);
 
 export {router as chatRoutes};

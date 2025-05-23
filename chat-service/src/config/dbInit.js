@@ -9,7 +9,6 @@ const mongoUri = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWO
 
 mongoose.set('strictQuery', false);
 
-// Connect to MongoDB
 const connectDatabase = async () => {
   try {
     await mongoose.connect(mongoUri);
@@ -20,7 +19,6 @@ const connectDatabase = async () => {
   }
 };
 
-// Test database connection
 const testDatabase = async () => {
   try {
     if (mongoose.connection.readyState !== 1) {

@@ -1,6 +1,7 @@
 import {
   getChatsServiceByUserId,
   getChatsServiceByRestaurantId,
+  createChatService,
 } from "../service/chatService.js";
 import {} from "../validator/chatValidators.js";
 import axios from "axios";
@@ -108,3 +109,45 @@ export const getChatsController = async (req, res) => {
     });
   }
 };
+
+export const createChatController = async (req, res) => {
+    const {orderId} = req.body;
+    const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+
+    try {
+        const order = await axios.get(
+            `${GLOBAL_SERVICE_URL}/order/order-items/${orderId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        const chat = await createChatService({
+            orderId: order.data.order.order_id,
+            restaurantId: order.data.order.restaurant_id,
+            userId: order.data.order.user_id,
+        })
+        if (!chat.success) {
+            logger.warn("Chat creation failed");
+            return res.status(400).json({
+                success: false,
+                message: "Chat creation failed",
+            });
+        }
+
+        logger.info("Create chat controller");
+        return res.status(200).json({
+            success: true,
+            message: "Get order success",
+            dataChat: chat,
+        })
+    } catch(err) {
+        logger.error("Internal Server Error", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+}

@@ -24,6 +24,7 @@ import {
   checkoutCartController,
   getCartItemsController,
   getAllOrdersWithItemsController,
+  getOrderWithItemsByOrderIdController
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -74,5 +75,7 @@ router.post("/cart-item", authMiddleware, createCartItemController);
 router.get("/cart-item", authMiddleware, getCartItemsController);
 router.delete("/cart-item/:menu_id", authMiddleware, deleteCartItemController);
 router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);
+
+router.get("/order-items/:order_id", authMiddleware, getOrderWithItemsByOrderIdController);
 
 export default router;
