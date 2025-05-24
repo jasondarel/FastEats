@@ -42,7 +42,6 @@ const ChatsList = () => {
     fetchChats();
   }, []);
 
-  // Transform MongoDB chat data to match your UI component's expected format
   const transformedChats = chats.map(chat => ({
     order_id: chat.orderId || -1,
     order_type: chat.orderReference ? "CHECKOUT" : "CART",
@@ -60,7 +59,8 @@ const ChatsList = () => {
       restaurant_image: chat.restaurant?.restaurant_image || null,
       restaurant_address: chat.restaurant?.restaurant_address || "Address not available",
     },
-    user: chat.user || null
+    user: chat.user || null,
+    orderDetails: chat.orderDetails || null,
   }));
   const activeChats = transformedChats.filter(chat => chat.status !== "Completed");
   const completedChats = transformedChats.filter(chat => chat.status === "Completed");

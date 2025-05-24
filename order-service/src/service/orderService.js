@@ -1,4 +1,5 @@
 import pool from "../config/dbInit.js";
+import { PREPARING_ORDER_ROUTING_KEY } from "../config/rabbitMQInit.js";
 
 export const createOrderService = async (order) => {
   const result = await pool.query(
@@ -91,6 +92,15 @@ export const completeOrderService = async (orderId) => {
   );
   return result.rows[0];
 };
+
+export const createPreparingOrderJobService = async(payload) => {
+  const result = await pool.query(
+    `INSERT INTO order_jobs (payload, routing_key)
+    VALUES ($1, $2) RETURNING *`,
+    [payload, PREPARING_ORDER_ROUTING_KEY]
+  );
+  return result.rows[0];
+}
 
 export const pendingOrderService = async (orderId) => {
   const result = await pool.query(

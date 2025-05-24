@@ -30,6 +30,7 @@ import {
   getAllOrdersWithItemsService,
   getOrderItemsByOrderIdService,
   getAllOrderWithItemsByOrderIdService,
+  createPreparingOrderJobService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -1008,6 +1009,25 @@ export const payOrderController = async (req, res) => {
     if (transaction_status === "settlement") {
       try {
         const response = await payOrderService(order_id);
+
+        const orderItems = await getAllOrderWithItemsByOrderIdService(order_id);
+        if (!orderItems) {
+          logger.warn(`Order items not found for order ${order_id}`);
+          return res.status(404).json({
+            success: false,
+            message: "Order items not found",
+          });
+        }
+        
+        const insertPreparingJobsResponse = await createPreparingOrderJobService(orderItems);
+        if (!insertPreparingJobsResponse) {
+          logger.error("Failed to create preparing order jobs");
+          return res.status(500).json({
+            success: false,
+            message: "Failed to create preparing order jobs",
+          });
+        }
+
         logger.info("Order paid successfully");
         return res.status(200).json({
           success: true,
