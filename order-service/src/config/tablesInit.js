@@ -44,6 +44,17 @@ const createTables = async () => {
     `);
 
     await client.query(`
+        CREATE TABLE IF NOT EXISTS order_jobs (
+          id SERIAL PRIMARY KEY,
+          payload JSONB NOT NULL,
+          routing_key TEXT NOT NULL,
+          status TEXT DEFAULT 'pending', -- 'pending', 'published', 'failed'
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
         CREATE TABLE IF NOT EXISTS order_items (
             order_item_id SERIAL PRIMARY KEY,
             order_id INT NOT NULL,
