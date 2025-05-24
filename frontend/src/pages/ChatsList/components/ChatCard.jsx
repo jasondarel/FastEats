@@ -10,7 +10,7 @@ const ChatCard = ({ chat, role="seller" }) => {
   console.log("ChatCard props:", chat);
   console.log("Role in ChatCard:", role);
   const navigate = useNavigate();
-  const isCompleted = chat.status === "Completed";
+  const isCompleted = chat.orderDetails?.status === "Completed" || false;
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -75,7 +75,7 @@ const ChatCard = ({ chat, role="seller" }) => {
         restaurantImage: chat.restaurant?.restaurant_image,
         orderId: chat.order_id,
         orderType: chat.order_type,
-        orderStatus: chat.status,
+        orderStatus: chat.orderDetails?.status,
         totalPrice,
         itemCount,
       },
@@ -196,7 +196,7 @@ const ChatCard = ({ chat, role="seller" }) => {
                   Order #{chat.order_id?.toString().slice(-6)}
                 </span>
                 <StatusBadge
-                  status={chat.status}
+                  status={chat.orderDetails.status}
                   className="px-2 py-1 rounded-full text-xs font-medium"
                 />
               </div>
