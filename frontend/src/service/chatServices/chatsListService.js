@@ -15,3 +15,22 @@ export const getChatsService = async (token) => {
     throw error;
   }
 };
+
+export const createChatService = async (orderId, token) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/chat/chat/`,
+      { orderId: orderId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating chat: ", error);
+    throw error;
+  }
+};
