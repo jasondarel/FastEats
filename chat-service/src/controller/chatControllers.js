@@ -42,11 +42,49 @@ export const getChatsController = async (req, res) => {
             }
           );
 
-          const plainChat = chat.toObject ? chat.toObject() : chat;
+          const orderResponse = await axios.get(
+            `${GLOBAL_SERVICE_URL}/order/order-items/${chat.orderId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
+          const itemsWithMenu = await Promise.all(
+            orderResponse.data.order.items.map(async (item) => {
+              try {
+                const menuResponse = await axios.get(
+                  `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+                
+                return {
+                  ...item,
+                  menuDetails: menuResponse.data.menu,
+                };
+              } catch (error) {
+                logger.warn(`Failed to fetch menu for item ${item.menu_id}:`, error.message);
+                return {
+                  ...item,
+                  menuDetails: null,
+                };
+              }
+            })
+          );
+
+          const plainChat = chat.toObject ? chat.toObject() : chat;
           return {
             ...plainChat,
             restaurant: restaurantResponse.data.restaurant,
+            orderDetails: {
+              ...orderResponse.data.order,
+              items: itemsWithMenu,
+            },
           };
         })
       );
@@ -86,10 +124,50 @@ export const getChatsController = async (req, res) => {
               },
             }
           );
+
+          const orderResponse = await axios.get(
+            `${GLOBAL_SERVICE_URL}/order/order-items/${chat.orderId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const itemsWithMenu = await Promise.all(
+            orderResponse.data.order.items.map(async (item) => {
+              try {
+                const menuResponse = await axios.get(
+                  `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+                
+                return {
+                  ...item,
+                  menuDetails: menuResponse.data.menu,
+                };
+              } catch (error) {
+                logger.warn(`Failed to fetch menu for item ${item.menu_id}:`, error.message);
+                return {
+                  ...item,
+                  menuDetails: null,
+                };
+              }
+            })
+          );
+
           const plainChat = chat.toObject ? chat.toObject() : chat;
           return {
             ...plainChat,
             user: userResponse.data.user,
+            orderDetails: {
+              ...orderResponse.data.order,
+              items: itemsWithMenu,
+            },
           };
         })
       );

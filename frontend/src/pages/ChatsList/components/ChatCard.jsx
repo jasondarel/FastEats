@@ -40,18 +40,16 @@ const ChatCard = ({ chat, role="seller" }) => {
     }).format(price);
   };
 
-  // Calculate total price based on order type
   let totalPrice = 0;
   let itemCount = 0;
 
-  if (chat.order_type === "CART" && chat.items) {
-    itemCount = chat.items.reduce(
+  if (chat.orderDetails) {
+    itemCount = chat.orderDetails.items.reduce(
       (total, item) => total + (item.item_quantity || 0),
       0
     );
-    totalPrice = chat.items.reduce((total, item) => {
-      const menuItem = chat.menu?.find((menu) => menu.menu_id === item.menu_id);
-      const menuPrice = parseFloat(menuItem?.menu_price || 0);
+    totalPrice = chat.orderDetails.items.reduce((total, item) => {
+      const menuPrice = parseFloat(item.menuDetails?.menu_price || 0);
       const quantity = item.item_quantity || 0;
       return total + menuPrice * quantity;
     }, 0);
