@@ -7,6 +7,7 @@ import {} from "../validator/chatValidators.js";
 import axios from "axios";
 import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
+import { responseError, responseSuccess } from "../util/responseUtil.js";
 
 envInit();
 
@@ -20,10 +21,7 @@ export const getChatsController = async (req, res) => {
   try {
     if (!userId) {
       logger.warn("User ID not found in request");
-      return res.status(400).json({
-        success: false,
-        message: "User ID not found",
-      });
+      return responseError(res, 400, "User ID not found");
     }
     console.log("Role:", role);
     if (role === "user") {
@@ -88,11 +86,7 @@ export const getChatsController = async (req, res) => {
           };
         })
       );
-      return res.status(200).json({
-        success: true,
-        message: "Get chats success",
-        dataChats: finalInformation,
-      });
+      return responseSuccess(res, 200, "Get chats success", "dataChats", finalInformation);
     } else {
       const restaurant = await axios.get(
         `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${userId}`,
@@ -105,10 +99,7 @@ export const getChatsController = async (req, res) => {
 
       if (!restaurant.data.success) {
         logger.warn("Restaurant not found");
-        return res.status(404).json({
-          success: false,
-          message: "Restaurant not found",
-        });
+        return responseError(res, 404, "Restaurant not found");
       }
 
       const restaurantId = restaurant.data.restaurant.restaurant_id;
@@ -173,25 +164,18 @@ export const getChatsController = async (req, res) => {
       );
 
       logger.info(`Get chats success: ${finalInformation.length} chats found`);
-      return res.status(200).json({
-        success: true,
-        message: "Get chats success",
-        dataChats: finalInformation,
-      });
+      return responseSuccess(res, 200, "Get chats success", "dataChats", finalInformation);
     }
   } catch (err) {
     logger.error("Internal Server Error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+    return responseError(res, 500, "Internal Server Error");
   }
 };
 
 export const createChatController = async (req, res) => {
+    logger.info("CREATE CHAT CONTROLLER");
     const {orderId} = req.body;
     const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
-
     try {
         const order = await axios.get(
             `${GLOBAL_SERVICE_URL}/order/order-items/${orderId}`,
@@ -201,7 +185,6 @@ export const createChatController = async (req, res) => {
                 },
             }
         );
-
         const chat = await createChatService({
             orderId: order.data.order.order_id,
             restaurantId: order.data.order.restaurant_id,
@@ -209,23 +192,12 @@ export const createChatController = async (req, res) => {
         })
         if (!chat.success) {
             logger.warn("Chat creation failed");
-            return res.status(400).json({
-                success: false,
-                message: "Chat creation failed",
-            });
+            return responseError(res, 400, "Chat creation failed");
         }
-
         logger.info("Create chat controller");
-        return res.status(200).json({
-            success: true,
-            message: "Get order success",
-            dataChat: chat,
-        })
+        return responseSuccess(res, 200, "Get order success", "dataChat", chat);
     } catch(err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+        return responseError(res, 500, "Internal Server Error");
     }
 }
