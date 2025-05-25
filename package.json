@@ -1,23 +1,16 @@
 {
-  "name": "fasteats",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix api-gateway run dev\" \"npm --prefix user-service run dev\" \"npm --prefix restaurant-service run dev\" \"npm --prefix order-service run dev\" \"npm --prefix notification-service run dev\" \"npm --prefix chat-service run dev\""
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AndreanDjabbar/FastEats.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/AndreanDjabbar/FastEats/issues"
-  },
-  "homepage": "https://github.com/AndreanDjabbar/FastEats#readme",
-  "description": "",
+  "packageManager": "npm@8.5.0",
   "devDependencies": {
-    "concurrently": "^9.1.2"
-  }
+    "turbo": "^2.5.3"
+  },
+  "private": true,
+  "workspaces": [
+    "user-service",
+    "chat-service",
+    "order-service",
+    "notification-service",
+    "restaurant-service",
+    "api-gateway",
+    "frontend"
+  ]
 }

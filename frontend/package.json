@@ -6,6 +6,7 @@
   "scripts": {
   "dev": "cross-env NODE_ENV=development vite --mode dev",
   "build": "cross-env NODE_ENV=production vite build --mode prod",
+  "check-types": "echo 'No type checking configured'",
   "lint": "eslint .",
   "preview": "vite preview"
   },
