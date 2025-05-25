@@ -30,8 +30,18 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/order", authMiddleware, createOrderController);
 router.get("/orders", authMiddleware, getAllOrdersWithItemsController);
+router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
+router.get(
+  "/orders-by-restaurant",
+  authMiddleware,
+  getOrdersByRestaurantIdController
+);
+router.post("/order", authMiddleware, createOrderController);
+router.put("/orders/:order_id", updateOrder);
+router.delete("/orders/:order_id", deleteOrder);
+
+
 router.patch("/cancel-order/:order_id", authMiddleware, cancelOrderController);
 router.patch(
   "/complete-order/:order_id",
@@ -45,13 +55,11 @@ router.post(
 );
 router.post("/pay-order", payOrderController);
 router.get("/thanks", thanksController);
-router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
-router.put("/orders/:order_id", updateOrder);
-router.get(
-  "/orders-by-restaurant",
-  authMiddleware,
-  getOrdersByRestaurantIdController
-);
+router.get("/check-midtrans-status", checkMidtransStatusController);
+router.post("/save-snap-token", saveSnapTokenController);
+router.get("/snap/:order_id", getSnapTokenController);
+
+
 router.get(
   "/restaurant-dashboard",
   authMiddleware,
@@ -62,12 +70,8 @@ router.get(
   authMiddleware,
   getRestaurantOrderController
 );
-router.get("/check-midtrans-status", checkMidtransStatusController);
-router.post("/save-snap-token", saveSnapTokenController);
-router.get("/snap/:order_id", getSnapTokenController);
-router.delete("/orders/:order_id", deleteOrder);
 
-// router.get("/cart", authMiddleware, getCartsController);
+
 router.get("/cart/:cart_id", authMiddleware, getCartController);
 router.post("/cart", authMiddleware, createCartController);
 router.delete("/cart/:restaurant_id", authMiddleware, deleteCartController);
