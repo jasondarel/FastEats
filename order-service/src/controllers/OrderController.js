@@ -41,6 +41,7 @@ import logger from "../config/loggerInit.js";
 import { responseSuccess, responseError } from "../util/responseUtil.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 export const createOrderController = async (req, res) => {
   logger.info("CREATE ORDER CONTROLLER");
@@ -198,7 +199,7 @@ export const getOrdersController = async (req, res) => {
       orders.map(async (order) => {
         try {
           const { data: menuData } = await axios.get(
-            `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -538,7 +539,7 @@ export const completeOrderController = async (req, res) => {
     try {
       logger.info(`Fetching restaurant ${order.restaurant_id}...`);
       const response = await axios.get(
-        `http://localhost:5000/restaurant/restaurant/${order.restaurant_id}`,
+        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${order.restaurant_id}`,
         {
           headers: {
             Authorization: req.headers.authorization,
@@ -612,7 +613,7 @@ export const getOrderByIdController = async (req, res) => {
     if (result.order_type === "CHECKOUT") {
       // For CHECKOUT type, fetch single menu
       const menu = await axios.get(
-        `http://localhost:5000/restaurant/menu-by-id/${result.menu_id}`,
+        `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${result.menu_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -635,7 +636,7 @@ export const getOrderByIdController = async (req, res) => {
       const orderItemsWithMenu = await Promise.all(
         orderItems.rows.map(async (item) => {
           const menu = await axios.get(
-            `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -922,7 +923,7 @@ export const thanksController = async (req, res) => {
   }
   logger.info("Redirecting to thanks page");
   return res.redirect(
-    `http://localhost:5173/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`
+    `${CLIENT_URL}/thanks?order_id=${order_id}&status_code=${status_code}&transaction_status=${transaction_status}`
   );
 };
 
@@ -998,7 +999,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     }
 
     const restaurantResponse = await axios.get(
-      `http://localhost:5000/restaurant/restaurant`,
+      `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
       {
         headers: {
           Authorization: token,
@@ -1032,7 +1033,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
             orderItems = await getOrderItemsByOrderIdService(order.order_id);
             
             const menuPromises = orderItems.map(item => 
-              axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+              axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
                 headers: {
                   Authorization: token,
                   "Content-Type": "application/json",
@@ -1046,7 +1047,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
             orderItems = [order];
             
             const menuResponse = await axios.get(
-              `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+              `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
               {
                 headers: {
                   Authorization: token,
@@ -1059,7 +1060,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
           }
 
           const userResponse = await axios.get(
-            `http://localhost:5000/user/user/${order.user_id}`,
+            `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
             {
               headers: {
                 Authorization: token,
@@ -1110,7 +1111,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
 
     // Get restaurant details
     const restaurantResponse = await axios.get(
-      `http://localhost:5000/restaurant/restaurant`,
+      `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
       {
         headers: {
           Authorization: token,
@@ -1145,7 +1146,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
             orderItems = await getOrderItemsByOrderIdService(order.order_id);
 
             const menuPromises = orderItems.map(item => 
-              axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+              axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
                 headers: {
                   Authorization: token,
                   "Content-Type": "application/json",
@@ -1159,7 +1160,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
             orderItems = [order];
             
             const menuResponse = await axios.get(
-              `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+              `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
               {
                 headers: {
                   Authorization: token,
@@ -1172,7 +1173,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
           }
 
           const userResponse = await axios.get(
-            `http://localhost:5000/user/user/${order.user_id}`,
+            `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
             {
               headers: {
                 Authorization: token,
@@ -1237,7 +1238,7 @@ export const getRestaurantOrderController = async (req, res) => {
       ordersInfo = await getOrderItemsByOrderIdService(order.order_id);
       
       const menuPromises = ordersInfo.map(item => 
-        axios.get(`http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`, {
+        axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
           headers: {
             Authorization: token,
             "Content-Type": "application/json",
@@ -1252,7 +1253,7 @@ export const getRestaurantOrderController = async (req, res) => {
       ordersInfo = order;
       
       const menuResponse = await axios.get(
-        `http://localhost:5000/restaurant/menu-by-id/${order.menu_id}`,
+        `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
         {
           headers: {
             Authorization: token,
@@ -1275,7 +1276,7 @@ export const getRestaurantOrderController = async (req, res) => {
     }
 
     const userResponse = await axios.get(
-      `http://localhost:5000/user/user/${order.user_id}`,
+      `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
       {
         headers: {
           Authorization: token,
@@ -1358,7 +1359,7 @@ export const getCartItemsController = async (req, res) => {
       finalCartItems.map(async (item) => {
         try {
           const response = await axios.get(
-            `http://localhost:5000/restaurant/menu-by-id/${item.menu_id}`,
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
             {
               headers: {
                 Authorization: req.headers.authorization,
