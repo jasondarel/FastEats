@@ -34,11 +34,18 @@ import {
 } from "../service/userService.js";
 import { getRedisClient } from "../config/redisInit.js";
 import logger from "../config/loggerInit.js";
+import { responseError, responseSuccess } from "../util/responseUtil.js";
+import envInit from "../config/envInit.js";
+envInit();
+
+const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads/restaurant");
 const blackListedTokens = new Set();
+
 
 export const registerController = async (req, res) => {
   logger.info("REGISTER CONTROLLER");
@@ -46,11 +53,7 @@ export const registerController = async (req, res) => {
     const errors = await validateRegisterRequest(req.body);
     if(Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
     
     const hashedPassword = hashPassword(req.body.password);
@@ -71,7 +74,7 @@ export const registerController = async (req, res) => {
     });
     await redisClient.expire(redisKey, 300);
 
-    const redisData = await redisClient.hgetall(redisKey);
+    // const redisData = await redisClient.hgetall(redisKey);
 
     const emailPayload = {
       email: req.body.email,
@@ -81,17 +84,10 @@ export const registerController = async (req, res) => {
 
     await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
     logger.info("User registered successfully");
-    return res.status(201).json({
-      success: true,
-      message: response.message,
-      token: emailVerificationToken,
-    })
+    return responseSuccess(res, 201, response.message, "token", emailVerificationToken);
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({ 
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -101,11 +97,7 @@ export const registerSellerController = async (req, res) => {
     const errors = await validateRegisterSellerRequest(req.body);
     if(Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
 
     const hashedPassword = hashPassword(req.body.password);
@@ -137,10 +129,7 @@ export const registerSellerController = async (req, res) => {
     if(response.role === "seller") {
       if (!req.files || !req.files.restaurantImage) {
         logger.warn("Restaurant image is required");
-        return res.status(400).json({
-          success: false,
-          message: "Restaurant image is required",
-        });
+        return responseError(res, 400, "Restaurant image is required");
       }
   
       const uploadedFile = req.files.restaurantImage;
@@ -162,23 +151,16 @@ export const registerSellerController = async (req, res) => {
       };
   
        await axios.post(
-        "http://localhost:5000/restaurant/restaurant",
+        `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
         restaurantData,
       );
     }
     await createUserPaymentService(response.id);
     logger.info("Seller registered successfully");
-    return res.status(201).json({
-      success: true,
-      message: response.message,
-      token: emailVerificationToken,
-    })
+    return responseSuccess(res, 201, response.message, "token", emailVerificationToken);
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({ 
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -203,10 +185,7 @@ export const loginController = async (req, res) => {
       
       if(!response) {
         logger.warn("Invalid credentials");
-        return res.status(400).json({
-          success: false,
-          message: "Invalid credentials",
-        });
+        return responseError(res, 400, "Invalid credentials");
       }
       
       const emailPayload = {
@@ -216,31 +195,19 @@ export const loginController = async (req, res) => {
       }
       await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
       logger.warn("Email is not verified");
-      return res.status(401).json({
-        success: false,
-        message: "Email is not verified",
-        token: emailVerificationToken,
-      })
+      return responseError(res, 401, "Email is not verified", "token",  emailVerificationToken);
     }
 
     if (Object.keys(errors).length > 0) {
-      console.log(errors);
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
     
 
     const user = await getUserByEmailService(req.body.email);
     if (!user) {
       logger.warn("Invalid credentials");
-      return res.status(400).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      return responseError(res, 400, "Invalid credentials");
     }
 
     const token = generateLoginToken({
@@ -250,21 +217,16 @@ export const loginController = async (req, res) => {
     });
     
     logger.info("Login successful");
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
+    return responseSuccess(res, 200, "Login successful", "user", {
       name: user.name,
       email: user.email,
       role: user.role,
       token,
-    })
+    });
 
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -273,34 +235,23 @@ export const getUsersController = async (req, res) => {
   try {
     const result = await getUsersService();
     logger.info("Users found");
-    return res.status(200).json({
-      success: true,
-      users: result,
-    })
+    return responseSuccess(res, 200, "Users found", "users", result);
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({ error: "Server error" });
+    return responseError(res, 500, "Server error");
   }
 };
 
 export const verifyTokenController = async (req, res) => {
   logger.info("VERIFY TOKEN CONTROLLER");
   const {token, email} = req.query;
-
   if(!token) {
     logger.warn("Token not found");
-    return res.status(401).json({
-      success: false,
-      message: "Token not found",
-    });
+    return responseError(res, 401, "Token not found");
   }
-
   if(!email) {
     logger.warn("Email not found");
-    return res.status(401).json({
-      success: false,
-      message: "Email not found",
-    });
+    return responseError(res, 401, "Email not found");
   }
   const redisKey = `email_verification:${email}`;
   const redisClient = getRedisClient();
@@ -308,18 +259,11 @@ export const verifyTokenController = async (req, res) => {
 
   if(!redisData) {
     logger.warn("Token expired");
-    return res.status(401).json({
-      success: false,
-      message: "Token expired",
-    });
+    return responseError(res, 401, "Token expired");
   }
-
   if(redisData.token !== token) {
     logger.warn("Invalid token");
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-    });
+    return responseError(res, 401, "Invalid token");
   }
 }
 
@@ -329,26 +273,15 @@ export const verifyOtpController = async (req, res) => {
   try {
     if(!otp) {
       logger.warn("OTP is required");
-      return res.status(400).json({
-        success: false,
-        message: "OTP is required",
-      });
+      return responseError(res, 400, "OTP is required");
     }
-
     if(!token) {
       logger.warn("Token is required");
-      return res.status(400).json({
-        success: false,
-        message: "Token is required",
-      });
+      return responseError(res, 400, "Token is required");
     }
-
     if(!email) {
       logger.warn("Email is required");
-      return res.status(400).json({
-        success: false,
-        message: "Email is required",
-      });
+      return responseError(res, 400, "Email is required");
     }
 
     const redisKey = `email_verification:${email}`;
@@ -357,34 +290,21 @@ export const verifyOtpController = async (req, res) => {
 
     if (!user) {
       logger.warn("Invalid email");
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email",
-      });
+      return responseError(res, 401, "Invalid email");
     }
 
     if (blackListedTokens.has(token)) {
       logger.warn("Token expired");
-      return res.status(401).json({
-        success: false,
-        message: "Token expired",
-      });
+      return responseError(res, 401, "Token expired");
     }
 
     if (user.otp !== otp) {
       logger.warn("Invalid OTP");
-      return res.status(401).json({
-        success: false,
-        message: "Invalid OTP",
-      });
+      return responseError(res, 401, "Invalid OTP");
     }
-    
     if(user.token !== token) {
       logger.warn("Invalid token");
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token",
-      });
+      return responseError(res, 401, "Invalid token");
     }
 
     await validateUserService(user.userId);
@@ -393,66 +313,39 @@ export const verifyOtpController = async (req, res) => {
     
     redisClient.del(redisKey);
     logger.info("Token verified successfully");
-    return res.status(200).json({
-      success: true,
-      message: "Token verified successfully",
-      user,
-    });
+    return responseSuccess(res, 200, "Token verified successfully", "user", user);
   } catch (error) {
     logger.error("Internal server error", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+    return responseError(res, 500, "Internal Server Error");
   }
 };
 
 export const getUserController = async (req, res) => {
   logger.info("GET USER CONTROLLER");
   const { id } = req.params;
-
   if (isNaN(id)) {
     logger.warn("User ID must be a number");
-    return res.status(400).json({
-      success: false,
-      message: "user ID must be a number",
-    })
+    return responseError(res, 400, "user ID must be a number");
   }
-
   try {
     const userQuery = await getUserByIdService(id);
     if (!userQuery) {
       logger.warn("User not found");
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return responseError(res, 404, "User not found");
     }
-
     const userDetailsQuery = await getUserDetailsByIdService(id);
     if (!userDetailsQuery) {
       logger.warn("User details not found");
-      return res.status(404).json({
-        success: false,
-        message: "User details not found",
-      });
+      return responseError(res, 404, "User details not found");
     }
-
     logger.info("User found");
-    return res.status(200).json({
-      success: true,
-      message: "User found",
-      user: {
-        ...userQuery,
-        ...userDetailsQuery,
-      }
-    })
+    return responseSuccess(res, 200, "User found", "user", {
+      ...userQuery,
+      ...userDetailsQuery,
+    });
   } catch (err) {
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    })
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -463,22 +356,13 @@ export const getCurrentUserController = async (req, res) => {
     const user = await getCurrentUserService(userId);
     if (!user) {
       logger.warn("User not found");
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return responseError(res, 404, "User not found");
     }
     logger.info("User found");
-    return res.status(200).json({
-      success: true,
-      user,
-    })
+    return responseSuccess(res, 200, "User found", "user", user);
   } catch(err) {
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return responseError(res, 500, "Internal server error");
   }
 }
 
@@ -489,36 +373,21 @@ export const getProfileController = async (req, res) => {
     const userQuery = await getUserByIdService(userId);
     if (!userQuery) {
       logger.warn("User not found");
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return responseError(res, 404, "User not found");
     }
-
     const userDetailsQuery = await getUserDetailsByIdService(userId);
     if (!userDetailsQuery) {
       logger.warn("User details not found");
-      return res.status(404).json({
-        success: false,
-        message: "User details not found",
-      });
+      return responseError(res, 404, "User details not found");
     }
-
     logger.info("User found");
-    return res.status(200).json({
-      success: true,
-      message: "User found",
-      user: {
-        ...userQuery,
-        ...userDetailsQuery,
-      }
-    })
+    return responseSuccess(res, 200, "User found", "user", {
+      ...userQuery,
+      ...userDetailsQuery,
+    });
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    })
+    return responseError(res, 500, "Internal server error");
   }
 };
 
@@ -529,11 +398,7 @@ export const updateProfileController = async (req, res) => {
     const errors = await validateUpdateProfileRequest(req.body);
     if (Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
 
     if(!req.body.address) {
@@ -548,16 +413,10 @@ export const updateProfileController = async (req, res) => {
 
     await updateUserDetailsService(req.body, userId);
     logger.info("Profile updated successfully");
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-    })
+    return responseSuccess(res, 200, "Profile updated successfully");
   } catch (err) {
     logger.error("Internal server error", err);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    })
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -566,35 +425,20 @@ export const updateUserPaymentController = async (req, res) => {
   const {userId, role} = req.user;
   if(role !== "seller") {
     logger.warn("Only sellers can update payment details");
-    return res.status(400).json({
-      success: false,
-      message: "Only sellers can update payment details",
-    });
-
+    return responseError(res, 400, "Only sellers can update payment details");
   }
   try {
     const errors = await validateUpdateUserPaymentRequest(req.body);
     if (Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
-
     await updateUserPaymentService(req.body, userId);
     logger.info("Payment details updated successfully");
-    return res.status(200).json({
-      success: true,
-      message: "Payment details updated successfully",
-    })
+    return responseSuccess(res, 200, "Payment details updated successfully");
   } catch(err) {
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -605,22 +449,13 @@ export const getUserPaymentController = async (req, res) => {
     const user = await getUserPaymentByIdService(userId);
     if (!user) {
       logger.warn("User not found");
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return responseError(res, 404, "User not found");
     }
     logger.info("User found");
-    return res.status(200).json({
-      success: true,
-      user,
-    })
+    return responseSuccess(res, 200, "User found", "user", user);
   } catch(err) {
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
 
@@ -628,54 +463,32 @@ export const changePasswordController = async (req, res) => {
   logger.info("CHANGE PASSWORD CONTROLLER");
   const { newPassword } = req.body;
   const { userId } = req.user;
-
   try {
     const errors = await validateChangePasswordRequest(req.body, userId);
-    console.log(errors);
     if (Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
+      return responseError(res, 400, "Validation failed", errors);
     }
-    
     await changePasswordService(userId, hashPassword(newPassword));
-
     logger.info("Password changed successfully");
-    return res.status(200).json({
-      success: true,
-      message: "Password changed successfully",
-    })
+    return responseSuccess(res, 200, "Password changed successfully");
   } catch (err) {
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    })
+    return responseError(res, 500, "Server error");
   }
 };
 
 export const becomeSellerController = async (req, res) => {
   logger.info("BECOME SELLER CONTROLLER");
-
   const { userId, role } = req.user;
   try {
     if (role !== "user") {
       logger.warn("Only users can become sellers");
-      return res.status(400).json({
-        success: false,
-        message: "Only users can become sellers",
-      });
+      return responseError(res, 400, "Only users can become sellers");
     }
-
     if (!req.files || !req.files.restaurantImage) {
       logger.warn("Restaurant image is required");
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant image is required",
-      });
+      return responseError(res, 400, "Restaurant image is required");
     }
 
     const uploadedFile = req.files.restaurantImage;
@@ -697,8 +510,8 @@ export const becomeSellerController = async (req, res) => {
       restaurantImage: safeFileName,
     };
 
-     await axios.post(
-      "http://localhost:5000/restaurant/restaurant",
+    await axios.post(
+      `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
       restaurantData,
       {
         headers: {
@@ -711,26 +524,19 @@ export const becomeSellerController = async (req, res) => {
     await becomeSellerService(userId);
     await createUserPaymentService(userId);
     logger.info("User upgraded to seller");
-    return res.status(200).json({
-      success: true,
-      message: "User upgraded to seller",
-      restaurant: restaurantData,
-    });
+    return responseSuccess(res, 200, "User upgraded to seller", "restaurant", restaurantData);
 
   } catch (err) {
     if (err.response) {
       if (err.response.status === 401) {
         logger.error("Unauthorized access");
-        return res.status(401).json(err.response.data);
+        return responseError(res, 401, err.response.data.message || "Unauthorized");
       } else if (err.response.status === 400) {
         logger.error("Bad request");
-        return res.status(400).json(err.response.data);
+        return responseError(res, 400, err.response.data.message || "Bad request");
       }
     }
     logger.error("Internal server error", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return responseError(res, 500, "Server error");
   }
 };
