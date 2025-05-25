@@ -8,6 +8,7 @@ import {
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
 import logger from "../config/loggerInit.js";
+import { responseError, responseSuccess } from "../util/responseUtil.js";
 
 export const createRestaurantController = async(req, res) => {
     logger.info("CREATE RESTAURANT CONTROLLER");
@@ -18,36 +19,21 @@ export const createRestaurantController = async(req, res) => {
         const errorLen = Object.keys(errors).length;
         if(errorLen > 0) {
             logger.warn("Validation failed", errors);
-            return res.status(400).json({
-                success: false,
-                message: 'Validation failed',
-                errors
-            })
+            return responseError(res, 400, "Validation failed", errors);
         }
 
         const newRestaurant = await createRestaurantService(restaurantReq);
 
         logger.info(`Create restaurant success: name: ${newRestaurant.restaurant_name}`);
-        return res.status(201).json({
-            success: true,
-            message: "Create restaurant success",
-            dataRestaurant: newRestaurant
-        })
+        return responseSuccess(res, 201, "Create restaurant success", "dataRestaurant", newRestaurant);
     } catch(err) {
         if (err.code === "23505") { 
             logger.warn("Restaurant name or owner already exists", err);
-            return res.status(400).json({
-                success: false,
-                message: "Restaurant name or owner already exists"
-            });
+            return responseError(res, 400, "Restaurant name or owner already exists");
         }
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
+        return responseError(res, 500, "Internal Server Error");
     }
-    
 }
 
 export const updateRestaurantController = async (req, res) => {
@@ -56,18 +42,12 @@ export const updateRestaurantController = async (req, res) => {
     try {
         if (role !== "seller") {
             logger.warn("Only sellers can update a restaurant");
-            return res.status(403).json({
-                success: false,
-                message: "Only sellers can update a restaurant",
-            });
+            return responseError(res, 403, "Only sellers can update a restaurant");
         }
         const restaurant = await getRestaurantByOwnerIdService(userId);
         if (!restaurant) {
             logger.warn("Restaurant not found for this owner");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner",
-            });
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
         const restaurantId = restaurant.restaurant_id;
@@ -80,11 +60,7 @@ export const updateRestaurantController = async (req, res) => {
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
             logger.warn("Validation failed", errors);
-            return res.status(400).json({
-                success: false,
-                message: "Validation failed",
-                errors,
-            });
+            return responseError(res, 400, "Validation failed", errors);
         }
 
         const updatedRestaurant = await updateRestaurantService(
@@ -93,60 +69,38 @@ export const updateRestaurantController = async (req, res) => {
         );
         if (!updatedRestaurant) {
             logger.error("Restaurant update failed");
-            return res.status(500).json({
-                success: false,
-                message: "Restaurant update failed",
-            });
+            return responseError(res, 500, "Restaurant update failed");
         }
 
         logger.info(`Restaurant updated successfully: name: ${updatedRestaurant.restaurant_name}`);
-        return res.status(200).json({
-            success: true,
-            message: "Restaurant updated successfully",
-            dataRestaurant: updatedRestaurant,
-        });
+        return responseSuccess(res, 200, "Restaurant updated successfully", "dataRestaurant", updatedRestaurant);
     } catch (err) {
         if (err instanceof jwt.JsonWebTokenError) {
             logger.error("Invalid or expired token", err);
-            return res.status(401).json({
-                success: false,
-                message: "Invalid or expired token",
-            });
+            return responseError(res, 401, "Invalid or expired token");
         }
 
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+        return responseError(res, 500, "Internal Server Error");
     }
 };
 
 export const deleteRestaurantController = async (req, res) => {
+    logger.info("DELETE RESTAURANT CONTROLLER");
     const { restaurantId } = req.params;
     try {
         const deletedRestaurant = await deleteRestaurantService(restaurantId);
 
         if (!deletedRestaurant) {
             logger.warn("Restaurant not found");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            return responseError(res, 404, "Restaurant not found");
         }
 
         logger.info(`Delete restaurant success: name: ${deletedRestaurant.restaurant_name}`);
-        return res.status(200).json({
-            success: true,
-            message: "Delete restaurant success",
-            deletedData: deletedRestaurant
-        });
+        return responseSuccess(res, 200, "Delete restaurant success", "deletedData", deletedRestaurant);
     } catch (err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
+        return responseError(res, 500, "Internal Server Error");
     }
 };
 
@@ -157,19 +111,12 @@ export const getRestaurantsController = async(req, res) => {
         const result = await getRestaurantsService(userId);
 
         logger.info("Get restaurants success");
-        return res.status(200).json({
-            success: true,
-            restaurants: result
-        })
+        return responseSuccess(res, 200, "Get restaurants success", "restaurants", result);
     } catch(err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        })
+        return responseError(res, 500, "Internal server error");
     }
 }
-
 
 export const getRestaurantByOwnerIdController = async (req, res) => {
     logger.info("GET RESTAURANT BY OWNER ID CONTROLLER");
@@ -179,23 +126,14 @@ export const getRestaurantByOwnerIdController = async (req, res) => {
 
         if (!result) {
             logger.warn("Restaurant not found");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            return responseError(res, 404, "Restaurant not found");
         }
 
         logger.info("Get restaurant by owner id success");
-        return res.status(200).json({
-            success: true,
-            restaurant: result
-        });
+        return responseSuccess(res, 200, "Get restaurant by owner id success", "restaurant", result);
     } catch (err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return responseError(res, 500, "Internal server error");
     }
 };
 
@@ -205,36 +143,23 @@ export const getRestaurantByRestaurantIdController = async (req, res) => {
     try {
         if (!restaurantId || isNaN(restaurantId)) {
             logger.warn("Invalid restaurantId");
-            return res.status(400).json({
-                success: false,
-                message: "Invalid restaurantId"
-            });
+            return responseError(res, 400, "Invalid restaurantId");
         }
 
         const result = await getRestaurantByRestaurantIdService(restaurantId);
 
         if (!result) {
             logger.warn("Restaurant not found");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            return responseError(res, 404, "Restaurant not found");
         }
 
         logger.info("Get restaurant by restaurant id success");
-        return res.status(200).json({
-            success: true,
-            restaurant: result
-        });
+        return responseSuccess(res, 200, "Get restaurant by restaurant id success", "restaurant", result);
     } catch (err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return responseError(res, 500, "Internal server error");
     }
 };
-
 
 export const getRestaurantController = async (req, res) => {
     logger.info("GET RESTAURANT CONTROLLER");
@@ -244,32 +169,20 @@ export const getRestaurantController = async (req, res) => {
 
         if (!restaurant) {
             logger.warn("Restaurant not found for this owner");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner"
-            });
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
         logger.info("Get restaurant success");
-        return res.status(200).json({
-            success: true,
-            restaurant: restaurant
-        });
+        return responseSuccess(res, 200, "Get restaurant success", "restaurant", restaurant);
 
     } catch (err) {
         if (err instanceof jwt.JsonWebTokenError) {
             logger.error("Invalid or expired token", err);
-            return res.status(401).json({
-                success: false,
-                message: "Invalid or expired token"
-            });
+            return responseError(res, 401, "Invalid or expired token");
         }
         
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return responseError(res, 500, "Internal server error");
     }
 };
 
@@ -281,53 +194,34 @@ export const updateOpenRestaurantController = async (req, res) => {
 
         if (role !== "seller") {
             logger.warn("Only sellers can open a restaurant");
-            return res.status(403).json({
-                success: false,
-                message: "Only sellers can open a restaurant"
-            });
+            return responseError(res, 403, "Only sellers can open a restaurant");
         }
 
         if(isOpen === undefined) {
             logger.warn("isOpen field is required");
-            return res.status(400).json({
-                success: false,
-                message: "isOpen field is required"
-            });
+            return responseError(res, 400, "isOpen field is required");
         }
 
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
             logger.warn("Restaurant not found for this owner");
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner"
-            });
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
         const restaurantId = restaurant.restaurant_id;
 
         if(restaurant.owner_id !== userId) {
             logger.warn("You are not authorized to open this restaurant");
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to open this restaurant"
-            });
+            return responseError(res, 403, "You are not authorized to open this restaurant");
         }
 
         const updatedRestaurant = await updateOpenRestaurantService(restaurantId, isOpen);
 
         logger.info("Restaurant is now open");
-        return res.status(200).json({
-            success: true,
-            message: "Restaurant is now open",
-            dataRestaurant: updatedRestaurant
-        });
+        return responseSuccess(res, 200, "Restaurant is now open", "dataRestaurant", updatedRestaurant);
     } catch (err) {
         logger.error("Internal Server Error", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        return responseError(res, 500, "Internal server error");
     }
 }

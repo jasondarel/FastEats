@@ -23,8 +23,6 @@ export const getChatsServiceByRestaurantId = async (restaurantId) => {
 
 export const createChatService = async (chatData) => {
     try {
-        console.log("Creating chat with data:", chatData);
-        
         if (chatData.restaurantId) chatData.restaurantId = Number(chatData.restaurantId);
         if (chatData.userId) chatData.userId = Number(chatData.userId);
         if (chatData.orderId) chatData.orderId = Number(chatData.orderId);

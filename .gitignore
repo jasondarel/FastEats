@@ -9,3 +9,4 @@ logs/*
 /src/uploads/profile/*
 
 !/src/uploads/profile/.gitkeep
+.turbo/
