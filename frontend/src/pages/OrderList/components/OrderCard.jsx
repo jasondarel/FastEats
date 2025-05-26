@@ -58,23 +58,6 @@ const OrderCard = ({ order }) => {
     totalPrice = menuPrice * itemCount;
   }
 
-  // const getFirstItemImage = () => {
-  //   if (order.order_type === "CART" && order.items && order.items.length > 0) {
-  //     const firstItem = order.items[0];
-  //     const menuItem = order.menu?.find(
-  //       (menu) => menu.menu_id === firstItem.menu_id
-  //     );
-  //     return menuItem?.menu_image || null;
-  //   } else if (
-  //     order.order_type === "CHECKOUT" &&
-  //     order.menu &&
-  //     order.menu.length > 0
-  //   ) {
-  //     return order.menu[0].menu_image || null;
-  //   }
-  //   return null;
-  // };
-
   // Check if order has a status
   const status = order.status || "Pending";
   const isCompleted = status === "Completed" || status === "Cancelled";
@@ -138,8 +121,13 @@ const OrderCard = ({ order }) => {
       {/* Action buttons section - visible only on active orders */}
       {!isCompleted && (
         <div className="px-4 pb-4">
-          <div className="flex justify-end space-x-2">
-            <ChatButton order={order} variant="secondary" size="sm" />
+          <div className="flex justify-end space-x-2 ">
+            <ChatButton
+              order={order}
+              variant="secondary"
+              size="sm"
+              className="hover:cursor-pointer"
+            />
           </div>
         </div>
       )}

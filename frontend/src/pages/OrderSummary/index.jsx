@@ -71,6 +71,10 @@ const OrderSummary = () => {
     })}`;
   };
 
+  const handleChatWithCustomer = () => {
+    navigate(`/chat/${order_id}`);
+  };
+
   const handleCompleteOrder = async () => {
     try {
       const response = await fetch(
@@ -160,6 +164,31 @@ const OrderSummary = () => {
           orderDetails={{ order, user, transaction }}
           formatDate={formatDate}
         />
+        <div className="flex justify-center gap-4">
+          {order.status === "Preparing" && (
+            <div className="flex justify-center gap-2 mb-4">
+              <button
+                onClick={handleChatWithCustomer}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white rounded-lg transition-colors duration-200 font-medium text-sm"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                Chat with Customer
+              </button>
+            </div>
+          )}
+        </div>
         <OrderItems
           menuItems={menuItems}
           order={order}
