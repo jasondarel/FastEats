@@ -60,7 +60,7 @@ export const createOrderController = async (req, res) => {
 
     if (!orderReq.menuId || !orderReq.quantity) {
       logger.warn("Order creation failed: Missing required fields", { userId });
-        return responseError(res, 400, "Missing required fields");
+      return responseError(res, 400, "Missing required fields");
     }
 
     if (isNaN(orderReq.menuId)) {
@@ -119,7 +119,11 @@ export const createOrderController = async (req, res) => {
         userId,
         restaurantId: orderReq.restaurantId,
       });
-      return responseError(res, 403, "You cannot order from your own restaurant");
+      return responseError(
+        res,
+        403,
+        "You cannot order from your own restaurant"
+      );
     }
 
     try {
@@ -228,7 +232,13 @@ export const getOrdersController = async (req, res) => {
     );
 
     logger.info("Orders fetched successfully");
-    return responseSuccess(res, 200, "Orders fetched successfully", "orders", ordersWithMenu.map((result) => result.value || result.reason));
+    return responseSuccess(
+      res,
+      200,
+      "Orders fetched successfully",
+      "orders",
+      ordersWithMenu.map((result) => result.value || result.reason)
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -239,7 +249,13 @@ export const getAllOrdersWithItemsController = async (req, res) => {
   logger.info("GET ALL ORDERS WITH ITEMS CONTROLLER");
   try {
     const orders = await getAllOrdersWithItemsService();
-    return responseSuccess(res, 200, "Orders fetched successfully", "data", orders);
+    return responseSuccess(
+      res,
+      200,
+      "Orders fetched successfully",
+      "data",
+      orders
+    );
   } catch (error) {
     logger.error("Error fetching orders:", error);
     return responseError(res, 500, "Internal server error");
@@ -250,13 +266,13 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
   logger.info("GET ORDER WITH ITEMS BY ORDER ID CONTROLLER");
   const { order_id } = req.params;
   const { userId, role } = req.user;
-  
+
   try {
     const order = await getAllOrderWithItemsByOrderIdService(order_id);
     if (!order) {
       logger.warn("Order not found:", order_id);
       return responseError(res, 404, "Order not found");
-    } 
+    }
 
     if (role === "seller" || role === "Seller") {
       const restaurant = await axios.get(
@@ -268,25 +284,39 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
           },
         }
       );
-      
+
       if (restaurant.data.restaurant.owner_id !== userId) {
         logger.warn("Unauthorized access attempt by user:", userId);
-        return responseError(res, 403, "You are not authorized to view this order");
+        return responseError(
+          res,
+          403,
+          "You are not authorized to view this order"
+        );
       }
     } else {
       if (order.user_id !== userId) {
         logger.warn("Unauthorized access attempt by user:", userId);
-        return responseError(res, 403, "You are not authorized to view this order");
+        return responseError(
+          res,
+          403,
+          "You are not authorized to view this order"
+        );
       }
     }
 
     logger.info("Fetching menu data for order items...");
-    return responseSuccess(res, 200, "Order fetched successfully", "order", order);
-  } catch(err) {
+    return responseSuccess(
+      res,
+      200,
+      "Order fetched successfully",
+      "order",
+      order
+    );
+  } catch (err) {
     logger.error("Error fetching order with items:", err);
     return responseError(res, 500, "Internal server error");
   }
-}
+};
 
 export const getCartController = async (req, res) => {
   logger.info("GET CART CONTROLLER");
@@ -302,7 +332,13 @@ export const getCartController = async (req, res) => {
     }
 
     logger.info("Fetching menu data for carts...");
-    return responseSuccess(res, 200, "Carts fetched successfully", "cart", carts);
+    return responseSuccess(
+      res,
+      200,
+      "Carts fetched successfully",
+      "cart",
+      carts
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -344,11 +380,23 @@ export const createCartController = async (req, res) => {
         return responseError(res, 500, "Failed to create cart");
       }
       logger.info("Cart already exists, using existing cart");
-      return responseSuccess(res, 200, "Cart already exists", "cartItem", existingCart);
+      return responseSuccess(
+        res,
+        200,
+        "Cart already exists",
+        "cartItem",
+        existingCart
+      );
     }
     logger.info(`Cart created: ${cartItem?.cart_id}...`);
 
-    return responseSuccess(res, 201, "Add cart successfully", "cartItem", cartItem);
+    return responseSuccess(
+      res,
+      201,
+      "Add cart successfully",
+      "cartItem",
+      cartItem
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -404,11 +452,19 @@ export const createCartItemController = async (req, res) => {
 
     if (cart.user_id !== userId) {
       logger.warn("Unauthorized access attempt to cart", { userId, cartId });
-      return responseError(res, 403, "You are not authorized to create a cart item");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to create a cart item"
+      );
     }
 
     if (!cartId || !menuId || !quantity) {
-      return responseError(res, 400, "cartId, menuId, and quantity are required");
+      return responseError(
+        res,
+        400,
+        "cartId, menuId, and quantity are required"
+      );
     }
 
     logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
@@ -421,7 +477,13 @@ export const createCartItemController = async (req, res) => {
 
     logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
-    return responseSuccess(res, 201, "Add cart item successfully", "cartItem", cartItem);
+    return responseSuccess(
+      res,
+      201,
+      "Add cart item successfully",
+      "cartItem",
+      cartItem
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -455,7 +517,13 @@ export const deleteCartItemController = async (req, res) => {
 
     logger.info(`Cart item deleted: ${cartItem?.cart_item_id}...`);
 
-    return responseSuccess(res, 201, "Deleting cart item successfully", "cartItem", cartItem);
+    return responseSuccess(
+      res,
+      201,
+      "Deleting cart item successfully",
+      "cartItem",
+      cartItem
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -485,7 +553,11 @@ export const cancelOrderController = async (req, res) => {
       logger.warn(
         `Unauthorized access attempt by user ${userId} on order ${order_id}`
       );
-      return responseError(res, 403, "You are not authorized to cancel this order");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to cancel this order"
+      );
     }
 
     if (order.status === "Cancelled") {
@@ -559,7 +631,11 @@ export const completeOrderController = async (req, res) => {
       logger.warn(
         `Unauthorized access attempt by user ${userId} on order ${order_id}`
       );
-      return responseError(res, 403, "You are not authorized to complete this order");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to complete this order"
+      );
     }
 
     if (order.status === "Completed") {
@@ -607,7 +683,11 @@ export const getOrderByIdController = async (req, res) => {
       logger.warn(
         `Unauthorized access attempt by user ${userId} on order ${order_id}`
       );
-      return responseError(res, 403, "You are not authorized to view this order");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view this order"
+      );
     }
 
     if (result.order_type === "CHECKOUT") {
@@ -626,7 +706,13 @@ export const getOrderByIdController = async (req, res) => {
         menu: menu.data.menu,
       };
       logger.info(`Order ${order_id} fetched successfully`);
-      return responseSuccess(res, 200, "Order fetched successfully", "order", order);
+      return responseSuccess(
+        res,
+        200,
+        "Order fetched successfully",
+        "order",
+        order
+      );
     } else if (result.order_type === "CART") {
       const orderItems = await pool.query(
         "SELECT * FROM order_items WHERE order_id = $1",
@@ -657,7 +743,13 @@ export const getOrderByIdController = async (req, res) => {
       };
 
       logger.info(`Cart order ${order_id} fetched successfully`);
-      return responseSuccess(res, 200, "Order fetched successfully", "order", order);
+      return responseSuccess(
+        res,
+        200,
+        "Order fetched successfully",
+        "order",
+        order
+      );
     } else {
       logger.warn(`Invalid order type: ${result.order_type}`);
       return responseError(res, 400, "Invalid order type");
@@ -828,8 +920,9 @@ export const payOrderController = async (req, res) => {
             message: "Order items not found",
           });
         }
-        
-        const insertPreparingJobsResponse = await createPreparingOrderJobService(orderItems);
+
+        const insertPreparingJobsResponse =
+          await createPreparingOrderJobService(orderItems);
         if (!insertPreparingJobsResponse) {
           logger.error("Failed to create preparing order jobs");
           return res.status(500).json({
@@ -980,7 +1073,13 @@ export const getSnapTokenController = async (req, res) => {
       return responseError(res, 404, "Snap token not found");
     }
     logger.info("Snap token fetched successfully");
-    return responseSuccess(res, 200, "Snap token fetched successfully", "snap_token", response.snap_token);
+    return responseSuccess(
+      res,
+      200,
+      "Snap token fetched successfully",
+      "snap_token",
+      response.snap_token
+    );
   } catch (err) {
     logger.error("Error fetching snap token:", err);
     return responseError(res, 500, "Internal server error");
@@ -995,7 +1094,11 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
   try {
     if (role !== "seller") {
       logger.warn("Unauthorized access attempt by user", { userId });
-      return responseError(res, 403, "You are not authorized to view these orders");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view these orders"
+      );
     }
 
     const restaurantResponse = await axios.get(
@@ -1013,7 +1116,11 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
 
     if (restaurant.owner_id !== userId) {
       logger.warn("Unauthorized access attempt by user", { userId });
-      return responseError(res, 403, "You are not authorized to view these orders");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view these orders"
+      );
     }
 
     const orders = await getOrdersByRestaurantIdService(restaurant_id);
@@ -1031,21 +1138,24 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
 
           if (order.order_type === "CART") {
             orderItems = await getOrderItemsByOrderIdService(order.order_id);
-            
-            const menuPromises = orderItems.map(item => 
-              axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
-                headers: {
-                  Authorization: token,
-                  "Content-Type": "application/json",
-                },
-              })
+
+            const menuPromises = orderItems.map((item) =>
+              axios.get(
+                `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+                {
+                  headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
             );
-            
+
             const menuResponses = await Promise.all(menuPromises);
-            menuItems = menuResponses.map(response => response.data.menu);
+            menuItems = menuResponses.map((response) => response.data.menu);
           } else {
             orderItems = [order];
-            
+
             const menuResponse = await axios.get(
               `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
               {
@@ -1055,7 +1165,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
                 },
               }
             );
-            
+
             menuItems = [menuResponse.data.menu];
           }
 
@@ -1068,7 +1178,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
               },
             }
           );
-          
+
           userInfo = userResponse.data.user;
           return {
             ...order,
@@ -1077,7 +1187,10 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
             user: userInfo,
           };
         } catch (err) {
-          logger.error(`Error processing order ${order.order_id}:`, err.message);
+          logger.error(
+            `Error processing order ${order.order_id}:`,
+            err.message
+          );
           return {
             ...order,
             error: "Failed to fetch complete details for this order",
@@ -1087,7 +1200,13 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
     );
 
     logger.info("Orders fetched successfully");
-    return responseSuccess(res, 200, "Orders fetched successfully", "orders", ordersWithDetails);
+    return responseSuccess(
+      res,
+      200,
+      "Orders fetched successfully",
+      "orders",
+      ordersWithDetails
+    );
   } catch (error) {
     logger.error("Error fetching restaurant orders:", error.message);
     return responseError(res, 500, "Failed to retrieve orders", error.message);
@@ -1106,7 +1225,11 @@ export const getRestaurantDashboardByRestaurantIdController = async (
     // Verify seller role
     if (role !== "seller") {
       logger.warn("Unauthorized access attempt by user", { userId });
-      return responseError(res, 403, "You are not authorized to view these orders");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view these orders"
+      );
     }
 
     // Get restaurant details
@@ -1126,10 +1249,14 @@ export const getRestaurantDashboardByRestaurantIdController = async (
     // Verify restaurant ownership
     if (restaurant.owner_id !== userId) {
       logger.warn("Unauthorized access attempt by user", { userId });
-      return responseError(res, 403, "You are not authorized to view these orders");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view these orders"
+      );
     }
 
-    const orders = await getCompletedOrdersByRestaurantIdService(restaurant_id);
+    const orders = await getOrdersByRestaurantIdService(restaurant_id);
     if (orders.length === 0) {
       logger.warn("No orders found");
       return responseError(res, 404, "No orders found");
@@ -1145,20 +1272,23 @@ export const getRestaurantDashboardByRestaurantIdController = async (
           if (order.order_type === "CART") {
             orderItems = await getOrderItemsByOrderIdService(order.order_id);
 
-            const menuPromises = orderItems.map(item => 
-              axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
-                headers: {
-                  Authorization: token,
-                  "Content-Type": "application/json",
-                },
-              })
+            const menuPromises = orderItems.map((item) =>
+              axios.get(
+                `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+                {
+                  headers: {
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
             );
-            
+
             const menuResponses = await Promise.all(menuPromises);
-            menuItems = menuResponses.map(response => response.data.menu);
+            menuItems = menuResponses.map((response) => response.data.menu);
           } else {
             orderItems = [order];
-            
+
             const menuResponse = await axios.get(
               `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
               {
@@ -1168,7 +1298,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
                 },
               }
             );
-            
+
             menuItems = [menuResponse.data.menu];
           }
 
@@ -1181,7 +1311,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
               },
             }
           );
-          
+
           userInfo = userResponse.data.user;
 
           return {
@@ -1191,7 +1321,10 @@ export const getRestaurantDashboardByRestaurantIdController = async (
             user: userInfo,
           };
         } catch (err) {
-          logger.error(`Error processing order ${order.order_id}:`, err.message);
+          logger.error(
+            `Error processing order ${order.order_id}:`,
+            err.message
+          );
           return {
             ...order,
             error: "Failed to fetch complete details for this order",
@@ -1201,7 +1334,13 @@ export const getRestaurantDashboardByRestaurantIdController = async (
     );
 
     logger.info("Orders fetched successfully");
-    return responseSuccess(res, 200, "Orders fetched successfully", "orders", ordersWithDetails);
+    return responseSuccess(
+      res,
+      200,
+      "Orders fetched successfully",
+      "orders",
+      ordersWithDetails
+    );
   } catch (error) {
     logger.error("Error fetching restaurant orders:", error.message);
     return responseError(res, 500, "Failed to retrieve orders", error.message);
@@ -1236,22 +1375,24 @@ export const getRestaurantOrderController = async (req, res) => {
 
     if (order.order_type === "CART") {
       ordersInfo = await getOrderItemsByOrderIdService(order.order_id);
-      
-      const menuPromises = ordersInfo.map(item => 
-        axios.get(`${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`, {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        })
+
+      const menuPromises = ordersInfo.map((item) =>
+        axios.get(
+          `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        )
       );
-      
+
       const menuResponses = await Promise.all(menuPromises);
-      menu = menuResponses.map(response => response.data.menu);
-      
+      menu = menuResponses.map((response) => response.data.menu);
     } else {
       ordersInfo = order;
-      
+
       const menuResponse = await axios.get(
         `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
         {
@@ -1261,18 +1402,24 @@ export const getRestaurantOrderController = async (req, res) => {
           },
         }
       );
-      
+
       menu.push(menuResponse.data.menu);
     }
 
     logger.info("Order items and menu fetched");
-    
+
     const restaurantId = order.restaurant_id;
-    const isAuthorized = menu.some(menuItem => menuItem.restaurant_id === restaurantId);
-    
+    const isAuthorized = menu.some(
+      (menuItem) => menuItem.restaurant_id === restaurantId
+    );
+
     if (!isAuthorized) {
       logger.warn("Unauthorized access attempt by user");
-      return responseError(res, 403, "You are not authorized to view this order");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to view this order"
+      );
     }
 
     const userResponse = await axios.get(
@@ -1303,7 +1450,6 @@ export const getRestaurantOrderController = async (req, res) => {
       user: userResponse.data.user,
       transaction,
     });
-    
   } catch (err) {
     logger.error("Error fetching order:", err.message);
     return responseError(res, 500, "Internal server error");
@@ -1385,7 +1531,13 @@ export const getCartItemsController = async (req, res) => {
       })
     );
 
-    return responseSuccess(res, 200, "Cart items fetched successfully", "cartItems", cartItemsWithMenu);
+    return responseSuccess(
+      res,
+      200,
+      "Cart items fetched successfully",
+      "cartItems",
+      cartItemsWithMenu
+    );
   } catch (err) {
     logger.error("Error fetching cart items:", err);
     return responseError(res, 500, "Internal server error");
@@ -1460,7 +1612,13 @@ export const checkoutCartController = async (req, res) => {
     await deleteUserCartService(userId);
 
     logger.info("Order created successfully:", order);
-    return responseSuccess(res, 200, "Order created successfully", "order", order);
+    return responseSuccess(
+      res,
+      200,
+      "Order created successfully",
+      "order",
+      order
+    );
   } catch (err) {
     logger.error("Error fetching cart:", err);
     return responseError(res, 500, "Internal server error");

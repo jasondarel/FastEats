@@ -36,7 +36,15 @@ const RestaurantHeader = ({ restaurantInfo }) => {
             </p>
           </div>
           <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-            <p className="text-sm text-amber-600 font-medium">Total Revenue</p>
+            <p className="text-sm text-amber-600 font-medium">Total Items</p>
+            <p className="text-3xl font-bold text-amber-800">
+              {restaurantInfo.totalItems}
+            </p>
+          </div>
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+            <p className="text-sm text-amber-600 font-medium">
+              Obtained Revenue
+            </p>
             <p className="text-3xl font-bold text-amber-800">
               {restaurantInfo.totalRevenue}
             </p>
@@ -46,14 +54,14 @@ const RestaurantHeader = ({ restaurantInfo }) => {
         <div className="flex space-x-4 mt-6">
           <button
             onClick={handleManageRestaurant}
-            className="flex items-center px-4 py-2 bg-sky-800 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
+            className="flex items-center px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors cursor-pointer"
           >
             <FileText className="mr-2" size={18} />
             Manage Restaurant
           </button>
           <button
             onClick={handleViewOrderHistory}
-            className="flex items-center px-4 py-2 bg-green-700 text-white rounded-md hover:bg-green-800 transition-colors cursor-pointer"
+            className="flex items-center px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="mr-2" size={18} />
             View Order History
