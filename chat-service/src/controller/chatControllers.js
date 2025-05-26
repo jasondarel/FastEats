@@ -60,13 +60,16 @@ export const getChatsController = async (req, res) => {
                     },
                   }
                 );
-                
+
                 return {
                   ...item,
                   menuDetails: menuResponse.data.menu,
                 };
               } catch (error) {
-                logger.warn(`Failed to fetch menu for item ${item.menu_id}:`, error.message);
+                logger.warn(
+                  `Failed to fetch menu for item ${item.menu_id}:`,
+                  error.message
+                );
                 return {
                   ...item,
                   menuDetails: null,
@@ -86,10 +89,16 @@ export const getChatsController = async (req, res) => {
           };
         })
       );
-      return responseSuccess(res, 200, "Get chats success", "dataChats", finalInformation);
+      return responseSuccess(
+        res,
+        200,
+        "Get chats success",
+        "dataChats",
+        finalInformation
+      );
     } else {
       const restaurant = await axios.get(
-        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${userId}`,
+        `${GLOBAL_SERVICE_URL}/restaurant/restaurant-owner/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -136,13 +145,16 @@ export const getChatsController = async (req, res) => {
                     },
                   }
                 );
-                
+
                 return {
                   ...item,
                   menuDetails: menuResponse.data.menu,
                 };
               } catch (error) {
-                logger.warn(`Failed to fetch menu for item ${item.menu_id}:`, error.message);
+                logger.warn(
+                  `Failed to fetch menu for item ${item.menu_id}:`,
+                  error.message
+                );
                 return {
                   ...item,
                   menuDetails: null,
@@ -164,7 +176,13 @@ export const getChatsController = async (req, res) => {
       );
 
       logger.info(`Get chats success: ${finalInformation.length} chats found`);
-      return responseSuccess(res, 200, "Get chats success", "dataChats", finalInformation);
+      return responseSuccess(
+        res,
+        200,
+        "Get chats success",
+        "dataChats",
+        finalInformation
+      );
     }
   } catch (err) {
     logger.error("Internal Server Error", err);
@@ -173,31 +191,32 @@ export const getChatsController = async (req, res) => {
 };
 
 export const createChatController = async (req, res) => {
-    logger.info("CREATE CHAT CONTROLLER");
-    const {orderId} = req.body;
-    const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
-    try {
-        const order = await axios.get(
-            `${GLOBAL_SERVICE_URL}/order/order-items/${orderId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const chat = await createChatService({
-            orderId: order.data.order.order_id,
-            restaurantId: order.data.order.restaurant_id,
-            userId: order.data.order.user_id,
-        })
-        if (!chat.success) {
-            logger.warn("Chat creation failed");
-            return responseError(res, 400, "Chat creation failed");
-        }
-        logger.info("Create chat controller");
-        return responseSuccess(res, 200, "Get order success", "dataChat", chat);
-    } catch(err) {
-        logger.error("Internal Server Error", err);
-        return responseError(res, 500, "Internal Server Error");
+  logger.info("CREATE CHAT CONTROLLER");
+  const { orderId } = req.body;
+  const token =
+    req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+  try {
+    const order = await axios.get(
+      `${GLOBAL_SERVICE_URL}/order/order-items/${orderId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const chat = await createChatService({
+      orderId: order.data.order.order_id,
+      restaurantId: order.data.order.restaurant_id,
+      userId: order.data.order.user_id,
+    });
+    if (!chat.success) {
+      logger.warn("Chat creation failed");
+      return responseError(res, 400, "Chat creation failed");
     }
-}
+    logger.info("Create chat controller");
+    return responseSuccess(res, 200, "Get order success", "dataChat", chat);
+  } catch (err) {
+    logger.error("Internal Server Error", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+};
