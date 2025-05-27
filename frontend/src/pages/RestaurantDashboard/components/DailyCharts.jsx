@@ -103,7 +103,7 @@ const DailyCharts = ({ orders, selectedMonth }) => {
             {payload[0].value}
           </p>
           <p className="text-sm">
-            <span className="font-medium text-green-600">Revenue:</span> $
+            <span className="font-medium text-green-600">Revenue:</span> Rp
             {payload[1].value}
           </p>
         </div>
@@ -140,7 +140,7 @@ const DailyCharts = ({ orders, selectedMonth }) => {
               <Bar
                 yAxisId="right"
                 dataKey="revenue"
-                name="Revenue ($)"
+                name="Revenue (Rp)"
                 fill="#10b981"
                 radius={[4, 4, 0, 0]}
               />
