@@ -1,70 +1,77 @@
 /* eslint-disable react/prop-types */
 import { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 const DailyCharts = ({ orders, selectedMonth }) => {
-  // Process orders data to create daily statistics for the selected month
   const dailyData = useMemo(() => {
-    // Map month abbreviation to month number (0-indexed)
     const monthMap = {
-      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+      Jan: 0,
+      Feb: 1,
+      Mar: 2,
+      Apr: 3,
+      May: 4,
+      Jun: 5,
+      Jul: 6,
+      Aug: 7,
+      Sep: 8,
+      Oct: 9,
+      Nov: 10,
+      Dec: 11,
     };
-    
-    // Get month index from selected month
+
     const monthIndex = monthMap[selectedMonth];
-    
-    // Determine the number of days in the selected month
+
     const currentYear = new Date().getFullYear();
     const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
-    
-    // Initialize data array for each day in the month
+
     const initialData = Array.from({ length: daysInMonth }, (_, i) => ({
       name: `${i + 1}`,
       day: i + 1,
       orders: 0,
-      revenue: 0
+      revenue: 0,
     }));
-    
-    // If there are no orders, return the empty data structure
+
     if (!Array.isArray(orders) || orders.length === 0) {
       return initialData;
     }
-    
-    // Filter orders to only include those from the selected month
-    const filteredOrders = orders.filter(order => {
+
+    const filteredOrders = orders.filter((order) => {
       if (!order.created_at) return false;
       const orderDate = new Date(order.created_at);
-      return orderDate.getMonth() === monthIndex;
+      const orderStatus = order.status?.toLowerCase() || "";
+      return orderDate.getMonth() === monthIndex && orderStatus === "completed";
     });
-    
-    // Process orders for the month
-    filteredOrders.forEach(order => {
+
+    filteredOrders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const dayOfMonth = orderDate.getDate();
-      
-      // Adjust for 0-indexed array
+
       const dayIndex = dayOfMonth - 1;
       if (dayIndex < 0 || dayIndex >= initialData.length) return;
-      
-      // Process orders based on type
+
       if (order.order_type === "CART" && Array.isArray(order.items)) {
-        // Handle cart orders with multiple items
         order.items.forEach((item, index) => {
           const quantity = item.item_quantity || 0;
           initialData[dayIndex].orders += quantity;
-          
-          // Calculate revenue
-          const menuItem = order.menu && Array.isArray(order.menu) && order.menu[index];
+
+          const menuItem =
+            order.menu && Array.isArray(order.menu) && order.menu[index];
           const price = menuItem ? parseFloat(menuItem.menu_price) || 0 : 0;
           initialData[dayIndex].revenue += price * quantity;
         });
       } else {
-        // Handle single item orders
         const quantity = order.item_quantity || 1;
         initialData[dayIndex].orders += quantity;
-        
-        // Calculate revenue
+
         let price = 0;
         if (order.menu) {
           if (Array.isArray(order.menu) && order.menu.length > 0) {
@@ -76,26 +83,28 @@ const DailyCharts = ({ orders, selectedMonth }) => {
         initialData[dayIndex].revenue += price * quantity;
       }
     });
-    
-    // Format revenue
-    initialData.forEach(item => {
+
+    initialData.forEach((item) => {
       item.revenue = parseFloat(item.revenue.toFixed(2));
     });
-    
+
     return initialData;
   }, [orders, selectedMonth]);
-  
-  // Custom tooltip for the chart
+
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium text-amber-800">{selectedMonth} {payload[0].payload.day}</p>
-          <p className="text-sm">
-            <span className="font-medium text-blue-600">Orders:</span> {payload[0].value}
+          <p className="font-medium text-amber-800">
+            {selectedMonth} {payload[0].payload.day}
           </p>
           <p className="text-sm">
-            <span className="font-medium text-green-600">Revenue:</span> ${payload[1].value}
+            <span className="font-medium text-blue-600">Orders:</span>{" "}
+            {payload[0].value}
+          </p>
+          <p className="text-sm">
+            <span className="font-medium text-green-600">Revenue:</span> $
+            {payload[1].value}
           </p>
         </div>
       );
@@ -121,19 +130,19 @@ const DailyCharts = ({ orders, selectedMonth }) => {
               <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar 
-                yAxisId="left" 
-                dataKey="orders" 
-                name="Orders" 
-                fill="#3b82f6" 
-                radius={[4, 4, 0, 0]} 
+              <Bar
+                yAxisId="left"
+                dataKey="orders"
+                name="Orders"
+                fill="#3b82f6"
+                radius={[4, 4, 0, 0]}
               />
-              <Bar 
-                yAxisId="right" 
-                dataKey="revenue" 
-                name="Revenue ($)" 
-                fill="#10b981" 
-                radius={[4, 4, 0, 0]} 
+              <Bar
+                yAxisId="right"
+                dataKey="revenue"
+                name="Revenue ($)"
+                fill="#10b981"
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
