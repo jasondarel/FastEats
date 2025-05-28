@@ -10,9 +10,10 @@ const OrderCard = ({ order }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString("id-ID", {
-      timeZone: "Asia/Jakarta",
-      day: "numeric",
+    const jakartaDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    return jakartaDate.toLocaleString("id-ID", {
+      day: "2-digit",
       month: "short",
       hour: "2-digit",
       minute: "2-digit",

@@ -13,6 +13,7 @@ import {
   Star,
   Calendar,
 } from "lucide-react";
+import DashboardBanner from "./components/DashboardBanner";
 
 const RestaurantDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -285,31 +286,7 @@ const RestaurantDashboard = () => {
       <div className="mx-12 lg:pl-[250px] xl:pl-[250px] flex-1 p-6">
         <div className=" max-w-7xl mx-auto md:mt-10 space-y-8">
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 rounded-2xl shadow-xl p-8 text-white overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-            <div className="relative z-10">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold">Welcome back!</h1>
-                  <p className="text-white/90">
-                    Here's your restaurant performance overview
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-6 mt-6">
-                <div className="flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    Today: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DashboardBanner />
 
           {/* Main Restaurant Card */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
