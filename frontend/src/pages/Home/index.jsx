@@ -18,8 +18,12 @@ const Home = () => {
 
   const navigate = useNavigate();
 
-  // Banner images for carousel
-  const bannerImages = ["/bannerMain.png", "/banner1.png", "/banner2.png"];
+  const bannerImages = [
+    "/bannerMain.png",
+    "/banner1.png",
+    "/banner2.png",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTatLiJAG6jse2XTu96VcidI8X5OYIvWzcenw&s",
+  ];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -121,22 +125,17 @@ const Home = () => {
     <div className="flex flex-col md:flex-row bg-yellow-50 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-4 md:p-5 lg:ml-64">
-        {/* Carousel Component */}
-        <Carousel images={bannerImages} intervalTime={5000} />
+        <Carousel images={bannerImages} intervalTime={3000} />
 
-        {/* Welcome Header Component */}
         <WelcomeHeader username={username} />
 
-        {/* Error Alert Component */}
         <ErrorAlert message={error} />
 
-        {/* Search Section Component */}
         <SearchSection
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
 
-        {/* Restaurant Grid Component */}
         <RestaurantGrid
           restaurants={filteredRestaurants}
           onRestaurantClick={handleRestaurantClick}

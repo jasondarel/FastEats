@@ -22,7 +22,7 @@ const DashboardBanner = () => {
 
   const formatJakartaTime = (date) => {
     // Add 7 hours for Jakarta time (UTC+7)
-    const jakartaDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+    const jakartaDate = new Date(date.getTime() + 0 * 60 * 60 * 1000);
 
     return jakartaDate.toLocaleTimeString("id-ID", {
       hour: "2-digit",
