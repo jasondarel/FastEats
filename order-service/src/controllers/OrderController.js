@@ -659,12 +659,21 @@ export const completeOrderController = async (req, res) => {
     }
 
     logger.info(`Order ${order_id} completed successfully`);
+
+    const io = req.app.get("io");
+    io.emit("orderCompleted", {
+      id: order.id,
+      status: "Completed",
+      completed_at: new Date(),
+    });
+
     return responseSuccess(res, 200, "Order completed successfully");
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
   }
 };
+
 
 export const getOrderByIdController = async (req, res) => {
   logger.info("GET ORDER BY ID CONTROLLER");
