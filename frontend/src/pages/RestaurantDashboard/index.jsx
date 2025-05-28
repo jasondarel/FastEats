@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from "react";
 import RestaurantHeader from "./components/RestaurantHeader";
 import DashboardCharts from "./components/DashboardCharts";
@@ -13,8 +14,11 @@ import {
   Star,
   Calendar,
 } from "lucide-react";
+import io from "socket.io-client";
+import { ORDER_URL } from "../../config/api";
 
 const RestaurantDashboard = () => {
+  const socket = io(ORDER_URL);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [restaurantName, setRestaurantName] = useState("");
@@ -28,7 +32,6 @@ const RestaurantDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch restaurant info
         const restInfo = await fetchRestaurantInfo(token);
         if (!restInfo || !restInfo.restaurant) {
           throw new Error("Failed to load restaurant information");
@@ -37,11 +40,9 @@ const RestaurantDashboard = () => {
         setRestaurantImage(restInfo.restaurant.restaurant_image);
 
         const orderData = await fetchOrderLists(token);
-
         setOrders(orderData?.orders || []);
       } catch (error) {
         setError(error.message || "Failed to load restaurant information");
-
         setOrders([]);
       } finally {
         setLoading(false);
@@ -49,6 +50,26 @@ const RestaurantDashboard = () => {
     };
 
     loadData();
+
+    socket.on("orderCompleted", (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === updatedOrder.id
+            ? { ...order, ...updatedOrder }
+            : order
+        )
+      );
+    });
+
+    // ✅ Optional: Listen to other events like new orders, etc.
+    // socket.on("newOrder", (newOrder) => {
+    //   setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    // });
+
+  
+    return () => {
+      socket.off("orderCompleted");
+    };
   }, [token]);
 
   const calculateSummaryInfo = () => {
