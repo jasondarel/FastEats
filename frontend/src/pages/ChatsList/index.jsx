@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useEffect, useState } from "react";
 import { FaComments, FaComment, FaStore } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";

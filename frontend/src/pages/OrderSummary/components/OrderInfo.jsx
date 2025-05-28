@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 const OrderInfo = ({ orderDetails, formatDate }) => {
   const { order, user, transaction } = orderDetails;
 

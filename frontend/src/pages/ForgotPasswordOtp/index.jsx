@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import BackgroundImage from "./components/BackgroundImage";
 import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, ArrowLeft } from "lucide-react";

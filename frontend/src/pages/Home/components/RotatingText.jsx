@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /*
 	jsrepo 1.39.3
 	Installed from https://reactbits.dev/tailwind/

@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home/index";

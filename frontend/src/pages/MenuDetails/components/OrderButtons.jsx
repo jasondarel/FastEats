@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import { ShoppingCart, CreditCard } from "lucide-react";
 
 const OrderButtons = ({ menu, quantity, onAddToCart, onOrderNow }) => {

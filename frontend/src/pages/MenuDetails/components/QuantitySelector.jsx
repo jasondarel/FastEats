@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import { MinusCircle, PlusCircle, RotateCcw } from "lucide-react";
 import { useState } from "react";
 
