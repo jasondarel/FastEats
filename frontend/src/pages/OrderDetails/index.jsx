@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   cancelOrderService,
@@ -19,8 +19,9 @@ import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
-import { API_URL } from "../../config/api";
+import { API_URL, ORDER_URL } from "../../config/api";
 import { MIDTRANS_SNAP_URL } from "../../config/api";
+import io from "socket.io-client";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -29,7 +30,9 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0); // For force re-render if needed
   const token = localStorage.getItem("token");
+  const socketRef = useRef(null);
 
   const handleCancel = async (orderId) => {
     Swal.fire({
@@ -71,6 +74,78 @@ const OrderDetails = () => {
     navigate(`/chat/${orderId}`);
   };
 
+  // Fetch order data function
+  const fetchOrderDetails = useCallback(async () => {
+    if (!orderId) {
+      setError("Order ID is missing");
+      setLoading(false);
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await getOrderDetailService(orderId, token);
+
+      console.log("Order data received:", response.data);
+      if (response.data.success && response.data.order) {
+        console.log("Setting order state with:", response.data.order);
+        setOrder(response.data.order);
+      } else {
+        throw new Error("No order data received");
+      }
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      setError(error.message || "Failed to fetch order details");
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId]);
+
+  // Handle socket order updates
+  const handleOrderUpdate = useCallback((updatedOrder) => {
+    console.log("=== SOCKET ORDER UPDATE ===");
+    console.log("Updated order received:", updatedOrder);
+    console.log("Current orderId from params:", orderId);
+    console.log("Updated order ID:", updatedOrder.order_id);
+    console.log("ID comparison:", String(updatedOrder.order_id) === String(orderId));
+    
+    // Convert both IDs to strings for comparison (handles type mismatch)
+    if (String(updatedOrder.order_id) === String(orderId)) {
+      console.log("✅ IDs match, updating order state...");
+      
+      setOrder((prevOrder) => {
+        console.log("Previous order state:", prevOrder);
+        
+        // Deep merge to ensure all properties are updated correctly
+        const newOrder = {
+          ...prevOrder,
+          ...updatedOrder,
+          // Ensure nested objects are properly merged
+          menu: updatedOrder.menu ? 
+            { ...prevOrder?.menu, ...updatedOrder.menu } : 
+            prevOrder?.menu,
+          restaurant: updatedOrder.restaurant ? 
+            { ...prevOrder?.restaurant, ...updatedOrder.restaurant } : 
+            prevOrder?.restaurant,
+        };
+        
+        console.log("New order state:", newOrder);
+        console.log("=== END SOCKET UPDATE ===");
+        return newOrder;
+      });
+      
+      // Force re-render to ensure UI updates
+      setForceUpdate(prev => prev + 1);
+    } else {
+      console.log("❌ Order IDs don't match - ignoring update");
+      console.log("=== END SOCKET UPDATE ===");
+    }
+  }, [orderId]);
+
+  // Initialize Midtrans Snap
   useEffect(() => {
     const snapScript = MIDTRANS_SNAP_URL;
     const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -80,7 +155,9 @@ const OrderDetails = () => {
     script.async = true;
     document.body.appendChild(script);
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -107,17 +184,18 @@ const OrderDetails = () => {
             console.log("success", result);
 
             try {
-              // ✅ Now passing orderId as parameter
               const chatResult = await createChatService(orderId, token);
               console.log("Chat created:", chatResult);
               alert("Pembayaran berhasil!");
+              // Refetch order data to get updated status
+              await fetchOrderDetails();
             } catch (chatError) {
               console.error("Failed to create chat:", chatError);
-
               alert(
                 "Pembayaran berhasil! Namun terjadi masalah saat membuat chat."
               );
             }
+            setPaymentLoading(false);
           },
 
           onPending: async function (result) {
@@ -129,6 +207,7 @@ const OrderDetails = () => {
               setPaymentLoading(false);
             } catch (err) {
               console.error("Error saving snap token:", err);
+              setPaymentLoading(false);
             }
           },
 
@@ -152,6 +231,7 @@ const OrderDetails = () => {
             } catch (error) {
               console.error("Error checking transaction status:", error);
             }
+            setPaymentLoading(false);
           },
         });
       }
@@ -190,41 +270,118 @@ const OrderDetails = () => {
     }
   };
 
+  // SOCKET.IO: Listen for real-time order updates
   useEffect(() => {
-    console.log("Fetching details for order ID:", orderId);
-    const fetchOrderDetails = async () => {
-      if (!orderId) {
-        setError("Order ID is missing");
-        setLoading(false);
-        return;
+    if (!token || !orderId) {
+      console.log("Missing token or orderId, skipping socket connection");
+      return;
+    }
+
+    console.log("Initializing socket connection...");
+    console.log("ORDER_URL:", ORDER_URL);
+    console.log("Token:", token ? "Present" : "Missing");
+    console.log("OrderId:", orderId);
+
+    socketRef.current = io(ORDER_URL, {
+      transports: ["websocket"],
+      auth: {
+        token: token // Pass token for authentication if needed
       }
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found");
-        }
+    });
 
-        const response = await getOrderDetailService(orderId, token);
+    // Connection event handlers
+    socketRef.current.on("connect", () => {
+      console.log("✅ Socket connected successfully");
+      console.log("Socket ID:", socketRef.current.id);
+      
+      // Optional: Join a room specific to this order
+      socketRef.current.emit("joinOrder", orderId);
+    });
 
-        console.log("Order data received:", response.data);
-        if (response.data.success && response.data.order) {
-          setOrder(response.data.order);
-        } else {
-          throw new Error("No order data received");
-        }
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        setError(error.message || "Failed to fetch order details");
-      } finally {
-        setLoading(false);
+    socketRef.current.on("disconnect", (reason) => {
+      console.log("❌ Socket disconnected:", reason);
+    });
+
+    socketRef.current.on("connect_error", (err) => {
+      console.error("❌ Socket connection error:", err);
+    });
+
+    // Listen for order updates
+    socketRef.current.on("orderUpdated", handleOrderUpdate);
+
+    // Listen for order completions (if your backend emits this event)
+    socketRef.current.on("orderCompleted", (completedOrder) => {
+      console.log("Order completed event received:", completedOrder);
+      if (String(completedOrder.order_id) === String(orderId)) {
+        handleOrderUpdate(completedOrder);
+      }
+    });
+
+    // Listen for status changes specifically
+    socketRef.current.on("statusChanged", (statusUpdate) => {
+      console.log("Status change event received:", statusUpdate);
+      if (String(statusUpdate.order_id) === String(orderId)) {
+        setOrder(prevOrder => ({
+          ...prevOrder,
+          status: statusUpdate.status,
+          updated_at: statusUpdate.updated_at || new Date().toISOString()
+        }));
+      }
+    });
+
+    return () => {
+      console.log("Cleaning up socket connection...");
+      if (socketRef.current) {
+        socketRef.current.off("orderUpdated", handleOrderUpdate);
+        socketRef.current.off("orderCompleted");
+        socketRef.current.off("statusChanged");
+        socketRef.current.disconnect();
       }
     };
+  }, [token, orderId, handleOrderUpdate]);
 
+  // Fetch initial order details
+  useEffect(() => {
+    console.log("Fetching details for order ID:", orderId);
     fetchOrderDetails();
-  }, [orderId]);
+  }, [fetchOrderDetails]);
+
+  // Debug: Log when order state changes
+  useEffect(() => {
+    console.log("🔄 Order state updated:", order);
+  }, [order, forceUpdate]);
 
   if (loading) {
     return <LoadingState />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 min-h-screen bg-amber-50">
+        <Sidebar />
+        <div className="flex-grow max-w-4xl mx-auto w-full">
+          <div className="mb-6">
+            <BackButton to="/orders" />
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6 border border-red-200">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
+              <p className="text-gray-700">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  fetchOrderDetails();
+                }}
+                className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -246,10 +403,15 @@ const OrderDetails = () => {
                   status={order.status}
                   className="px-4 py-2 rounded-full text-sm font-medium"
                 />
+                {/* Debug info - remove in production */}
+                <span className="text-xs text-gray-500">
+                  {new Date().toLocaleTimeString()}
+                </span>
               </div>
             </div>
 
             <OrderStatusAnimation status={order.status} />
+            
             {order.status?.toLowerCase() === "preparing" && (
               <div className="flex justify-center gap-2 mb-4">
                 <button
@@ -273,6 +435,7 @@ const OrderDetails = () => {
                 </button>
               </div>
             )}
+            
             <OrderDateInfo
               createdAt={order.created_at}
               updatedAt={order.updated_at}

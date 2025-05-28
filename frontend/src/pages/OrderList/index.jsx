@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import OrderCard from "./components/OrderCard";
 import LoadingState from "../../components/LoadingState";
-import { API_URL } from "../../config/api";
+import { API_URL,ORDER_URL } from "../../config/api";
 import SortButton from "../../components/SortButton";
 import DateFilterButton from "../../components/DateFilterButton";
+import io from "socket.io-client";
 
 const OrderList = () => {
   const token = localStorage.getItem("token");
@@ -33,6 +34,56 @@ const OrderList = () => {
       ],
     },
   ];
+
+  // --- SOCKET.IO SETUP ---
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    // Initialize socket connection
+    socketRef.current = io(ORDER_URL, {
+      transports: ["websocket"],
+      // If you need authentication, add: auth: { token }
+    });
+
+    // Listen for order updates
+    socketRef.current.on("orderUpdated", (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.order_id === updatedOrder.order_id
+            ? { ...order, ...updatedOrder }
+            : order
+        )
+      );
+    });
+
+    // Listen for order completions (if your backend emits this event)
+    socketRef.current.on("orderCompleted", (completedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.order_id === completedOrder.order_id
+            ? { ...order, ...completedOrder }
+            : order
+        )
+      );
+    });
+
+    // Listen for creation of new orders
+    socketRef.current.on("orderCreated", (newOrder) => {
+      setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    });
+
+    // Optionally handle socket errors
+    socketRef.current.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [token]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -63,6 +114,7 @@ const OrderList = () => {
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {

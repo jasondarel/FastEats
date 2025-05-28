@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+/* eslint-disable react/no-unescaped-entities */
+import { useState, useEffect, useRef } from "react";
 import RestaurantHeader from "./components/RestaurantHeader";
 import DashboardCharts from "./components/DashboardCharts";
 import Sidebar from "../../components/Sidebar";
@@ -13,6 +14,8 @@ import {
   Star,
   Calendar,
 } from "lucide-react";
+import io from "socket.io-client";
+import { ORDER_URL } from "../../config/api";
 import DashboardBanner from "./components/DashboardBanner";
 
 const RestaurantDashboard = () => {
@@ -25,11 +28,18 @@ const RestaurantDashboard = () => {
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
+  const socketRef = useRef(null);
 
   useEffect(() => {
+    // Initialize socket connection only once
+    const socket = io(ORDER_URL, {
+      transports: ["websocket"],
+      // If you need to send the token for auth, use: auth: { token }
+    });
+    socketRef.current = socket;
+
     const loadData = async () => {
       try {
-        // Fetch restaurant info
         const restInfo = await fetchRestaurantInfo(token);
         if (!restInfo || !restInfo.restaurant) {
           throw new Error("Failed to load restaurant information");
@@ -38,11 +48,9 @@ const RestaurantDashboard = () => {
         setRestaurantImage(restInfo.restaurant.restaurant_image);
 
         const orderData = await fetchOrderLists(token);
-
         setOrders(orderData?.orders || []);
       } catch (error) {
         setError(error.message || "Failed to load restaurant information");
-
         setOrders([]);
       } finally {
         setLoading(false);
@@ -50,6 +58,28 @@ const RestaurantDashboard = () => {
     };
 
     loadData();
+
+    // Listen to socket events
+    socket.on("orderCompleted", (updatedOrder) => {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === updatedOrder.id
+            ? { ...order, ...updatedOrder }
+            : order
+        )
+      );
+    });
+
+    // Optional: Listen to other events like new orders, etc.
+    // socket.on("newOrder", (newOrder) => {
+    //   setOrders((prevOrders) => [newOrder, ...prevOrders]);
+    // });
+
+    return () => {
+      socket.off("orderCompleted");
+      // socket.off("newOrder");
+      socket.disconnect();
+    };
   }, [token]);
 
   const calculateSummaryInfo = () => {
@@ -116,8 +146,6 @@ const RestaurantDashboard = () => {
     };
   };
 
-  // In your index.jsx file, update the calculateAdditionalMetrics function:
-
   const calculateAdditionalMetrics = () => {
     if (!orders || !Array.isArray(orders) || orders.length === 0) {
       return {
@@ -127,11 +155,6 @@ const RestaurantDashboard = () => {
         ordersByStatus: { preparing: 0, completed: 0, cancelled: 0 },
       };
     }
-
-    console.log(
-      "Order statuses:",
-      orders.map((order) => order.status)
-    );
 
     const summaryInfo = calculateSummaryInfo();
     const totalRevenue = parseFloat(summaryInfo.totalRevenue.replace("Rp", ""));
