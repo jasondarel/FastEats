@@ -975,7 +975,7 @@ export const updateOrder = async (req, res) => {
   try {
     const { order_id } = req.params;
     const { status } = req.body;
-    const validStatuses = ["pending", "preparing", "delivered"];
+    const validStatuses = ["pending", "preparing", "delivered,", "Completed", "cancelled"];
 
     if (!validStatuses.includes(status)) {
       logger.warn("Invalid status value");
@@ -983,14 +983,18 @@ export const updateOrder = async (req, res) => {
     }
 
     const result = await updateOrderStatusService(order_id, status);
-    if (result.rows.length === 0) {
+    if (!result) {
       logger.warn(`Order ${order_id} not found`);
       return res.status(404).json({
         error: "Order Not Found",
       });
     }
+
+    const io = req.app.get("io");
+
+    io.emit("orderUpdated", result);
     logger.info(`Order ${order_id} updated successfully`);
-    return res.json(result.rows[0]);
+    return responseSuccess(res, 200, "Order updated successfully", "order", result);
   } catch (error) {
     logger.error("Internal server error:", error);
     return res.status(500).json({ error: "Internal server error" });

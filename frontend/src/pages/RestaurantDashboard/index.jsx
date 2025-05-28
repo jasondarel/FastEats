@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import RestaurantHeader from "./components/RestaurantHeader";
 import DashboardCharts from "./components/DashboardCharts";
 import Sidebar from "../../components/Sidebar";
@@ -18,7 +18,6 @@ import io from "socket.io-client";
 import { ORDER_URL } from "../../config/api";
 
 const RestaurantDashboard = () => {
-  const socket = io(ORDER_URL);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [restaurantName, setRestaurantName] = useState("");
@@ -28,8 +27,16 @@ const RestaurantDashboard = () => {
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
+  const socketRef = useRef(null);
 
   useEffect(() => {
+    // Initialize socket connection only once
+    const socket = io(ORDER_URL, {
+      transports: ["websocket"],
+      // If you need to send the token for auth, use: auth: { token }
+    });
+    socketRef.current = socket;
+
     const loadData = async () => {
       try {
         const restInfo = await fetchRestaurantInfo(token);
@@ -51,6 +58,7 @@ const RestaurantDashboard = () => {
 
     loadData();
 
+    // Listen to socket events
     socket.on("orderCompleted", (updatedOrder) => {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -61,14 +69,15 @@ const RestaurantDashboard = () => {
       );
     });
 
-    // ✅ Optional: Listen to other events like new orders, etc.
+    // Optional: Listen to other events like new orders, etc.
     // socket.on("newOrder", (newOrder) => {
     //   setOrders((prevOrders) => [newOrder, ...prevOrders]);
     // });
 
-  
     return () => {
       socket.off("orderCompleted");
+      // socket.off("newOrder");
+      socket.disconnect();
     };
   }, [token]);
 
@@ -136,8 +145,6 @@ const RestaurantDashboard = () => {
     };
   };
 
-  // In your index.jsx file, update the calculateAdditionalMetrics function:
-
   const calculateAdditionalMetrics = () => {
     if (!orders || !Array.isArray(orders) || orders.length === 0) {
       return {
@@ -147,11 +154,6 @@ const RestaurantDashboard = () => {
         ordersByStatus: { preparing: 0, completed: 0, cancelled: 0 },
       };
     }
-
-    console.log(
-      "Order statuses:",
-      orders.map((order) => order.status)
-    );
 
     const summaryInfo = calculateSummaryInfo();
     const totalRevenue = parseFloat(summaryInfo.totalRevenue.replace("Rp", ""));

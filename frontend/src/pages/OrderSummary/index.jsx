@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { Navigate, useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import  { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import BackButton from "../../components/BackButton";
 import OrderStatus from "./components/OrderStatus";
 import OrderHeader from "./components/OrderHeader";
 import OrderInfo from "./components/OrderInfo";
 import OrderItems from "./components/OrderItems";
 import PaymentDetails from "./components/PaymentDetails";
-import { API_URL } from "../../config/api";
+import { API_URL, ORDER_URL } from "../../config/api";
 import Swal from "sweetalert2";
+import io from "socket.io-client";
 
 const OrderSummary = () => {
   const [orderData, setOrderData] = useState(null);
@@ -16,6 +16,7 @@ const OrderSummary = () => {
   const [error, setError] = useState(null);
   const { order_id } = useParams();
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchOrderSummary = async () => {
@@ -49,6 +50,48 @@ const OrderSummary = () => {
     fetchOrderSummary();
   }, [order_id]);
 
+  useEffect(() => {
+    if (!order_id) return;
+    socketRef.current = io(ORDER_URL, {
+      transports: ["websocket"],
+    });
+
+    socketRef.current.on("orderUpdated", (updatedOrder) => {
+      console.log("Order updated:", updatedOrder);
+      if (
+        updatedOrder.order_id === order_id ||
+        updatedOrder.order_id === Number(order_id)
+      ) {
+        setOrderData((prev) => {
+          if (!prev || !prev.order) return prev;
+          return { ...prev, order: { ...prev.order, ...updatedOrder } };
+        });
+      }
+    });
+
+    // Listen for order completions
+    socketRef.current.on("orderCompleted", (completedOrder) => {
+      if (
+        completedOrder.order_id === order_id ||
+        completedOrder.order_id === Number(order_id)
+      ) {
+        setOrderData((prev) => {
+          if (!prev || !prev.order) return prev;
+          return { ...prev, order: { ...prev.order, ...completedOrder } };
+        });
+      }
+    });
+
+    // Optionally handle socket errors
+    socketRef.current.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+    });
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [order_id]);
+
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -60,6 +103,7 @@ const OrderSummary = () => {
         minute: "2-digit",
       });
     } catch (error) {
+      console.error("Error formatting date:", error);
       return dateString;
     }
   };
