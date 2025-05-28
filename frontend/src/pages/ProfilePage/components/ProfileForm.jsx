@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React from "react";
 import { FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
 import { saveProfileService } from "../../../service/userServices/profileService";

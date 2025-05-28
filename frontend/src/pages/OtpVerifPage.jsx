@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";

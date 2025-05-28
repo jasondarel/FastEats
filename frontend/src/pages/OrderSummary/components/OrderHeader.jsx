@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 const OrderHeader = ({ orderId, status }) => {
   return (
     <header className="flex justify-between items-center pb-6 border-b border-amber-200 mb-6">

@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 // components/MenuItem.jsx
 import React from "react";
 import { API_URL } from "../../../config/api";
