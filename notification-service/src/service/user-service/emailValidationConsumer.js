@@ -51,7 +51,7 @@ const sendVerificationEmail = async (email, token, otpCode) => {
   logger.info(`📧 Verification email sent to ${email}`);
 };
 
-const startConsumer = async () => {
+const startEmailVerificationConsumer = async () => {
   try {
     logger.info("⏳ Connecting to RabbitMQ...");
     logger.info(`🔗 RabbitMQ URL: ${RABBITMQ_URL}`);
@@ -90,4 +90,4 @@ const startConsumer = async () => {
   }
 };
 
-export default startConsumer;
+export default startEmailVerificationConsumer;
