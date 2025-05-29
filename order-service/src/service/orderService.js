@@ -93,6 +93,26 @@ export const completeOrderService = async (orderId) => {
   return result.rows[0];
 };
 
+export const getOrderJobsByRoutingKeyService = async (routingKey, status) => {
+  const result = await pool.query(
+    `SELECT * FROM order_jobs
+    WHERE routing_key = $1 AND status = $2
+    ORDER BY created_at DESC`,
+    [routingKey, status]
+  );
+  return result.rows;
+}
+
+export const updateOrderJobStatusService = async (jobId, status) => {
+  const result = await pool.query(
+    `UPDATE order_jobs
+    SET status = $1, updated_at = NOW()
+    WHERE id = $2 RETURNING *`,
+    [status, jobId]
+  );
+  return result.rows[0];
+}
+
 export const createPreparingOrderJobService = async(payload) => {
   const result = await pool.query(
     `INSERT INTO order_jobs (payload, routing_key)

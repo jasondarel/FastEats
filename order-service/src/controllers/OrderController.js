@@ -42,6 +42,7 @@ import { responseSuccess, responseError } from "../util/responseUtil.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
+const internalAPIKey = process.env.INTERNAL_API_KEY;
 
 export const createOrderController = async (req, res) => {
   logger.info("CREATE ORDER CONTROLLER");
@@ -929,9 +930,96 @@ export const payOrderController = async (req, res) => {
             message: "Order items not found",
           });
         }
+        const itemsWithMenuDetails = await Promise.all(
+          orderItems.items.map(async (item) => {
+            try {
+              const menuResponse = await axios.get(
+                `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+                {
+                  headers: {
+                    Authorization: internalAPIKey,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+              return {
+                ...item,
+                menu_name: menuResponse.data.menu?.name || menuResponse.data.menu?.menu_name || `Menu #${item.menu_id}`,
+                menu_description: menuResponse.data.menu?.menu_description || "",
+                menu_price: menuResponse.data.menu?.menu_price || 0,
+                menu_image: menuResponse.data.menu?.image || menuResponse.data.menu?.menu_image || "",
+                menu_category: menuResponse.data.menu?.category || "",
+              };
+            } catch (error) {
+              logger.error(`Failed to fetch menu details for menu_id ${item.menu_id}:`, error.message);
 
-        const insertPreparingJobsResponse =
-          await createPreparingOrderJobService(orderItems);
+              return {
+                ...item,
+                menu_name: `Menu #${item.menu_id}`,
+                menu_description: "Menu details unavailable",
+                menu_price: 0,
+                menu_image: "",
+                menu_category: "Unknown",
+              };
+            }
+          })
+        );
+
+        const restaurantDetails = await axios.get(
+          `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${orderItems.restaurant_id}`,
+          {
+            headers: {
+              Authorization: internalAPIKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!restaurantDetails.data.restaurant) {
+          logger.warn(`Restaurant not found for order ${order_id}`);
+          return responseError(res, 404, "Restaurant not found");
+        }
+
+        const ownerData = await axios.get(
+          `${GLOBAL_SERVICE_URL}/user/user/${restaurantDetails.data.restaurant.owner_id}`,
+          {
+            headers: {
+              Authorization: internalAPIKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!ownerData) {
+          logger.warn(`Owner not found for restaurant ${restaurantDetails.data.restaurant.owner_id}`);
+          return responseError(res, 404, "Owner not found");
+        }
+
+        const customerData = await axios.get(
+          `${GLOBAL_SERVICE_URL}/user/user/${orderItems.user_id}`,
+          {
+            headers: {
+              Authorization: internalAPIKey,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!customerData) {
+          logger.warn(`Customer not found for user_id ${orderItems.user_id}`);
+          return responseError(res, 404, "Customer not found");
+        }
+
+        const completeOrderData = {
+          ...orderItems,
+          items: itemsWithMenuDetails,
+          restaurant: restaurantDetails.data.restaurant,
+          ownerName: ownerData.data.user.name,
+          ownerEmail: ownerData.data.user.email,
+          customerName: customerData.data.user.name,
+          customerEmail: customerData.data.user.email,
+        };
+
+        const insertPreparingJobsResponse = await createPreparingOrderJobService(completeOrderData);
+
         if (!insertPreparingJobsResponse) {
           logger.error("Failed to create preparing order jobs");
           return res.status(500).json({
