@@ -1,13 +1,15 @@
 import logger from "./src/config/loggerInit.js";
 import express from "express";
 import cors from "cors";
-import OrderRoutes from "./src/routes/orderRoutes.js";
+import OrderRoutes from "./src/routes/OrderRoutes.js";
 import envInit from "./src/config/envInit.js";
 import createTables from "./src/config/tablesInit.js";
 import { createDatabase, testDatabase } from "./src/config/dbInit.js";
 import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
 import { Server as SocketIOServer } from "socket.io";
 import http from "http";
+import cron from "node-cron";
+import { publishPreparingOrderMessage } from "./src/util/orderUtil.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -46,9 +48,21 @@ app.use(OrderRoutes);
 
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
 
+    // Start server after all initializations
     server.listen(PORT, () => {
       logger.info(`🚀 Server with WebSocket running on http://localhost:${PORT}`);
     });
+
+    cron.schedule("*/5 * * * * *", async () => {
+      logger.info("⏰ Running scheduled publisher: publishPreparingOrderMessage");
+      const payload = {
+        email: "cron@example.com",
+        orderId: "CRON_ORDER_ID",
+        completedAt: new Date().toISOString()
+      };
+      await publishPreparingOrderMessage();
+    });
+
   } catch (error) {
     logger.error("❌ Error initializing services:", error);
   }
