@@ -68,7 +68,7 @@ const ChatCard = ({ chat, role="seller" }) => {
     }
 
     // Navigate to the chat room with the order ID
-    navigate(`/chat/${chat.order_id}`, {
+    navigate(`/chat/${chat.chat_id}`, {
       state: {
         restaurantId: chat.restaurant?.restaurant_id,
         restaurantName: chat.restaurant?.restaurant_name,

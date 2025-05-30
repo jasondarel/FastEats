@@ -44,6 +44,7 @@ const ChatsList = () => {
   }, []);
 
   const transformedChats = chats.map(chat => ({
+    chat_id: chat._id,
     order_id: chat.orderId || -1,
     order_type: chat.orderReference ? "CHECKOUT" : "CART",
     status: chat.status === "active" ? "Preparing" : 

@@ -2,6 +2,7 @@ import {
   getChatsServiceByUserId,
   getChatsServiceByRestaurantId,
   createChatService,
+  getChatByIdService,
 } from "../service/chatService.js";
 import {} from "../validator/chatValidators.js";
 import axios from "axios";
@@ -189,6 +190,103 @@ export const getChatsController = async (req, res) => {
     return responseError(res, 500, "Internal Server Error");
   }
 };
+
+export const getChatByIdController = async(req, res) => {
+  logger.info("GET CHAT BY ID CONTROLLER");
+  const { userId, role } = req.user;
+  const { chat_id } = req.params;
+  const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+  let credentialId;
+  console.log("TOken", token);
+  try {
+    const chat = await getChatByIdService(chat_id);
+    if (!chat.success) {
+      logger.warn("Chat not found");
+      return responseError(res, 404, "Chat not found");
+    }
+    const chatData = chat.chat;
+    
+    if (role === "user") {
+      credentialId = userId;
+    } else {
+      const restaurant = await axios.get(
+        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!restaurant.data.success) {
+        logger.warn("Restaurant not found");
+        return responseError(res, 404, "Restaurant not found");
+      }
+      credentialId = chatData.restaurantId || restaurant.data.restaurant.restaurant_id;
+    }
+
+    if (!credentialId) {
+      logger.warn("Credential ID not found");
+      return responseError(res, 400, "Credential ID not found");
+    }
+
+    if (credentialId !== userId) {
+      logger.warn("Unauthorized access to chat");
+      return responseError(res, 403, "Unauthorized access to chat");
+    }
+
+    const orderResponse = await axios.get(
+      `${GLOBAL_SERVICE_URL}/order/order-items/${chatData.orderId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const itemsWithMenu = await Promise.all(
+      orderResponse.data.order.items.map(async (item) => {
+        try {
+          const menuResponse = await axios.get(
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          return {
+            ...item,
+            menuDetails: menuResponse.data.menu,
+          };
+        } catch (error) {
+          logger.warn(
+            `Failed to fetch menu for item ${item.menu_id}:`,
+            error.message
+          );
+          return {
+            ...item,
+            menuDetails: null,
+          };
+        }
+      })
+    );
+
+    const chatDataWithDetails = {
+      ...chatData.toObject ? chatData.toObject() : chatData,
+      orderDetails: {
+        ...orderResponse.data.order,
+        items: itemsWithMenu,
+      },
+    }
+    
+    logger.info("Get chat by ID success");
+    return responseSuccess(res, 200, "Get chat by ID success", "dataChat", chatDataWithDetails);
+  } catch (err) {
+    logger.error("Internal Server Error", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+}
 
 export const createChatController = async (req, res) => {
   logger.info("CREATE CHAT CONTROLLER");
