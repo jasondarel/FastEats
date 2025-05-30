@@ -7,7 +7,6 @@ import StatusBadge from "../../../components/StatusBadge";
 import { API_URL } from "../../../config/api";
 
 const ChatCard = ({ chat, role="seller" }) => {
-  console.log("ChatCard props:", chat);
   console.log("Role in ChatCard:", role);
   const navigate = useNavigate();
   const isCompleted = chat.orderDetails?.status === "Completed" || false;
@@ -68,16 +67,30 @@ const ChatCard = ({ chat, role="seller" }) => {
     }
 
     // Navigate to the chat room with the order ID
-    navigate(`/chat/${chat.order_id}`, {
-      state: {
-        restaurantId: chat.restaurant?.restaurant_id,
-        restaurantName: chat.restaurant?.restaurant_name,
-        restaurantImage: chat.restaurant?.restaurant_image,
+    let locationState;
+    if (role === "seller") {
+      locationState = {
+        customerName: chat.user?.name || "Customer",
+        customerImage: chat.user?.profile_photo || null,
         orderId: chat.order_id,
         orderType: chat.order_type,
-        orderStatus: chat.orderDetails?.status,
         totalPrice,
         itemCount,
+      }
+    } else {
+      locationState = {
+        restaurantName: chat.restaurant?.restaurant_name,
+        restaurantImage: `http://localhost:5000/restaurant/uploads/restaurant/${chat.restaurant?.restaurant_image}`,
+        orderId: chat.order_id,
+        orderType: chat.order_type,
+        totalPrice,
+        itemCount,
+      };
+    }
+
+    navigate(`/chat/${chat.chat_id}`, {
+      state: {
+        ...locationState,
       },
     });
   };

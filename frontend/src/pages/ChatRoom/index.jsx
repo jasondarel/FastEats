@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -9,91 +10,117 @@ import {
 } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import StatusBadge from "../../components/StatusBadge";
+import { getChatByIdService } from "../../service/chatServices/chatService";
 
 // Dummy chat messages for demo
-const DUMMY_MESSAGES = {
-  12345: [
-    {
-      id: 1,
-      sender: "restaurant",
-      message: "Hello! We've received your order and are starting preparation.",
-      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 2,
-      sender: "user",
-      message: "Great! How long will it take approximately?",
-      timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 3,
-      sender: "restaurant",
-      message: "Your order is being prepared and will be ready in 15 minutes!",
-      timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    },
-  ],
-  12346: [
-    {
-      id: 1,
-      sender: "restaurant",
-      message:
-        "Thank you for your order! We're reviewing your special request.",
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 2,
-      sender: "restaurant",
-      message:
-        "We're working on your special request. Thanks for your patience!",
-      timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    },
-  ],
-  12348: [
-    {
-      id: 1,
-      sender: "restaurant",
-      message: "Thank you for your order! We'll start preparing it shortly.",
-      timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-    },
-  ],
-  12349: [
-    {
-      id: 1,
-      sender: "restaurant",
-      message: "Hello! Your order has been received.",
-      timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 2,
-      sender: "user",
-      message: "Hi! Can you make sure the pizza is extra crispy?",
-      timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 3,
-      sender: "restaurant",
-      message: "Chef is preparing your order with extra care! ETA: 10 minutes.",
-      timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-    },
-  ],
-};
+// const DUMMY_MESSAGES = {
+//   12345: [
+//     {
+//       id: 1,
+//       sender: "restaurant",
+//       message: "Hello! We've received your order and are starting preparation.",
+//       timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+//     },
+//     {
+//       id: 2,
+//       sender: "user",
+//       message: "Great! How long will it take approximately?",
+//       timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+//     },
+//     {
+//       id: 3,
+//       sender: "restaurant",
+//       message: "Your order is being prepared and will be ready in 15 minutes!",
+//       timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+//     },
+//   ],
+//   12346: [
+//     {
+//       id: 1,
+//       sender: "restaurant",
+//       message:
+//         "Thank you for your order! We're reviewing your special request.",
+//       timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+//     },
+//     {
+//       id: 2,
+//       sender: "restaurant",
+//       message:
+//         "We're working on your special request. Thanks for your patience!",
+//       timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+//     },
+//   ],
+//   12348: [
+//     {
+//       id: 1,
+//       sender: "restaurant",
+//       message: "Thank you for your order! We'll start preparing it shortly.",
+//       timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+//     },
+//   ],
+//   12349: [
+//     {
+//       id: 1,
+//       sender: "restaurant",
+//       message: "Hello! Your order has been received.",
+//       timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+//     },
+//     {
+//       id: 2,
+//       sender: "user",
+//       message: "Hi! Can you make sure the pizza is extra crispy?",
+//       timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+//     },
+//     {
+//       id: 3,
+//       sender: "restaurant",
+//       message: "Chef is preparing your order with extra care! ETA: 10 minutes.",
+//       timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+//     },
+//   ],
+// };
 
 const ChatRoom = () => {
   const { chatId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
-
+  
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [fetchedOrderDetails, setFetchedOrderDetails] = useState(null);
+  const [error, setError] = useState(null);
 
   // Get order details from navigation state
   const orderDetails = location.state || {};
+  console.log("Order Details:", orderDetails);
 
-  // Format price function
+  // Fetch order details function
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+      
+      const chat = await getChatByIdService(chatId, token);
+      console.log("Fetched chat details:", chat);
+      setFetchedOrderDetails(chat.dataChat);
+    } catch (err) {
+      console.error("Error fetching order details:", err);
+      setError(err.message || "Failed to fetch order details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatPrice = (price) => {
+    if (!price || isNaN(price)) return "Rp 0";
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
@@ -103,41 +130,60 @@ const ChatRoom = () => {
 
   // Format time function
   const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid time";
+      return date.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (err) {
+      return "Invalid time";
+    }
   };
 
   // Format date function for message grouping
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid date";
+      
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
+      if (date.toDateString() === today.toDateString()) {
+        return "Today";
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+      } else {
+        return date.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+      }
+    } catch (err) {
+      return "Invalid date";
     }
   };
 
-  // Load messages
+  // Load messages and fetch order details on component mount
   useEffect(() => {
-    const loadMessages = () => {
-      const chatMessages = DUMMY_MESSAGES[chatId] || [];
-      setMessages(chatMessages);
-    };
+    // const loadMessages = () => {
+    //   if (chatId && DUMMY_MESSAGES[chatId]) {
+    //     setMessages(DUMMY_MESSAGES[chatId]);
+    //   } else {
+    //     setMessages([]);
+    //   }
+    // };
 
-    loadMessages();
+    // loadMessages();
+    
+    // Fetch order details if chatId exists
+    if (chatId) {
+      fetchOrderDetails();
+    }
   }, [chatId]);
 
   // Auto scroll to bottom when new messages arrive
@@ -151,7 +197,7 @@ const ChatRoom = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || loading) return;
+    if (!newMessage.trim() || loading || isTyping) return;
 
     const message = {
       id: Date.now(),
@@ -198,6 +244,12 @@ const ChatRoom = () => {
     navigate("/chat");
   };
 
+  const handleQuickMessage = (message) => {
+    if (!loading && !isTyping) {
+      setNewMessage(message);
+    }
+  };
+
   // Group messages by date
   const groupedMessages = messages.reduce((groups, message) => {
     const date = formatDate(message.timestamp);
@@ -207,6 +259,29 @@ const ChatRoom = () => {
     groups[date].push(message);
     return groups;
   }, {});
+
+  // Get the current order details (prioritize fetched over passed state)
+  const currentOrderDetails = fetchedOrderDetails;
+
+  if (error) {
+    return (
+      <div className="flex flex-col md:flex-row w-full md:pl-64 h-screen bg-yellow-50">
+        <Sidebar />
+        <div className="flex flex-col flex-grow h-full items-center justify-center">
+          <div className="text-center p-8">
+            <p className="text-red-600 text-lg font-medium mb-4">Error loading chat</p>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => navigate("/chat")}
+              className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+            >
+              Go Back to Chats
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row w-full md:pl-64 h-screen bg-yellow-50">
@@ -221,16 +296,17 @@ const ChatRoom = () => {
                 <button
                   onClick={handleBackClick}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Go back to chat list"
                 >
                   <FaArrowLeft className="text-gray-600" />
                 </button>
 
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
-                    {orderDetails.restaurantImage ? (
+                    {orderDetails.restaurantImage || orderDetails.customerImage ? (
                       <img
-                        src={orderDetails.restaurantImage}
-                        alt={orderDetails.restaurantName}
+                        src={orderDetails.restaurantImage || orderDetails.customerImage}
+                        alt={orderDetails.restaurantName || orderDetails.customerName || "Profile"}
                         className="h-full w-full object-cover"
                         onError={(e) => {
                           e.target.style.display = "none";
@@ -240,21 +316,21 @@ const ChatRoom = () => {
                     ) : null}
                     <FaStore
                       className={`text-yellow-600 ${
-                        orderDetails.restaurantImage ? "hidden" : "flex"
+                        orderDetails.restaurantImage || orderDetails.customerImage ? "hidden" : "flex"
                       }`}
                     />
                   </div>
 
                   <div>
                     <h3 className="font-semibold text-gray-800">
-                      {orderDetails.restaurantName || "Restaurant"}
+                      {orderDetails.restaurantName || orderDetails.customerName || "Restaurant"}
                     </h3>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-500">
-                        Order #{chatId?.toString().slice(-6)}
+                        Order #{orderDetails.orderId || chatId || "Unknown"}
                       </span>
                       <StatusBadge
-                        status={orderDetails.orderStatus || "Unknown"}
+                        status={currentOrderDetails?.orderDetails?.status || "Unknown"}
                         className="text-xs px-2 py-1 rounded-full"
                       />
                     </div>
@@ -266,16 +342,17 @@ const ChatRoom = () => {
                 <div className="text-right text-sm">
                   <div className="text-gray-600">
                     {orderDetails.itemCount || 0} item
-                    {orderDetails.itemCount !== 1 ? "s" : ""}
+                    {(orderDetails.itemCount || 0) !== 1 ? "s" : ""}
                   </div>
                   <div className="font-semibold text-gray-800">
-                    {formatPrice(orderDetails.totalPrice || 0)}
+                    {formatPrice(orderDetails.totalPrice)}
                   </div>
                 </div>
 
                 <button
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   onClick={() => alert("Calling restaurant... (Demo feature)")}
+                  aria-label="Call restaurant"
                 >
                   <FaPhoneAlt className="text-yellow-600" />
                 </button>
@@ -409,25 +486,21 @@ const ChatRoom = () => {
                 {/* Quick Actions */}
                 <div className="flex space-x-2 mt-3">
                   <button
-                    onClick={() =>
-                      setNewMessage("How long will my order take?")
-                    }
+                    onClick={() => handleQuickMessage("How long will my order take?")}
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
                     disabled={loading || isTyping}
                   >
                     Order time?
                   </button>
                   <button
-                    onClick={() =>
-                      setNewMessage("Can I make changes to my order?")
-                    }
+                    onClick={() => handleQuickMessage("Can I make changes to my order?")}
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
                     disabled={loading || isTyping}
                   >
                     Make changes?
                   </button>
                   <button
-                    onClick={() => setNewMessage("Thank you!")}
+                    onClick={() => handleQuickMessage("Thank you!")}
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
                     disabled={loading || isTyping}
                   >

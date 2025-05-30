@@ -21,6 +21,19 @@ export const getChatsServiceByRestaurantId = async (restaurantId) => {
     }
 };
 
+export const getChatByIdService = async (chatId) => {
+    try {
+        const chat = await Chat.findById(chatId);
+        if (!chat) {
+            return { success: false, error: 'Chat not found' };
+        }
+        return { success: true, chat };
+    } catch (error) {
+        logger.error('Error retrieving chat by ID:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 export const createChatService = async (chatData) => {
     try {
         if (chatData.restaurantId) chatData.restaurantId = Number(chatData.restaurantId);
