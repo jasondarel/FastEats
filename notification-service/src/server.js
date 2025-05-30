@@ -3,6 +3,7 @@ import logger from "./config/loggerInit.js";
 import startOrderPreparingConsumer from "./service/order-service/orderPreparingConsumer.js";
 import startEmailVerificationConsumer from "./service/user-service/emailValidationConsumer.js";
 import envInit from "./config/envInit.js";
+import startOrderCompletedConsumer from "./service/order-service/orderCompletedConsumer.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -20,6 +21,7 @@ const start = async () => {
   try {
     await startEmailVerificationConsumer();
     await startOrderPreparingConsumer();
+    await startOrderCompletedConsumer();
     app.listen(PORT, () => {
       logger.info(`🚀 Server running on port ${PORT}`);
     });

@@ -9,7 +9,7 @@ import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
 import { Server as SocketIOServer } from "socket.io";
 import http from "http";
 import cron from "node-cron";
-import { publishPreparingOrderMessage } from "./src/util/orderUtil.js";
+import { publishCompletedOrderMessage, publishPreparingOrderMessage } from "./src/util/orderUtil.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -55,12 +55,12 @@ app.use(OrderRoutes);
 
     cron.schedule("*/5 * * * * *", async () => {
       logger.info("⏰ Running scheduled publisher: publishPreparingOrderMessage");
-      const payload = {
-        email: "cron@example.com",
-        orderId: "CRON_ORDER_ID",
-        completedAt: new Date().toISOString()
-      };
       await publishPreparingOrderMessage();
+    });
+
+    cron.schedule("*/5 * * * * *", async () => {
+      logger.info("⏰ Running scheduled publisher: publishCompletedOrderMessage");
+      await publishCompletedOrderMessage();
     });
 
   } catch (error) {
