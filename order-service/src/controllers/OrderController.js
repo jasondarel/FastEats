@@ -31,6 +31,7 @@ import {
   getOrderItemsByOrderIdService,
   getAllOrderWithItemsByOrderIdService,
   createPreparingOrderJobService,
+  createCompletedOrderJobService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -601,8 +602,7 @@ export const completeOrderController = async (req, res) => {
     }
 
     logger.info(`Fetching order ${order_id}...`);
-    const order = await getOrderByIdService(order_id);
-
+    const order = await getAllOrderWithItemsByOrderIdService(order_id);
     if (!order) {
       logger.warn(`Order ${order_id} not found`);
       return responseError(res, 404, "Order not found");
@@ -622,21 +622,13 @@ export const completeOrderController = async (req, res) => {
       );
       restaurant = response.data.restaurant;
     } catch (err) {
-      logger.error(
-        `Failed to fetch restaurant ${order.restaurant_id}: ${err.message}`
-      );
+      logger.error(`Failed to fetch restaurant ${order.restaurant_id}: ${err.message}`);
       return responseError(res, 404, "Restaurant not found");
     }
 
     if (restaurant.owner_id !== userId) {
-      logger.warn(
-        `Unauthorized access attempt by user ${userId} on order ${order_id}`
-      );
-      return responseError(
-        res,
-        403,
-        "You are not authorized to complete this order"
-      );
+      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
+      return responseError(res, 403, "You are not authorized to complete this order");
     }
 
     if (order.status === "Completed") {
@@ -645,36 +637,115 @@ export const completeOrderController = async (req, res) => {
     }
 
     if (order.status !== "Preparing") {
-      logger.warn(
-        `Order ${order_id} cannot be completed (Current status: ${order.status})`
-      );
+      logger.warn(`Order ${order_id} cannot be completed (Current status: ${order.status})`);
       return responseError(res, 400, "Order cannot be completed");
     }
 
     logger.info(`Completing order ${order_id}...`);
     const result = await completeOrderService(order_id);
-
     if (!result) {
       logger.error(`Failed to complete order ${order_id}`);
       return responseError(res, 500, "Failed to complete order");
     }
 
     logger.info(`Order ${order_id} completed successfully`);
+    const updatedOrder = await getAllOrderWithItemsByOrderIdService(order_id);
 
     const io = req.app.get("io");
     io.emit("orderCompleted", {
-      id: order.id,
-      status: "Completed",
+      id: updatedOrder.id,
+      status: updatedOrder.status,
       completed_at: new Date(),
     });
 
+    const [ownerResult, customerResult] = await Promise.all([
+      axios.get(`${GLOBAL_SERVICE_URL}/user/user/${userId}`, {
+        headers: {
+          Authorization: internalAPIKey,
+          "Content-Type": "application/json",
+        },
+      }).catch(err => {
+        logger.error(`Failed to fetch owner data for user ${userId}:`, err.message);
+        return null;
+      }),
+      axios.get(`${GLOBAL_SERVICE_URL}/user/user/${updatedOrder.user_id}`, {
+        headers: {
+          Authorization: internalAPIKey,
+          "Content-Type": "application/json",
+        },
+      }).catch(err => {
+        logger.error(`Failed to fetch customer data for user ${updatedOrder.user_id}:`, err.message);
+        return null;
+      })
+    ]);
+
+    if (!ownerResult?.data?.user) {
+      logger.warn(`Owner not found for user ${userId}`);
+      return responseError(res, 404, "Owner not found");
+    }
+
+    if (!customerResult?.data?.user) {
+      logger.warn(`Customer not found for user ${updatedOrder.user_id}`);
+      return responseError(res, 404, "Customer not found");
+    }
+
+    const itemsWithMenuDetails = await Promise.all(
+      updatedOrder.items.map(async (item) => {
+        try {
+          const menuResponse = await axios.get(
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
+            {
+              headers: {
+                Authorization: internalAPIKey,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          
+          const menu = menuResponse.data.menu;
+          return {
+            ...item,
+            menu_name: menu?.name || menu?.menu_name || `Menu #${item.menu_id}`,
+            menu_description: menu?.menu_description || "",
+            menu_price: menu?.menu_price || 0,
+            menu_image: menu?.image || menu?.menu_image || "",
+            menu_category: menu?.category || "",
+          };
+        } catch (error) {
+          logger.error(`Failed to fetch menu details for menu_id ${item.menu_id}:`, error.message);
+          return {
+            ...item,
+            menu_name: `Menu #${item.menu_id}`,
+            menu_description: "Menu details unavailable",
+            menu_price: 0,
+            menu_image: "",
+            menu_category: "Unknown",
+          };
+        }
+      })
+    );
+
+    const orderDetails = {
+      order_id: updatedOrder.order_id,
+      restaurant_name: restaurant.restaurant_name,
+      customer_name: customerResult.data.user.name,
+      owner_name: ownerResult.data.user.name,
+      owner_email: ownerResult.data.user.email,
+      customer_email: customerResult.data.user.email,
+      total_price: updatedOrder.total_price,
+      completed_at: new Date(),
+      order: { ...updatedOrder, items: itemsWithMenuDetails },
+    };
+
+    await createCompletedOrderJobService(orderDetails);
+    
     return responseSuccess(res, 200, "Order completed successfully");
+    
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
   }
 };
-
 
 export const getOrderByIdController = async (req, res) => {
   logger.info("GET ORDER BY ID CONTROLLER");
@@ -701,7 +772,6 @@ export const getOrderByIdController = async (req, res) => {
     }
 
     if (result.order_type === "CHECKOUT") {
-      // For CHECKOUT type, fetch single menu
       const menu = await axios.get(
         `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${result.menu_id}`,
         {
