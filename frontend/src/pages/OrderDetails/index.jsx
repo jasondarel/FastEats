@@ -8,7 +8,10 @@ import {
   checkMidtransStatusService,
   getOrderDetailService,
 } from "../../service/orderServices/orderDetails";
-import { createChatService } from "../../service/chatServices/chatsListService";
+import {
+  createChatService,
+  getChatsService,
+} from "../../service/chatServices/chatsListService";
 import Sidebar from "../../components/Sidebar";
 import BackButton from "../../components/BackButton";
 import StatusBadge from "../../components/StatusBadge";
@@ -70,11 +73,44 @@ const OrderDetails = () => {
     });
   };
 
-  const handleChatWithRestaurant = () => {
-    navigate(`/chat/${orderId}`);
+  const handleChatWithRestaurant = async () => {
+    try {
+      const existingChatsResponse = await getChatsService(token);
+
+      if (existingChatsResponse.success) {
+        const existingChat = existingChatsResponse.dataChats?.find(
+          (chat) => String(chat.orderId) === String(orderId)
+        );
+
+        if (existingChat) {
+          console.log("Chat already exists, navigating to:", existingChat._id);
+          navigate(`/chat/${existingChat._id}`);
+          return;
+        }
+      }
+
+      console.log("Creating new chat for order:", orderId);
+      const chatResult = await createChatService(orderId, token);
+
+      if (chatResult.success && chatResult.dataChat?.chat) {
+        const chatId = chatResult.dataChat.chat._id;
+        console.log("Chat created successfully, navigating to:", chatId);
+        navigate(`/chat/${chatId}`);
+      } else {
+        throw new Error("Failed to create chat - invalid response");
+      }
+    } catch (error) {
+      console.error("Error handling chat with restaurant:", error);
+
+      Swal.fire({
+        title: "Error",
+        text: "Failed to open chat with restaurant. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
-  // Fetch order data function
   const fetchOrderDetails = useCallback(async () => {
     if (!orderId) {
       setError("Order ID is missing");
@@ -105,45 +141,51 @@ const OrderDetails = () => {
   }, [orderId]);
 
   // Handle socket order updates
-  const handleOrderUpdate = useCallback((updatedOrder) => {
-    console.log("=== SOCKET ORDER UPDATE ===");
-    console.log("Updated order received:", updatedOrder);
-    console.log("Current orderId from params:", orderId);
-    console.log("Updated order ID:", updatedOrder.order_id);
-    console.log("ID comparison:", String(updatedOrder.order_id) === String(orderId));
-    
-    // Convert both IDs to strings for comparison (handles type mismatch)
-    if (String(updatedOrder.order_id) === String(orderId)) {
-      console.log("✅ IDs match, updating order state...");
-      
-      setOrder((prevOrder) => {
-        console.log("Previous order state:", prevOrder);
-        
-        // Deep merge to ensure all properties are updated correctly
-        const newOrder = {
-          ...prevOrder,
-          ...updatedOrder,
-          // Ensure nested objects are properly merged
-          menu: updatedOrder.menu ? 
-            { ...prevOrder?.menu, ...updatedOrder.menu } : 
-            prevOrder?.menu,
-          restaurant: updatedOrder.restaurant ? 
-            { ...prevOrder?.restaurant, ...updatedOrder.restaurant } : 
-            prevOrder?.restaurant,
-        };
-        
-        console.log("New order state:", newOrder);
+  const handleOrderUpdate = useCallback(
+    (updatedOrder) => {
+      console.log("=== SOCKET ORDER UPDATE ===");
+      console.log("Updated order received:", updatedOrder);
+      console.log("Current orderId from params:", orderId);
+      console.log("Updated order ID:", updatedOrder.order_id);
+      console.log(
+        "ID comparison:",
+        String(updatedOrder.order_id) === String(orderId)
+      );
+
+      // Convert both IDs to strings for comparison (handles type mismatch)
+      if (String(updatedOrder.order_id) === String(orderId)) {
+        console.log("✅ IDs match, updating order state...");
+
+        setOrder((prevOrder) => {
+          console.log("Previous order state:", prevOrder);
+
+          // Deep merge to ensure all properties are updated correctly
+          const newOrder = {
+            ...prevOrder,
+            ...updatedOrder,
+            // Ensure nested objects are properly merged
+            menu: updatedOrder.menu
+              ? { ...prevOrder?.menu, ...updatedOrder.menu }
+              : prevOrder?.menu,
+            restaurant: updatedOrder.restaurant
+              ? { ...prevOrder?.restaurant, ...updatedOrder.restaurant }
+              : prevOrder?.restaurant,
+          };
+
+          console.log("New order state:", newOrder);
+          console.log("=== END SOCKET UPDATE ===");
+          return newOrder;
+        });
+
+        // Force re-render to ensure UI updates
+        setForceUpdate((prev) => prev + 1);
+      } else {
+        console.log("❌ Order IDs don't match - ignoring update");
         console.log("=== END SOCKET UPDATE ===");
-        return newOrder;
-      });
-      
-      // Force re-render to ensure UI updates
-      setForceUpdate(prev => prev + 1);
-    } else {
-      console.log("❌ Order IDs don't match - ignoring update");
-      console.log("=== END SOCKET UPDATE ===");
-    }
-  }, [orderId]);
+      }
+    },
+    [orderId]
+  );
 
   // Initialize Midtrans Snap
   useEffect(() => {
@@ -184,8 +226,6 @@ const OrderDetails = () => {
             console.log("success", result);
 
             try {
-              const chatResult = await createChatService(orderId, token);
-              console.log("Chat created:", chatResult);
               alert("Pembayaran berhasil!");
               // Refetch order data to get updated status
               await fetchOrderDetails();
@@ -285,15 +325,15 @@ const OrderDetails = () => {
     socketRef.current = io(ORDER_URL, {
       transports: ["websocket"],
       auth: {
-        token: token // Pass token for authentication if needed
-      }
+        token: token, // Pass token for authentication if needed
+      },
     });
 
     // Connection event handlers
     socketRef.current.on("connect", () => {
       console.log("✅ Socket connected successfully");
       console.log("Socket ID:", socketRef.current.id);
-      
+
       // Optional: Join a room specific to this order
       socketRef.current.emit("joinOrder", orderId);
     });
@@ -321,10 +361,10 @@ const OrderDetails = () => {
     socketRef.current.on("statusChanged", (statusUpdate) => {
       console.log("Status change event received:", statusUpdate);
       if (String(statusUpdate.order_id) === String(orderId)) {
-        setOrder(prevOrder => ({
+        setOrder((prevOrder) => ({
           ...prevOrder,
           status: statusUpdate.status,
-          updated_at: statusUpdate.updated_at || new Date().toISOString()
+          updated_at: statusUpdate.updated_at || new Date().toISOString(),
         }));
       }
     });
@@ -411,7 +451,7 @@ const OrderDetails = () => {
             </div>
 
             <OrderStatusAnimation status={order.status} />
-            
+
             {order.status?.toLowerCase() === "preparing" && (
               <div className="flex justify-center gap-2 mb-4">
                 <button
@@ -435,7 +475,7 @@ const OrderDetails = () => {
                 </button>
               </div>
             )}
-            
+
             <OrderDateInfo
               createdAt={order.created_at}
               updatedAt={order.updated_at}
