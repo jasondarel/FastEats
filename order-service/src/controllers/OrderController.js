@@ -812,7 +812,7 @@ export const payOrderConfirmationController = async (req, res) => {
       {
         transaction_details: {
           order_id,
-          gross_amount: itemPrice * itemQuantity,
+          gross_amount: itemPrice,
         },
         credit_card: { secure: true },
         isProduction: process.env.IS_PRODUCTION,
