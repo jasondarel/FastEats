@@ -40,6 +40,8 @@ import {
 } from "../service/transactionService.js";
 import logger from "../config/loggerInit.js";
 import { responseSuccess, responseError } from "../util/responseUtil.js";
+import { getOrderDetailsInformation } from "../util/orderUtil.js";
+import { getMenuInformation, getRestaurantInformation, getUserInformation } from "../../../packages/shared/apiService.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
@@ -608,23 +610,13 @@ export const completeOrderController = async (req, res) => {
       return responseError(res, 404, "Order not found");
     }
 
-    let restaurant;
-    try {
-      logger.info(`Fetching restaurant ${order.restaurant_id}...`);
-      const response = await axios.get(
-        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${order.restaurant_id}`,
-        {
-          headers: {
-            Authorization: req.headers.authorization,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      restaurant = response.data.restaurant;
-    } catch (err) {
-      logger.error(`Failed to fetch restaurant ${order.restaurant_id}: ${err.message}`);
+    const restaurantResponse = await getRestaurantInformation(GLOBAL_SERVICE_URL, order.restaurant_id, internalAPIKey, `Restaurant with ID ${order.restaurant_id} not found`);
+
+    if (!restaurantResponse?.restaurant) {
+      logger.warn(`Restaurant with ID ${order.restaurant_id} not found`);
       return responseError(res, 404, "Restaurant not found");
     }
+    const restaurant = restaurantResponse.restaurant;
 
     if (restaurant.owner_id !== userId) {
       logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
@@ -659,50 +651,25 @@ export const completeOrderController = async (req, res) => {
     });
 
     const [ownerResult, customerResult] = await Promise.all([
-      axios.get(`${GLOBAL_SERVICE_URL}/user/user/${userId}`, {
-        headers: {
-          Authorization: internalAPIKey,
-          "Content-Type": "application/json",
-        },
-      }).catch(err => {
-        logger.error(`Failed to fetch owner data for user ${userId}:`, err.message);
-        return null;
-      }),
-      axios.get(`${GLOBAL_SERVICE_URL}/user/user/${updatedOrder.user_id}`, {
-        headers: {
-          Authorization: internalAPIKey,
-          "Content-Type": "application/json",
-        },
-      }).catch(err => {
-        logger.error(`Failed to fetch customer data for user ${updatedOrder.user_id}:`, err.message);
-        return null;
-      })
+      getUserInformation(GLOBAL_SERVICE_URL, userId, internalAPIKey, `Owner with ID ${userId} not found`),
+      getUserInformation(GLOBAL_SERVICE_URL, updatedOrder.user_id, internalAPIKey, `Customer with ID ${updatedOrder.user_id} not found`),
     ]);
 
-    if (!ownerResult?.data?.user) {
+    if (!ownerResult?.user) {
       logger.warn(`Owner not found for user ${userId}`);
       return responseError(res, 404, "Owner not found");
     }
 
-    if (!customerResult?.data?.user) {
+    if (!customerResult?.user) {
       logger.warn(`Customer not found for user ${updatedOrder.user_id}`);
       return responseError(res, 404, "Customer not found");
     }
-
     const itemsWithMenuDetails = await Promise.all(
       updatedOrder.items.map(async (item) => {
         try {
-          const menuResponse = await axios.get(
-            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
-            {
-              headers: {
-                Authorization: internalAPIKey,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const menuResponse = await getMenuInformation(GLOBAL_SERVICE_URL, item.menu_id, internalAPIKey, `Menu with ID ${item.menu_id} not found`);
           
-          const menu = menuResponse.data.menu;
+          const menu = menuResponse.menu;
           return {
             ...item,
             menu_name: menu?.name || menu?.menu_name || `Menu #${item.menu_id}`,
@@ -728,10 +695,10 @@ export const completeOrderController = async (req, res) => {
     const orderDetails = {
       order_id: updatedOrder.order_id,
       restaurant_name: restaurant.restaurant_name,
-      customer_name: customerResult.data.user.name,
-      owner_name: ownerResult.data.user.name,
-      owner_email: ownerResult.data.user.email,
-      customer_email: customerResult.data.user.email,
+      customer_name: customerResult.user.name,
+      owner_name: ownerResult.user.name,
+      owner_email: ownerResult.user.email,
+      customer_email: customerResult.user.email,
       total_price: updatedOrder.total_price,
       completed_at: new Date(),
       order: { ...updatedOrder, items: itemsWithMenuDetails },
@@ -849,28 +816,21 @@ export const payOrderConfirmationController = async (req, res) => {
     const order = await getOrderByIdService(order_id);
     if (!order) {
       logger.warn(`Order ${order_id} not found`);
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return responseError(res, 404, "Order not found");
     }
 
     if (order.user_id !== userId) {
       logger.warn(
         `Unauthorized access attempt by user ${userId} on order ${order_id}`
       );
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized to pay for this order",
-      });
+      return responseError(res, 403, "You are not authorized to pay for this order");
     }
 
     if (order.status !== "Waiting") {
       logger.warn(
         `Order ${order_id} cannot be paid (Current status: ${order.status})`
       );
-      return res
-        .status(400)
-        .json({ success: false, message: "Order cannot be paid" });
+      return responseError(res, 400, "Order cannot be paid");
     }
 
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
@@ -896,13 +856,10 @@ export const payOrderConfirmationController = async (req, res) => {
       }
     );
     logger.info("Payment token generated successfully");
-    return res.status(200).json({ success: true, data: response.data });
+    return responseSuccess(res, 200, "Payment token generated successfully", "data", response.data);
   } catch (err) {
     logger.error("Error generating payment token:", err);
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    return responseError(res, 500, "Error generating payment token");
   }
 };
 
@@ -912,9 +869,7 @@ export const payOrderController = async (req, res) => {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     if (!MIDTRANS_SERVER_KEY) {
       logger.error("Server configuration error");
-      return res
-        .status(500)
-        .json({ success: false, message: "Server configuration error" });
+      return responseError(res, 500, "Server configuration error");
     }
     const {
       order_id,
@@ -931,10 +886,7 @@ export const payOrderController = async (req, res) => {
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
       logger.warn("Missing required payment information");
-      return res.status(400).json({
-        success: false,
-        message: "Missing required payment information",
-      });
+      return responseError(res, 400, "Missing required payment information");
     }
 
     const expectedSignature = crypto
@@ -951,9 +903,7 @@ export const payOrderController = async (req, res) => {
 
     if (!isSignatureValid) {
       logger.warn("Invalid signature key");
-      return res
-        .status(403)
-        .json({ success: false, message: "Invalid signature key" });
+      return responseError(res, 403, "Invalid signature key");
     }
 
     if (transaction_status === "pending") {
@@ -992,139 +942,28 @@ export const payOrderController = async (req, res) => {
       try {
         const response = await payOrderService(order_id);
 
-        const orderItems = await getAllOrderWithItemsByOrderIdService(order_id);
-        if (!orderItems) {
-          logger.warn(`Order items not found for order ${order_id}`);
-          return res.status(404).json({
-            success: false,
-            message: "Order items not found",
-          });
-        }
-        const itemsWithMenuDetails = await Promise.all(
-          orderItems.items.map(async (item) => {
-            try {
-              const menuResponse = await axios.get(
-                `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
-                {
-                  headers: {
-                    Authorization: internalAPIKey,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              return {
-                ...item,
-                menu_name: menuResponse.data.menu?.name || menuResponse.data.menu?.menu_name || `Menu #${item.menu_id}`,
-                menu_description: menuResponse.data.menu?.menu_description || "",
-                menu_price: menuResponse.data.menu?.menu_price || 0,
-                menu_image: menuResponse.data.menu?.image || menuResponse.data.menu?.menu_image || "",
-                menu_category: menuResponse.data.menu?.category || "",
-              };
-            } catch (error) {
-              logger.error(`Failed to fetch menu details for menu_id ${item.menu_id}:`, error.message);
+        const orderDetailData = await getOrderDetailsInformation(order_id, internalAPIKey);
 
-              return {
-                ...item,
-                menu_name: `Menu #${item.menu_id}`,
-                menu_description: "Menu details unavailable",
-                menu_price: 0,
-                menu_image: "",
-                menu_category: "Unknown",
-              };
-            }
-          })
-        );
-
-        const restaurantDetails = await axios.get(
-          `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${orderItems.restaurant_id}`,
-          {
-            headers: {
-              Authorization: internalAPIKey,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!restaurantDetails.data.restaurant) {
-          logger.warn(`Restaurant not found for order ${order_id}`);
-          return responseError(res, 404, "Restaurant not found");
-        }
-
-        const ownerData = await axios.get(
-          `${GLOBAL_SERVICE_URL}/user/user/${restaurantDetails.data.restaurant.owner_id}`,
-          {
-            headers: {
-              Authorization: internalAPIKey,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (!ownerData) {
-          logger.warn(`Owner not found for restaurant ${restaurantDetails.data.restaurant.owner_id}`);
-          return responseError(res, 404, "Owner not found");
-        }
-
-        const customerData = await axios.get(
-          `${GLOBAL_SERVICE_URL}/user/user/${orderItems.user_id}`,
-          {
-            headers: {
-              Authorization: internalAPIKey,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (!customerData) {
-          logger.warn(`Customer not found for user_id ${orderItems.user_id}`);
-          return responseError(res, 404, "Customer not found");
-        }
-
-        const completeOrderData = {
-          ...orderItems,
-          items: itemsWithMenuDetails,
-          restaurant: restaurantDetails.data.restaurant,
-          ownerName: ownerData.data.user.name,
-          ownerEmail: ownerData.data.user.email,
-          customerName: customerData.data.user.name,
-          customerEmail: customerData.data.user.email,
-        };
-
-        const insertPreparingJobsResponse = await createPreparingOrderJobService(completeOrderData);
+        const insertPreparingJobsResponse = await createPreparingOrderJobService(orderDetailData);
 
         if (!insertPreparingJobsResponse) {
           logger.error("Failed to create preparing order jobs");
-          return res.status(500).json({
-            success: false,
-            message: "Failed to create preparing order jobs",
-          });
+          return responseError(res, 500, "Failed to create preparing order jobs");
         }
 
         logger.info("Order paid successfully");
-        return res.status(200).json({
-          success: true,
-          message: "Order paid successfully",
-          order: response,
-        });
+        return responseSuccess(res, 200, "Order paid successfully", "order", response);
       } catch (error) {
         logger.error("Error processing payment:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Error processing payment",
-        });
+        return responseError(res, 500, "Error processing payment");
       }
     } else {
       logger.info(`Payment ${transaction_status}`);
-      return res.status(200).json({
-        success: false,
-        message: `Payment ${transaction_status}`,
-        order_id,
-      });
+      return responseError(res, 400, `Payment ${transaction_status}`, "order_id", order_id);
     }
   } catch (error) {
     logger.error("Internal server error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "An unexpected error occurred",
-    });
+    return responseError(res, 500, "Internal server error");
   }
 };
 
@@ -1137,15 +976,13 @@ export const updateOrder = async (req, res) => {
 
     if (!validStatuses.includes(status)) {
       logger.warn("Invalid status value");
-      return res.status(400).json({ error: "Invalid status value" });
+      return responseError(res, 400, "Invalid status value");
     }
 
     const result = await updateOrderStatusService(order_id, status);
     if (!result) {
       logger.warn(`Order ${order_id} not found`);
-      return res.status(404).json({
-        error: "Order Not Found",
-      });
+      return responseError(res, 404, "Order Not Found");
     }
 
     const io = req.app.get("io");
@@ -1155,7 +992,7 @@ export const updateOrder = async (req, res) => {
     return responseSuccess(res, 200, "Order updated successfully", "order", result);
   } catch (error) {
     logger.error("Internal server error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return responseError(res, 500, "Internal server error");
   }
 };
 
@@ -1167,13 +1004,13 @@ export const deleteOrder = async (req, res) => {
 
     if (result.rows.length === 0) {
       logger.warn(`Order ${order_id} not found`);
-      return res.status(404).json({ error: "Order Not Found" });
+      return responseError(res, 404, "Order Not Found");
     }
     logger.info(`Order ${order_id} deleted successfully`);
-    return res.json({ message: "Order deleted successfully" });
+    return responseSuccess(res, 200, "Order deleted successfully");
   } catch (error) {
     logger.error("Internal server error:", error);
-    return res.status(500).json({ error: error.message });
+    return responseError(res, 500, "Internal server error");
   }
 };
 
@@ -1183,7 +1020,7 @@ export const thanksController = async (req, res) => {
 
   if (!order_id || !status_code || !transaction_status) {
     logger.warn("Missing required parameters");
-    return res.status(400).json({ message: "Missing required parameters" });
+    return responseError(res, 400, "Missing required parameters");
   }
   logger.info("Redirecting to thanks page");
   return res.redirect(
@@ -1207,13 +1044,10 @@ export const checkMidtransStatusController = async (req, res) => {
       }
     );
     logger.info("Midtrans status check successful");
-    return res.status(200).json(response.data);
+    return responseSuccess(res, 200, "Midtrans status check successful", "data", response.data);
   } catch (err) {
     logger.error("Error checking Midtrans status:", err);
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    return responseError(res, 500, err.message);
   }
 };
 
@@ -1223,15 +1057,10 @@ export const saveSnapTokenController = async (req, res) => {
   const response = await saveSnapTokenService(order_id, snap_token);
   if (!response) {
     logger.error("Failed to save snap token");
-    return res.status(500).json({
-      success: false,
-      message: "Failed to save snap token",
-    });
+    return responseError(res, 500, "Failed to save snap token");
   }
   logger.info("Snap token saved successfully");
-  return res
-    .status(200)
-    .json({ success: true, message: "Snap token saved successfully" });
+  return responseSuccess(res, 201, "Snap token saved successfully", "snap_token", response.snap_token);
 };
 
 export const getSnapTokenController = async (req, res) => {
@@ -1393,7 +1222,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (
   const token = req.headers.authorization;
 
   try {
-    // Verify seller role
     if (role !== "seller") {
       logger.warn("Unauthorized access attempt by user", { userId });
       return responseError(
@@ -1403,7 +1231,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (
       );
     }
 
-    // Get restaurant details
     const restaurantResponse = await axios.get(
       `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
       {
@@ -1417,7 +1244,6 @@ export const getRestaurantDashboardByRestaurantIdController = async (
     const restaurant = restaurantResponse.data.restaurant;
     const restaurant_id = restaurant.restaurant_id;
 
-    // Verify restaurant ownership
     if (restaurant.owner_id !== userId) {
       logger.warn("Unauthorized access attempt by user", { userId });
       return responseError(

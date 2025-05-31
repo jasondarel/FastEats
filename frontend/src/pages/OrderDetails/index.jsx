@@ -76,7 +76,7 @@ const OrderDetails = () => {
   const handleChatWithRestaurant = async () => {
     try {
       const existingChatsResponse = await getChatsService(token);
-
+      console.log("Existing chats response:", existingChatsResponse);
       if (existingChatsResponse.success) {
         const existingChat = existingChatsResponse.dataChats?.find(
           (chat) => String(chat.orderId) === String(orderId)
