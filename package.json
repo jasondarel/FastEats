@@ -12,5 +12,8 @@
     "restaurant-service",
     "api-gateway",
     "frontend"
-  ]
+  ],
+  "dependencies": {
+    "axios": "^1.9.0"
+  }
 }
