@@ -66,12 +66,12 @@ const messageSchema = new mongoose.Schema({
         default: 'text' 
     },
     text: { type: String, required: true },
-    attachments: [{
-        type: { type: String, enum: ['image', 'file'] },
-        url: { type: String, required: true },
-        name: { type: String },
-        size: { type: Number }
-    }],
+    // attachments: [{
+    //     type: { type: String, enum: ['image', 'file'] },
+    //     url: { type: String, required: true },
+    //     name: { type: String },
+    //     size: { type: Number }
+    // }],
     
     readBy: {
         user: {
@@ -82,11 +82,6 @@ const messageSchema = new mongoose.Schema({
         isRead: { type: Boolean, default: false },
         readAt: { type: Date, default: null },
         }
-    },
-    
-    orderUpdate: {
-        status: { type: String },
-        estimatedTime: { type: Number }
     },
     
     deliveredAt: { type: Date, default: null }

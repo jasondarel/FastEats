@@ -3,7 +3,8 @@ import authMiddleware from '../middleware/authMiddleware.js';
 import { 
     getChatsController,
     createChatController,
-    getChatByIdController
+    getChatByIdController,
+    createMessageController,
 } from '../controller/chatControllers.js';
 import { fileURLToPath } from 'url';
 import multerUpload from '../config/multerInit.js';
@@ -21,5 +22,7 @@ router.get("/", (req, res) => {
 router.get("/chats", authMiddleware, getChatsController);
 router.post("/chat", authMiddleware, createChatController);
 router.get("/chat/:chat_id", authMiddleware, getChatByIdController);
+
+router.post("/message", authMiddleware, createMessageController);
 
 export {router as chatRoutes};
