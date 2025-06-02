@@ -26,7 +26,10 @@ const chatSchema = new mongoose.Schema({
     
     lastMessage: {
         text: { type: String, default: '' },
-        sender: { type: String, enum: ['user', 'restaurant']},
+        sender: { 
+            type: String, 
+            enum: ['user', 'restaurant']
+        },
         timestamp: { type: Date, default: Date.now }
     },
     
@@ -50,13 +53,13 @@ const messageSchema = new mongoose.Schema({
     
     sender: {
         type: { 
-        type: String, 
-        enum: ['user', 'restaurant'], 
-        required: true 
+            type: String, 
+            enum: ['user', 'restaurant'], 
+            required: true 
         },
         id: {
-        type: Number,
-        required: true
+            type: Number,
+            required: true
         }
     },
     

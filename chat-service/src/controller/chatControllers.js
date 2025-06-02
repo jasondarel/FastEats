@@ -4,6 +4,8 @@ import {
   createChatService,
   getChatByIdService,
   createMessageService,
+  getMessageService,
+  updateLastMessageChatService,
 } from "../service/chatService.js";
 import {} from "../validator/chatValidators.js";
 import axios from "axios";
@@ -350,10 +352,59 @@ export const createMessageController = async (req, res) => {
       logger.warn("Message creation failed");
       return responseError(res, 400, "Message creation failed");
     }
+
+    await updateLastMessageChatService(chatId, {
+      text: text,
+      sender: sender,
+    })
+
     logger.info("Create message controller");
     return responseSuccess(res, 200, "Message created successfully", "dataMessage", newMessage.message);
   } catch(err) {
     logger.error("Error determining sender information", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+}
+
+export const getMessageController = async (req, res) => {
+  logger.info("GET MESSAGE CONTROLLER");
+  const {userId, role} = req.user;
+  const { chatId } = req.query;
+  try {
+    const chat = await getChatByIdService(chatId);
+    if (!chat.success) {
+      logger.warn("Chat not found");
+      return responseError(res, 404, "Chat not found");
+    }
+
+    if (role === "user") {
+      if (chat.chat.userId !== userId) {
+        logger.warn("Unauthorized access to chat messages");
+        return responseError(res, 403, "Unauthorized access to chat messages");
+      }
+    } else {
+      const restaurant = await getRestaurantByOwnerIdInformation(GLOBAL_SERVICE_URL, userId, req.headers.authorization);
+      if (!restaurant) {
+        logger.warn("Restaurant not found");
+        return responseError(res, 404, "Restaurant not found");
+      }
+      
+      if (chat.chat.restaurantId !== restaurant.restaurant.restaurant_id) {
+        logger.warn("Unauthorized access to chat messages");
+        return responseError(res, 403, "Unauthorized access to chat messages");
+      }
+    }
+
+    const message = await getMessageService(chatId);
+    if (!message.success) {
+      logger.warn("Message not found");
+      return responseError(res, 404, "Message not found");
+    }
+
+    logger.info("Get message success");
+    return responseSuccess(res, 200, "Get message success", "dataMessage", message.messages);
+  } catch(err) {
+    logger.error("Error retrieving message", err);
     return responseError(res, 500, "Internal Server Error");
   }
 }
