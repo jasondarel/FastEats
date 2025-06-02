@@ -66,3 +66,32 @@ export const createMessageService = async (messageData) => {
         return { success: false, error: error.message };
     }
 }
+
+export const updateLastMessageChatService = async (chatId, lastMessage) => {
+    try {
+        if (lastMessage.sender && typeof lastMessage.sender === 'object') {
+            lastMessage.sender = JSON.stringify(lastMessage.sender);
+        }
+        console.log('Updating last message in chat:', chatId, lastMessage);
+        const updatedChat = await Chat.findByIdAndUpdate(
+            chatId,
+            { lastMessage: lastMessage },
+            { new: true }
+        );
+        
+        return { success: true, chat: updatedChat };
+    } catch(err) {
+        logger.error('Error updating last message in chat:', err);
+        return { success: false, error: err.message };
+    }
+}
+
+export const getMessageService = async(chatId) => {
+    try {
+        const messages = await Message.find({ chatId: chatId }).sort({ createdAt: 1 });
+        return { success: true, messages };
+    } catch (error) {
+        logger.error('Error retrieving messages:', error);
+        return { success: false, error: error.message };
+    }
+}

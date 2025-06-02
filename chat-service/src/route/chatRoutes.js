@@ -5,6 +5,7 @@ import {
     createChatController,
     getChatByIdController,
     createMessageController,
+    getMessageController
 } from '../controller/chatControllers.js';
 import { fileURLToPath } from 'url';
 import multerUpload from '../config/multerInit.js';
@@ -24,5 +25,6 @@ router.post("/chat", authMiddleware, createChatController);
 router.get("/chat/:chat_id", authMiddleware, getChatByIdController);
 
 router.post("/message", authMiddleware, createMessageController);
+router.get("/message", authMiddleware, getMessageController);
 
 export {router as chatRoutes};
