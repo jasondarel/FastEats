@@ -11,111 +11,115 @@ import {
 import Sidebar from "../../components/Sidebar";
 import StatusBadge from "../../components/StatusBadge";
 import { getChatByIdService } from "../../service/chatServices/chatService";
-
-// Dummy chat messages for demo
-// const DUMMY_MESSAGES = {
-//   12345: [
-//     {
-//       id: 1,
-//       sender: "restaurant",
-//       message: "Hello! We've received your order and are starting preparation.",
-//       timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-//     },
-//     {
-//       id: 2,
-//       sender: "user",
-//       message: "Great! How long will it take approximately?",
-//       timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
-//     },
-//     {
-//       id: 3,
-//       sender: "restaurant",
-//       message: "Your order is being prepared and will be ready in 15 minutes!",
-//       timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-//     },
-//   ],
-//   12346: [
-//     {
-//       id: 1,
-//       sender: "restaurant",
-//       message:
-//         "Thank you for your order! We're reviewing your special request.",
-//       timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-//     },
-//     {
-//       id: 2,
-//       sender: "restaurant",
-//       message:
-//         "We're working on your special request. Thanks for your patience!",
-//       timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-//     },
-//   ],
-//   12348: [
-//     {
-//       id: 1,
-//       sender: "restaurant",
-//       message: "Thank you for your order! We'll start preparing it shortly.",
-//       timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-//     },
-//   ],
-//   12349: [
-//     {
-//       id: 1,
-//       sender: "restaurant",
-//       message: "Hello! Your order has been received.",
-//       timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-//     },
-//     {
-//       id: 2,
-//       sender: "user",
-//       message: "Hi! Can you make sure the pizza is extra crispy?",
-//       timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-//     },
-//     {
-//       id: 3,
-//       sender: "restaurant",
-//       message: "Chef is preparing your order with extra care! ETA: 10 minutes.",
-//       timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-//     },
-//   ],
-// };
+import { API_URL } from "../../config/api";
 
 const ChatRoom = () => {
   const { chatId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
-  
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [fetchedOrderDetails, setFetchedOrderDetails] = useState(null);
   const [error, setError] = useState(null);
 
-  // Get order details from navigation state
   const orderDetails = location.state || {};
   console.log("Order Details:", orderDetails);
+
+  const createMessageService = async (messageData, token) => {
+    try {
+      const response = await fetch(`${API_URL}/chat/message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(messageData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send message");
+      }
+
+      return { success: true, message: data.dataMessage };
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const getMessagesService = async (chatId, token) => {
+    try {
+      const response = await fetch(`/{API_URL}/chat/${chatId}/messages`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch messages");
+      }
+
+      return { success: true, messages: data.dataMessages || [] };
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return { success: false, error: error.message };
+    }
+  };
 
   // Fetch order details function
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Authentication token not found");
       }
-      
+
       const chat = await getChatByIdService(chatId, token);
       console.log("Fetched chat details:", chat);
       setFetchedOrderDetails(chat.dataChat);
+
+      await fetchMessages();
     } catch (err) {
       console.error("Error fetching order details:", err);
       setError(err.message || "Failed to fetch order details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      const result = await getMessagesService(chatId, token);
+      if (result.success) {
+        const transformedMessages = result.messages.map((msg) => ({
+          id: msg._id || msg.id,
+          sender: msg.sender?.type === "user" ? "user" : "restaurant",
+          message: msg.text,
+          timestamp: msg.createdAt || msg.timestamp,
+        }));
+        setMessages(transformedMessages);
+      } else {
+        console.error("Failed to fetch messages:", result.error);
+      }
+    } catch (err) {
+      console.error("Error fetching messages:", err);
     }
   };
 
@@ -128,7 +132,6 @@ const ChatRoom = () => {
     }).format(price);
   };
 
-  // Format time function
   const formatTime = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -142,12 +145,11 @@ const ChatRoom = () => {
     }
   };
 
-  // Format date function for message grouping
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "Invalid date";
-      
+
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -168,28 +170,25 @@ const ChatRoom = () => {
     }
   };
 
-  // Load messages and fetch order details on component mount
   useEffect(() => {
-    // const loadMessages = () => {
-    //   if (chatId && DUMMY_MESSAGES[chatId]) {
-    //     setMessages(DUMMY_MESSAGES[chatId]);
-    //   } else {
-    //     setMessages([]);
-    //   }
-    // };
-
-    // loadMessages();
-    
-    // Fetch order details if chatId exists
     if (chatId) {
       fetchOrderDetails();
     }
   }, [chatId]);
 
-  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (!chatId) return;
+
+    const pollInterval = setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [chatId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -197,47 +196,58 @@ const ChatRoom = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || loading || isTyping) return;
+    if (!newMessage.trim() || sendingMessage) return;
 
-    const message = {
-      id: Date.now(),
-      sender: "user",
-      message: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, message]);
+    const messageText = newMessage.trim();
     setNewMessage("");
-    setIsTyping(true);
+    setSendingMessage(true);
 
-    // Simulate restaurant response delay
-    setTimeout(() => {
-      setIsTyping(false);
-      setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
 
-      const responses = [
-        "Thank you for your message! We'll get back to you shortly.",
-        "We're preparing your order with care!",
-        "Your order will be ready soon!",
-        "Thanks for choosing us!",
-        "We appreciate your patience!",
-        "Our chef is working on your order right now!",
-        "We'll notify you when your order is ready for pickup.",
-      ];
-
-      const randomResponse =
-        responses[Math.floor(Math.random() * responses.length)];
-
-      const restaurantMessage = {
-        id: Date.now() + 1,
-        sender: "restaurant",
-        message: randomResponse,
+      const tempMessage = {
+        id: Date.now(),
+        sender: "user",
+        message: messageText,
         timestamp: new Date().toISOString(),
       };
+      setMessages((prev) => [...prev, tempMessage]);
 
-      setMessages((prev) => [...prev, restaurantMessage]);
-      setLoading(false);
-    }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+      const result = await createMessageService(
+        {
+          chatId,
+          text: messageText,
+          messageType: "text",
+        },
+        token
+      );
+
+      if (result.success) {
+        setMessages((prev) => {
+          const newMessages = prev.filter((msg) => msg.id !== tempMessage.id);
+          const serverMessage = {
+            id: result.message._id || result.message.id,
+            sender:
+              result.message.sender?.type === "user" ? "user" : "restaurant",
+            message: result.message.text,
+            timestamp: result.message.createdAt || result.message.timestamp,
+          };
+          return [...newMessages, serverMessage];
+        });
+      } else {
+        setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+        setError("Failed to send message: " + result.error);
+      }
+    } catch (err) {
+      setMessages((prev) => prev.filter((msg) => msg.id === Date.now()));
+      setError("Failed to send message: " + err.message);
+      console.error("Error sending message:", err);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleBackClick = () => {
@@ -245,7 +255,7 @@ const ChatRoom = () => {
   };
 
   const handleQuickMessage = (message) => {
-    if (!loading && !isTyping) {
+    if (!sendingMessage) {
       setNewMessage(message);
     }
   };
@@ -260,20 +270,30 @@ const ChatRoom = () => {
     return groups;
   }, {});
 
-  // Get the current order details (prioritize fetched over passed state)
   const currentOrderDetails = fetchedOrderDetails;
 
-  if (error) {
+  if (error && !messages.length) {
     return (
       <div className="flex flex-col md:flex-row w-full md:pl-64 h-screen bg-yellow-50">
         <Sidebar />
         <div className="flex flex-col flex-grow h-full items-center justify-center">
           <div className="text-center p-8">
-            <p className="text-red-600 text-lg font-medium mb-4">Error loading chat</p>
+            <p className="text-red-600 text-lg font-medium mb-4">
+              Error loading chat
+            </p>
             <p className="text-gray-600 mb-4">{error}</p>
             <button
+              onClick={() => {
+                setError(null);
+                fetchOrderDetails();
+              }}
+              className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors mr-4"
+            >
+              Retry
+            </button>
+            <button
               onClick={() => navigate("/chat")}
-              className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+              className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
             >
               Go Back to Chats
             </button>
@@ -303,10 +323,18 @@ const ChatRoom = () => {
 
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
-                    {orderDetails.restaurantImage || orderDetails.customerImage ? (
+                    {orderDetails.restaurantImage ||
+                    orderDetails.customerImage ? (
                       <img
-                        src={orderDetails.restaurantImage || orderDetails.customerImage}
-                        alt={orderDetails.restaurantName || orderDetails.customerName || "Profile"}
+                        src={
+                          orderDetails.restaurantImage ||
+                          orderDetails.customerImage
+                        }
+                        alt={
+                          orderDetails.restaurantName ||
+                          orderDetails.customerName ||
+                          "Profile"
+                        }
                         className="h-full w-full object-cover"
                         onError={(e) => {
                           e.target.style.display = "none";
@@ -316,21 +344,28 @@ const ChatRoom = () => {
                     ) : null}
                     <FaStore
                       className={`text-yellow-600 ${
-                        orderDetails.restaurantImage || orderDetails.customerImage ? "hidden" : "flex"
+                        orderDetails.restaurantImage ||
+                        orderDetails.customerImage
+                          ? "hidden"
+                          : "flex"
                       }`}
                     />
                   </div>
 
                   <div>
                     <h3 className="font-semibold text-gray-800">
-                      {orderDetails.restaurantName || orderDetails.customerName || "Restaurant"}
+                      {orderDetails.restaurantName ||
+                        orderDetails.customerName ||
+                        "Restaurant"}
                     </h3>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-500">
                         Order #{orderDetails.orderId || chatId || "Unknown"}
                       </span>
                       <StatusBadge
-                        status={currentOrderDetails?.orderDetails?.status || "Unknown"}
+                        status={
+                          currentOrderDetails?.orderDetails?.status || "Unknown"
+                        }
                         className="text-xs px-2 py-1 rounded-full"
                       />
                     </div>
@@ -365,9 +400,31 @@ const ChatRoom = () => {
         <div className="flex-1 overflow-hidden">
           <div className="h-full max-w-6xl mx-auto p-4">
             <div className="h-full bg-white rounded-lg shadow-sm flex flex-col">
+              {/* Error Banner */}
+              {error && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-red-700">{error}</p>
+                      <button
+                        onClick={() => setError(null)}
+                        className="text-red-700 underline text-sm mt-1"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4">
-                {Object.keys(groupedMessages).length === 0 ? (
+                {loading && messages.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading messages...</p>
+                  </div>
+                ) : Object.keys(groupedMessages).length === 0 ? (
                   <div className="text-center py-8">
                     <FaReceipt className="text-gray-300 text-4xl mx-auto mb-4" />
                     <p className="text-gray-500 text-lg font-medium">
@@ -438,27 +495,6 @@ const ChatRoom = () => {
                   </div>
                 )}
 
-                {/* Typing Indicator */}
-                {isTyping && (
-                  <div className="flex justify-start mt-4">
-                    <div className="bg-gray-100 text-gray-800 max-w-xs lg:max-w-md px-4 py-3 rounded-2xl rounded-bl-md">
-                      <div className="flex space-x-1 items-center">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <div ref={messagesEndRef} />
               </div>
 
@@ -471,38 +507,48 @@ const ChatRoom = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
                     className="flex-1 border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 bg-white"
-                    disabled={loading || isTyping}
+                    disabled={sendingMessage}
                   />
                   <button
                     type="submit"
-                    disabled={!newMessage.trim() || loading || isTyping}
+                    disabled={!newMessage.trim() || sendingMessage}
                     className="bg-yellow-500 text-white px-6 py-3 rounded-full hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-medium"
                   >
-                    <FaPaperPlane className="text-sm" />
-                    <span className="hidden sm:inline">Send</span>
+                    {sendingMessage ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <FaPaperPlane className="text-sm" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {sendingMessage ? "Sending..." : "Send"}
+                    </span>
                   </button>
                 </form>
 
                 {/* Quick Actions */}
                 <div className="flex space-x-2 mt-3">
                   <button
-                    onClick={() => handleQuickMessage("How long will my order take?")}
+                    onClick={() =>
+                      handleQuickMessage("How long will my order take?")
+                    }
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={loading || isTyping}
+                    disabled={sendingMessage}
                   >
                     Order time?
                   </button>
                   <button
-                    onClick={() => handleQuickMessage("Can I make changes to my order?")}
+                    onClick={() =>
+                      handleQuickMessage("Can I make changes to my order?")
+                    }
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={loading || isTyping}
+                    disabled={sendingMessage}
                   >
                     Make changes?
                   </button>
                   <button
                     onClick={() => handleQuickMessage("Thank you!")}
                     className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={loading || isTyping}
+                    disabled={sendingMessage}
                   >
                     Thank you!
                   </button>
