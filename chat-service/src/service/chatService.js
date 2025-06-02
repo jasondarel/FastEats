@@ -1,4 +1,4 @@
-import { Chat } from "../config/schema.js";
+import { Chat, Message } from "../config/schema.js";
 import logger from "../config/loggerInit.js";
 
 export const getChatsServiceByUserId = async (userId) => {
@@ -46,6 +46,23 @@ export const createChatService = async (chatData) => {
         return { success: true, chat: savedChat };
     } catch (error) {
         logger.error('Error creating chat:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export const createMessageService = async (messageData) => {
+    try {
+        if (messageData.chatId) messageData.chatId = messageData.chatId.toString();
+        if (messageData.sender && messageData.sender.id) {
+            messageData.sender.id = Number(messageData.sender.id);
+        }
+        
+        const newMessage = new Message(messageData);
+        
+        const savedMessage = await newMessage.save();
+        return { success: true, message: savedMessage };
+    } catch (error) {
+        logger.error('Error creating message:', error);
         return { success: false, error: error.message };
     }
 }

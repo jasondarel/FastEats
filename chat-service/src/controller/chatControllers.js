@@ -3,12 +3,14 @@ import {
   getChatsServiceByRestaurantId,
   createChatService,
   getChatByIdService,
+  createMessageService,
 } from "../service/chatService.js";
 import {} from "../validator/chatValidators.js";
 import axios from "axios";
 import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
+import { getRestaurantByOwnerIdInformation, getRestaurantInformation } from "../../../packages/shared/apiService.js";
 
 envInit();
 
@@ -318,3 +320,40 @@ export const createChatController = async (req, res) => {
     return responseError(res, 500, "Internal Server Error");
   }
 };
+
+export const createMessageController = async (req, res) => {
+  logger.info("CREATE MESSAGE CONTROLLER");
+  const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+  const {role, userId} = req.user;
+  let sender;
+  const { chatId, messageType, text, } = req.body;
+
+  try {
+    if (!chatId || !text) {
+      logger.warn("Chat ID or text not provided");
+      return responseError(res, 400, "Chat ID and text are required");
+    }
+
+    if (role === "user") {
+      sender = { type: "user", id: userId };
+    } else {
+      const restaurant = await getRestaurantByOwnerIdInformation(GLOBAL_SERVICE_URL,userId, token);
+      if (!restaurant) {
+        logger.warn("Restaurant not found");
+        return responseError(res, 404, "Restaurant not found");
+      }
+      sender = { type: "restaurant", id: restaurant.restaurant.restaurant_id };
+    }
+    const newMessage = await createMessageService({
+      chatId, userId, text, sender});
+    if (!newMessage.success) {
+      logger.warn("Message creation failed");
+      return responseError(res, 400, "Message creation failed");
+    }
+    logger.info("Create message controller");
+    return responseSuccess(res, 200, "Message created successfully", "dataMessage", newMessage.message);
+  } catch(err) {
+    logger.error("Error determining sender information", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+}
