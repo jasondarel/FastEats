@@ -10,7 +10,6 @@ const fetchWithLogging = async(url, token, warnMsg) => {
         });
         return response.data;
     } catch (error) {
-        logger.warn(`${warnMsg}: ${error.message}`);
         return null;
     }
 }
@@ -27,6 +26,15 @@ export const getUserInformation = async (url, userId, token, message=`User with 
 export const getRestaurantInformation = async (url, restaurantId, token, message=`Restaurant with restaurant ID ${restaurantId} not found`) => {
     const restaurantData = await fetchWithLogging(
         `${url}/restaurant/restaurant/${restaurantId}`,
+        token,
+        message
+    );
+    return restaurantData;
+}
+
+export const getRestaurantByOwnerIdInformation = async (url, ownerId, token, message=`Restaurant with owner ID ${ownerId} not found`) => {
+    const restaurantData = await fetchWithLogging(
+        `${url}/restaurant/restaurant-owner/${ownerId}`,
         token,
         message
     );
