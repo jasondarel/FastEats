@@ -344,6 +344,7 @@ export const createMessageController = async (req, res) => {
   const { role, userId } = req.user;
   let sender;
   const { chatId, messageType, text } = req.body;
+  const io = req.app.get("io");
 
   try {
     if (!chatId || !text) {
@@ -380,6 +381,34 @@ export const createMessageController = async (req, res) => {
       text: text,
       sender: sender,
     });
+    
+    if (io) {
+      const messageData = {
+        ...newMessage.message,
+        chatId,
+        sender,
+        createdAt: new Date().toISOString()
+      };
+      const objectMessage = messageData.toObject
+        ? newMessage.message.toObject()
+        : newMessage.message;
+      
+      io.to(`chat_${chatId}`).emit('new_message', objectMessage);
+      logger.info(`WebSocket: Emitted new_message event to all clients`);
+    
+      io.to(`user_${sender.id}`).emit('update_chat', {
+        chatId,
+        lastMessage: {
+          text,
+          sender,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      logger.info(`WebSocket: Emitted new_message event to chat_${chatId}`);
+    } else {
+      logger.warn("WebSocket: io instance not available");
+    }
 
     logger.info("Create message controller");
     return responseSuccess(

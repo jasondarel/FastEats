@@ -3,7 +3,6 @@ import logger from "../config/loggerInit.js";
 
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
-  console.log(`[AUTH] Request from ${req.ip} with token: ${token}`);
   if (!token) {
     logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip}`);
     return res.status(401).json({
