@@ -670,6 +670,41 @@ const ChatRoom = (chat) => {
     navigate("/chat");
   };
 
+  const getQuickMessages = () => {
+    if (currentUserRole === "seller" || currentUserRole === "restaurant") {
+      return [
+        {
+          text: "Order received, preparing now",
+          label: "Order received, preparing now",
+        },
+        {
+          text: "Your order will be ready in 15 minutes",
+          label: "Your order will be ready in 15 minutes",
+        },
+        { text: "Order has been delivered", label: "Order has been delivered" },
+        { text: "Sorry for the delay", label: "Sorry for the delay" },
+        {
+          text: "Thank you for your order!",
+          label: "Thank you for your order!",
+        },
+      ];
+    } else {
+      return [
+        {
+          text: "How long will my order take?",
+          label: "How long will my order take?",
+        },
+        {
+          text: "Can I make changes to my order?",
+          label: "Can I make changes to my order?",
+        },
+        { text: "Is my order ready?", label: "Is my order ready?" },
+        { text: "Where is my order?", label: "Where is my order?" },
+        { text: "Thank you!", label: "Thank you!" },
+      ];
+    }
+  };
+
   const handleQuickMessage = (message) => {
     if (!sendingMessage) {
       setNewMessage(message);
@@ -871,11 +906,6 @@ const ChatRoom = (chat) => {
 
                           <div className="space-y-4">
                             {dayMessages.map((message, index) => {
-                              const isLastFromSender =
-                                index === dayMessages.length - 1 ||
-                                dayMessages[index + 1]?.sender !==
-                                  message.sender;
-
                               return (
                                 <div
                                   key={message.id}
@@ -890,22 +920,20 @@ const ChatRoom = (chat) => {
                                       message.sender === "currentUser"
                                         ? "bg-yellow-500 text-white rounded-br-md"
                                         : "bg-gray-100 text-gray-800 rounded-bl-md"
-                                    } ${!isLastFromSender ? "mb-1" : "mb-2"}`}
+                                    } mb-2`}
                                   >
                                     <p className="text-sm leading-relaxed">
                                       {message.message}
                                     </p>
-                                    {isLastFromSender && (
-                                      <p
-                                        className={`text-xs mt-2 ${
-                                          message.sender === "currentUser"
-                                            ? "text-yellow-100"
-                                            : "text-gray-500"
-                                        }`}
-                                      >
-                                        {formatTime(message.timestamp)}
-                                      </p>
-                                    )}
+                                    <p
+                                      className={`text-xs mt-2 ${
+                                        message.sender === "currentUser"
+                                          ? "text-yellow-100"
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {formatTime(message.timestamp)}
+                                    </p>
                                   </div>
                                 </div>
                               );
@@ -961,32 +989,17 @@ const ChatRoom = (chat) => {
                   </button>
                 </form>
 
-                <div className="flex space-x-2 mt-3">
-                  <button
-                    onClick={() =>
-                      handleQuickMessage("How long will my order take?")
-                    }
-                    className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={sendingMessage}
-                  >
-                    Order time?
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleQuickMessage("Can I make changes to my order?")
-                    }
-                    className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={sendingMessage}
-                  >
-                    Make changes?
-                  </button>
-                  <button
-                    onClick={() => handleQuickMessage("Thank you!")}
-                    className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
-                    disabled={sendingMessage}
-                  >
-                    Thank you!
-                  </button>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {getQuickMessages().map((quickMsg, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickMessage(quickMsg.text)}
+                      className="text-xs bg-white border border-gray-300 text-gray-600 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors"
+                      disabled={sendingMessage}
+                    >
+                      {quickMsg.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
