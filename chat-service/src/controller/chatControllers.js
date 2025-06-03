@@ -12,7 +12,10 @@ import axios from "axios";
 import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
-import { getRestaurantByOwnerIdInformation, getRestaurantInformation } from "../../../packages/shared/apiService.js";
+import {
+  getRestaurantByOwnerIdInformation,
+  getRestaurantInformation,
+} from "../../../packages/shared/apiService.js";
 
 envInit();
 
@@ -195,13 +198,13 @@ export const getChatsController = async (req, res) => {
   }
 };
 
-export const getChatByIdController = async(req, res) => {
+export const getChatByIdController = async (req, res) => {
   logger.info("GET CHAT BY ID CONTROLLER");
   const { userId, role } = req.user;
   const { chat_id } = req.params;
-  const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+  const token =
+    req.headers.authorization?.split(" ")[1] || req.headers.authorization;
   let credentialId;
-  console.log("TOken", token);
   try {
     const chat = await getChatByIdService(chat_id);
     if (!chat.success) {
@@ -209,9 +212,13 @@ export const getChatByIdController = async(req, res) => {
       return responseError(res, 404, "Chat not found");
     }
     const chatData = chat.chat;
-    
+
     if (role === "user") {
       credentialId = userId;
+      if (credentialId !== userId) {
+        logger.warn("Unauthorized access to chat");
+        return responseError(res, 403, "Unauthorized access to chat");
+      }
     } else {
       const restaurant = await axios.get(
         `${GLOBAL_SERVICE_URL}/restaurant/restaurant/`,
@@ -225,17 +232,18 @@ export const getChatByIdController = async(req, res) => {
         logger.warn("Restaurant not found");
         return responseError(res, 404, "Restaurant not found");
       }
-      credentialId = chatData.restaurantId || restaurant.data.restaurant.restaurant_id;
+      credentialId =
+        chatData.restaurantId || restaurant.data.restaurant.restaurant_id;
+
+      if (credentialId !== chatData.restaurantId) {
+        logger.warn("Unauthorized access to chat");
+        return responseError(res, 403, "Unauthorized access to chat");
+      }
     }
 
     if (!credentialId) {
       logger.warn("Credential ID not found");
       return responseError(res, 400, "Credential ID not found");
-    }
-
-    if (credentialId !== userId) {
-      logger.warn("Unauthorized access to chat");
-      return responseError(res, 403, "Unauthorized access to chat");
     }
 
     const orderResponse = await axios.get(
@@ -277,20 +285,26 @@ export const getChatByIdController = async(req, res) => {
     );
 
     const chatDataWithDetails = {
-      ...chatData.toObject ? chatData.toObject() : chatData,
+      ...(chatData.toObject ? chatData.toObject() : chatData),
       orderDetails: {
         ...orderResponse.data.order,
         items: itemsWithMenu,
       },
-    }
-    
+    };
+
     logger.info("Get chat by ID success");
-    return responseSuccess(res, 200, "Get chat by ID success", "dataChat", chatDataWithDetails);
+    return responseSuccess(
+      res,
+      200,
+      "Get chat by ID success",
+      "dataChat",
+      chatDataWithDetails
+    );
   } catch (err) {
     logger.error("Internal Server Error", err);
     return responseError(res, 500, "Internal Server Error");
   }
-}
+};
 
 export const createChatController = async (req, res) => {
   logger.info("CREATE CHAT CONTROLLER");
@@ -325,10 +339,11 @@ export const createChatController = async (req, res) => {
 
 export const createMessageController = async (req, res) => {
   logger.info("CREATE MESSAGE CONTROLLER");
-  const token = req.headers.authorization?.split(" ")[1] || req.headers.authorization;
-  const {role, userId} = req.user;
+  const token =
+    req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+  const { role, userId } = req.user;
   let sender;
-  const { chatId, messageType, text, } = req.body;
+  const { chatId, messageType, text } = req.body;
 
   try {
     if (!chatId || !text) {
@@ -339,7 +354,11 @@ export const createMessageController = async (req, res) => {
     if (role === "user") {
       sender = { type: "user", id: userId };
     } else {
-      const restaurant = await getRestaurantByOwnerIdInformation(GLOBAL_SERVICE_URL,userId, token);
+      const restaurant = await getRestaurantByOwnerIdInformation(
+        GLOBAL_SERVICE_URL,
+        userId,
+        token
+      );
       if (!restaurant) {
         logger.warn("Restaurant not found");
         return responseError(res, 404, "Restaurant not found");
@@ -347,7 +366,11 @@ export const createMessageController = async (req, res) => {
       sender = { type: "restaurant", id: restaurant.restaurant.restaurant_id };
     }
     const newMessage = await createMessageService({
-      chatId, userId, text, sender});
+      chatId,
+      userId,
+      text,
+      sender,
+    });
     if (!newMessage.success) {
       logger.warn("Message creation failed");
       return responseError(res, 400, "Message creation failed");
@@ -356,19 +379,25 @@ export const createMessageController = async (req, res) => {
     await updateLastMessageChatService(chatId, {
       text: text,
       sender: sender,
-    })
+    });
 
     logger.info("Create message controller");
-    return responseSuccess(res, 200, "Message created successfully", "dataMessage", newMessage.message);
-  } catch(err) {
+    return responseSuccess(
+      res,
+      200,
+      "Message created successfully",
+      "dataMessage",
+      newMessage.message
+    );
+  } catch (err) {
     logger.error("Error determining sender information", err);
     return responseError(res, 500, "Internal Server Error");
   }
-}
+};
 
 export const getMessageController = async (req, res) => {
   logger.info("GET MESSAGE CONTROLLER");
-  const {userId, role} = req.user;
+  const { userId, role } = req.user;
   const { chatId } = req.query;
   try {
     const chat = await getChatByIdService(chatId);
@@ -383,12 +412,17 @@ export const getMessageController = async (req, res) => {
         return responseError(res, 403, "Unauthorized access to chat messages");
       }
     } else {
-      const restaurant = await getRestaurantByOwnerIdInformation(GLOBAL_SERVICE_URL, userId, req.headers.authorization);
+      console.log("Restaurant triggered");
+      const restaurant = await getRestaurantByOwnerIdInformation(
+        GLOBAL_SERVICE_URL,
+        userId,
+        req.headers.authorization
+      );
       if (!restaurant) {
         logger.warn("Restaurant not found");
         return responseError(res, 404, "Restaurant not found");
       }
-      
+
       if (chat.chat.restaurantId !== restaurant.restaurant.restaurant_id) {
         logger.warn("Unauthorized access to chat messages");
         return responseError(res, 403, "Unauthorized access to chat messages");
@@ -402,9 +436,15 @@ export const getMessageController = async (req, res) => {
     }
 
     logger.info("Get message success");
-    return responseSuccess(res, 200, "Get message success", "dataMessage", message.messages);
-  } catch(err) {
+    return responseSuccess(
+      res,
+      200,
+      "Get message success",
+      "dataMessage",
+      message.messages
+    );
+  } catch (err) {
     logger.error("Error retrieving message", err);
     return responseError(res, 500, "Internal Server Error");
   }
-}
+};

@@ -13,7 +13,7 @@ import StatusBadge from "../../components/StatusBadge";
 import { getChatByIdService } from "../../service/chatServices/chatService";
 import { API_URL } from "../../config/api";
 
-const ChatRoom = () => {
+const ChatRoom = (chat) => {
   const { chatId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,19 +25,50 @@ const ChatRoom = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [fetchedOrderDetails, setFetchedOrderDetails] = useState(null);
   const [error, setError] = useState(null);
+  const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const orderDetails = location.state || {};
   console.log("Order Details:", orderDetails);
 
+  const extractUserInfo = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setCurrentUserRole(payload.role);
+      setCurrentUserId(payload.userId);
+
+      return { token, payload };
+    } catch (error) {
+      console.error("Token extraction failed:", error);
+      throw error;
+    }
+  };
+
   const createMessageService = async (messageData, token) => {
     try {
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+
+      const enhancedMessageData = {
+        ...messageData,
+        sender: {
+          id: tokenPayload.userId,
+          type: tokenPayload.role,
+          role: tokenPayload.role,
+        },
+      };
+
+      console.log("Sending message with enhanced data:", enhancedMessageData);
+
       const response = await fetch(`${API_URL}/chat/message`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(messageData),
+        body: JSON.stringify(enhancedMessageData),
       });
 
       const data = await response.json();
@@ -55,7 +86,7 @@ const ChatRoom = () => {
 
   const getMessagesService = async (chatId, token) => {
     try {
-      const response = await fetch(`/{API_URL}/chat/${chatId}/messages`, {
+      const response = await fetch(`${API_URL}/chat/message?chatId=${chatId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -63,19 +94,139 @@ const ChatRoom = () => {
       });
 
       const data = await response.json();
+      console.log("Data ajg: ", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch messages");
       }
 
-      return { success: true, messages: data.dataMessages || [] };
+      return { success: true, messages: data.dataMessage || [] };
     } catch (error) {
       console.error("Error fetching messages:", error);
       return { success: false, error: error.message };
     }
   };
 
-  // Fetch order details function
+  const transformMessages = (apiMessages, currentRole, currentUserId) => {
+    console.log("=== TRANSFORM MESSAGES DEBUG ===");
+    console.log("Current Role:", currentRole);
+    console.log("Current User ID:", currentUserId);
+    console.log("Total messages to transform:", apiMessages.length);
+
+    return apiMessages.map((msg, index) => {
+      console.log(`\n--- Message ${index} ---`);
+      console.log("Raw message:", msg);
+      console.log("msg.sender:", msg.sender);
+      console.log("msg.sender.type:", msg.sender?.type);
+      console.log("msg.sender.role:", msg.sender?.role);
+      console.log("msg.sender.id:", msg.sender?.id);
+
+      let isCurrentUserMessage = false;
+
+      if (msg.sender) {
+        if (msg.sender.type || msg.sender.role) {
+          const senderRole = msg.sender.type || msg.sender.role;
+
+          if (currentRole === "seller") {
+            isCurrentUserMessage = ["seller", "restaurant"].includes(
+              senderRole.toLowerCase()
+            );
+          } else if (currentRole === "user" || currentRole === "customer") {
+            isCurrentUserMessage = ["user", "customer"].includes(
+              senderRole.toLowerCase()
+            );
+          }
+
+          console.log(
+            `✓ Type/Role check: sender=${senderRole}, current=${currentRole}, match=${isCurrentUserMessage}`
+          );
+        } else if (msg.sender.id || msg.sender.userId) {
+          isCurrentUserMessage =
+            (msg.sender.id || msg.sender.userId) === currentUserId;
+          console.log(
+            `✓ ID check: senderID=${
+              msg.sender.id || msg.sender.userId
+            }, currentID=${currentUserId}, match=${isCurrentUserMessage}`
+          );
+        } else if (typeof msg.sender === "string") {
+          console.log(`✓ String check: sender="${msg.sender}"`);
+
+          if (currentRole === "seller") {
+            isCurrentUserMessage = ["seller", "restaurant"].includes(
+              msg.sender.toLowerCase()
+            );
+          } else {
+            isCurrentUserMessage = ["user", "customer"].includes(
+              msg.sender.toLowerCase()
+            );
+          }
+          console.log(`String match result: ${isCurrentUserMessage}`);
+        }
+      } else {
+        console.log("❌ No sender info found");
+      }
+
+      if (!isCurrentUserMessage && !msg.sender) {
+        const messageTime = new Date(msg.createdAt || msg.timestamp);
+        const now = new Date();
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+        isCurrentUserMessage = messageTime > fiveMinutesAgo;
+      }
+
+      let uiSender;
+      if (isCurrentUserMessage) {
+        uiSender = "currentUser";
+      } else {
+        uiSender = "otherUser";
+      }
+
+      console.log(
+        `Final result: isCurrentUser=${isCurrentUserMessage}, uiSender="${uiSender}"`
+      );
+
+      return {
+        id: msg._id || msg.id || `msg-${Date.now()}-${Math.random()}`,
+        sender: uiSender,
+        message: msg.text || msg.message || "",
+        timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
+      };
+    });
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const { token, payload } = extractUserInfo();
+
+      console.log("Fetching messages for:", {
+        role: payload.role,
+        userId: payload.userId,
+        chatId,
+      });
+
+      const result = await getMessagesService(chatId, token);
+
+      if (result.success) {
+        console.log("Raw messages from API:", result.messages);
+
+        const transformedMessages = transformMessages(
+          result.messages,
+          payload.role,
+          payload.userId
+        );
+
+        console.log("Transformed messages:", transformedMessages);
+        setMessages(transformedMessages);
+      } else {
+        console.error("Failed to fetch messages:", result.error);
+        setError(`Failed to load messages: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Error in fetchMessages:", err);
+      setError(`Error loading chat: ${err.message}`);
+    }
+  };
+
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
@@ -86,9 +237,26 @@ const ChatRoom = () => {
         throw new Error("Authentication token not found");
       }
 
-      const chat = await getChatByIdService(chatId, token);
-      console.log("Fetched chat details:", chat);
-      setFetchedOrderDetails(chat.dataChat);
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+      console.log("Token Payload:", tokenPayload);
+
+      try {
+        console.log("Fetching chat details for chatId:", chatId);
+        console.log("Using token:", token);
+        const chat = await getChatByIdService(chatId, token);
+        console.log("Fetched chat details:", chat);
+        setFetchedOrderDetails(chat.dataChat);
+      } catch (chatError) {
+        console.warn(
+          "Failed to fetch chat details, continuing with limited info:",
+          chatError
+        );
+        setFetchedOrderDetails({
+          _id: chatId,
+          orderDetails: { status: "Active" },
+          participants: [],
+        });
+      }
 
       await fetchMessages();
     } catch (err) {
@@ -96,30 +264,6 @@ const ChatRoom = () => {
       setError(err.message || "Failed to fetch order details");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
-
-      const result = await getMessagesService(chatId, token);
-      if (result.success) {
-        const transformedMessages = result.messages.map((msg) => ({
-          id: msg._id || msg.id,
-          sender: msg.sender?.type === "user" ? "user" : "restaurant",
-          message: msg.text,
-          timestamp: msg.createdAt || msg.timestamp,
-        }));
-        setMessages(transformedMessages);
-      } else {
-        console.error("Failed to fetch messages:", result.error);
-      }
-    } catch (err) {
-      console.error("Error fetching messages:", err);
     }
   };
 
@@ -172,7 +316,13 @@ const ChatRoom = () => {
 
   useEffect(() => {
     if (chatId) {
-      fetchOrderDetails();
+      try {
+        extractUserInfo();
+        fetchOrderDetails();
+      } catch (error) {
+        console.error("Initialization error:", error);
+        setError("Authentication failed. Please login again.");
+      }
     }
   }, [chatId]);
 
@@ -203,48 +353,56 @@ const ChatRoom = () => {
     setSendingMessage(true);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
+      const { token, payload } = extractUserInfo();
 
       const tempMessage = {
-        id: Date.now(),
-        sender: "user",
+        id: `temp-${Date.now()}`,
+        sender: "currentUser",
         message: messageText,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, tempMessage]);
 
-      const result = await createMessageService(
-        {
-          chatId,
-          text: messageText,
-          messageType: "text",
-        },
-        token
-      );
+      const messageData = {
+        chatId,
+        text: messageText,
+        messageType: "text",
+
+        senderRole: payload.role,
+        senderId: payload.userId,
+      };
+
+      console.log("Sending message data:", messageData);
+
+      const result = await createMessageService(messageData, token);
 
       if (result.success) {
+        console.log("Message sent successfully:", result.message);
+
         setMessages((prev) => {
-          const newMessages = prev.filter((msg) => msg.id !== tempMessage.id);
+          const filtered = prev.filter((msg) => msg.id !== tempMessage.id);
           const serverMessage = {
-            id: result.message._id || result.message.id,
-            sender:
-              result.message.sender?.type === "user" ? "user" : "restaurant",
-            message: result.message.text,
-            timestamp: result.message.createdAt || result.message.timestamp,
+            id:
+              result.message._id || result.message.id || `server-${Date.now()}`,
+            sender: "currentUser",
+            message: result.message.text || messageText,
+            timestamp: result.message.createdAt || new Date().toISOString(),
           };
-          return [...newMessages, serverMessage];
+          return [...filtered, serverMessage];
         });
+
+        setError(null);
       } else {
+        console.error("Failed to send message:", result.error);
         setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
-        setError("Failed to send message: " + result.error);
+        setError(`Failed to send message: ${result.error}`);
       }
     } catch (err) {
-      setMessages((prev) => prev.filter((msg) => msg.id === Date.now()));
-      setError("Failed to send message: " + err.message);
       console.error("Error sending message:", err);
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== `temp-${Date.now()}`)
+      );
+      setError(`Error sending message: ${err.message}`);
     } finally {
       setSendingMessage(false);
     }
@@ -260,7 +418,6 @@ const ChatRoom = () => {
     }
   };
 
-  // Group messages by date
   const groupedMessages = messages.reduce((groups, message) => {
     const date = formatDate(message.timestamp);
     if (!groups[date]) {
@@ -308,7 +465,6 @@ const ChatRoom = () => {
       <Sidebar />
 
       <div className="flex flex-col flex-grow h-full">
-        {/* Chat Header */}
         <div className="bg-white shadow-sm border-b p-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between">
@@ -396,11 +552,9 @@ const ChatRoom = () => {
           </div>
         </div>
 
-        {/* Messages Container */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full max-w-6xl mx-auto p-4">
             <div className="h-full bg-white rounded-lg shadow-sm flex flex-col">
-              {/* Error Banner */}
               {error && (
                 <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
                   <div className="flex">
@@ -417,7 +571,6 @@ const ChatRoom = () => {
                 </div>
               )}
 
-              {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4">
                 {loading && messages.length === 0 ? (
                   <div className="text-center py-8">
@@ -439,14 +592,12 @@ const ChatRoom = () => {
                     {Object.entries(groupedMessages).map(
                       ([date, dayMessages]) => (
                         <div key={date}>
-                          {/* Date Separator */}
                           <div className="flex items-center justify-center my-4">
                             <div className="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
                               {date}
                             </div>
                           </div>
 
-                          {/* Messages for this date */}
                           <div className="space-y-4">
                             {dayMessages.map((message, index) => {
                               const isLastFromSender =
@@ -458,14 +609,14 @@ const ChatRoom = () => {
                                 <div
                                   key={message.id}
                                   className={`flex ${
-                                    message.sender === "user"
+                                    message.sender === "currentUser"
                                       ? "justify-end"
                                       : "justify-start"
                                   }`}
                                 >
                                   <div
                                     className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                                      message.sender === "user"
+                                      message.sender === "currentUser"
                                         ? "bg-yellow-500 text-white rounded-br-md"
                                         : "bg-gray-100 text-gray-800 rounded-bl-md"
                                     } ${!isLastFromSender ? "mb-1" : "mb-2"}`}
@@ -476,7 +627,7 @@ const ChatRoom = () => {
                                     {isLastFromSender && (
                                       <p
                                         className={`text-xs mt-2 ${
-                                          message.sender === "user"
+                                          message.sender === "currentUser"
                                             ? "text-yellow-100"
                                             : "text-gray-500"
                                         }`}
@@ -497,8 +648,6 @@ const ChatRoom = () => {
 
                 <div ref={messagesEndRef} />
               </div>
-
-              {/* Message Input */}
               <div className="border-t bg-gray-50 p-4">
                 <form onSubmit={handleSendMessage} className="flex space-x-3">
                   <input
@@ -525,7 +674,6 @@ const ChatRoom = () => {
                   </button>
                 </form>
 
-                {/* Quick Actions */}
                 <div className="flex space-x-2 mt-3">
                   <button
                     onClick={() =>
