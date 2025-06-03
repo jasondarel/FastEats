@@ -11,13 +11,19 @@ import {
 import Sidebar from "../../components/Sidebar";
 import StatusBadge from "../../components/StatusBadge";
 import { getChatByIdService } from "../../service/chatServices/chatService";
-import { API_URL } from "../../config/api";
+import { API_URL, CHAT_URL } from "../../config/api";
+import io from "socket.io-client";
 
 const ChatRoom = (chat) => {
   const { chatId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const typingTimeoutRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -27,9 +33,208 @@ const ChatRoom = (chat) => {
   const [error, setError] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   const orderDetails = location.state || {};
   console.log("Order Details:", orderDetails);
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setNewMessage(value);
+    
+    if (value.trim() !== '') {
+      handleTypingStart();
+    } else {
+      handleTypingStop();
+    }
+  };
+
+  const handleTypingStart = () => {
+    if (!isTyping) {
+      setIsTyping(true);
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('typing', {
+          chatId,
+          userId: currentUserId,
+          username: currentUserRole === 'seller' ? orderDetails?.customerName || 'Customer' : orderDetails?.restaurantName || 'Restaurant',
+          isTyping: true
+        });
+      }
+    }
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      handleTypingStop();
+    }, 3000);
+  };
+
+  const handleTypingStop = () => {
+    if (isTyping) {
+      setIsTyping(false);
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('typing', {
+          chatId,
+          userId: currentUserId,
+          username: currentUserRole === 'seller' ? orderDetails?.customerName || 'Customer' : orderDetails?.restaurantName || 'Restaurant',
+          isTyping: false
+        });
+      }
+    }
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+  };
+
+  const setupSocket = () => {
+  if (socketRef.current) return;
+  
+  try {
+    console.log("Attempting to connect to Socket.IO server at:", CHAT_URL);
+    
+    socketRef.current = io(CHAT_URL, {
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('✅ Socket connected:', socketRef.current.id);
+      setIsSocketConnected(true);
+      
+      console.log(`Joining chat room: chat_${chatId}`);
+      socketRef.current.emit('join_room', `chat_${chatId}`);
+      
+      if (currentUserId) {
+        console.log(`Joining user room: user_${currentUserId}`);
+        socketRef.current.emit('join_room', `user_${currentUserId}`);
+      }
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error.message);
+      setIsSocketConnected(false);
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason);
+      setIsSocketConnected(false);
+      
+      if (reason === 'io server disconnect') {
+        console.log('Server disconnected the socket. Attempting to reconnect...');
+        socketRef.current.connect();
+      }
+    });
+
+    socketRef.current.onAny((event, ...args) => {
+      console.log(`🔔 Received Socket.IO event: ${event}`, args);
+    });
+
+    socketRef.current.on('new_message', (messageData) => {
+      
+      const transformedMessage = {
+        id: messageData._id || messageData.id || `socket-${Date.now()}`,
+        sender: determineMessageSender(messageData.sender),
+        message: messageData.text || messageData.message || "",
+        timestamp: messageData.createdAt || messageData.timestamp || new Date().toISOString(),
+      };
+      
+      setMessages(prevMessages => {
+        const exists = prevMessages.some(msg => {
+          const isDuplicate = msg.id === transformedMessage.id || 
+            (msg.message === transformedMessage.message && 
+            Math.abs(new Date(msg.timestamp) - new Date(transformedMessage.timestamp)) < 5000);
+          
+          if (isDuplicate) {
+            console.log('Duplicate message detected, skipping:', msg);
+          }
+          return isDuplicate;
+        });
+        
+        if (exists) {
+          console.log('Message already exists, not adding to state');
+          return prevMessages;
+        }
+        
+        console.log('Adding new message to state');
+        return [...prevMessages, transformedMessage];
+      });
+    });
+
+    socketRef.current.on('user_typing', (data) => {
+      console.log('User typing update:', data);
+      
+      if (data.userId === currentUserId) return;
+      
+      if (data.isTyping) {
+        setTypingUsers(prev => {
+          if (prev.some(user => user.userId === data.userId)) {
+            return prev;
+          }
+          return [...prev, { userId: data.userId, username: data.username }];
+        });
+      } else {
+        setTypingUsers(prev => prev.filter(user => user.userId !== data.userId));
+      }
+    });
+
+
+    socketRef.current.on('update_chat', (chatData) => {
+      console.log('Received update_chat event:', chatData);
+    });
+
+    return () => {
+      console.log('Cleaning up socket connection');
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  } catch (err) {
+    console.error('Socket setup error:', err);
+    setError(`Socket connection failed: ${err.message}`);
+  }
+};
+
+  const determineMessageSender = (sender) => {
+    if (!sender || !currentUserRole || !currentUserId) return "otherUser";
+    
+    if (typeof sender === 'object') {
+      const senderRole = sender.type || sender.role;
+      const senderId = sender.id || sender.userId;
+      
+      if (currentUserRole === "seller") {
+        if (["seller", "restaurant"].includes(senderRole?.toLowerCase())) {
+          return "currentUser";
+        }
+      } else if (currentUserRole === "user" || currentUserRole === "customer") {
+        if (["user", "customer"].includes(senderRole?.toLowerCase())) {
+          return "currentUser";
+        }
+      }
+      
+      if (senderId === currentUserId) {
+        return "currentUser";
+      }
+    } else if (typeof sender === 'string') {
+      if (currentUserRole === "seller") {
+        if (["seller", "restaurant"].includes(sender.toLowerCase())) {
+          return "currentUser";
+        }
+      } else if (currentUserRole === "user" || currentUserRole === "customer") {
+        if (["user", "customer"].includes(sender.toLowerCase())) {
+          return "currentUser";
+        }
+      }
+    }
+    
+    return "otherUser";
+  };
 
   const extractUserInfo = () => {
     try {
@@ -94,7 +299,7 @@ const ChatRoom = (chat) => {
       });
 
       const data = await response.json();
-      console.log("Data ajg: ", data);
+      console.log("Data from API: ", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch messages");
@@ -327,18 +532,61 @@ const ChatRoom = (chat) => {
   }, [chatId]);
 
   useEffect(() => {
+    if (currentUserId && chatId) {
+      setupSocket();
+    }
+    
+    return () => {
+      if (socketRef.current) {
+        console.log('Disconnecting socket on component unmount');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [currentUserId, chatId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
-    if (!chatId) return;
-
+    if (!chatId || isSocketConnected) return;
+    
+    console.log('Setting up fallback polling since Socket.IO is not connected');
     const pollInterval = setInterval(() => {
       fetchMessages();
     }, 5000);
 
     return () => clearInterval(pollInterval);
-  }, [chatId]);
+  }, [chatId, isSocketConnected]);
+
+  useEffect(() => {
+    if (currentUserId && chatId) {
+      setupSocket();
+    }
+    
+    return () => {
+      if (socketRef.current) {
+        console.log('Disconnecting socket on component unmount');
+        
+        if (isTyping) {
+          socketRef.current.emit('typing', {
+            chatId,
+            userId: currentUserId,
+            username: currentUserRole === 'seller' ? 'Restaurant' : 'Customer',
+            isTyping: false
+          });
+        }
+        
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [currentUserId, chatId, isTyping, currentUserRole]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -367,12 +615,22 @@ const ChatRoom = (chat) => {
         chatId,
         text: messageText,
         messageType: "text",
-
         senderRole: payload.role,
         senderId: payload.userId,
       };
 
       console.log("Sending message data:", messageData);
+
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('send_message', {
+          ...messageData,
+          sender: {
+            type: payload.role,
+            id: payload.userId
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
 
       const result = await createMessageService(messageData, token);
 
@@ -478,6 +736,9 @@ const ChatRoom = (chat) => {
               onClick={() => {
                 setError(null);
                 fetchOrderDetails();
+                if (!socketRef.current) {
+                  setupSocket();
+                }
               }}
               className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors mr-4"
             >
@@ -500,6 +761,16 @@ const ChatRoom = (chat) => {
       <Sidebar />
 
       <div className="flex flex-col flex-grow h-full">
+        {/* {isSocketConnected ? (
+          <div className="bg-green-50 text-green-700 text-xs px-4 py-1 text-center">
+            ⚡ Live chat connected
+          </div>
+        ) : (
+          <div className="bg-yellow-50 text-yellow-700 text-xs px-4 py-1 text-center">
+            ⏱️ Using message polling
+          </div>
+        )} */}
+
         <div className="bg-white shadow-sm border-b p-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between">
@@ -676,12 +947,28 @@ const ChatRoom = (chat) => {
 
                 <div ref={messagesEndRef} />
               </div>
+              {typingUsers.length > 0 && (
+                <div className="px-4 py-2 text-xs text-gray-500 italic">
+                  {typingUsers.length === 1 
+                    ? `${typingUsers[0].username} is typing...` 
+                    : `${typingUsers.length} people are typing...`}
+                  <div className="flex space-x-1 mt-1">
+                    <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" 
+                      style={{ animationDelay: "0ms" }}></div>
+                    <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" 
+                      style={{ animationDelay: "300ms" }}></div>
+                    <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" 
+                      style={{ animationDelay: "600ms" }}></div>
+                  </div>
+                </div>
+              )}
               <div className="border-t bg-gray-50 p-4">
                 <form onSubmit={handleSendMessage} className="flex space-x-3">
                   <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleInputChange}
+                    onBlur={handleTypingStop}
                     placeholder="Type your message..."
                     className="flex-1 border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 bg-white"
                     disabled={sendingMessage}
