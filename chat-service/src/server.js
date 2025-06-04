@@ -9,6 +9,7 @@ import logger from "./config/loggerInit.js";
 import envInit from "./config/envInit.js";
 import { Server as SocketIOServer } from "socket.io";
 import http from "http";
+import path from "path";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -18,6 +19,7 @@ const __dirname = dirname(__filename);
 
 const app = express();
 app.use(express.json());
+app.use("/uploads/chat", express.static(path.join(__dirname, "uploads", "chat")));
 
 app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT;
