@@ -19,6 +19,7 @@ const MessageBubble = ({ message, formatTime }) => {
     window.open(imageUrl, "_blank");
   };
 
+  const hasTextContent = message.message && message.message.trim() !== "";
   return (
     <div
       className={`flex ${
@@ -32,7 +33,7 @@ const MessageBubble = ({ message, formatTime }) => {
             : "bg-gray-100 text-gray-800 rounded-bl-md"
         } mb-2 overflow-hidden`}
       >
-        {/* Image content */}
+        {/* Image Section */}
         {message.type === "image" && message.imageUrl && (
           <div className="relative">
             {imageLoading && (
@@ -59,19 +60,17 @@ const MessageBubble = ({ message, formatTime }) => {
           </div>
         )}
 
-        {/* Text content */}
-        {(message.message || message.type !== "image") && (
+        {hasTextContent && (
           <div className="px-4 py-3">
             <p className="text-sm leading-relaxed">
-              {message.message || (message.type === "image" ? "" : "Message")}
+              {message.message}
             </p>
           </div>
         )}
 
-        {/* Timestamp */}
         <div
           className={`px-4 pb-3 ${
-            message.type === "image" && !message.message ? "pt-3" : ""
+            message.type === "image" && !hasTextContent ? "pt-3" : ""
           }`}
         >
           <p
@@ -88,5 +87,4 @@ const MessageBubble = ({ message, formatTime }) => {
     </div>
   );
 };
-
 export default MessageBubble;

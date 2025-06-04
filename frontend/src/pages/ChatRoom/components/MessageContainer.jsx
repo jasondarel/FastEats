@@ -10,6 +10,7 @@ const MessagesContainer = ({
   formatTime,
   formatDate,
 }) => {
+  console.log("Rendering MessagesContainer with groupedMessages:", groupedMessages);
   if (loading && Object.keys(groupedMessages).length === 0) {
     return (
       <div className="text-center py-8">
