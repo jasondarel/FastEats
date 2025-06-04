@@ -5,14 +5,10 @@ import {
     createChatController,
     getChatByIdController,
     createMessageController,
-    getMessageController
+    getMessageController,
+    uploadImageChatController
 } from '../controller/chatControllers.js';
-import { fileURLToPath } from 'url';
-import multerUpload from '../config/multerInit.js';
-
-const __filename = fileURLToPath(import.meta.url);
-// const uploadLocation = "../uploads/chat";
-// const upload = multerUpload(__filename, uploadLocation);
+import multerMiddleware from '../middleware/multerMiddleware.js';
 
 const router = express.Router();
 
@@ -22,6 +18,7 @@ router.get("/", (req, res) => {
 
 router.get("/chats", authMiddleware, getChatsController);
 router.post("/chat", authMiddleware, createChatController);
+router.post("/upload-image", authMiddleware, multerMiddleware("image"), uploadImageChatController);
 router.get("/chat/:chat_id", authMiddleware, getChatByIdController);
 
 router.post("/message", authMiddleware, createMessageController);

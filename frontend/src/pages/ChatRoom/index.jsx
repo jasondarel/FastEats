@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
@@ -44,7 +45,6 @@ const ChatRoom = () => {
     offNewMessage,
   } = useChatSocket(chatId, currentUserId, currentUserRole, orderDetails);
 
-  // Utility functions
   const extractUserInfo = () => {
     try {
       const token = localStorage.getItem("token");
@@ -108,11 +108,9 @@ const ChatRoom = () => {
     }
   };
 
-  // Image handling functions
   const handleImageSelect = (file) => {
     setSelectedImage(file);
 
-    // Create preview URL
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target.result);
@@ -129,7 +127,7 @@ const ChatRoom = () => {
     const formData = new FormData();
     formData.append("image", file);
     formData.append("chatId", chatId);
-
+    console.log("Uploading image:", file.name);
     try {
       const response = await fetch(`${API_URL}/chat/upload-image`, {
         method: "POST",
@@ -138,21 +136,25 @@ const ChatRoom = () => {
         },
         body: formData,
       });
-
-      const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data.message || "Failed to upload image");
+        const responseJson = await response.json();
+        console.error("Server error response:", responseJson.message || responseJson);
+        
+        return { 
+          success: false, 
+          error: `${responseJson.message || "Unknown error"}` 
+        };
       }
 
+      const data = await response.json();
       return { success: true, imageUrl: data.imageUrl };
     } catch (error) {
       console.error("Error uploading image:", error);
       return { success: false, error: error.message };
     }
-  };
+  }
 
-  // Message handling functions
   const determineMessageSender = (sender) => {
     if (!sender || !currentUserRole || !currentUserId) return "otherUser";
 
@@ -195,8 +197,6 @@ const ChatRoom = () => {
     console.log("Total messages to transform:", apiMessages.length);
 
     return apiMessages.map((msg, index) => {
-      console.log(`\n--- Message ${index} ---`);
-      console.log("Raw message:", msg);
 
       let isCurrentUserMessage = false;
 
@@ -235,16 +235,15 @@ const ChatRoom = () => {
         message: msg.text || msg.message || "",
         timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
         type: msg.messageType || msg.type || "text",
-        imageUrl: msg.imageUrl || null,
+        imageUrl: msg.attachments?.url || null,
       };
     });
   };
 
-  // API functions
   const createMessageService = async (messageData, token) => {
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-
+      console.log("Message data before sending:", messageData);
       const enhancedMessageData = {
         ...messageData,
         sender: {
@@ -286,7 +285,6 @@ const ChatRoom = () => {
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch messages");
       }
@@ -302,13 +300,14 @@ const ChatRoom = () => {
     try {
       const { token, payload } = extractUserInfo();
       const result = await getMessagesService(chatId, token);
-
+      
       if (result.success) {
         const transformedMessages = transformMessages(
           result.messages,
           payload.role,
           payload.userId
         );
+        console.log("Transformed messages:", transformedMessages);
         setMessages(transformedMessages);
       } else {
         setError(`Failed to load messages: ${result.error}`);
@@ -348,7 +347,6 @@ const ChatRoom = () => {
     }
   };
 
-  // Event handlers
   const handleInputChange = (e) => {
     const value = e.target.value;
     setNewMessage(value);
@@ -367,7 +365,8 @@ const ChatRoom = () => {
     const messageText = newMessage.trim();
     const imageFile = selectedImage;
 
-    // Clear inputs immediately
+    const clientTempId = `client-temp-${Date.now()}-${Math.random()}`;
+
     setNewMessage("");
     handleImageRemove();
     setSendingMessage(true);
@@ -375,7 +374,6 @@ const ChatRoom = () => {
     try {
       const { token, payload } = extractUserInfo();
 
-      // Handle image upload if there's an image
       let imageUrl = null;
       if (imageFile) {
         const uploadResult = await uploadImage(imageFile, token);
@@ -387,7 +385,8 @@ const ChatRoom = () => {
       }
 
       const tempMessage = {
-        id: `temp-${Date.now()}`,
+        id: clientTempId,
+        clientTempId: clientTempId,
         sender: "currentUser",
         message: messageText,
         timestamp: new Date().toISOString(),
@@ -403,9 +402,9 @@ const ChatRoom = () => {
         imageUrl: imageUrl,
         senderRole: payload.role,
         senderId: payload.userId,
+        clientTempId,
       };
 
-      // Emit via socket if connected
       if (isSocketConnected) {
         emitMessage({
           ...messageData,
@@ -421,7 +420,7 @@ const ChatRoom = () => {
 
       if (result.success) {
         setMessages((prev) => {
-          const filtered = prev.filter((msg) => msg.id !== tempMessage.id);
+          const filtered = prev.filter((msg) => msg.clientTempId !== clientTempId);
           const serverMessage = {
             id:
               result.message._id || result.message.id || `server-${Date.now()}`,
@@ -433,19 +432,18 @@ const ChatRoom = () => {
               result.message.type ||
               (imageUrl ? "image" : "text"),
             imageUrl: result.message.imageUrl || imageUrl,
+            clientTempId,
           };
           return [...filtered, serverMessage];
         });
         setError(null);
       } else {
-        setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+        setMessages((prev) => prev.filter((msg) => msg.clientTempId !== clientTempId));
         setError(`Failed to send message: ${result.error}`);
       }
     } catch (err) {
-      setMessages((prev) =>
-        prev.filter((msg) => msg.id !== `temp-${Date.now()}`)
-      );
-      setError(`Error sending message: ${err.message}`);
+      setMessages((prev) => prev.filter((msg) => !msg.clientTempId));
+      setError(`${err.message}`);
     } finally {
       setSendingMessage(false);
     }
@@ -500,9 +498,10 @@ const ChatRoom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Socket message handling
   useEffect(() => {
     const handleNewMessage = (messageData) => {
+      console.log("Received new message from socket:", messageData);
+      console.log("Messages before transformation:", messages);
       const transformedMessage = {
         id: messageData._id || messageData.id || `socket-${Date.now()}`,
         sender: determineMessageSender(messageData.sender),
@@ -512,11 +511,18 @@ const ChatRoom = () => {
           messageData.timestamp ||
           new Date().toISOString(),
         type: messageData.messageType || messageData.type || "text",
-        imageUrl: messageData.imageUrl || null,
+        imageUrl: messageData.attachments?.url || messageData.imageUrl || null,
+        clientTempId: messageData.clientTempId,
       };
 
       setMessages((prevMessages) => {
-        const exists = prevMessages.some((msg) => {
+        let filtered = prevMessages;
+        if (transformedMessage.clientTempId) {
+          filtered = prevMessages.filter(
+            (msg) => msg.clientTempId !== transformedMessage.clientTempId
+          );
+        }
+        const exists = filtered.some((msg) => {
           return (
             msg.id === transformedMessage.id ||
             (msg.message === transformedMessage.message &&
@@ -525,9 +531,8 @@ const ChatRoom = () => {
               ) < 5000)
           );
         });
-
-        if (exists) return prevMessages;
-        return [...prevMessages, transformedMessage];
+        if (exists) return filtered;
+        return [...filtered, transformedMessage];
       });
     };
 
@@ -538,7 +543,6 @@ const ChatRoom = () => {
     };
   }, [currentUserId, currentUserRole, onNewMessage, offNewMessage]);
 
-  // Initialize component
   useEffect(() => {
     if (chatId) {
       try {
@@ -550,12 +554,10 @@ const ChatRoom = () => {
     }
   }, [chatId]);
 
-  // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Fallback polling when socket is not connected
   useEffect(() => {
     if (!chatId || isSocketConnected) return;
 
@@ -566,15 +568,21 @@ const ChatRoom = () => {
     return () => clearInterval(pollInterval);
   }, [chatId, isSocketConnected]);
 
-  // Group messages by date
-  const groupedMessages = messages.reduce((groups, message) => {
-    const date = formatDate(message.timestamp);
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(message);
-    return groups;
-  }, {});
+  const groupedMessages = messages
+    .filter(
+      (message) =>
+        !(
+          (message.type === "text" && !message.message)
+        )
+    )
+    .reduce((groups, message) => {
+      const date = formatDate(message.timestamp);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+      return groups;
+    }, {});
 
   const currentOrderDetails = fetchedOrderDetails;
   const hasMessages = messages.length > 0;

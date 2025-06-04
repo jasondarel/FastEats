@@ -68,14 +68,16 @@ const messageSchema = new mongoose.Schema({
         enum: ['text', 'image', 'order_update', 'system'], 
         default: 'text' 
     },
-    text: { type: String, required: true },
-    // attachments: [{
-    //     type: { type: String, enum: ['image', 'file'] },
-    //     url: { type: String, required: true },
-    //     name: { type: String },
-    //     size: { type: Number }
-    // }],
-    
+    text: { type: String, required: false },
+    attachments: {
+        type: {
+            fileType: { type: String, enum: ['image', 'file'] },
+            url: { type: String, required: true },
+            name: { type: String },
+            size: { type: Number }
+        },
+        required: false
+    },
     readBy: {
         user: {
         isRead: { type: Boolean, default: false },

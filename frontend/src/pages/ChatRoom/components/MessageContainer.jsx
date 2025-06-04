@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React from "react";
 import { FaReceipt } from "react-icons/fa";
 import MessageBubble from "./MessageBubble";
@@ -8,6 +10,7 @@ const MessagesContainer = ({
   formatTime,
   formatDate,
 }) => {
+  console.log("Rendering MessagesContainer with groupedMessages:", groupedMessages);
   if (loading && Object.keys(groupedMessages).length === 0) {
     return (
       <div className="text-center py-8">
