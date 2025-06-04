@@ -51,10 +51,12 @@ const MonthlyCharts = ({ orders }) => {
       const monthData = initialData.find((item) => item.name === monthName);
       if (!monthData) return;
 
+      // Count each completed order as 1 order (regardless of quantity)
+      monthData.orders += 1;
+
       if (order.order_type === "CART" && Array.isArray(order.items)) {
         order.items.forEach((item, index) => {
           const quantity = item.item_quantity || 0;
-          monthData.orders += quantity;
 
           const menuItem =
             order.menu && Array.isArray(order.menu) && order.menu[index];
@@ -63,7 +65,6 @@ const MonthlyCharts = ({ orders }) => {
         });
       } else {
         const quantity = order.item_quantity || 1;
-        monthData.orders += quantity;
 
         let price = 0;
         if (order.menu) {
