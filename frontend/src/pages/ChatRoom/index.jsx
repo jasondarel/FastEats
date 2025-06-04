@@ -27,6 +27,10 @@ const ChatRoom = () => {
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
+  // Image handling state
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
   const orderDetails = location.state || {};
 
   // Socket hook
@@ -101,6 +105,50 @@ const ChatRoom = () => {
       }
     } catch (err) {
       return "Invalid date";
+    }
+  };
+
+  // Image handling functions
+  const handleImageSelect = (file) => {
+    setSelectedImage(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const uploadImage = async (file, token) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("chatId", chatId);
+
+    try {
+      const response = await fetch(`${API_URL}/chat/upload-image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to upload image");
+      }
+
+      return { success: true, imageUrl: data.imageUrl };
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -186,6 +234,8 @@ const ChatRoom = () => {
         sender: isCurrentUserMessage ? "currentUser" : "otherUser",
         message: msg.text || msg.message || "",
         timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
+        type: msg.messageType || msg.type || "text",
+        imageUrl: msg.imageUrl || null,
       };
     });
   };
@@ -312,27 +362,45 @@ const ChatRoom = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sendingMessage) return;
+    if ((!newMessage.trim() && !selectedImage) || sendingMessage) return;
 
     const messageText = newMessage.trim();
+    const imageFile = selectedImage;
+
+    // Clear inputs immediately
     setNewMessage("");
+    handleImageRemove();
     setSendingMessage(true);
 
     try {
       const { token, payload } = extractUserInfo();
+
+      // Handle image upload if there's an image
+      let imageUrl = null;
+      if (imageFile) {
+        const uploadResult = await uploadImage(imageFile, token);
+        if (uploadResult.success) {
+          imageUrl = uploadResult.imageUrl;
+        } else {
+          throw new Error(`Image upload failed: ${uploadResult.error}`);
+        }
+      }
 
       const tempMessage = {
         id: `temp-${Date.now()}`,
         sender: "currentUser",
         message: messageText,
         timestamp: new Date().toISOString(),
+        type: imageUrl ? "image" : "text",
+        imageUrl: imageUrl,
       };
       setMessages((prev) => [...prev, tempMessage]);
 
       const messageData = {
         chatId,
         text: messageText,
-        messageType: "text",
+        messageType: imageUrl ? "image" : "text",
+        imageUrl: imageUrl,
         senderRole: payload.role,
         senderId: payload.userId,
       };
@@ -360,6 +428,11 @@ const ChatRoom = () => {
             sender: "currentUser",
             message: result.message.text || messageText,
             timestamp: result.message.createdAt || new Date().toISOString(),
+            type:
+              result.message.messageType ||
+              result.message.type ||
+              (imageUrl ? "image" : "text"),
+            imageUrl: result.message.imageUrl || imageUrl,
           };
           return [...filtered, serverMessage];
         });
@@ -438,6 +511,8 @@ const ChatRoom = () => {
           messageData.createdAt ||
           messageData.timestamp ||
           new Date().toISOString(),
+        type: messageData.messageType || messageData.type || "text",
+        imageUrl: messageData.imageUrl || null,
       };
 
       setMessages((prevMessages) => {
@@ -553,6 +628,10 @@ const ChatRoom = () => {
                   sendingMessage={sendingMessage}
                   quickMessages={getQuickMessages()}
                   onQuickMessage={handleQuickMessage}
+                  selectedImage={selectedImage}
+                  onImageSelect={handleImageSelect}
+                  onImageRemove={handleImageRemove}
+                  imagePreview={imagePreview}
                 />
               </div>
             </div>
