@@ -343,13 +343,28 @@ export const createMessageController = async (req, res) => {
     req.headers.authorization?.split(" ")[1] || req.headers.authorization;
   const { role, userId } = req.user;
   let sender;
-  const { chatId, messageType, text } = req.body;
+  const { chatId, messageType, text, imageUrl} = req.body;
   const io = req.app.get("io");
+  let textMessage = text || "";
+  let attachments = null;
 
   try {
-    if (!chatId || !text) {
-      logger.warn("Chat ID or text not provided");
-      return responseError(res, 400, "Chat ID and text are required");
+    if (messageType === "image") {
+      if (!chatId) {
+        logger.warn("Chat ID or text not provided");
+        return responseError(res, 400, "Chat ID and text are required");
+      }
+      attachments = {
+        type: "image",
+        url: imageUrl,
+        name: imageUrl.split("/").pop(),
+        size: 0,
+      }
+    } else {
+      if (!chatId || !text) {
+        logger.warn("Chat ID or text not provided");
+        return responseError(res, 400, "Chat ID and text are required");
+      }
     }
 
     if (role === "user") {
@@ -369,8 +384,10 @@ export const createMessageController = async (req, res) => {
     const newMessage = await createMessageService({
       chatId,
       userId,
-      text,
+      text: textMessage,
       sender,
+      attachments: attachments || null,
+      messageType: messageType || "text",
     });
     if (!newMessage.success) {
       logger.warn("Message creation failed");
@@ -390,8 +407,8 @@ export const createMessageController = async (req, res) => {
         createdAt: new Date().toISOString()
       };
       const objectMessage = messageData.toObject
-        ? newMessage.message.toObject()
-        : newMessage.message;
+      ? newMessage.message.toObject()
+      : newMessage.message;
       
       io.to(`chat_${chatId}`).emit('new_message', objectMessage);
       logger.info(`WebSocket: Emitted new_message event to all clients`);
@@ -474,6 +491,56 @@ export const getMessageController = async (req, res) => {
     );
   } catch (err) {
     logger.error("Error retrieving message", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+};
+
+export const uploadImageChatController = async (req, res) => {
+  logger.info("UPLOAD IMAGE CHAT CONTROLLER");
+  const { chatId } = req.body;
+  const token =
+    req.headers.authorization?.split(" ")[1] || req.headers.authorization;
+
+  if (!chatId) {
+    logger.warn("Chat ID not provided");
+    return responseError(res, 400, "Chat ID is required");
+  }
+
+  if (!req.file) {
+    logger.warn("No file uploaded");
+    return responseError(res, 400, "No file uploaded");
+  }
+
+  try {
+    const baseUrl = GLOBAL_SERVICE_URL.endsWith("/")
+  ? GLOBAL_SERVICE_URL.slice(0, -1)
+  : GLOBAL_SERVICE_URL;
+    const imageUrl = `${baseUrl}/chat/uploads/chat/${req.file.filename}`;
+
+    logger.info("Image uploaded successfully", imageUrl);
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`chat_${chatId}`).emit('new_message', {
+        chatId,
+        imageUrl,
+        createdAt: new Date().toISOString(),
+        sender: { type: "user", id: req.user.userId }
+      });
+      logger.info(`WebSocket: Emitted new_message event for image upload to chat_${chatId}`);
+    } else {
+      logger.warn("WebSocket: io instance not available");
+    }
+
+    return responseSuccess(
+      res,
+      200,
+      "Image uploaded successfully",
+      "imageUrl",
+      imageUrl
+    );
+  } catch (error) {
+    logger.error("Error uploading image", error);
     return responseError(res, 500, "Internal Server Error");
   }
 };

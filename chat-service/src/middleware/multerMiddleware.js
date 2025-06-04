@@ -1,41 +1,27 @@
+import { responseError, responseSuccess } from "../util/responseUtil.js";
+import multerUpload from "./multerConfigMiddleware.js";
+import { fileURLToPath } from 'url';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import logger from "../config/loggerInit.js";
 
-/**
- * @param {string} fileName
- * @param {string} uploadLocation
- */
+const __filename = fileURLToPath(import.meta.url);
+const uploadLocation = "../uploads/chat";
+const upload = multerUpload(__filename, uploadLocation);
 
-const multerUpload = (fileName, uploadLocation) => {
-    const __dirname = path.dirname(fileName);
-    const uploadDir = path.resolve(__dirname, uploadLocation);
-
-    fs.mkdirSync(uploadDir, { recursive: true });
-
-    const storage = multer.diskStorage({
-        destination: (req, file, cb) => {
-            cb(null, uploadDir);
-        },
-        filename: (req, file, cb) => {
-            const uniqueSuffix = Date.now() + '-' + file.originalname;
-            cb(null, uniqueSuffix);
+const multerMiddleware = (fieldName) => (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+        if (err) {
+            logger.error(`Multer error: ${err.message}`, { error: err });
+            if (err instanceof multer.MulterError) {
+                return responseError(res, 400, err.message);
+            } else if (err.message === "Unsupported file type") {
+                return responseError(res, 400, "Invalid file type. Only JPEG, PNG, and PDF files are allowed.");
+            }
+            
+            return responseError(res, 500, "File upload failed due to an unexpected error.");
         }
-    });
-
-    const fileFilter = (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Unsupported file type'), false);
-        }
-    };
-
-    return multer({ 
-        storage,
-        fileFilter
+        next();
     });
 };
 
-export default multerUpload;
+export default multerMiddleware;

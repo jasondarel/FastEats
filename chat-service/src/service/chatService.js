@@ -72,7 +72,6 @@ export const updateLastMessageChatService = async (chatId, lastMessage) => {
         if (lastMessage.sender && typeof lastMessage.sender === 'object') {
             lastMessage.sender = JSON.stringify(lastMessage.sender);
         }
-        console.log('Updating last message in chat:', chatId, lastMessage);
         const updatedChat = await Chat.findByIdAndUpdate(
             chatId,
             { lastMessage: lastMessage },
