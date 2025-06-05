@@ -1,9 +1,8 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
 import React from "react";
-import { FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
+import { FaUser, FaPhone } from "react-icons/fa";
 import { saveProfileService } from "../../../service/userServices/profileService";
 import Swal from "sweetalert2";
+import AddressForm from "./AddressForm";
 
 const ProfileForm = ({
   profile,
@@ -12,6 +11,15 @@ const ProfileForm = ({
   preview,
   updateOriginalProfile,
 }) => {
+  const handleAddressChange = (fullAddress) => {
+    handleChange({
+      target: {
+        name: "address",
+        value: fullAddress,
+      },
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -46,14 +54,14 @@ const ProfileForm = ({
         onChange={handleChange}
       />
 
-      <InputField
-        icon={<FaMapMarkerAlt className="ml-3 text-gray-500" />}
-        type="text"
-        name="address"
-        placeholder="Address"
-        value={profile.address}
-        onChange={handleChange}
-      />
+      <div>
+        <label className="block text-gray-700 font-medium mb-2">Address</label>
+        <AddressForm
+          profile={profile}
+          handleChange={handleChange}
+          onAddressChange={handleAddressChange}
+        />
+      </div>
 
       <InputField
         icon={<FaPhone className="ml-3 text-gray-500" />}
