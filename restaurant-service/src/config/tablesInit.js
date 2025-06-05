@@ -10,6 +10,10 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS restaurants (
         restaurant_id SERIAL PRIMARY KEY,
         restaurant_name VARCHAR(255) NOT NULL,
+        restaurant_province TEXT DEFAULT 'Unknown',
+        restaurant_city TEXT DEFAULT 'Unknown',
+        restaurant_district TEXT DEFAULT 'Unknown',
+        restaurant_village TEXT DEFAULT 'Unknown',
         restaurant_address TEXT NOT NULL,
         restaurant_image VARCHAR(500),
         owner_id INT NOT NULL UNIQUE,

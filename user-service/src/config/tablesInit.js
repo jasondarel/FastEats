@@ -21,7 +21,11 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS user_details (
         user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
         profile_photo TEXT,
-        address TEXT,
+        province TEXT DEFAULT 'Unknown',
+        city TEXT DEFAULT 'Unknown',
+        district TEXT DEFAULT 'Unknown',
+        village TEXT DEFAULT 'Unknown',
+        address TEXT DEFAULT 'Unknown',
         phone_number TEXT,
         updated_at TIMESTAMP DEFAULT NOW()
       );

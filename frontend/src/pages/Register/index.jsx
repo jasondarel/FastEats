@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import RegisterForm from "../Register/components/RegisterForm";
 import AuthLayout from "./components/AuthLayout";
-import registerService from "../../service/userServices/registerService";
+import {registerService} from "../../service/userServices/registerService";
 
 const Register = () => {
   const [errors, setErrors] = useState({});
@@ -48,6 +48,10 @@ const Register = () => {
 
       if (userType === "seller" && additionalData) {
         formData.append("restaurantName", additionalData.restaurantName);
+        formData.append("restaurantProvince", additionalData.restaurantProvince);
+        formData.append("restaurantCity", additionalData.restaurantCity);
+        formData.append("restaurantDistrict", additionalData.restaurantDistrict);
+        formData.append("restaurantVillage", additionalData.restaurantVillage);
         formData.append("restaurantAddress", additionalData.restaurantAddress);
 
         if (additionalData.restaurantImage) {
@@ -73,7 +77,8 @@ const Register = () => {
         }
       });
     } catch (error) {
-      const errors = error.response?.data.errors || {
+      console.error("Registration error:", error);
+      const errors = error.error || {
         general: "An error occurred",
       };
       setErrors(errors);

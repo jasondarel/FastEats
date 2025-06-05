@@ -25,10 +25,14 @@ export const isRestaurantAvailableById = async (restaurantId) => {
 
 export const createRestaurantService = async (restaurantReq) => {
     const result = await pool.query(
-        `INSERT INTO restaurants (restaurant_name, restaurant_address, owner_id, restaurant_image) 
-        VALUES ($1, $2, $3, $4) RETURNING *`,
+        `INSERT INTO restaurants (restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, owner_id, restaurant_image) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
         [
             restaurantReq.restaurantName,
+            restaurantReq.restaurantProvince,
+            restaurantReq.restaurantCity,
+            restaurantReq.restaurantDistrict,
+            restaurantReq.restaurantVillage,
             restaurantReq.restaurantAddress,
             restaurantReq.ownerId,
             restaurantReq.restaurantImage,

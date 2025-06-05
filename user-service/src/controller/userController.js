@@ -96,8 +96,8 @@ export const registerSellerController = async (req, res) => {
   try {
     const errors = await validateRegisterSellerRequest(req.body);
     if(Object.keys(errors).length > 0) {
-      logger.warn("Validation failed", errors);
-      return responseError(res, 400, "Validation failed", errors);
+      logger.warn("Validation failed ", errors);
+      return responseError(res, 400, "Validation failed", "error", errors);
     }
 
     const hashedPassword = hashPassword(req.body.password);

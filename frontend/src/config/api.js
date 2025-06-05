@@ -4,3 +4,7 @@ export const CHAT_URL = import.meta.env.VITE_CHAT_SERVICE_URL;
 export const ROOT_URL = import.meta.env.VITE_ROOT_URL;
 export const PORT = import.meta.env.VITE_PORT;
 export const MIDTRANS_SNAP_URL = import.meta.env.VITE_MIDTRANS_SNAP_URL;
+export const PROVINCES_URL = import.meta.env.VITE_PROVINCES_URL;
+export const CITIES_URL = import.meta.env.VITE_CITIES_URL;
+export const DISTRICTS_URL = import.meta.env.VITE_DISTRICTS_URL;
+export const VILLAGES_URL = import.meta.env.VITE_VILLAGES_URL;
