@@ -44,7 +44,10 @@ const ImageUploader = ({
           </button>
         </div>
       ) : (
-        <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+        <label
+          htmlFor="file-upload"
+          className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-yellow-400 hover:bg-gray-50 transition-colors"
+        >
           <div className="space-y-1 text-center">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
@@ -61,25 +64,22 @@ const ImageUploader = ({
               />
             </svg>
             <div className="flex text-sm text-gray-600">
-              <label
-                htmlFor="file-upload"
-                className="relative cursor-pointer bg-white rounded-md font-medium text-yellow-500 hover:text-yellow-600 focus-within:outline-none"
-              >
-                <span>Upload an image</span>
-                <input
-                  id="file-upload"
-                  name="file-upload"
-                  type="file"
-                  className="sr-only"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-              </label>
+              <span className="font-medium text-yellow-500 hover:text-yellow-600">
+                Upload an image
+              </span>
               <p className="pl-1">or drag and drop</p>
             </div>
             <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
           </div>
-        </div>
+          <input
+            id="file-upload"
+            name="file-upload"
+            type="file"
+            className="sr-only"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+        </label>
       )}
       <ErrorMessage error={error} />
     </div>
