@@ -46,10 +46,18 @@ export const createRestaurantService = async (restaurantReq) => {
 export const updateRestaurantService = async (restaurantReq, id) => {
     const result = await pool.query(
         `UPDATE restaurants 
-        SET restaurant_name = $1, restaurant_address = $2, restaurant_image = $3, updated_at = NOW()
-        WHERE restaurant_id = $4 
+        SET 
+        restaurant_name = $1, 
+        restaurant_address = $2, 
+        restaurant_image = $3,
+        restaurant_province = $4,
+        restaurant_city = $5,
+        restaurant_district = $6,
+        restaurant_village = $7, 
+        updated_at = NOW()
+        WHERE restaurant_id = $8 
         RETURNING *`,
-        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.restaurantImage, id]
+        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.restaurantImage, restaurantReq.restaurantProvince, restaurantReq.restaurantCity, restaurantReq.restaurantDistrict, restaurantReq.restaurantVillage, id]
     );
 
     if (result.rows.length === 0) {

@@ -19,8 +19,16 @@ import { API_URL } from "../../config/api";
 const ManageRestaurant = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddress, setRestaurantAddress] = useState("");
+  const [restaurantProvince, setRestaurantProvince] = useState("");
+  const [restaurantCity, setRestaurantCity] = useState("");
+  const [restaurantDistrict, setRestaurantDistrict] = useState("");
+  const [restaurantVillage, setRestaurantVillage] = useState("");
   const [initialRestaurantName, setInitialRestaurantName] = useState("");
   const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
+  const [initialRestaurantProvince, setInitialRestaurantProvince] = useState("");
+  const [initialRestaurantCity, setInitialRestaurantCity] = useState("");
+  const [initialRestaurantDistrict, setInitialRestaurantDistrict] = useState("");
+  const [initialRestaurantVillage, setInitialRestaurantVillage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [initialIsOpen, setInitialIsOpen] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
@@ -41,6 +49,7 @@ const ManageRestaurant = () => {
       try {
         const response = await getRestaurantData(token);
         const { restaurant } = response.data;
+        console.log("Restaurant data:", restaurant);
         if (restaurant) {
           setFormDataState({
             restaurantName: restaurant.restaurant_name || "",
@@ -48,8 +57,19 @@ const ManageRestaurant = () => {
           });
           setRestaurantName(restaurant.restaurant_name);
           setRestaurantAddress(restaurant.restaurant_address);
+          setRestaurantProvince(restaurant.restaurant_province || "");
           setInitialRestaurantName(restaurant.restaurant_name);
+          setInitialRestaurantProvince(
+            restaurant.restaurant_province || "");
+          
+          setInitialRestaurantCity(restaurant.restaurant_city || "");
+          setRestaurantCity(restaurant.restaurant_city || "");
+          setInitialRestaurantDistrict(restaurant.restaurant_district || "");
+          setRestaurantDistrict(restaurant.restaurant_district || "");
+          setInitialRestaurantVillage(restaurant.restaurant_village || "");
+          setRestaurantVillage(restaurant.restaurant_village || "");
           setInitialRestaurantAddress(restaurant.restaurant_address);
+
           setIsOpen(restaurant.is_open || false);
           setInitialIsOpen(restaurant.is_open || false);
 
@@ -85,6 +105,10 @@ const ManageRestaurant = () => {
     if (
       restaurantName !== initialRestaurantName ||
       restaurantAddress !== initialRestaurantAddress ||
+      restaurantProvince !== initialRestaurantProvince ||
+      restaurantCity !== initialRestaurantCity ||
+      restaurantDistrict !== initialRestaurantDistrict ||
+      restaurantVillage !== initialRestaurantVillage ||
       isOpen !== initialIsOpen ||
       imageFile
     ) {
@@ -97,6 +121,14 @@ const ManageRestaurant = () => {
     restaurantAddress,
     initialRestaurantName,
     initialRestaurantAddress,
+    restaurantProvince,
+    restaurantCity,
+    restaurantDistrict,
+    restaurantVillage,
+    initialRestaurantProvince,
+    initialRestaurantCity,
+    initialRestaurantDistrict,
+    initialRestaurantVillage,
     isOpen,
     initialIsOpen,
     imageFile,
@@ -111,11 +143,24 @@ const ManageRestaurant = () => {
       alert("You must be logged in to update your restaurant");
       return;
     }
-
+    console.log("Updating restaurant with data:", {
+      restaurantName,
+      restaurantAddress,
+      restaurantProvince,
+      restaurantCity,
+      restaurantDistrict,
+      restaurantVillage,
+      isOpen,
+      imageFile,
+  });
     try {
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
       formData.append("restaurantAddress", restaurantAddress);
+      formData.append("restaurantProvince", restaurantProvince);
+      formData.append("restaurantCity", restaurantCity);
+      formData.append("restaurantDistrict", restaurantDistrict);
+      formData.append("restaurantVillage", restaurantVillage);
       formData.append("isOpen", isOpen);
       if (imageFile) {
         formData.append("restaurantImage", imageFile);
@@ -134,13 +179,13 @@ const ManageRestaurant = () => {
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.reload();
-        }
       });
 
       setInitialRestaurantName(restaurantName);
+      setInitialRestaurantProvince(restaurantProvince);
+      setInitialRestaurantCity(restaurantCity);
+      setInitialRestaurantDistrict(restaurantDistrict);
+      setInitialRestaurantVillage(restaurantVillage);
       setInitialRestaurantAddress(restaurantAddress);
       setInitialIsOpen(isOpen);
       setIsChanged(false);
@@ -254,10 +299,21 @@ const ManageRestaurant = () => {
           <RestaurantDetailsForm
             restaurantName={restaurantName}
             setRestaurantName={setRestaurantName}
+            restaurantProvince={restaurantProvince}
+            setRestaurantProvince={setRestaurantProvince}
+            restaurantCity={restaurantCity}
+            setRestaurantCity={setRestaurantCity}
+            restaurantDistrict={restaurantDistrict}
+            setRestaurantDistrict={setRestaurantDistrict}
+            restaurantVillage={restaurantVillage}
+            setRestaurantVillage={setRestaurantVillage}
             restaurantAddress={restaurantAddress}
             setRestaurantAddress={setRestaurantAddress}
             isChanged={isChanged}
             onSubmit={handleUpdateRestaurant}
+            initialRestaurantProvince={initialRestaurantProvince}
+            initialRestaurantCity={initialRestaurantCity}
+            initialRestaurantDistrict={initialRestaurantDistrict}
           />
         </div>
 

@@ -43,6 +43,22 @@ const validateUpdateRestaurantRequest = async(restaurantReq) => {
         errors.restaurantAddress = "Restaurant address too short (10 characters minimum)";
     }
 
+    if (!restaurantReq.restaurantProvince || restaurantReq.restaurantProvince.trim() === '') {
+        errors.restaurantProvince = 'Restaurant province is required';
+    }
+
+    if (!restaurantReq.restaurantCity || restaurantReq.restaurantCity.trim() === '') {
+        errors.restaurantCity = 'Restaurant city is required';
+    }
+
+    if (!restaurantReq.restaurantDistrict || restaurantReq.restaurantDistrict.trim() === '') {
+        errors.restaurantDistrict = 'Restaurant district is required';
+    }
+
+    if (!restaurantReq.restaurantVillage || restaurantReq.restaurantVillage.trim() === '') {
+        errors.restaurantVillage = 'Restaurant village is required';
+    }
+
     return errors
 }
 

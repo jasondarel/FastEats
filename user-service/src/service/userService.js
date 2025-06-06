@@ -85,7 +85,7 @@ export const getUserByIdService = async(id) => {
 
 export const getUserDetailsByIdService = async(id) => {
     const result = await pool.query(
-        "SELECT profile_photo, address, phone_number FROM user_details WHERE user_id = $1",
+        "SELECT profile_photo, address, phone_number, province, city, district, village FROM user_details WHERE user_id = $1",
         [id]
     );
     return result.rows[0];
@@ -101,10 +101,10 @@ export const createUserDetailsService = async(userReq) => {
 }
 
 export const updateUserDetailsService = async(userReq, user_id) => {
-    const { profile_photo, address, phone_number } = userReq;
+    const { profile_photo, address, phone_number, province, city, district, village } = userReq;
     const result = await pool.query(
-        "UPDATE user_details SET profile_photo = $1, address = $2, phone_number = $3, updated_at = NOW() WHERE user_id = $4 RETURNING *",
-        [profile_photo, address, phone_number, user_id]
+        "UPDATE user_details SET profile_photo = $1, address = $2, phone_number = $3, province=$4, city=$5, district=$6, village=$7, updated_at = NOW() WHERE user_id = $8 RETURNING *",
+        [profile_photo, address, phone_number, province, city, district, village, user_id]
     );
     return result.rows[0];
 }
