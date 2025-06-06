@@ -47,7 +47,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       setLoadingStates(prev => ({ ...prev, provinces: true }));
       try {
         const response = await getProvincesService();
-        setProvinces(response || []);
+        setProvinces(response.data || []);
       } catch (error) {
         console.error("Error fetching provinces:", error);
         setProvinces([]);
@@ -71,7 +71,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     setLoadingStates(prev => ({ ...prev, cities: true }));
     try {
       const response = await getCitiesService(provinceId);
-      setAvailableCities(response || []);
+      setAvailableCities(response.data || []);
     } catch (error) {
       console.error(`Error fetching cities for province ${provinceId}:`, error);
       setAvailableCities([]);
@@ -90,7 +90,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     setLoadingStates(prev => ({ ...prev, districts: true }));
     try {
       const response = await getDistrictsService(cityId);
-      setAvailableDistricts(response || []);
+      setAvailableDistricts(response.data || []);
     } catch (error) {
       console.error(`Error fetching districts for city ${cityId}:`, error);
       setAvailableDistricts([]);
@@ -109,7 +109,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     setLoadingStates(prev => ({ ...prev, villages: true }));
     try {
       const response = await getVillagesService(districtId);
-      setAvailableVillages(response || []);
+      setAvailableVillages(response.data || []);
     } catch (error) {
       console.error(`Error fetching villages for district ${districtId}:`, error);
       setAvailableVillages([]);
