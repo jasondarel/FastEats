@@ -8,7 +8,7 @@ import {
   getDistrictsService, 
   getProvincesService, 
   getVillagesService 
-} from "../../../service/userServices/registerService";
+} from "../../../service/utilServices/utilService";
 
 const RegisterForm = ({ onRegister, errors, userType }) => {
   // User form states
