@@ -13,7 +13,10 @@ import {
     getCurrentUserController,
     registerSellerController,
     updateUserPaymentController,
-    getUserPaymentController
+    getUserPaymentController,
+    sendResetPasswordReqController,
+    verifyResetPasswordTokenController,
+    resetPasswordController
 } from "../controller/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
@@ -39,5 +42,8 @@ userRoutes.get("/verify-token", verifyTokenController);
 userRoutes.post("/verify-otp", verifyOtpController);
 userRoutes.get("/user-payment", authMiddleware, getUserPaymentController);
 userRoutes.put("/user-payment", authMiddleware, updateUserPaymentController);
+userRoutes.post("/send-reset-password-req", sendResetPasswordReqController);
+userRoutes.get("/verify-reset-password-token", verifyResetPasswordTokenController);
+userRoutes.post("/reset-password", resetPasswordController);
 
 export default userRoutes;

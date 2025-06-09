@@ -3,7 +3,8 @@ import jwt from "jsonwebtoken";
 import { 
   EXCHANGE_NAME,
   getChannel, 
-  ROUTING_KEY
+  EMAIL_RESET_PASSWORD_ROUTING_KEY,
+  EMAIL_VERIFICATION_ROUTING_KEY
 } from "../config/rabbitMQInit.js";
 import logger from "../config/loggerInit.js";
 
@@ -36,16 +37,30 @@ export const validatePhoneNumber = (phone) => {
   return phoneRegex.test(phone);
 }
 
-export const publishMessage = async(email, token, otp) => {
+export const publishVerificationEmailMessage = async(email, token, otp) => {
   const channel = await getChannel();
 
   const message = JSON.stringify({ email, token, otp });
 
-  channel.publish(EXCHANGE_NAME, ROUTING_KEY, Buffer.from(message), {
+  channel.publish(EXCHANGE_NAME, EMAIL_VERIFICATION_ROUTING_KEY, Buffer.from(message), {
     persistent: true,
   });
 
   logger.info(`📨 Sent verification email to ${email}`);
+};
+
+export const publishResetPasswordEmailMessage = async(email, token) => {
+  const channel = await getChannel();
+
+  const message = JSON.stringify({ email, token });
+
+  channel.publish(
+    EXCHANGE_NAME, 
+    EMAIL_RESET_PASSWORD_ROUTING_KEY, Buffer.from(message), {
+    persistent: true,
+  });
+
+  logger.info(`📨 Sent reset password email to ${email}`);
 };
 
 export const generateOtpCode = (len) => {
