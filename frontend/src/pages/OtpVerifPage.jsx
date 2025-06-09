@@ -20,7 +20,7 @@ const OtpVerification = () => {
 
   const checkToken = async () => {
     if (!token || isVerified) return;
-
+    console.log("Checking token:", token, "for email:", emailQuery);
     try {
       const response = await fetch(
         `${API_URL}/user/verify-token?token=${token}&email=${emailQuery}`,
@@ -29,8 +29,9 @@ const OtpVerification = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
-
       const data = await response.json();
+      console.log("Token verification response:", data);
+
       if (!data.success) {
         setError(data.message || "Failed to verify token");
         MySwal.fire({
@@ -44,6 +45,7 @@ const OtpVerification = () => {
         });
       }
     } catch (err) {
+      console.error("Error verifying token:", err);
       setError(err.message || "Failed to verify token");
       MySwal.fire({
         title: "Error",

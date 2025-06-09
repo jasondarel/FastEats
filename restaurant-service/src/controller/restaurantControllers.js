@@ -19,7 +19,7 @@ export const createRestaurantController = async(req, res) => {
         const errorLen = Object.keys(errors).length;
         if(errorLen > 0) {
             logger.warn("Validation failed", errors);
-            return responseError(res, 400, "Validation failed", errors);
+            return responseError(res, 400, "Validation failed", "error", errors);
         }
 
         const newRestaurant = await createRestaurantService(restaurantReq);

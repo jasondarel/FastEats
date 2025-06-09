@@ -125,7 +125,7 @@ export const registerSellerController = async (req, res) => {
       otp: otp,
     }
 
-    await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+    await publishVerificationEmailMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
 
     if(response.role === "seller") {
       if (!req.files || !req.files.restaurantImage) {
@@ -161,6 +161,10 @@ export const registerSellerController = async (req, res) => {
     return responseSuccess(res, 201, response.message, "token", emailVerificationToken);
   } catch (err) {
     logger.error("Internal server error", err);
+    if (err.response && err.response.status === 400) {
+      logger.warn("Bad request", err.response.data.error);
+      return responseError(res, 400, err.response.data.error);
+    }
     return responseError(res, 500, "Server error");
   }
 };
