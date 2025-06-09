@@ -6,10 +6,10 @@ import logger from "../../config/loggerInit.js";
 envInit();
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
-const EXCHANGE_NAME = "email_exchange";
-const EXCHANGE_TYPE = "direct";
-const QUEUE_NAME = "email_verification_queue";
-const ROUTING_KEY = "email_verification";
+const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "email_exchange";
+const EXCHANGE_TYPE = process.env.EXCHANGE_TYPE || "direct";
+const QUEUE_NAME = process.env.USER_VERIFICATION_QUEUE || "email_verification_queue";
+const ROUTING_KEY = process.env.EMAIL_VERIFICATION_USER_ROUTE || "email_verification";
 
 logger.info("EMAIL VALIDATION CONSUMER SERVICE");
 
@@ -86,7 +86,7 @@ const startEmailVerificationConsumer = async () => {
     });
   } catch (error) {
     logger.error("❌ RabbitMQ Connection Failed:", error);
-    setTimeout(startConsumer, 5000);
+    setTimeout(startEmailVerificationConsumer, 5000);
   }
 };
 

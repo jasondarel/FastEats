@@ -8,7 +8,7 @@ envInit();
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "email_exchange";
 const EXCHANGE_TYPE = process.env.EXCHANGE_TYPE || "direct";
-const QUEUE_NAME = process.env.QUEUE_NAME || "email_verification_queue";
+const QUEUE_NAME = process.env.ORDER_QUEUE || "email_verification_queue";
 const ROUTING_KEY = process.env.EMAIL_PREPARING_ORDER_ROUTE || "email_verification";
 
 logger.info("ORDER PREPARING CONSUMER SERVICE");

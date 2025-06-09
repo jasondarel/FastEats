@@ -4,6 +4,7 @@ import startOrderPreparingConsumer from "./service/order-service/orderPreparingC
 import startEmailVerificationConsumer from "./service/user-service/emailValidationConsumer.js";
 import envInit from "./config/envInit.js";
 import startOrderCompletedConsumer from "./service/order-service/orderCompletedConsumer.js";
+import startResetPasswordConsumer from "./service/user-service/emailResetPasswordConsumer.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 4000;
 const start = async () => {
   try {
     await startEmailVerificationConsumer();
+    await startResetPasswordConsumer();
     await startOrderPreparingConsumer();
     await startOrderCompletedConsumer();
     app.listen(PORT, () => {

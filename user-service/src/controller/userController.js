@@ -1,9 +1,10 @@
 import {
   generateLoginToken,
   hashPassword,
-  publishMessage,
+  publishVerificationEmailMessage,
   generateOtpCode,
   generateRandomToken,
+  publishResetPasswordEmailMessage,
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
@@ -12,7 +13,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { 
   validateChangePasswordRequest, validateLoginRequest, 
-  validateRegisterRequest, validateRegisterSellerRequest, validateUpdateProfileRequest, 
+  validateRegisterRequest, validateRegisterSellerRequest, validateResetPasswordRequest, validateUpdateProfileRequest, 
   validateUpdateUserPaymentRequest
 } from "../validator/userValidator.js";
 import { 
@@ -82,7 +83,7 @@ export const registerController = async (req, res) => {
       otp: otp,
     }
 
-    await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+    await publishVerificationEmailMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
     logger.info("User registered successfully");
     return responseSuccess(res, 201, response.message, "token", emailVerificationToken);
   } catch (err) {
@@ -540,3 +541,110 @@ export const becomeSellerController = async (req, res) => {
     return responseError(res, 500, "Server error");
   }
 };
+
+export const sendResetPasswordReqController = async(req, res) => {
+  logger.info("SEND RESET PASSWORD REQUEST CONTROLLER");
+  const { email } = req.body;
+  try {
+    if (!email) {
+      logger.warn("Email is required");
+      return responseError(res, 400, "Email is required");
+    }
+    
+    const user = await getUserByEmailService(email);
+    if (!user) {
+      logger.warn("User not found");
+      return responseError(res, 404, "User not found");
+    }
+
+    const resetToken = generateRandomToken(50);
+    const redisKey = `password_reset:${resetToken}`;
+    const redisClient = getRedisClient();
+    
+    await redisClient.del(redisKey);
+    await redisClient.hset(redisKey, {
+      token: resetToken,
+      userId: user.id,
+    });
+    await redisClient.expire(redisKey, 300);
+
+    const redisData = await redisClient.hgetall(redisKey);
+    const emailPayload = {
+      email: user.email,
+      token: resetToken,
+    };
+    await publishResetPasswordEmailMessage(email, resetToken);
+    
+    logger.info("Reset email sent successfully");
+    return responseSuccess(res, 200, "Reset email sent successfully. Please check your email to get the link.", "token", resetToken);
+  } catch (err) {
+    logger.error("Internal server error", err);
+    return responseError(res, 500, "Server error");
+  }
+}
+
+export const verifyResetPasswordTokenController = async (req, res) => {
+  logger.info("VERIFY RESET PASSWORD TOKEN CONTROLLER");
+  const { token } = req.query;
+  if (!token) {
+    logger.warn("Token not found");
+    return responseError(res, 401, "Token not found");
+  }
+
+  const redisKey = `password_reset:${token}`;
+  const redisClient = getRedisClient();
+
+  const redisData = await redisClient.hgetall(redisKey);
+  if (!redisData || Object.keys(redisData).length === 0) {
+    logger.warn("Token expired or invalid email");
+    return responseError(res, 401, "Token expired or invalid email");
+  }
+
+  if (redisData.token !== token) {
+    logger.warn("Invalid token");
+    return responseError(res, 401, "Invalid token");
+  }
+  logger.info("Token verified successfully");
+  return responseSuccess(res, 200, "Token verified successfully", "userId", redisData.userId);
+}
+
+export const resetPasswordController = async (req, res) => {
+  logger.info("RESET PASSWORD CONTROLLER");
+  const { token } = req.query;
+  const { password, passwordConfirmation } = req.body;
+  if (!token) {
+    logger.warn("Token not found");
+    return responseError(res, 401, "Token not found");
+  }
+  
+  const errors = await validateResetPasswordRequest({ password, passwordConfirmation });
+  if (Object.keys(errors).length > 0) {
+    logger.warn("Validation failed", errors);
+    return responseError(res, 400, "Validation failed", "error", errors);
+  }
+
+  try {
+    const redisKey = `password_reset:${token}`;
+    const redisClient = getRedisClient();
+    const redisData = await redisClient.hgetall(redisKey);
+
+    if (!redisData || Object.keys(redisData).length === 0) {
+      logger.warn("Token expired or invalid email");
+      return responseError(res, 401, "Token expired or invalid email");
+    }
+
+    if (redisData.token !== token) {
+      logger.warn("Invalid token");
+      return responseError(res, 401, "Invalid token");
+    }
+
+    await changePasswordService(redisData.userId, hashPassword(password));
+    await redisClient.del(redisKey);
+    
+    logger.info("Password reset successfully");
+    return responseSuccess(res, 200, "Password reset successfully. You can now log in.");
+  } catch (err) {
+    logger.error("Internal server error", err);
+    return responseError(res, 500, "Server error");
+  }
+}

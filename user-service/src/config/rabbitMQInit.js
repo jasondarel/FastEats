@@ -5,10 +5,15 @@ import envInit from "./envInit.js";
 envInit();
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
-export const EXCHANGE_NAME = "email_exchange";
-const EXCHANGE_TYPE = "direct";
-const QUEUE_NAME = "email_verification_queue";
-export const ROUTING_KEY = "email_verification";
+export const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "notification_exchange";
+const EXCHANGE_TYPE = process.env.EXCHANGE_TYPE || "direct";
+
+export const USER_VERIFICATION_QUEUE = process.env.USER_VERIFICATION_QUEUE || "email_verification_queue";
+export const EMAIL_VERIFICATION_ROUTING_KEY = process.env.EMAIL_VERIFICATION_USER_ROUTE || "email.verification.user";
+
+
+export const USER_RESET_QUEUE = process.env.USER_RESET_QUEUE || "email_reset_queue";
+export const EMAIL_RESET_PASSWORD_ROUTING_KEY = process.env.EMAIL_RESET_PASSWORD_ROUTE || "email.reset.password";
 
 let channel;
 let connection;
@@ -20,10 +25,12 @@ export const rabbitMQInit = async () => {
 
     await channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, { durable: true });
 
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
-
-    await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
-
+    await channel.assertQueue(USER_VERIFICATION_QUEUE, { durable: true });
+    await channel.assertQueue(USER_RESET_QUEUE, { durable: true });
+    
+    await channel.bindQueue(USER_VERIFICATION_QUEUE, EXCHANGE_NAME, EMAIL_VERIFICATION_ROUTING_KEY);
+    await channel.bindQueue(USER_RESET_QUEUE, EXCHANGE_NAME, EMAIL_RESET_PASSWORD_ROUTING_KEY);
+    
     logger.info(`✅ RabbitMQ Connected & Exchange "${EXCHANGE_NAME}" Initialized`);
   } catch (error) {
     logger.error("❌ RabbitMQ Connection Failed:", error);

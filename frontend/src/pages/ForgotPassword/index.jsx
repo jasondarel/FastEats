@@ -9,7 +9,7 @@ import SubmitButton from "./components/SubmitButton";
 import AuthLink from "./components/AuthLink";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { loginUser } from "../../app/auth/authThunk";
+import { sendResetEmailService } from "../../service/userServices/forgotPasswordService";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +18,44 @@ const ForgotPassword = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const MySwal = withReactContent(Swal);
+
+  const onSubmit = async(e) => {
+    e.preventDefault();
+    if (!email) {
+      MySwal.fire({
+        title: "Error",
+        text: "Email is required",
+        icon: "error",
+      });
+      return;
+    }
+    try {
+      const response = await sendResetEmailService(email);
+      const {success, message} = response.data;
+      if (success) {
+        MySwal.fire({
+          title: "Success",
+          text: message,
+          icon: "success",
+        }).then(() => {
+          navigate("/login");
+        });
+      } else {
+        MySwal.fire({
+          title: "Error",
+          text: message,
+          icon: "error",
+        });
+      }
+    } catch(err) {
+      console.error("Error during password reset:", err);
+      MySwal.fire({
+        title: "Error",
+        text: "Failed to send reset email. Please try again later.",
+        icon: "error",
+      });
+    }
+  }
 
   return (
     <div className="fixed inset-0 w-full h-screen overflow-hidden">
@@ -32,7 +70,10 @@ const ForgotPassword = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <SubmitButton text={"Send E-mail"} disabled={loading} />
+          <SubmitButton 
+          text={"Send E-mail"} 
+          disabled={loading}
+          onClickSubmit={onSubmit} />
         </form>
 
         {error && (

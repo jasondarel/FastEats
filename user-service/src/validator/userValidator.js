@@ -36,6 +36,27 @@ export const validateRegisterRequest = async(userReq) => {
     return errors
 }
 
+export const validateResetPasswordRequest = async(userReq) => {
+    const errors = {};
+
+    const {password, passwordConfirmation} = userReq;
+
+    if(!password || password.trim() === '') {
+        errors.password = 'Password is required';
+    }
+    if(!passwordConfirmation || passwordConfirmation.trim() === '') {
+        errors.passwordConfirmation = 'Password confirmation is required';
+    }
+
+    if(!validatePassword(password)) {
+        errors.password = 'Password must be at least 8 characters long, also must include letters and numbers';
+    }
+    if(password !== passwordConfirmation) {
+        errors.passwordConfirmation = 'Password does not match';
+    }
+    return errors;
+}
+
 export const validateRegisterSellerRequest = async(userReq) => {
     const errors = {};
 
