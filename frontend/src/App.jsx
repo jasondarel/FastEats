@@ -31,6 +31,7 @@ import NewPassword from "./pages/NewPassword";
 import ForgotPasswordOtp from "./pages/ForgotPasswordOtp";
 import ChatsList from "./pages/ChatsList";
 import ChatRoom from "./pages/ChatRoom";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword/>}/>
           <Route path="/forgot-password-otp" element={<ForgotPasswordOtp />} />
           <Route path="/new-password" element={<NewPassword />} />
 
