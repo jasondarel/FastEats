@@ -5,7 +5,7 @@ import envInit from "./envInit.js";
 envInit();
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
-export const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "email_exchange";
+export const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "notification_exchange";
 const EXCHANGE_TYPE = process.env.EXCHANGE_TYPE || "direct";
 const QUEUE_NAME = process.env.QUEUE_NAME || "email_verification_queue";
 
