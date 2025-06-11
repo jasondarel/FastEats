@@ -75,6 +75,11 @@ const createTables = async () => {
           bank VARCHAR(50),
           va_number VARCHAR(50),
           payment_type VARCHAR(50),
+          shipping_province VARCHAR(50) DEFAULT 'unknown',
+          shipping_city VARCHAR(50) DEFAULT 'unknown',
+          shipping_district VARCHAR(50) DEFAULT 'unknown',
+          shipping_village VARCHAR(50) DEFAULT 'unknown',
+          shipping_address VARCHAR(255) DEFAULT 'unknown',
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW(),
           FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
