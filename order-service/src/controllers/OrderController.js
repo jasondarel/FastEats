@@ -808,10 +808,21 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
+  console.log("REQ BODY:", req.body);
   logger.info("PAY ORDER CONFIRMATION CONTROLLER");
   try {
     const { userId } = req.user;
-    const { order_id, itemPrice, itemQuantity } = req.body;
+    const { order_id, 
+      itemPrice, 
+      itemQuantity, 
+      shipping_province, 
+      shipping_city,
+      shipping_district, 
+      shipping_village, 
+      shipping_address, 
+      shipping_phone,
+      shipping_name 
+    } = req.body;
 
     const order = await getOrderByIdService(order_id);
     if (!order) {
@@ -844,6 +855,7 @@ export const payOrderConfirmationController = async (req, res) => {
           order_id,
           gross_amount: itemPrice,
         },
+        "custom_field1": [shipping_province, shipping_city, shipping_district, shipping_village, shipping_address, shipping_phone, shipping_name],
         credit_card: { secure: true },
         isProduction: process.env.IS_PRODUCTION,
       },
@@ -882,7 +894,16 @@ export const payOrderController = async (req, res) => {
       payment_type,
       currency,
       expiry_time,
+      custom_field1
     } = req.body;
+
+    const shippingProvince = JSON.parse(custom_field1)[0];
+    const shippingCity = JSON.parse(custom_field1)[1];
+    const shippingDistrict = JSON.parse(custom_field1)[2];
+    const shippingVillage = JSON.parse(custom_field1)[3];
+    const shippingAddress = JSON.parse(custom_field1)[4];
+    const shippingPhone = JSON.parse(custom_field1)[5];
+    const shippingName = JSON.parse(custom_field1)[6];
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
       logger.warn("Missing required payment information");
@@ -917,6 +938,13 @@ export const payOrderController = async (req, res) => {
           expiry_time: expiry_time,
           gross_amount: gross_amount,
           bank: bank,
+          shipping_province: shippingProvince,
+          shipping_city: shippingCity,
+          shipping_district: shippingDistrict,
+          shipping_village: shippingVillage,
+          shipping_address: shippingAddress,
+          shipping_phone: shippingPhone,
+          shipping_name: shippingName,
           va_number: va_number,
           payment_type: payment_type,
           transaction_status: transaction_status,
@@ -929,11 +957,23 @@ export const payOrderController = async (req, res) => {
           expiry_time: expiry_time,
           gross_amount: gross_amount,
           payment_type: payment_type,
+          shipping_province: shippingProvince,
+          shipping_city: shippingCity,
+          shipping_district: shippingDistrict,
+          shipping_village: shippingVillage,
+          shipping_address: shippingAddress,
+          shipping_phone: shippingPhone,
+          shipping_name: shippingName,
           transaction_status: transaction_status,
         };
       }
 
-      await createTransactionService(newTransaction);
+      const existingTransaction = await getTransactionByOrderIdService(order_id);
+      if (existingTransaction) {
+        await createTransactionService({ ...newTransaction, id: existingTransaction.transaction_id });
+      } else {
+        await createTransactionService(newTransaction);
+      }
 
       await pendingOrderService(order_id);
     }

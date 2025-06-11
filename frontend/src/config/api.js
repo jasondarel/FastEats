@@ -8,3 +8,7 @@ export const PROVINCES_URL = import.meta.env.VITE_PROVINCES_URL;
 export const CITIES_URL = import.meta.env.VITE_CITIES_URL;
 export const DISTRICTS_URL = import.meta.env.VITE_DISTRICTS_URL;
 export const VILLAGES_URL = import.meta.env.VITE_VILLAGES_URL;
+export const PROVINCE_URL = import.meta.env.VITE_PROVINCE_URL;
+export const CITY_URL = import.meta.env.VITE_CITY_URL;
+export const DISTRICT_URL = import.meta.env.VITE_DISTRICT_URL;
+export const VILLAGE_URL = import.meta.env.VITE_VILLAGE_URL;
