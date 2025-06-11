@@ -11,9 +11,9 @@ export const registerService = async (formData, userType = "user") => {
     };
     const response = await axios.post(endpoint, formData, config);
     console.log("Registration response:", response.data);
-    return response.data.otpToken;
+    return response.data.token;
   } catch (error) {
     console.error("Registration error:", error);
-    throw error.response?.data || { message: "An error occurred during registration" };
+    throw error.response?.data?.message || { message: "An error occurred during registration" };
   }
 };

@@ -70,15 +70,17 @@ const Register = () => {
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
       }).then((result) => {
+        console.log("Registration result:", result);
+        console.log("OTP Token:", otpToken);
         if (result.isConfirmed) {
           navigate(
-            `/otp-verification?token=${otpToken.data.token}&email=${email}`
+            `/otp-verification?token=${otpToken}&email=${email}`
           );
         }
       });
     } catch (error) {
       console.error("Registration error:", error);
-      const errors = error.error || {
+      const errors = error || {
         general: "An error occurred",
       };
       setErrors(errors);
