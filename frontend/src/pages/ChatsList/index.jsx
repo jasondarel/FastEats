@@ -18,22 +18,21 @@ const ChatsList = () => {
     setError(null);
 
     try {
-      // Get user ID from local storage or auth context
-      const token = localStorage.getItem('token');
-      
-      // Call the service to get the chats
+      const token = localStorage.getItem("token");
+
       const response = await getChatsService(token);
-  
+
       if (response.success) {
         console.log("Fetched chats:", response.dataChats);
-        // Based on your backend response format
         setChats(response?.dataChats || []);
       } else {
         throw new Error(response.message || "Failed to fetch chats");
       }
     } catch (err) {
       console.error("Error fetching chats:", err);
-      setError("An error occurred while fetching chats: " + (err.message || err));
+      setError(
+        "An error occurred while fetching chats: " + (err.message || err)
+      );
     } finally {
       setLoading(false);
     }
@@ -43,29 +42,82 @@ const ChatsList = () => {
     fetchChats();
   }, []);
 
-  const transformedChats = chats.map(chat => ({
-    chat_id: chat._id,
-    order_id: chat.orderId || -1,
-    order_type: chat.orderReference ? "CHECKOUT" : "CART",
-    status: chat.status === "active" ? "Preparing" : 
-           chat.status === "resolved" ? "Completed" : 
-           "Waiting",
-    created_at: chat.createdAt,
-    updated_at: chat.updatedAt,
-    lastMessageTime: chat.lastMessage?.timestamp || chat.updatedAt,
-    lastMessage: chat.lastMessage?.text || "No messages yet",
-    unreadCount: chat.unreadCountUser || 0,
-    restaurant: {
-      restaurant_id: chat.restaurant?.restaurant_id,
-      restaurant_name: chat.restaurant?.restaurant_name || "Restaurant",
-      restaurant_image: chat.restaurant?.restaurant_image || null,
-      restaurant_address: chat.restaurant?.restaurant_address || "Address not available",
-    },
-    user: chat.user || null,
-    orderDetails: chat.orderDetails || null,
-  }));
-  const activeChats = transformedChats.filter(chat => chat.status !== "Completed");
-  const completedChats = transformedChats.filter(chat => chat.status === "Completed");
+  const transformedChats = chats.map((chat) => {
+    const getOrderStatus = () => {
+      if (chat.orderDetails?.status) {
+        const orderStatus = chat.orderDetails.status.toLowerCase();
+        if (
+          orderStatus === "completed" ||
+          orderStatus === "delivered" ||
+          orderStatus === "finished"
+        ) {
+          return "Completed";
+        } else if (
+          orderStatus === "preparing" ||
+          orderStatus === "accepted" ||
+          orderStatus === "cooking"
+        ) {
+          return "Preparing";
+        } else if (orderStatus === "pending" || orderStatus === "waiting") {
+          return "Waiting";
+        }
+      }
+
+      if (chat.status) {
+        const chatStatus = chat.status.toLowerCase();
+        if (
+          chatStatus === "resolved" ||
+          chatStatus === "completed" ||
+          chatStatus === "closed"
+        ) {
+          return "Completed";
+        } else if (chatStatus === "active" || chatStatus === "ongoing") {
+          return "Preparing";
+        } else {
+          return "Waiting";
+        }
+      }
+
+      return "Waiting";
+    };
+
+    return {
+      chat_id: chat._id,
+      order_id: chat.orderId || -1,
+      order_type: chat.orderReference ? "CHECKOUT" : "CART",
+      status: getOrderStatus(),
+      created_at: chat.createdAt,
+      updated_at: chat.updatedAt,
+      lastMessageTime: chat.lastMessage?.timestamp || chat.updatedAt,
+      lastMessage: chat.lastMessage?.text || "No messages yet",
+      unreadCount: chat.unreadCountUser || 0,
+      restaurant: {
+        restaurant_id: chat.restaurant?.restaurant_id,
+        restaurant_name: chat.restaurant?.restaurant_name || "Restaurant",
+        restaurant_image: chat.restaurant?.restaurant_image || null,
+        restaurant_address:
+          chat.restaurant?.restaurant_address || "Address not available",
+      },
+      user: chat.user || null,
+      orderDetails: chat.orderDetails || null,
+    };
+  });
+
+  const activeChats = transformedChats.filter(
+    (chat) => chat.status === "Preparing" || chat.status === "Waiting"
+  );
+
+  const completedChats = transformedChats.filter(
+    (chat) => chat.status === "Completed"
+  );
+
+  const sortedActiveChats = activeChats.sort(
+    (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+  );
+
+  const sortedCompletedChats = completedChats.sort(
+    (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+  );
 
   if (loading) {
     return (
@@ -114,7 +166,7 @@ const ChatsList = () => {
                   ) : (
                     <h3 className="font-medium">Chat with Restaurants</h3>
                   )}
-                  
+
                   <p className="text-sm text-gray-600">
                     Communicate with restaurants about your active orders
                   </p>
@@ -151,22 +203,22 @@ const ChatsList = () => {
               <FaComment className="text-yellow-500 text-xl mr-3" />
               <div>
                 {user?.role === "seller" ? (
-                    <>
-                      <h3 className="font-medium">Chat with Customers</h3>
-                      <p className="text-sm text-gray-600">
-                        Communicate with customers about your active orders that are
-                        being prepared
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="font-medium">Chat with Restaurants</h3>
-                      <p className="text-sm text-gray-600">
-                        Communicate with restaurants about your active orders that are
-                        being prepared
-                      </p>
-                    </>
-                  )}
+                  <>
+                    <h3 className="font-medium">Chat with Customers</h3>
+                    <p className="text-sm text-gray-600">
+                      Communicate with customers about your active orders that
+                      are being prepared
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-medium">Chat with Restaurants</h3>
+                    <p className="text-sm text-gray-600">
+                      Communicate with restaurants about your active orders that
+                      are being prepared
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -189,36 +241,56 @@ const ChatsList = () => {
             </p>
           </div>
         ) : (
-          <div className="w-full max-w-6xl space-y-6">
+          <div className="w-full max-w-6xl space-y-8">
             {/* Active Chats Section */}
-            {activeChats.length > 0 && (
+            {sortedActiveChats.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Active Conversations ({activeChats.length})
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
+                    Active Conversations ({sortedActiveChats.length})
+                  </h3>
+                </div>
                 <div className="space-y-3">
-                  {activeChats.map((chat) => (
-                    <ChatCard 
-                    key={chat.order_id} 
-                    chat={chat}
-                    role={user?.role} />
+                  {sortedActiveChats.map((chat) => (
+                    <ChatCard
+                      key={chat.chat_id}
+                      chat={chat}
+                      role={user?.role}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Separator between sections */}
+            {sortedActiveChats.length > 0 &&
+              sortedCompletedChats.length > 0 && (
+                <div className="border-t border-gray-200 my-6"></div>
+              )}
+
             {/* Completed Chats Section */}
-            {completedChats.length > 0 && (
+            {sortedCompletedChats.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-3">
-                  Completed Orders ({completedChats.length})
-                </h3>
-                <p className="text-sm text-gray-500 mb-3">
-                  These orders are completed and chat is no longer available
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-600 flex items-center">
+                    <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                    Completed Orders ({sortedCompletedChats.length})
+                  </h3>
+                </div>
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <FaComment className="text-gray-400 mr-2" />
+                    These orders are completed and chat is no longer available
+                  </p>
+                </div>
                 <div className="space-y-3">
-                  {completedChats.map((chat) => (
-                    <ChatCard key={chat.order_id} chat={chat} />
+                  {sortedCompletedChats.map((chat) => (
+                    <ChatCard
+                      key={chat.chat_id}
+                      chat={chat}
+                      role={user?.role}
+                    />
                   ))}
                 </div>
               </div>

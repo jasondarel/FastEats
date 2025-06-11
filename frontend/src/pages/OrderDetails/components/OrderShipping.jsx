@@ -6,7 +6,7 @@ import {
   getVillagesService,
 } from "../../../service/utilServices/utilService";
 
-const OrderShipping = () => {
+const OrderShipping = ({ onShippingValidationChange }) => {
   const [useCurrentInfo, setUseCurrentInfo] = useState(true);
   const [shippingData, setShippingData] = useState({
     province: "",
@@ -31,6 +31,26 @@ const OrderShipping = () => {
   useEffect(() => {
     loadProvinces();
   }, []);
+
+  useEffect(() => {
+    const isShippingValid = () => {
+      if (useCurrentInfo) {
+        return true;
+      }
+
+      return (
+        shippingData.province &&
+        shippingData.city &&
+        shippingData.district &&
+        shippingData.village &&
+        shippingData.address.trim()
+      );
+    };
+
+    if (onShippingValidationChange) {
+      onShippingValidationChange(isShippingValid());
+    }
+  }, [useCurrentInfo, shippingData, onShippingValidationChange]);
 
   const loadProvinces = async () => {
     setLoading((prev) => ({ ...prev, provinces: true }));
@@ -133,6 +153,24 @@ const OrderShipping = () => {
       loadVillages(value);
     }
   };
+
+  const handleUseCurrentInfoChange = (useCurrent) => {
+    setUseCurrentInfo(useCurrent);
+
+    if (useCurrent) {
+      setShippingData({
+        province: "",
+        city: "",
+        district: "",
+        village: "",
+        address: "",
+      });
+      setCities([]);
+      setDistricts([]);
+      setVillages([]);
+    }
+  };
+
   return (
     <div>
       <div className="mt-8 p-6 bg-amber-50 rounded-lg">
@@ -142,7 +180,7 @@ const OrderShipping = () => {
 
         <div className="mb-6 flex gap-4">
           <button
-            onClick={() => setUseCurrentInfo(true)}
+            onClick={() => handleUseCurrentInfoChange(true)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               useCurrentInfo
                 ? "bg-amber-600 text-white"
@@ -152,7 +190,7 @@ const OrderShipping = () => {
             Use Current Address
           </button>
           <button
-            onClick={() => setUseCurrentInfo(false)}
+            onClick={() => handleUseCurrentInfoChange(false)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               !useCurrentInfo
                 ? "bg-amber-600 text-white"
@@ -174,8 +212,13 @@ const OrderShipping = () => {
                 onChange={(e) =>
                   handleShippingChange("province", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  !shippingData.province && !useCurrentInfo
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
                 disabled={loading.provinces}
+                required={!useCurrentInfo}
               >
                 <option value="">
                   {loading.provinces
@@ -188,6 +231,11 @@ const OrderShipping = () => {
                   </option>
                 ))}
               </select>
+              {!shippingData.province && !useCurrentInfo && (
+                <p className="text-red-500 text-xs mt-1">
+                  Province is required
+                </p>
+              )}
             </div>
 
             <div>
@@ -197,8 +245,13 @@ const OrderShipping = () => {
               <select
                 value={shippingData.city}
                 onChange={(e) => handleShippingChange("city", e.target.value)}
-                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  !shippingData.city && !useCurrentInfo
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
                 disabled={!shippingData.province || loading.cities}
+                required={!useCurrentInfo}
               >
                 <option value="">
                   {loading.cities ? "Loading cities..." : "Select City/Regency"}
@@ -209,6 +262,13 @@ const OrderShipping = () => {
                   </option>
                 ))}
               </select>
+              {!shippingData.city &&
+                !useCurrentInfo &&
+                shippingData.province && (
+                  <p className="text-red-500 text-xs mt-1">
+                    City/Regency is required
+                  </p>
+                )}
             </div>
 
             <div>
@@ -220,8 +280,13 @@ const OrderShipping = () => {
                 onChange={(e) =>
                   handleShippingChange("district", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  !shippingData.district && !useCurrentInfo
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
                 disabled={!shippingData.city || loading.districts}
+                required={!useCurrentInfo}
               >
                 <option value="">
                   {loading.districts
@@ -234,6 +299,13 @@ const OrderShipping = () => {
                   </option>
                 ))}
               </select>
+              {!shippingData.district &&
+                !useCurrentInfo &&
+                shippingData.city && (
+                  <p className="text-red-500 text-xs mt-1">
+                    District is required
+                  </p>
+                )}
             </div>
 
             <div>
@@ -245,8 +317,13 @@ const OrderShipping = () => {
                 onChange={(e) =>
                   handleShippingChange("village", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  !shippingData.village && !useCurrentInfo
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
                 disabled={!shippingData.district || loading.villages}
+                required={!useCurrentInfo}
               >
                 <option value="">
                   {loading.villages ? "Loading villages..." : "Select Village"}
@@ -257,6 +334,13 @@ const OrderShipping = () => {
                   </option>
                 ))}
               </select>
+              {!shippingData.village &&
+                !useCurrentInfo &&
+                shippingData.district && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Village is required
+                  </p>
+                )}
             </div>
 
             <div>
@@ -270,12 +354,45 @@ const OrderShipping = () => {
                 }
                 placeholder="Enter your complete address (street name, house number, landmarks, etc.)"
                 rows={4}
-                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-vertical"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-vertical ${
+                  !shippingData.address.trim() && !useCurrentInfo
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
+                required={!useCurrentInfo}
               />
-              <div className="text-xs text-amber-600 mt-1">
-                Please provide complete address details for accurate delivery
-              </div>
+              {!shippingData.address.trim() && !useCurrentInfo && (
+                <p className="text-red-500 text-xs mt-1">
+                  Detailed address is required
+                </p>
+              )}
             </div>
+
+            {!useCurrentInfo && (
+              <div className="bg-amber-100 border-l-4 border-amber-500 p-4 rounded">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-amber-500"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-amber-700">
+                      Please fill in all shipping address fields to proceed with
+                      payment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
