@@ -1,5 +1,14 @@
 import axios from "axios";
-import { PROVINCES_URL, CITIES_URL, DISTRICTS_URL, VILLAGES_URL } from "../../config/api";
+import { 
+  PROVINCES_URL, 
+  CITIES_URL, 
+  DISTRICTS_URL, 
+  VILLAGES_URL,
+  PROVINCE_URL,
+  CITY_URL,
+  DISTRICT_URL,
+  VILLAGE_URL
+} from "../../config/api";
 
 export const getProvincesService = async() => {
   try {
@@ -37,6 +46,46 @@ export const getVillagesService = async(districtId) => {
     return response;
   } catch (error) {
     console.error("Error fetching villages:", error);
+    throw error;
+  }
+}
+
+export const getProvinceService = async(provinceId) => {
+  try {
+    const response = await axios.get(`${PROVINCE_URL}/${provinceId}.json`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching province:", error);
+    throw error;
+  }
+}
+
+export const getCityService = async(cityId) => {
+  try {
+    const response = await axios.get(`${CITY_URL}/${cityId}.json`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching city:", error);
+    throw error;
+  }
+}
+
+export const getDistrictService = async(districtId) => {
+  try {
+    const response = await axios.get(`${DISTRICT_URL}/${districtId}.json`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching district:", error);
+    throw error;
+  }
+}
+
+export const getVillageService = async(villageId) => {
+  try {
+    const response = await axios.get(`${VILLAGE_URL}/${villageId}.json`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching village:", error);
     throw error;
   }
 }

@@ -19,6 +19,13 @@ const payConfirmationService = async (
   orderId,
   itemQuantity,
   itemPrice,
+  shippingProvince,
+  shippingCity,
+  shippingDistrict,
+  shippingVillage,
+  shippingAddress,
+  shippingPhone,
+  shippingName,
   token
 ) => {
   const response = await axios.post(
@@ -27,6 +34,13 @@ const payConfirmationService = async (
       order_id: orderId,
       itemQuantity: itemQuantity,
       itemPrice: itemPrice,
+      shipping_province: shippingProvince,
+      shipping_city: shippingCity,
+      shipping_district: shippingDistrict,
+      shipping_village: shippingVillage,
+      shipping_address: shippingAddress,
+      shipping_phone: shippingPhone,
+      shipping_name: shippingName,
     },
     {
       headers: {

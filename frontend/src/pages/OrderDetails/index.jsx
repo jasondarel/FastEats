@@ -34,7 +34,8 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [isShippingValid, setIsShippingValid] = useState(true); // New state for shipping validation
+  const [isShippingValid, setIsShippingValid] = useState(true);
+  const [shippingData, setShippingData] = useState(null);
   const [forceUpdate, setForceUpdate] = useState(0);
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
@@ -43,6 +44,11 @@ const OrderDetails = () => {
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
     setIsShippingValid(isValid);
+  }, []);
+
+  const handleShippingDataChange = useCallback((data) => {
+    console.log("Shipping data changed:", data);
+    setShippingData(data);
   }, []);
 
   const handleCancel = async (orderId) => {
@@ -221,6 +227,13 @@ const OrderDetails = () => {
         orderId,
         itemQuantity,
         itemPrice,
+        shippingData.shippingData.province,
+        shippingData.shippingData.city,
+        shippingData.shippingData.district,
+        shippingData.shippingData.village,
+        shippingData.shippingData.address,
+        shippingData.shippingData.phone,
+        shippingData.shippingData.fullName,
         token
       );
 
@@ -504,6 +517,7 @@ const OrderDetails = () => {
               {shouldShowShipping && (
                 <OrderShipping
                   onShippingValidationChange={handleShippingValidationChange}
+                  onShippingDataChange={handleShippingDataChange}
                 />
               )}
             </div>
