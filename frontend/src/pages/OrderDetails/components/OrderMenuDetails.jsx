@@ -55,6 +55,27 @@ const OrderMenuDetails = ({ order }) => {
             <p className="text-amber-900">{order.menu.menu_description}</p>
           </div>
         )}
+
+        <div className="mt-8 p-6 bg-amber-50 rounded-lg">
+          <h3 className="text-xl font-semibold text-amber-900 mb-4">
+            Order Summary
+          </h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-amber-700 font-medium">Total Items</span>
+              <span className="text-amber-900">{order.item_quantity}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-amber-700 font-medium">Total Amount</span>
+              <span className="text-amber-900">
+                Rp{" "}
+                {(
+                  parseFloat(order.menu.menu_price) * order.item_quantity
+                ).toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
+        </div>
       </>
     );
   } else if (order.order_type === "CART") {
@@ -65,7 +86,6 @@ const OrderMenuDetails = ({ order }) => {
             key={index}
             className="bg-gradient-to-r from-amber-50 to-white p-6 rounded-lg"
           >
-            {/* Menu Image */}
             {item.menu.menu_image && (
               <div className="mb-6 p-4 bg-amber-50 rounded-lg">
                 <img
@@ -123,7 +143,6 @@ const OrderMenuDetails = ({ order }) => {
           </div>
         ))}
 
-        {/* Total Order Summary */}
         <div className="mt-8 p-6 bg-amber-50 rounded-lg">
           <h3 className="text-xl font-semibold text-amber-900 mb-4">
             Order Summary

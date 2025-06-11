@@ -20,12 +20,12 @@ import OrderDateInfo from "./components/OrderDateInfo";
 import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
+import OrderShipping from "./components/OrderShipping";
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
 import { API_URL, ORDER_URL } from "../../config/api";
 import { MIDTRANS_SNAP_URL } from "../../config/api";
 import io from "socket.io-client";
-import OrderShipping from "./components/OrderShipping";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -34,9 +34,16 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0); // For force re-render if needed
+  const [isShippingValid, setIsShippingValid] = useState(true); // New state for shipping validation
+  const [forceUpdate, setForceUpdate] = useState(0);
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
+
+  // Handle shipping validation change
+  const handleShippingValidationChange = useCallback((isValid) => {
+    console.log("Shipping validation changed:", isValid);
+    setIsShippingValid(isValid);
+  }, []);
 
   const handleCancel = async (orderId) => {
     Swal.fire({
@@ -206,6 +213,7 @@ const OrderDetails = () => {
 
   const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
     console.log("Confirming payment for order ID:", orderId);
+
     try {
       setPaymentLoading(true);
 
@@ -392,6 +400,10 @@ const OrderDetails = () => {
     console.log("🔄 Order state updated:", order);
   }, [order, forceUpdate]);
 
+  // Check if shipping component should be shown (only for orders that need payment)
+  const shouldShowShipping =
+    order && ["Waiting", "Pending"].includes(order.status);
+
   if (loading) {
     return <LoadingState />;
   }
@@ -488,7 +500,12 @@ const OrderDetails = () => {
               </h2>
 
               <OrderMenuDetails order={order} />
-              <OrderShipping/>
+
+              {shouldShowShipping && (
+                <OrderShipping
+                  onShippingValidationChange={handleShippingValidationChange}
+                />
+              )}
             </div>
 
             <OrderTimestamp createdAt={order.created_at} />
@@ -497,6 +514,7 @@ const OrderDetails = () => {
               <OrderActions
                 order={order}
                 paymentLoading={paymentLoading}
+                isShippingValid={isShippingValid}
                 onCancel={handleCancel}
                 onPayConfirmation={handlePayConfirmation}
                 onPayment={handlePayment}
