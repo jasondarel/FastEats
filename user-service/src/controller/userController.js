@@ -636,12 +636,6 @@ export const resetPasswordController = async (req, res) => {
     return responseError(res, 401, "Token not found");
   }
   
-  const errors = await validateResetPasswordRequest({ password, passwordConfirmation });
-  if (Object.keys(errors).length > 0) {
-    logger.warn("Validation failed", errors);
-    return responseError(res, 400, "Validation failed", "error", errors);
-  }
-
   try {
     const redisKey = `password_reset:${token}`;
     const redisClient = getRedisClient();
@@ -655,6 +649,12 @@ export const resetPasswordController = async (req, res) => {
     if (redisData.token !== token) {
       logger.warn("Invalid token");
       return responseError(res, 401, "Invalid token");
+    }
+
+    const errors = await validateResetPasswordRequest({ password, passwordConfirmation, userId: redisData.userId });
+    if (Object.keys(errors).length > 0) {
+      logger.warn("Validation failed", errors);
+      return responseError(res, 400, "Validation failed", "error", errors);
     }
 
     await changePasswordService(redisData.userId, hashPassword(password));

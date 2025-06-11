@@ -54,6 +54,17 @@ export const validateResetPasswordRequest = async(userReq) => {
     if(password !== passwordConfirmation) {
         errors.passwordConfirmation = 'Password does not match';
     }
+    
+    try {
+        const oldPassword = await getPasswordHashByIdService(userReq.userId);
+        if(!oldPassword) {
+            errors.password = 'Invalid user';
+        } else if(oldPassword.password_hash === hashPassword(userReq.password)) {
+            errors.password = 'New password must be different from old password';
+        }
+    } catch(err) {
+        errors.password = 'Invalid user';
+    }
     return errors;
 }
 
