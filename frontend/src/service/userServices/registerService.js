@@ -14,6 +14,6 @@ export const registerService = async (formData, userType = "user") => {
     return response.data.token;
   } catch (error) {
     console.error("Registration error:", error);
-    throw error.response?.data?.message || { message: "An error occurred during registration" };
+    throw error.response?.data?.error || error.response?.data?.message || { message: "An error occurred during registration" };
   }
 };

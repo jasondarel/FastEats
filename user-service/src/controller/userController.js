@@ -47,7 +47,6 @@ const __dirname = path.dirname(__filename);
 const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads/restaurant");
 const blackListedTokens = new Set();
 
-
 export const registerController = async (req, res) => {
   logger.info("REGISTER CONTROLLER");
   try {
@@ -95,9 +94,11 @@ export const registerController = async (req, res) => {
 export const registerSellerController = async (req, res) => {
   logger.info("REGISTER SELLER CONTROLLER");
   try {
+    await pool.query("BEGIN");
     const errors = await validateRegisterSellerRequest(req.body);
     if(Object.keys(errors).length > 0) {
       logger.warn("Validation failed ", errors);
+      await pool.query("ROLLBACK");
       return responseError(res, 400, "Validation failed", "error", errors);
     }
 
@@ -105,6 +106,11 @@ export const registerSellerController = async (req, res) => {
     req.body.password = hashedPassword;
 
     const response = await registerSellerService(req.body);
+    if (!response) {
+      logger.warn("Failed to register seller");
+      await pool.query("ROLLBACK");
+      return responseError(res, 400, "Failed to register seller");
+    }
     const otp = generateOtpCode(6);
     const emailVerificationToken = generateRandomToken(50);
 
@@ -125,11 +131,10 @@ export const registerSellerController = async (req, res) => {
       otp: otp,
     }
 
-    await publishVerificationEmailMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
-
     if(response.role === "seller") {
       if (!req.files || !req.files.restaurantImage) {
         logger.warn("Restaurant image is required");
+        await pool.query("ROLLBACK");
         return responseError(res, 400, "Restaurant image is required");
       }
   
@@ -144,29 +149,39 @@ export const registerSellerController = async (req, res) => {
       const filePath = path.join(uploadDir, safeFileName);
   
       await uploadedFile.mv(filePath);
-  
       const restaurantData = {
         ...req.body,
         ownerId: response.id,
         restaurantImage: safeFileName,
       };
   
-       await axios.post(
-        `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
-        restaurantData,
-      );
+      try {
+        await axios.post(
+          `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
+          restaurantData,
+        );
+      } catch (err) {
+        logger.error("Failed to create restaurant", err);
+        await pool.query("ROLLBACK");
+        return responseError(res, 400, err.response?.data?.error || "Failed to create restaurant");
+      }
+      await pool.query("COMMIT");
+    } else {
+      await pool.query("COMMIT");
     }
     await createUserPaymentService(response.id);
     logger.info("Seller registered successfully");
+    await publishVerificationEmailMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
     return responseSuccess(res, 201, response.message, "token", emailVerificationToken);
   } catch (err) {
+    await pool.query("ROLLBACK");
     logger.error("Internal server error", err);
     if (err.response && err.response.status === 400) {
       logger.warn("Bad request", err.response.data.error);
       return responseError(res, 400, err.response.data.error);
     }
     return responseError(res, 500, "Server error");
-  }
+  } 
 };
 
 export const loginController = async (req, res) => {
