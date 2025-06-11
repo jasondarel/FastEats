@@ -25,6 +25,7 @@ import LoadingState from "../../components/LoadingState";
 import { API_URL, ORDER_URL } from "../../config/api";
 import { MIDTRANS_SNAP_URL } from "../../config/api";
 import io from "socket.io-client";
+import OrderShipping from "./components/OrderShipping";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -487,6 +488,7 @@ const OrderDetails = () => {
               </h2>
 
               <OrderMenuDetails order={order} />
+              <OrderShipping/>
             </div>
 
             <OrderTimestamp createdAt={order.created_at} />
