@@ -1,7 +1,17 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import { FaUser, FaMapMarkerAlt, FaPhone, FaChevronDown } from "react-icons/fa";
+import {
+  FaUser,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaChevronDown,
+  FaGlobeAmericas,
+  FaCity,
+  FaBuilding,
+  FaTree,
+  FaHome,
+} from "react-icons/fa";
 import { saveProfileService } from "../../../service/userServices/profileService";
 import Swal from "sweetalert2";
 import {
@@ -19,7 +29,6 @@ const ProfileForm = ({
   updateOriginalProfile,
   setProfile,
 }) => {
-  // Dropdown state
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -30,7 +39,6 @@ const ProfileForm = ({
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const [isLoadingVillages, setIsLoadingVillages] = useState(false);
 
-  // Load provinces on mount
   useEffect(() => {
     const loadProvinces = async () => {
       setIsLoadingProvinces(true);
@@ -46,7 +54,6 @@ const ProfileForm = ({
     loadProvinces();
   }, []);
 
-  // Load cities when province changes
   useEffect(() => {
     if (profile.province) {
       setIsLoadingCities(true);
@@ -67,7 +74,6 @@ const ProfileForm = ({
     }
   }, [profile.province]);
 
-  // Load districts when city changes
   useEffect(() => {
     if (profile.city) {
       setIsLoadingDistricts(true);
@@ -87,7 +93,6 @@ const ProfileForm = ({
     }
   }, [profile.city]);
 
-  // Load villages when district changes
   useEffect(() => {
     if (profile.district) {
       setIsLoadingVillages(true);
@@ -106,7 +111,6 @@ const ProfileForm = ({
     }
   }, [profile.district]);
 
-  // Custom select component
   const CustomSelect = ({
     label,
     name,
@@ -116,12 +120,13 @@ const ProfileForm = ({
     placeholder,
     isLoading,
     disabled,
+    icon,
   }) => (
     <div>
       <label className="block text-gray-700 font-medium mb-1">{label}</label>
       <div className="relative">
         <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-          <FaMapMarkerAlt className="ml-3 text-gray-500" />
+          {icon}
           <select
             name={name}
             value={value}
@@ -130,9 +135,7 @@ const ProfileForm = ({
             className="w-full p-3 focus:outline-none appearance-none bg-transparent cursor-pointer disabled:cursor-not-allowed disabled:text-gray-400"
             required
           >
-            <option value="">
-              {isLoading ? "Loading..." : placeholder}
-            </option>
+            <option value="">{isLoading ? "Loading..." : placeholder}</option>
             {options.map((option) => (
               <option
                 key={option.id || option.value}
@@ -174,6 +177,7 @@ const ProfileForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <InputField
+        label="Name"
         icon={<FaUser className="ml-3 text-gray-500" />}
         type="text"
         name="name"
@@ -181,15 +185,9 @@ const ProfileForm = ({
         value={profile.name}
         onChange={handleChange}
       />
+
       <InputField
-        icon={<FaMapMarkerAlt className="ml-3 text-gray-500" />}
-        type="text"
-        name="address"
-        placeholder="Address"
-        value={profile.address}
-        onChange={handleChange}
-      />
-      <InputField
+        label="Phone Number"
         icon={<FaPhone className="ml-3 text-gray-500" />}
         type="text"
         name="phone_number"
@@ -206,6 +204,7 @@ const ProfileForm = ({
         placeholder="Select Province"
         isLoading={isLoadingProvinces}
         disabled={false}
+        icon={<FaGlobeAmericas className="ml-3 text-gray-500" />}
       />
       <CustomSelect
         label="City"
@@ -216,6 +215,7 @@ const ProfileForm = ({
         placeholder="Select City"
         isLoading={isLoadingCities}
         disabled={!profile.province}
+        icon={<FaCity className="ml-3 text-gray-500" />}
       />
       <CustomSelect
         label="District"
@@ -226,6 +226,7 @@ const ProfileForm = ({
         placeholder="Select District"
         isLoading={isLoadingDistricts}
         disabled={!profile.city}
+        icon={<FaBuilding className="ml-3 text-gray-500" />}
       />
       <CustomSelect
         label="Village"
@@ -236,6 +237,16 @@ const ProfileForm = ({
         placeholder="Select Village"
         isLoading={isLoadingVillages}
         disabled={!profile.district}
+        icon={<FaTree className="ml-3 text-gray-500" />}
+      />
+      <InputField
+        label="Address Detail"
+        icon={<FaHome className="ml-3 text-gray-500" />}
+        type="text"
+        name="address"
+        placeholder="Address Detail"
+        value={profile.address}
+        onChange={handleChange}
       />
       <button
         type="submit"
@@ -252,19 +263,32 @@ const ProfileForm = ({
   );
 };
 
-const InputField = ({ icon, type, name, placeholder, value, onChange }) => {
+const InputField = ({
+  label,
+  icon,
+  type,
+  name,
+  placeholder,
+  value,
+  onChange,
+}) => {
   return (
-    <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-      {icon}
-      <input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        required
-        className="w-full p-3 focus:outline-none"
-      />
+    <div>
+      {label && (
+        <label className="block text-gray-700 font-medium mb-1">{label}</label>
+      )}
+      <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
+        {icon}
+        <input
+          type={type}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required
+          className="w-full p-3 focus:outline-none"
+        />
+      </div>
     </div>
   );
 };
