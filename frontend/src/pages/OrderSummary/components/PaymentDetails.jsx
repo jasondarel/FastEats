@@ -3,16 +3,34 @@
 import React from "react";
 
 const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
+  const getItemQuantity = (menuId) => {
+    if (order.order_type === "CHECKOUT") {
+      return order.item_quantity || 1;
+    } else if (order.order_type === "CART") {
+      if (order.orderItems && Array.isArray(order.orderItems)) {
+        const item = order.orderItems.find((item) => item.menu_id === menuId);
+        return item ? item.item_quantity : 1;
+      }
+
+      if (order.items && Array.isArray(order.items)) {
+        const item = order.items.find((item) => item.menu_id === menuId);
+        return item ? item.item_quantity : 1;
+      }
+    }
+    return 1;
+  };
+
   const calculateSubtotal = () => {
     if (
       order.order_type === "CART" &&
       Array.isArray(menuItems) &&
       menuItems.length > 0
     ) {
-      return menuItems.reduce(
-        (total, item) => total + parseFloat(item.menu_price),
-        0
-      );
+      return menuItems.reduce((total, item) => {
+        const quantity = getItemQuantity(item.menu_id);
+        const price = parseFloat(item.menu_price) || 0;
+        return total + price * quantity;
+      }, 0);
     } else if (
       order.order_type === "CHECKOUT" &&
       order.menu_id &&
@@ -44,6 +62,15 @@ const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
       <h2 className="text-lg font-semibold mb-4 text-amber-900">
         Payment Details
       </h2>
+
+      {process.env.NODE_ENV === "development" && (
+        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          <p>Debug: Order Type: {order.order_type}</p>
+          <p>Menu Items: {menuItems ? menuItems.length : "null"}</p>
+          <p>Order Items: {order.items ? order.items.length : "null"}</p>
+          <p>Calculated Subtotal: {subtotal}</p>
+        </div>
+      )}
 
       {paymentItems.map((item, index) => (
         <div key={index} className="flex justify-between mb-2">

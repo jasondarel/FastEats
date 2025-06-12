@@ -3,58 +3,106 @@
 import React from "react";
 
 const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
-  if (
-    order.order_type === "CART" &&
-    Array.isArray(menuItems) &&
-    menuItems.length > 0
-  ) {
+  const getItemQuantity = (menuId) => {
+    if (order.order_type === "CHECKOUT") {
+      return order.item_quantity;
+    } else if (order.order_type === "CART") {
+      if (order.orderItems && Array.isArray(order.orderItems)) {
+        const item = order.orderItems.find((item) => item.menu_id === menuId);
+        return item ? item.item_quantity : 1;
+      }
+
+      if (order.items && Array.isArray(order.items)) {
+        const item = order.items.find((item) => item.menu_id === menuId);
+        return item ? item.item_quantity : 1;
+      }
+    }
+    return 1;
+  };
+
+  const getTotalQuantity = () => {
+    let total = 0;
+    if (order.order_type === "CHECKOUT") {
+      total = order.item_quantity || 0;
+    } else if (order.order_type === "CART") {
+      if (order.orderItems && Array.isArray(order.orderItems)) {
+        order.orderItems.forEach((item) => {
+          if (item && item.item_quantity) {
+            total += item.item_quantity;
+          }
+        });
+      } else if (order.items && Array.isArray(order.items)) {
+        order.items.forEach((item) => {
+          if (item && item.item_quantity) {
+            total += item.item_quantity;
+          }
+        });
+      } else if (Array.isArray(menuItems)) {
+        total = menuItems.length;
+      }
+    }
+    return total;
+  };
+
+  const itemsToRender = menuItems || order.menu || [];
+
+  if (Array.isArray(itemsToRender) && itemsToRender.length > 0) {
     return (
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-4 text-amber-900">
           Order Items
         </h2>
         <div className="space-y-4">
-          {menuItems.map((menuItem) => (
-            <div
-              key={menuItem.menu_id}
-              className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-amber-100"
-            >
-              <img
-                src={
-                  menuItem.menu_image
-                    ? `${API_URL}/restaurant/uploads/menu/${menuItem.menu_image}`
-                    : "/api/placeholder/80/80"
-                }
-                alt={menuItem.menu_name}
-                className="w-20 h-20 object-cover rounded-lg"
-              />
-              <div className="flex-1">
-                <div className="text-lg font-semibold text-amber-900">
-                  {menuItem.menu_name}
+          {itemsToRender.map((menuItem, index) => {
+            const quantity = getItemQuantity(menuItem.menu_id);
+            return (
+              <div
+                key={menuItem.menu_id || index}
+                className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-amber-100"
+              >
+                <img
+                  src={
+                    menuItem.menu_image
+                      ? `${API_URL}/restaurant/uploads/menu/${menuItem.menu_image}`
+                      : "/api/placeholder/80/80"
+                  }
+                  alt={menuItem.menu_name}
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <div className="text-lg font-semibold text-amber-900">
+                    {menuItem.menu_name}
+                  </div>
+                  <div className="text-sm text-amber-700 mb-2">
+                    {menuItem.menu_description}
+                  </div>
+                  <div className="text-amber-900 font-semibold">
+                    {formatCurrency(menuItem.menu_price)}
+                  </div>
                 </div>
-                <div className="text-sm text-amber-700 mb-2">
-                  {menuItem.menu_description}
-                </div>
-                <div className="text-amber-900 font-semibold">
-                  {formatCurrency(menuItem.menu_price)}
+                <div className="bg-amber-100 px-4 py-2 rounded-lg font-semibold text-amber-900">
+                  x{quantity}
                 </div>
               </div>
-              <div className="bg-amber-100 px-4 py-2 rounded-lg font-semibold text-amber-900">
-                x1
-              </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+        <div className="mt-4 p-4 bg-amber-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-amber-700 font-medium">Total Items:</span>
+            <span className="text-amber-900 font-semibold">
+              {getTotalQuantity()}
+            </span>
+          </div>
         </div>
       </div>
     );
-  } else if (order.order_type === "CHECKOUT") {
-    let menuItem;
-    if (Array.isArray(order.menu) && order.menu.length > 0) {
-      menuItem = order.menu[0];
-    } else {
-      menuItem = order.menu;
-    }
-
+  } else if (
+    itemsToRender &&
+    typeof itemsToRender === "object" &&
+    !Array.isArray(itemsToRender)
+  ) {
+    const quantity = order.item_quantity || 1;
     return (
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-4 text-amber-900">
@@ -63,28 +111,36 @@ const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
         <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-amber-100">
           <img
             src={
-              menuItem?.menu_image
-                ? `${API_URL}/restaurant/uploads/menu/${menuItem.menu_image}`
+              itemsToRender.menu_image
+                ? `${API_URL}/restaurant/uploads/menu/${itemsToRender.menu_image}`
                 : "/api/placeholder/80/80"
             }
-            alt={menuItem?.menu_name || "Menu Item"}
+            alt={itemsToRender.menu_name || "Menu Item"}
             className="w-20 h-20 object-cover rounded-lg"
           />
           <div className="flex-1">
             <div className="text-lg font-semibold text-amber-900">
-              {menuItem?.menu_name || "Menu Item"}
+              {itemsToRender.menu_name || "Menu Item"}
             </div>
             <div className="text-sm text-amber-700 mb-2">
-              {menuItem?.menu_description || ""}
+              {itemsToRender.menu_description || ""}
             </div>
             <div className="text-amber-900 font-semibold">
-              {menuItem?.menu_price
-                ? formatCurrency(menuItem.menu_price)
+              {itemsToRender.menu_price
+                ? formatCurrency(itemsToRender.menu_price)
                 : "N/A"}
             </div>
           </div>
           <div className="bg-amber-100 px-4 py-2 rounded-lg font-semibold text-amber-900">
-            x{order.item_quantity || 1}
+            x{quantity}
+          </div>
+        </div>
+        <div className="mt-4 p-4 bg-amber-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-amber-700 font-medium">Total Items:</span>
+            <span className="text-amber-900 font-semibold">
+              {getTotalQuantity()}
+            </span>
           </div>
         </div>
       </div>
@@ -97,6 +153,12 @@ const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
         </h2>
         <div className="p-4 bg-white rounded-lg shadow-sm border border-amber-100">
           <p className="text-amber-700">No order items available</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Debug: menuItems type: {typeof menuItems}, isArray:{" "}
+            {Array.isArray(menuItems)}, order_type: {order.order_type}
+            <br />
+            itemsToRender: {JSON.stringify(itemsToRender)}
+          </p>
         </div>
       </div>
     );

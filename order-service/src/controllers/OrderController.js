@@ -41,7 +41,11 @@ import {
 import logger from "../config/loggerInit.js";
 import { responseSuccess, responseError } from "../util/responseUtil.js";
 import { getOrderDetailsInformation } from "../util/orderUtil.js";
-import { getMenuInformation, getRestaurantInformation, getUserInformation } from "../../../packages/shared/apiService.js";
+import {
+  getMenuInformation,
+  getRestaurantInformation,
+  getUserInformation,
+} from "../../../packages/shared/apiService.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
@@ -610,7 +614,12 @@ export const completeOrderController = async (req, res) => {
       return responseError(res, 404, "Order not found");
     }
 
-    const restaurantResponse = await getRestaurantInformation(GLOBAL_SERVICE_URL, order.restaurant_id, internalAPIKey, `Restaurant with ID ${order.restaurant_id} not found`);
+    const restaurantResponse = await getRestaurantInformation(
+      GLOBAL_SERVICE_URL,
+      order.restaurant_id,
+      internalAPIKey,
+      `Restaurant with ID ${order.restaurant_id} not found`
+    );
 
     if (!restaurantResponse?.restaurant) {
       logger.warn(`Restaurant with ID ${order.restaurant_id} not found`);
@@ -619,8 +628,14 @@ export const completeOrderController = async (req, res) => {
     const restaurant = restaurantResponse.restaurant;
 
     if (restaurant.owner_id !== userId) {
-      logger.warn(`Unauthorized access attempt by user ${userId} on order ${order_id}`);
-      return responseError(res, 403, "You are not authorized to complete this order");
+      logger.warn(
+        `Unauthorized access attempt by user ${userId} on order ${order_id}`
+      );
+      return responseError(
+        res,
+        403,
+        "You are not authorized to complete this order"
+      );
     }
 
     if (order.status === "Completed") {
@@ -629,7 +644,9 @@ export const completeOrderController = async (req, res) => {
     }
 
     if (order.status !== "Preparing") {
-      logger.warn(`Order ${order_id} cannot be completed (Current status: ${order.status})`);
+      logger.warn(
+        `Order ${order_id} cannot be completed (Current status: ${order.status})`
+      );
       return responseError(res, 400, "Order cannot be completed");
     }
 
@@ -651,8 +668,18 @@ export const completeOrderController = async (req, res) => {
     });
 
     const [ownerResult, customerResult] = await Promise.all([
-      getUserInformation(GLOBAL_SERVICE_URL, userId, internalAPIKey, `Owner with ID ${userId} not found`),
-      getUserInformation(GLOBAL_SERVICE_URL, updatedOrder.user_id, internalAPIKey, `Customer with ID ${updatedOrder.user_id} not found`),
+      getUserInformation(
+        GLOBAL_SERVICE_URL,
+        userId,
+        internalAPIKey,
+        `Owner with ID ${userId} not found`
+      ),
+      getUserInformation(
+        GLOBAL_SERVICE_URL,
+        updatedOrder.user_id,
+        internalAPIKey,
+        `Customer with ID ${updatedOrder.user_id} not found`
+      ),
     ]);
 
     if (!ownerResult?.user) {
@@ -667,8 +694,13 @@ export const completeOrderController = async (req, res) => {
     const itemsWithMenuDetails = await Promise.all(
       updatedOrder.items.map(async (item) => {
         try {
-          const menuResponse = await getMenuInformation(GLOBAL_SERVICE_URL, item.menu_id, internalAPIKey, `Menu with ID ${item.menu_id} not found`);
-          
+          const menuResponse = await getMenuInformation(
+            GLOBAL_SERVICE_URL,
+            item.menu_id,
+            internalAPIKey,
+            `Menu with ID ${item.menu_id} not found`
+          );
+
           const menu = menuResponse.menu;
           return {
             ...item,
@@ -679,7 +711,10 @@ export const completeOrderController = async (req, res) => {
             menu_category: menu?.category || "",
           };
         } catch (error) {
-          logger.error(`Failed to fetch menu details for menu_id ${item.menu_id}:`, error.message);
+          logger.error(
+            `Failed to fetch menu details for menu_id ${item.menu_id}:`,
+            error.message
+          );
           return {
             ...item,
             menu_name: `Menu #${item.menu_id}`,
@@ -705,9 +740,8 @@ export const completeOrderController = async (req, res) => {
     };
 
     await createCompletedOrderJobService(orderDetails);
-    
+
     return responseSuccess(res, 200, "Order completed successfully");
-    
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -811,16 +845,17 @@ export const payOrderConfirmationController = async (req, res) => {
   logger.info("PAY ORDER CONFIRMATION CONTROLLER");
   try {
     const { userId } = req.user;
-    const { order_id, 
-      itemPrice, 
-      itemQuantity, 
-      shipping_province, 
+    const {
+      order_id,
+      itemPrice,
+      itemQuantity,
+      shipping_province,
       shipping_city,
-      shipping_district, 
-      shipping_village, 
-      shipping_address, 
+      shipping_district,
+      shipping_village,
+      shipping_address,
       shipping_phone,
-      shipping_name 
+      shipping_name,
     } = req.body;
 
     const order = await getOrderByIdService(order_id);
@@ -833,7 +868,11 @@ export const payOrderConfirmationController = async (req, res) => {
       logger.warn(
         `Unauthorized access attempt by user ${userId} on order ${order_id}`
       );
-      return responseError(res, 403, "You are not authorized to pay for this order");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to pay for this order"
+      );
     }
 
     if (order.status !== "Waiting") {
@@ -854,7 +893,15 @@ export const payOrderConfirmationController = async (req, res) => {
           order_id,
           gross_amount: itemPrice,
         },
-        "custom_field1": [shipping_province, shipping_city, shipping_district, shipping_village, shipping_address, shipping_phone, shipping_name],
+        custom_field1: [
+          shipping_province,
+          shipping_city,
+          shipping_district,
+          shipping_village,
+          shipping_address,
+          shipping_phone,
+          shipping_name,
+        ],
         credit_card: { secure: true },
         isProduction: process.env.IS_PRODUCTION,
       },
@@ -867,7 +914,13 @@ export const payOrderConfirmationController = async (req, res) => {
       }
     );
     logger.info("Payment token generated successfully");
-    return responseSuccess(res, 200, "Payment token generated successfully", "data", response.data);
+    return responseSuccess(
+      res,
+      200,
+      "Payment token generated successfully",
+      "data",
+      response.data
+    );
   } catch (err) {
     logger.error("Error generating payment token:", err);
     return responseError(res, 500, "Error generating payment token");
@@ -893,7 +946,7 @@ export const payOrderController = async (req, res) => {
       payment_type,
       currency,
       expiry_time,
-      custom_field1
+      custom_field1,
     } = req.body;
 
     const shippingProvince = JSON.parse(custom_field1)[0];
@@ -967,44 +1020,87 @@ export const payOrderController = async (req, res) => {
         };
       }
 
-      const existingTransaction = await getTransactionByOrderIdService(order_id);
+      const existingTransaction = await getTransactionByOrderIdService(
+        order_id
+      );
       if (existingTransaction) {
-        await createTransactionService({ ...newTransaction, id: existingTransaction.transaction_id });
+        await createTransactionService({
+          ...newTransaction,
+          id: existingTransaction.transaction_id,
+        });
       } else {
         await createTransactionService(newTransaction);
       }
 
       await pendingOrderService(order_id);
-      
+
       logger.info(`Transaction ${order_id} set to pending`);
-      return responseSuccess(res, 200, "Transaction pending processed successfully", "order_id", order_id);
+      return responseSuccess(
+        res,
+        200,
+        "Transaction pending processed successfully",
+        "order_id",
+        order_id
+      );
     }
 
     if (transaction_status === "settlement") {
       try {
         const response = await payOrderService(order_id);
 
-        const orderDetailData = await getOrderDetailsInformation(order_id, internalAPIKey);
+        const orderDetailData = await getOrderDetailsInformation(
+          order_id,
+          internalAPIKey
+        );
 
-        const insertPreparingJobsResponse = await createPreparingOrderJobService(orderDetailData);
+        const insertPreparingJobsResponse =
+          await createPreparingOrderJobService(orderDetailData);
 
         if (!insertPreparingJobsResponse) {
           logger.error("Failed to create preparing order jobs");
-          return responseError(res, 500, "Failed to create preparing order jobs");
+          return responseError(
+            res,
+            500,
+            "Failed to create preparing order jobs"
+          );
         }
 
         logger.info("Order paid successfully");
-        return responseSuccess(res, 200, "Order paid successfully", "order", response);
+        return responseSuccess(
+          res,
+          200,
+          "Order paid successfully",
+          "order",
+          response
+        );
       } catch (error) {
         logger.error("Error processing payment:", error);
         return responseError(res, 500, "Error processing payment");
       }
-    } else if (transaction_status === "cancel" || transaction_status === "deny" || transaction_status === "expire") {
+    } else if (
+      transaction_status === "cancel" ||
+      transaction_status === "deny" ||
+      transaction_status === "expire"
+    ) {
       logger.info(`Transaction ${order_id} status: ${transaction_status}`);
-      return responseSuccess(res, 200, `Transaction ${transaction_status} processed`, "order_id", order_id);
+      return responseSuccess(
+        res,
+        200,
+        `Transaction ${transaction_status} processed`,
+        "order_id",
+        order_id
+      );
     } else {
-      logger.info(`Unknown transaction status: ${transaction_status} for order: ${order_id}`);
-      return responseSuccess(res, 200, `Transaction status ${transaction_status} acknowledged`, "order_id", order_id);
+      logger.info(
+        `Unknown transaction status: ${transaction_status} for order: ${order_id}`
+      );
+      return responseSuccess(
+        res,
+        200,
+        `Transaction status ${transaction_status} acknowledged`,
+        "order_id",
+        order_id
+      );
     }
   } catch (error) {
     logger.error("Internal server error:", error);
@@ -1017,7 +1113,13 @@ export const updateOrder = async (req, res) => {
   try {
     const { order_id } = req.params;
     const { status } = req.body;
-    const validStatuses = ["pending", "preparing", "delivered,", "Completed", "cancelled"];
+    const validStatuses = [
+      "pending",
+      "preparing",
+      "delivered,",
+      "Completed",
+      "cancelled",
+    ];
 
     if (!validStatuses.includes(status)) {
       logger.warn("Invalid status value");
@@ -1034,7 +1136,13 @@ export const updateOrder = async (req, res) => {
 
     io.emit("orderUpdated", result);
     logger.info(`Order ${order_id} updated successfully`);
-    return responseSuccess(res, 200, "Order updated successfully", "order", result);
+    return responseSuccess(
+      res,
+      200,
+      "Order updated successfully",
+      "order",
+      result
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -1089,7 +1197,13 @@ export const checkMidtransStatusController = async (req, res) => {
       }
     );
     logger.info("Midtrans status check successful");
-    return responseSuccess(res, 200, "Midtrans status check successful", "data", response.data);
+    return responseSuccess(
+      res,
+      200,
+      "Midtrans status check successful",
+      "data",
+      response.data
+    );
   } catch (err) {
     logger.error("Error checking Midtrans status:", err);
     return responseError(res, 500, err.message);
@@ -1105,7 +1219,13 @@ export const saveSnapTokenController = async (req, res) => {
     return responseError(res, 500, "Failed to save snap token");
   }
   logger.info("Snap token saved successfully");
-  return responseSuccess(res, 201, "Snap token saved successfully", "snap_token", response.snap_token);
+  return responseSuccess(
+    res,
+    201,
+    "Snap token saved successfully",
+    "snap_token",
+    response.snap_token
+  );
 };
 
 export const getSnapTokenController = async (req, res) => {
@@ -1485,13 +1605,22 @@ export const getRestaurantOrderController = async (req, res) => {
       return responseError(res, 404, "Transaction not found");
     }
 
-    logger.info("Order fetched successfully");
-    return responseSuccess(res, 200, "Order fetched successfully", "order", {
+    const finalOrder = {
       ...order,
+      items: ordersInfo,
       menu,
       user: userResponse.data.user,
       transaction,
-    });
+    };
+
+    logger.info("Order fetched successfully");
+    return responseSuccess(
+      res,
+      200,
+      "Order fetched successfully",
+      "order",
+      finalOrder
+    );
   } catch (err) {
     logger.error("Error fetching order:", err.message);
     return responseError(res, 500, "Internal server error");

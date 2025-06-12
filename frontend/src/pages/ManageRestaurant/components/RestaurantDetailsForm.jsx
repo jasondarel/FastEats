@@ -1,8 +1,23 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import { FaUtensils, FaMapMarkerAlt, FaSave, FaChevronDown } from "react-icons/fa";
-import { getProvincesService, getDistrictsService, getCitiesService, getVillagesService } from "../../../service/utilServices/utilService";
+import {
+  FaUtensils,
+  FaMapMarkerAlt,
+  FaSave,
+  FaChevronDown,
+  FaGlobeAmericas,
+  FaCity,
+  FaBuilding,
+  FaTree,
+  FaHome,
+} from "react-icons/fa";
+import {
+  getProvincesService,
+  getDistrictsService,
+  getCitiesService,
+  getVillagesService,
+} from "../../../service/utilServices/utilService";
 
 const RestaurantDetailsForm = ({
   restaurantName,
@@ -27,7 +42,7 @@ const RestaurantDetailsForm = ({
   const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [villages, setVillages] = useState([]);
-  
+
   // Loading states
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
@@ -80,7 +95,13 @@ const RestaurantDetailsForm = ({
     };
 
     loadCities();
-  }, [restaurantProvince, initialRestaurantProvince, setRestaurantCity, setRestaurantDistrict, setRestaurantVillage]);
+  }, [
+    restaurantProvince,
+    initialRestaurantProvince,
+    setRestaurantCity,
+    setRestaurantDistrict,
+    setRestaurantVillage,
+  ]);
 
   // Load districts when city changes
   useEffect(() => {
@@ -108,7 +129,12 @@ const RestaurantDetailsForm = ({
     };
 
     loadDistricts();
-  }, [restaurantCity, initialRestaurantCity, setRestaurantDistrict, setRestaurantVillage]);
+  }, [
+    restaurantCity,
+    initialRestaurantCity,
+    setRestaurantDistrict,
+    setRestaurantVillage,
+  ]);
 
   // Load villages when district changes
   useEffect(() => {
@@ -136,14 +162,21 @@ const RestaurantDetailsForm = ({
   }, [restaurantDistrict, initialRestaurantDistrict, setRestaurantVillage]);
 
   // Custom Select Component
-  const CustomSelect = ({ label, value, onChange, options, placeholder, isLoading, disabled }) => (
+  const CustomSelect = ({
+    label,
+    value,
+    onChange,
+    options,
+    placeholder,
+    isLoading,
+    disabled,
+    icon,
+  }) => (
     <div>
-      <label className="block text-gray-700 font-medium mb-1">
-        {label}
-      </label>
+      <label className="block text-gray-700 font-medium mb-1">{label}</label>
       <div className="relative">
         <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-          <FaMapMarkerAlt className="ml-3 text-gray-500" />
+          {icon}
           <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -151,11 +184,12 @@ const RestaurantDetailsForm = ({
             className="w-full p-3 focus:outline-none appearance-none bg-transparent cursor-pointer disabled:cursor-not-allowed disabled:text-gray-400"
             required
           >
-            <option value="">
-              {isLoading ? "Loading..." : placeholder}
-            </option>
+            <option value="">{isLoading ? "Loading..." : placeholder}</option>
             {options.map((option) => (
-              <option key={option.id || option.value} value={option.id || option.value}>
+              <option
+                key={option.id || option.value}
+                value={option.id || option.value}
+              >
                 {option.name || option.label}
               </option>
             ))}
@@ -193,6 +227,7 @@ const RestaurantDetailsForm = ({
         placeholder="Select Province"
         isLoading={isLoadingProvinces}
         disabled={false}
+        icon={<FaGlobeAmericas className="ml-3 text-gray-500" />}
       />
 
       <CustomSelect
@@ -203,6 +238,7 @@ const RestaurantDetailsForm = ({
         placeholder="Select City"
         isLoading={isLoadingCities}
         disabled={!restaurantProvince}
+        icon={<FaCity className="ml-3 text-gray-500" />}
       />
 
       <CustomSelect
@@ -213,6 +249,7 @@ const RestaurantDetailsForm = ({
         placeholder="Select District"
         isLoading={isLoadingDistricts}
         disabled={!restaurantCity}
+        icon={<FaBuilding className="ml-3 text-gray-500" />}
       />
 
       <CustomSelect
@@ -223,6 +260,7 @@ const RestaurantDetailsForm = ({
         placeholder="Select Village"
         isLoading={isLoadingVillages}
         disabled={!restaurantDistrict}
+        icon={<FaTree className="ml-3 text-gray-500" />}
       />
 
       <div>
@@ -230,7 +268,7 @@ const RestaurantDetailsForm = ({
           Restaurant Address
         </label>
         <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
-          <FaMapMarkerAlt className="ml-3 text-gray-500" />
+          <FaHome className="ml-3 text-gray-500" />
           <textarea
             placeholder="Enter your restaurant address"
             value={restaurantAddress}
