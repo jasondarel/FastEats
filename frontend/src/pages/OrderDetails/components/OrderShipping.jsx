@@ -20,6 +20,7 @@ const OrderShipping = ({
   const token = localStorage.getItem("token");
   const [useCurrentInfo, setUseCurrentInfo] = useState(true);
   const [currentUserInfo, setCurrentUserInfo] = useState(null);
+  const [currentUserInfoDetail, setCurrentUserInfoDetail] = useState(null);
   const [shippingData, setShippingData] = useState({
     province: "",
     city: "",
@@ -93,14 +94,22 @@ const OrderShipping = ({
       const userResponse = response.data?.user || response.data;
       if (userResponse) {
         const userInfo = {
-          province: await getProvinceName(userResponse.province) || "Not specified",
-          city: await getCityName(userResponse.city) || "Not specified",
-          district: await getDistrictName(userResponse.district) || "Not specified",
-          village: await getVillageName(userResponse.village) || "Not specified",
+          province: userResponse.province || "Not specified",
+          city:  userResponse.city || "Not specified",
+          district: userResponse.district || "Not specified",
+          village: userResponse.village || "Not specified",
           address: userResponse.address || "Not specified",
           fullName: userResponse.name || userResponse.data.name || "User",
           phone: userResponse.phone_number || userResponse.data.phone_number || "Not specified",
         };
+        setCurrentUserInfoDetail({
+          province: await getProvinceName(userResponse.province),
+          city: await getCityName(userResponse.city),
+          district: await getDistrictName(userResponse.district),
+          village: await getVillageName(userResponse.village),
+          address: userResponse.address || "Not specified",
+          fullName: userResponse.name || userResponse.data.name || "User",
+        })
         setCurrentUserInfo(userInfo);
       }
     } catch (err) {
@@ -365,13 +374,13 @@ const OrderShipping = ({
                   Current Saved Address:
                 </div>
                 <div className="space-y-2 text-sm text-amber-900">
-                  <div><strong>Name:</strong> {currentUserInfo.fullName}</div>
-                  <div><strong>Phone:</strong> {currentUserInfo.phone}</div>
-                  <div><strong>Province:</strong> {currentUserInfo.province}</div>
-                  <div><strong>City:</strong> {currentUserInfo.city}</div>
-                  <div><strong>District:</strong> {currentUserInfo.district}</div>
-                  <div><strong>Village:</strong> {currentUserInfo.village}</div>
-                  <div><strong>Address:</strong> {currentUserInfo.address}</div>
+                  <div><strong>Name:</strong> {currentUserInfoDetail.fullName}</div>
+                  <div><strong>Phone:</strong> {currentUserInfoDetail.phone}</div>
+                  <div><strong>Province:</strong> {currentUserInfoDetail.province}</div>
+                  <div><strong>City:</strong> {currentUserInfoDetail.city}</div>
+                  <div><strong>District:</strong> {currentUserInfoDetail.district}</div>
+                  <div><strong>Village:</strong> {currentUserInfoDetail.village}</div>
+                  <div><strong>Address:</strong> {currentUserInfoDetail.address}</div>
                 </div>
                 
                 {(currentUserInfo.province === "Not specified" || 
