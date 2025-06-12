@@ -645,7 +645,7 @@ export const completeOrderController = async (req, res) => {
 
     const io = req.app.get("io");
     io.emit("orderCompleted", {
-      id: updatedOrder.id,
+      order_id: updatedOrder.order_id,
       status: updatedOrder.status,
       completed_at: new Date(),
     });
@@ -808,7 +808,6 @@ export const getOrderByIdController = async (req, res) => {
 };
 
 export const payOrderConfirmationController = async (req, res) => {
-  console.log("REQ BODY:", req.body);
   logger.info("PAY ORDER CONFIRMATION CONTROLLER");
   try {
     const { userId } = req.user;
@@ -976,6 +975,9 @@ export const payOrderController = async (req, res) => {
       }
 
       await pendingOrderService(order_id);
+      
+      logger.info(`Transaction ${order_id} set to pending`);
+      return responseSuccess(res, 200, "Transaction pending processed successfully", "order_id", order_id);
     }
 
     if (transaction_status === "settlement") {
@@ -997,9 +999,12 @@ export const payOrderController = async (req, res) => {
         logger.error("Error processing payment:", error);
         return responseError(res, 500, "Error processing payment");
       }
+    } else if (transaction_status === "cancel" || transaction_status === "deny" || transaction_status === "expire") {
+      logger.info(`Transaction ${order_id} status: ${transaction_status}`);
+      return responseSuccess(res, 200, `Transaction ${transaction_status} processed`, "order_id", order_id);
     } else {
-      logger.info(`Payment ${transaction_status}`);
-      return responseError(res, 400, `Payment ${transaction_status}`, "order_id", order_id);
+      logger.info(`Unknown transaction status: ${transaction_status} for order: ${order_id}`);
+      return responseSuccess(res, 200, `Transaction status ${transaction_status} acknowledged`, "order_id", order_id);
     }
   } catch (error) {
     logger.error("Internal server error:", error);
@@ -1603,7 +1608,6 @@ export const checkoutCartController = async (req, res) => {
     }
 
     const cartItems = await getCartItemsService(cart_id);
-    console.log("cartItems", cartItems);
 
     const groupedCartItems = cartItems.reduce((acc, item) => {
       const { cart_id, quantity, menu_id } = item;
@@ -1622,7 +1626,6 @@ export const checkoutCartController = async (req, res) => {
     }, {});
 
     const finalCartItems = Object.values(groupedCartItems);
-    console.log("finalCartItems", finalCartItems);
     logger.info("Creating order from cart id:", cart_id);
     const order = await createOrderService({
       userId: userId,
