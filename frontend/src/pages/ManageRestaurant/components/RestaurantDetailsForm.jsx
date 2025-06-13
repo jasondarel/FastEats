@@ -69,7 +69,7 @@ const RestaurantDetailsForm = ({
   // Load cities when province changes
   useEffect(() => {
     const loadCities = async () => {
-      if (restaurantProvince) {
+      if (restaurantProvince && restaurantProvince !== 'unknown') {
         setIsLoadingCities(true);
         try {
           const response = await getCitiesService(restaurantProvince);
@@ -106,7 +106,7 @@ const RestaurantDetailsForm = ({
   // Load districts when city changes
   useEffect(() => {
     const loadDistricts = async () => {
-      if (restaurantCity) {
+      if (restaurantCity && restaurantCity !== 'unknown') {
         setIsLoadingDistricts(true);
         try {
           const response = await getDistrictsService(restaurantCity);
@@ -139,7 +139,7 @@ const RestaurantDetailsForm = ({
   // Load villages when district changes
   useEffect(() => {
     const loadVillages = async () => {
-      if (restaurantDistrict) {
+      if (restaurantDistrict && restaurantDistrict !== 'unknown') {
         setIsLoadingVillages(true);
         try {
           const response = await getVillagesService(restaurantDistrict);
