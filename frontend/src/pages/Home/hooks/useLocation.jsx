@@ -8,8 +8,9 @@ import {
 
 const locationCache = new Map();
 
-const useLocation = (locationIds) => {
+const useLocation = (locationIds, showAll = false) => {
   const [fullAddress, setFullAddress] = useState("");
+  const [expandedAddress, setExpandedAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -34,7 +35,7 @@ const useLocation = (locationIds) => {
   }, []);
 
   const buildFullAddress = useCallback(
-    async (locationIds, streetAddress) => {
+    async (locationIds, streetAddress, includeAll = false) => {
       const { province_id, city_id, district_id, village_id } = locationIds;
 
       if (!province_id && !city_id && !district_id && !village_id) {
@@ -45,37 +46,46 @@ const useLocation = (locationIds) => {
       setError(null);
 
       try {
-        const [provinceName, cityName, districtName, villageName] =
-          await Promise.all([
-            fetchLocationName(province_id, "province", getProvinceService),
-            fetchLocationName(city_id, "city", getCityService),
+        const promises = [
+          fetchLocationName(province_id, "province", getProvinceService),
+          fetchLocationName(city_id, "city", getCityService),
+        ];
+
+        if (includeAll) {
+          promises.push(
             fetchLocationName(district_id, "district", getDistrictService),
-            fetchLocationName(village_id, "village", getVillageService),
-          ]);
+            fetchLocationName(village_id, "village", getVillageService)
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const [provinceName, cityName, districtName, villageName] = results;
 
         const addressParts = [];
 
-        if (streetAddress) {
-          addressParts.push(streetAddress);
-        }
-
-        if (villageName) {
-          addressParts.push(`Kel. ${villageName}`);
-        }
-
-        if (districtName) {
-          addressParts.push(`Kec. ${districtName}`);
+        if (provinceName) {
+          addressParts.push(provinceName);
         }
 
         if (cityName) {
           addressParts.push(cityName);
         }
 
-        if (provinceName) {
-          addressParts.push(provinceName);
+        if (includeAll) {
+          if (districtName) {
+            addressParts.push(`Kec. ${districtName}`);
+          }
+
+          if (villageName) {
+            addressParts.push(`Kel. ${villageName}`);
+          }
         }
 
-        return addressParts.join(", ");
+        if (streetAddress) {
+          addressParts.push(streetAddress);
+        }
+
+        return addressParts.join("\n");
       } catch (error) {
         console.error("Error building full address:", error);
         setError(error.message);
@@ -89,13 +99,25 @@ const useLocation = (locationIds) => {
 
   useEffect(() => {
     if (locationIds) {
-      buildFullAddress(locationIds, locationIds.streetAddress).then(
+      // Build basic address (province, city, street)
+      buildFullAddress(locationIds, locationIds.streetAddress, false).then(
         setFullAddress
+      );
+
+      // Build expanded address (all details)
+      buildFullAddress(locationIds, locationIds.streetAddress, true).then(
+        setExpandedAddress
       );
     }
   }, [locationIds, buildFullAddress]);
 
-  return { fullAddress, isLoading, error };
+  return {
+    fullAddress,
+    expandedAddress,
+    isLoading,
+    error,
+    currentAddress: showAll ? expandedAddress : fullAddress,
+  };
 };
 
 export default useLocation;
