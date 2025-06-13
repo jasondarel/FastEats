@@ -94,12 +94,36 @@ export const isOwnerAvailable = async(ownerId) => {
     }
 }
 
-export const getRestaurantsService = async (ownerId) => {
+export const getRestaurantsService = async (ownerId, filters = null) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM restaurants WHERE owner_id != $1",
-            [ownerId]
-        );
+        let query = "SELECT * FROM restaurants WHERE owner_id != $1";
+        let params = [ownerId];
+        let paramIndex = 2;
+
+        if (filters) {
+            if (filters.province) {
+                query += ` AND restaurant_province = $${paramIndex}`;
+                params.push(filters.province);
+                paramIndex++;
+            }
+            if (filters.city) {
+                query += ` AND restaurant_city = $${paramIndex}`;
+                params.push(filters.city);
+                paramIndex++;
+            }
+            if (filters.district) {
+                query += ` AND restaurant_district = $${paramIndex}`;
+                params.push(filters.district);
+                paramIndex++;
+            }
+            if (filters.village) {
+                query += ` AND restaurant_village = $${paramIndex}`;
+                params.push(filters.village);
+                paramIndex++;
+            }
+        }
+
+        const result = await pool.query(query, params);
         return result.rows;
     } catch (error) {
         console.error("❌ Error fetching restaurants:", error);
