@@ -107,8 +107,15 @@ export const deleteRestaurantController = async (req, res) => {
 export const getRestaurantsController = async(req, res) => {
     logger.info("GET RESTAURANTS CONTROLLER");
     const userId = req.user.userId;
+    const { province, city, district, village } = req.query;
+    const filters = {};
+    if (province) filters.province = province;
+    if (city) filters.city = city;
+    if (district) filters.district = district;
+    if (village) filters.village = village;
+
     try {
-        const result = await getRestaurantsService(userId);
+        const result = await getRestaurantsService(userId, filters);
 
         logger.info("Get restaurants success");
         return responseSuccess(res, 200, "Get restaurants success", "restaurants", result);

@@ -7,6 +7,7 @@ import ErrorAlert from "./components/ErrorAlert";
 import WelcomeHeader from "./components/WelcomeHeader";
 import RestaurantGrid from "./components/RestaurantGrid";
 import SearchSection from "./components/SearchSection";
+import { getRestaurants } from "../../service/restaurantService/manageRestaurantService";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -15,6 +16,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
 
   const navigate = useNavigate();
 
@@ -51,6 +53,12 @@ const Home = () => {
         }
 
         const data = await response.json();
+        setUserLocation({
+          province: data.user?.province || 'unknown',
+          city: data.user?.city || 'unknown',
+          district: data.user?.district || 'unknown',
+          village: data.user?.village || 'unknown',
+        });
         setUsername(data.user?.name || "Guest");
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -60,6 +68,10 @@ const Home = () => {
       }
     };
 
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -67,40 +79,23 @@ const Home = () => {
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
+        const response = await getRestaurants({...userLocation}, token);
+        const data = response.data;
+        console.log("Fetched restaurants:", data.restaurants);
 
-        const response = await fetch(
-          "http://localhost:5000/restaurant/restaurants",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch restaurants.");
-        }
-
-        const data = await response.json();
-
-        // Filter out closed restaurants before updating state
         const openRestaurants = data.restaurants.filter(
           (restaurant) => restaurant.is_open
         );
 
         setRestaurants(openRestaurants);
-        setFilteredRestaurants(openRestaurants); // Only store open restaurants
+        setFilteredRestaurants(openRestaurants);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
         setError(error.message);
       }
     };
-
-    fetchUser();
     fetchRestaurants();
-  }, []);
+  }, [userLocation])
 
   // Update filtered restaurants whenever search query changes
   useEffect(() => {
