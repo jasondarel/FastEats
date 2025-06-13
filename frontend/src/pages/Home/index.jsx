@@ -14,6 +14,12 @@ const Home = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationFilters, setLocationFilters] = useState({
+    province: "",
+    city: "",
+    district: "",
+    village: "",
+  });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
@@ -53,13 +59,13 @@ const Home = () => {
         }
 
         const data = await response.json();
+        console.log("User profile data:", data.user);
+
+        const user = data.user || {};
         setUserLocation({
-          province: data.user?.province || 'unknown',
-          city: data.user?.city || 'unknown',
-          district: data.user?.district || 'unknown',
-          village: data.user?.village || 'unknown',
+          province: user.province_id || user.province || "",
         });
-        setUsername(data.user?.name || "Guest");
+        setUsername(user.name || "Guest");
       } catch (error) {
         console.error("Error fetching user:", error);
         setError(error.message);
@@ -79,7 +85,34 @@ const Home = () => {
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
-        const response = await getRestaurants({...userLocation}, token);
+
+        const hasActiveFilters = Object.values(locationFilters).some(
+          (value) => value !== ""
+        );
+
+        let locationParams = {};
+
+        if (hasActiveFilters) {
+          locationParams = Object.fromEntries(
+            Object.entries(locationFilters).filter(([_, value]) => value !== "")
+          );
+        } else if (locationFilters.userInteracted) {
+          locationParams = {};
+        } else {
+          locationParams = Object.fromEntries(
+            Object.entries(userLocation || {}).filter(
+              ([_, value]) => value !== ""
+            )
+          );
+        }
+
+        console.log("Has active filters:", hasActiveFilters);
+        console.log("User interacted:", locationFilters.userInteracted);
+        console.log("Location filters:", locationFilters);
+        console.log("User location:", userLocation);
+        console.log("Final location params being sent:", locationParams);
+
+        const response = await getRestaurants(locationParams, token);
         const data = response.data;
         console.log("Fetched restaurants:", data.restaurants);
 
@@ -94,10 +127,12 @@ const Home = () => {
         setError(error.message);
       }
     };
-    fetchRestaurants();
-  }, [userLocation])
 
-  // Update filtered restaurants whenever search query changes
+    if (userLocation) {
+      fetchRestaurants();
+    }
+  }, [userLocation, locationFilters]);
+
   useEffect(() => {
     const filtered = restaurants.filter((restaurant) =>
       restaurant.restaurant_name
@@ -107,7 +142,10 @@ const Home = () => {
     setFilteredRestaurants(filtered);
   }, [searchQuery, restaurants]);
 
-  // Handle restaurant click
+  const handleLocationFiltersChange = (newFilters) => {
+    setLocationFilters(newFilters);
+  };
+
   const handleRestaurantClick = (restaurantId) => {
     navigate(`/restaurant/${restaurantId}/menu`);
   };
@@ -129,6 +167,8 @@ const Home = () => {
         <SearchSection
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          onFiltersChange={handleLocationFiltersChange}
+          userLocation={userLocation}
         />
 
         <RestaurantGrid
