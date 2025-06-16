@@ -143,6 +143,7 @@ const Home = () => {
   }, [searchQuery, restaurants]);
 
   const handleLocationFiltersChange = (newFilters) => {
+    console.log("Location filters changed (index):", newFilters);
     setLocationFilters(newFilters);
   };
 

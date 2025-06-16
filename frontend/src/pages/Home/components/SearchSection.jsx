@@ -42,6 +42,7 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    console.log("User Location:", userLocation);
     if (userLocation && userLocation.province && !isInitialized) {
       const newFilterIds = {
         province: userLocation.province,
@@ -244,11 +245,10 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
         newFilterIds.village = selectedItem ? selectedItem.id : "";
         break;
     }
-
     setFilters(newFilters);
     setFilterIds(newFilterIds);
 
-    onFiltersChange && onFiltersChange(newFilterIds);
+    // onFiltersChange && onFiltersChange(newFilterIds);
   };
 
   const clearFilters = () => {
@@ -301,6 +301,13 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
         return [];
     }
   };
+
+  const handleApplyFilters = () => {
+    setIsOpen(false);
+    const newFilterIds = { ...filterIds, userInteracted: true };
+    setFilterIds(newFilterIds);
+    onFiltersChange && onFiltersChange(newFilterIds);
+  }
 
   const renderSelect = (type, label, disabled = false) => {
     const options = getAvailableOptions(type);
@@ -368,7 +375,7 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border-2 border-amber-200 z-50">
+        <div className="absolute top-full left-1/2 -translate-x-1/1 mt-2 w-[200%] max-w-xs bg-white rounded-lg shadow-lg border-2 border-amber-200 z-50">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -397,7 +404,7 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
 
             <div className="mt-4 pt-3 border-t border-amber-100">
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleApplyFilters}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
               >
                 Apply Filters
