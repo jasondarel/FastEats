@@ -3,11 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import ErrorMessage from "./ErrorMessage";
 import ImageUploader from "./ImageUploader";
-import { 
-  getCitiesService, 
-  getDistrictsService, 
-  getProvincesService, 
-  getVillagesService 
+import {
+  getCitiesService,
+  getDistrictsService,
+  getProvincesService,
+  getVillagesService,
 } from "../../../service/utilServices/utilService";
 
 const RegisterForm = ({ onRegister, errors, userType }) => {
@@ -38,13 +38,13 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     provinces: false,
     cities: false,
     districts: false,
-    villages: false
+    villages: false,
   });
 
   // Fetch provinces on component mount
   useEffect(() => {
     const fetchProvinces = async () => {
-      setLoadingStates(prev => ({ ...prev, provinces: true }));
+      setLoadingStates((prev) => ({ ...prev, provinces: true }));
       try {
         const response = await getProvincesService();
         setProvinces(response.data || []);
@@ -52,7 +52,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         console.error("Error fetching provinces:", error);
         setProvinces([]);
       } finally {
-        setLoadingStates(prev => ({ ...prev, provinces: false }));
+        setLoadingStates((prev) => ({ ...prev, provinces: false }));
       }
     };
 
@@ -68,7 +68,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, cities: true }));
+    setLoadingStates((prev) => ({ ...prev, cities: true }));
     try {
       const response = await getCitiesService(provinceId);
       setAvailableCities(response.data || []);
@@ -76,7 +76,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       console.error(`Error fetching cities for province ${provinceId}:`, error);
       setAvailableCities([]);
     } finally {
-      setLoadingStates(prev => ({ ...prev, cities: false }));
+      setLoadingStates((prev) => ({ ...prev, cities: false }));
     }
   }, []);
 
@@ -87,7 +87,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, districts: true }));
+    setLoadingStates((prev) => ({ ...prev, districts: true }));
     try {
       const response = await getDistrictsService(cityId);
       setAvailableDistricts(response.data || []);
@@ -95,7 +95,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       console.error(`Error fetching districts for city ${cityId}:`, error);
       setAvailableDistricts([]);
     } finally {
-      setLoadingStates(prev => ({ ...prev, districts: false }));
+      setLoadingStates((prev) => ({ ...prev, districts: false }));
     }
   }, []);
 
@@ -106,15 +106,18 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, villages: true }));
+    setLoadingStates((prev) => ({ ...prev, villages: true }));
     try {
       const response = await getVillagesService(districtId);
       setAvailableVillages(response.data || []);
     } catch (error) {
-      console.error(`Error fetching villages for district ${districtId}:`, error);
+      console.error(
+        `Error fetching villages for district ${districtId}:`,
+        error
+      );
       setAvailableVillages([]);
     } finally {
-      setLoadingStates(prev => ({ ...prev, villages: false }));
+      setLoadingStates((prev) => ({ ...prev, villages: false }));
     }
   }, []);
 
@@ -207,16 +210,18 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
   };
 
   const buildFullAddress = () => {
-    const selectedProvince = provinces.find(p => p.id === restaurantProvince);
-    const selectedCity = availableCities.find(c => c.id === restaurantCity);
-    const selectedDistrict = availableDistricts.find(d => d.id === restaurantDistrict);
-    const selectedVillage = availableVillages.find(v => v.id === restaurantVillage);
+    const selectedProvince = provinces.find((p) => p.id === restaurantProvince);
+    const selectedCity = availableCities.find((c) => c.id === restaurantCity);
+    const selectedDistrict = availableDistricts.find(
+      (d) => d.id === restaurantDistrict
+    );
+    const selectedVillage = availableVillages.find(
+      (v) => v.id === restaurantVillage
+    );
 
-    return `${restaurantAlamat}, ${
-      selectedVillage?.name || ""
-    }, ${selectedDistrict?.name || ""}, ${selectedCity?.name || ""}, ${
-      selectedProvince?.name || ""
-    }`;
+    return `${restaurantAlamat}, ${selectedVillage?.name || ""}, ${
+      selectedDistrict?.name || ""
+    }, ${selectedCity?.name || ""}, ${selectedProvince?.name || ""}`;
   };
 
   const handleSubmit = (e) => {
@@ -261,9 +266,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         disabled={disabled || loading}
         className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white disabled:bg-gray-100"
       >
-        <option value="">
-          {loading ? "Loading..." : placeholder}
-        </option>
+        <option value="">{loading ? "Loading..." : placeholder}</option>
         {options.map((option) => (
           <option key={option.id} value={option.id}>
             {option.name}
@@ -343,8 +346,10 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Personal Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Personal Information</h3>
-              
+              <h3 className="text-lg font-medium text-gray-700 mb-4">
+                Personal Information
+              </h3>
+
               <div>
                 <input
                   type="text"
@@ -396,8 +401,10 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
 
             {/* Right Column - Restaurant Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Restaurant Information</h3>
-              
+              <h3 className="text-lg font-medium text-gray-700 mb-4">
+                Restaurant Information
+              </h3>
+
               <div>
                 <input
                   type="text"
@@ -491,7 +498,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         Already have an account?{" "}
         <Link
           to="/login"
-          className="text-yellow-500 hover:text-yellow-600 font-medium transition duration-200"
+          className="underline text-yellow-500 hover:text-yellow-600 font-medium transition duration-200"
         >
           Login here
         </Link>
