@@ -11,7 +11,7 @@ const GifPicker = ({ isOpen, onClose, onGifSelect, onToggle }) => {
   const pickerRef = useRef(null);
 
   //API key from https://developers.giphy.com/
-  const GIPHY_API_KEY = "hpAoUTDz3DFSKlT2SxZjccBjhs9IvGqD";
+  const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
   const GIPHY_BASE_URL = "https://api.giphy.com/v1/gifs";
 
   const categories = [
