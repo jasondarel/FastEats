@@ -1,25 +1,66 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const MessageBubble = ({ message, formatTime }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
+  useEffect(() => {
+    if (message.type === "gif") {
+      console.log("MessageBubble received GIF message:", {
+        id: message.id,
+        type: message.type,
+        gifUrl: message.gifUrl,
+        gifTitle: message.gifTitle,
+        gifData: message.gifData,
+        message: message.message,
+        fullMessage: message,
+      });
+    }
+  }, [message]);
+
   const handleImageError = () => {
+    const mediaUrl = message.type === "gif" ? message.gifUrl : message.imageUrl;
+    console.log("Image/GIF failed to load:", mediaUrl);
     setImageError(true);
     setImageLoading(false);
   };
 
   const handleImageLoad = () => {
+    const mediaUrl = message.type === "gif" ? message.gifUrl : message.imageUrl;
+    console.log("Image/GIF loaded successfully:", mediaUrl);
     setImageLoading(false);
   };
 
-  const openImageInNewTab = (imageUrl) => {
-    window.open(imageUrl, "_blank");
+  const openMediaInNewTab = (mediaUrl) => {
+    window.open(mediaUrl, "_blank");
   };
 
-  const hasTextContent = message.message && message.message.trim() !== "";
+  const hasTextContent =
+    message.message &&
+    message.message.trim() !== "" &&
+    !(message.type === "gif" && message.message === message.gifTitle);
+
+  const isMediaMessage = message.type === "image" || message.type === "gif";
+
+  let mediaUrl = null;
+  if (message.type === "gif") {
+    mediaUrl = message.gifUrl || (message.gifData && message.gifData.url);
+  } else if (message.type === "image") {
+    mediaUrl = message.imageUrl;
+  }
+
+  if (isMediaMessage) {
+    console.log("Rendering media message:", {
+      type: message.type,
+      mediaUrl,
+      hasTextContent,
+      isMediaMessage,
+      gifUrl: message.gifUrl,
+      gifData: message.gifData,
+      imageUrl: message.imageUrl,
+    });
+  }
+
   return (
     <div
       className={`flex ${
@@ -33,8 +74,7 @@ const MessageBubble = ({ message, formatTime }) => {
             : "bg-gray-100 text-gray-800 rounded-bl-md"
         } mb-2 overflow-hidden`}
       >
-        {/* Image Section */}
-        {message.type === "image" && message.imageUrl && (
+        {isMediaMessage && mediaUrl && (
           <div className="relative">
             {imageLoading && (
               <div className="flex items-center justify-center h-32 bg-gray-200">
@@ -43,34 +83,58 @@ const MessageBubble = ({ message, formatTime }) => {
             )}
             {!imageError ? (
               <img
-                src={message.imageUrl}
-                alt="Shared image"
+                src={mediaUrl}
+                alt={message.type === "gif" ? "GIF" : "Shared image"}
                 className={`w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity ${
                   imageLoading ? "hidden" : "block"
                 }`}
-                onClick={() => openImageInNewTab(message.imageUrl)}
+                onClick={() => openMediaInNewTab(mediaUrl)}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
             ) : (
               <div className="flex items-center justify-center h-32 bg-gray-200 text-gray-500">
-                <span className="text-sm">Failed to load image</span>
+                <div className="text-center">
+                  <span className="text-sm">
+                    Failed to load {message.type === "gif" ? "GIF" : "image"}
+                  </span>
+                  {message.type === "gif" && (
+                    <div className="text-xs mt-1">URL: {mediaUrl}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {message.type === "gif" && !imageError && !imageLoading && (
+              <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                GIF
               </div>
             )}
           </div>
         )}
 
+        {/* Show debug info for GIF messages without media URL */}
+        {message.type === "gif" && !mediaUrl && (
+          <div className="p-4 bg-red-100 text-red-800 text-xs">
+            <div>GIF Message Debug:</div>
+            <div>gifUrl: {message.gifUrl || "null"}</div>
+            <div>
+              gifData:{" "}
+              {message.gifData ? JSON.stringify(message.gifData) : "null"}
+            </div>
+          </div>
+        )}
+
+        {/* Only show text content if it's not just the GIF title */}
         {hasTextContent && (
           <div className="px-4 py-3">
-            <p className="text-sm leading-relaxed">
-              {message.message}
-            </p>
+            <p className="text-sm leading-relaxed">{message.message}</p>
           </div>
         )}
 
         <div
           className={`px-4 pb-3 ${
-            message.type === "image" && !hasTextContent ? "pt-3" : ""
+            isMediaMessage && !hasTextContent ? "pt-3" : ""
           }`}
         >
           <p
@@ -87,4 +151,5 @@ const MessageBubble = ({ message, formatTime }) => {
     </div>
   );
 };
+
 export default MessageBubble;

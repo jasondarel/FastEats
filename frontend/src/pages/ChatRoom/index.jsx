@@ -18,7 +18,6 @@ const ChatRoom = () => {
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
-  // State management
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,13 +27,13 @@ const ChatRoom = () => {
   const [currentUserRole, setCurrentUserRole] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  // Image handling state
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  const [selectedGif, setSelectedGif] = useState(null);
+
   const orderDetails = location.state || {};
 
-  // Socket hook
   const {
     isSocketConnected,
     typingUsers,
@@ -109,6 +108,10 @@ const ChatRoom = () => {
   };
 
   const handleImageSelect = (file) => {
+    if (selectedGif) {
+      setSelectedGif(null);
+    }
+
     setSelectedImage(file);
 
     const reader = new FileReader();
@@ -121,6 +124,18 @@ const ChatRoom = () => {
   const handleImageRemove = () => {
     setSelectedImage(null);
     setImagePreview(null);
+  };
+
+  const handleGifSelect = (gifData) => {
+    if (selectedImage) {
+      handleImageRemove();
+    }
+
+    setSelectedGif(gifData);
+  };
+
+  const handleGifRemove = () => {
+    setSelectedGif(null);
   };
 
   const uploadImage = async (file, token) => {
@@ -136,14 +151,17 @@ const ChatRoom = () => {
         },
         body: formData,
       });
-      
+
       if (!response.ok) {
         const responseJson = await response.json();
-        console.error("Server error response:", responseJson.message || responseJson);
-        
-        return { 
-          success: false, 
-          error: `${responseJson.message || "Unknown error"}` 
+        console.error(
+          "Server error response:",
+          responseJson.message || responseJson
+        );
+
+        return {
+          success: false,
+          error: `${responseJson.message || "Unknown error"}`,
         };
       }
 
@@ -153,7 +171,7 @@ const ChatRoom = () => {
       console.error("Error uploading image:", error);
       return { success: false, error: error.message };
     }
-  }
+  };
 
   const determineMessageSender = (sender) => {
     if (!sender || !currentUserRole || !currentUserId) return "otherUser";
@@ -196,8 +214,23 @@ const ChatRoom = () => {
     console.log("Current User ID:", currentUserId);
     console.log("Total messages to transform:", apiMessages.length);
 
-    return apiMessages.map((msg, index) => {
+    apiMessages.forEach((msg, index) => {
+      if (msg.messageType === "gif" || msg.type === "gif") {
+        console.log(`GIF Message ${index} - RAW SERVER DATA:`, {
+          id: msg._id || msg.id,
+          messageType: msg.messageType || msg.type,
+          gifData: msg.gifData,
+          gifUrl: msg.gifUrl,
+          gifTitle: msg.gifTitle,
+          imageUrl: msg.imageUrl,
+          attachments: msg.attachments,
+          text: msg.text || msg.message,
+          fullMessage: msg,
+        });
+      }
+    });
 
+    return apiMessages.map((msg, index) => {
       let isCurrentUserMessage = false;
 
       if (msg.sender) {
@@ -229,14 +262,79 @@ const ChatRoom = () => {
         }
       }
 
-      return {
+      let gifUrl = null;
+      let gifTitle = null;
+
+      if (msg.gifData?.url) {
+        gifUrl = msg.gifData.url;
+        gifTitle = msg.gifData.title;
+      } else if (msg.gifUrl) {
+        gifUrl = msg.gifUrl;
+        gifTitle = msg.gifTitle;
+      } else if (msg.attachments?.gifUrl) {
+        gifUrl = msg.attachments.gifUrl;
+        gifTitle = msg.attachments.gifTitle;
+      } else if (
+        msg.attachments?.url &&
+        (msg.messageType === "gif" || msg.type === "gif")
+      ) {
+        gifUrl = msg.attachments.url;
+        gifTitle = msg.attachments.title || msg.text || msg.message;
+      } else if (
+        (msg.messageType === "gif" || msg.type === "gif") &&
+        msg.imageUrl
+      ) {
+        gifUrl = msg.imageUrl;
+        gifTitle = msg.text || msg.message;
+      }
+
+      const gifData = gifUrl
+        ? {
+            url: gifUrl,
+            title: gifTitle || "",
+            id: msg.gifData?.id || msg._id || msg.id || `gif-${Date.now()}`,
+          }
+        : null;
+
+      const messageType = msg.messageType || msg.type || "text";
+      let finalImageUrl = null;
+
+      if (messageType === "gif") {
+        finalImageUrl = null;
+      } else {
+        finalImageUrl = msg.attachments?.url || msg.imageUrl || null;
+      }
+
+      const transformedMessage = {
         id: msg._id || msg.id || `msg-${Date.now()}-${Math.random()}`,
         sender: isCurrentUserMessage ? "currentUser" : "otherUser",
         message: msg.text || msg.message || "",
         timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
-        type: msg.messageType || msg.type || "text",
-        imageUrl: msg.attachments?.url || null,
+        type: messageType,
+        imageUrl: finalImageUrl,
+        gifUrl,
+        gifTitle,
+        gifData,
       };
+
+      if (transformedMessage.type === "gif") {
+        console.log(`Transformed GIF Message:`, {
+          id: transformedMessage.id,
+          type: transformedMessage.type,
+          gifUrl: transformedMessage.gifUrl,
+          gifTitle: transformedMessage.gifTitle,
+          gifData: transformedMessage.gifData,
+          message: transformedMessage.message,
+          hasGifContent: !!(
+            transformedMessage.gifUrl || transformedMessage.message?.trim()
+          ),
+          originalAttachments: msg.attachments,
+          originalImageUrl: msg.imageUrl,
+          originalMessage: msg,
+        });
+      }
+
+      return transformedMessage;
     });
   };
 
@@ -244,6 +342,7 @@ const ChatRoom = () => {
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       console.log("Message data before sending:", messageData);
+
       const enhancedMessageData = {
         ...messageData,
         sender: {
@@ -252,6 +351,13 @@ const ChatRoom = () => {
           role: tokenPayload.role,
         },
       };
+
+      if (messageData.messageType === "gif") {
+        console.log("GIF message detected, including extra fields:");
+        console.log("gifUrl:", messageData.gifUrl);
+        console.log("gifData:", messageData.gifData);
+        console.log("gifTitle:", messageData.gifTitle);
+      }
 
       const response = await fetch(`${API_URL}/chat/message`, {
         method: "POST",
@@ -300,7 +406,7 @@ const ChatRoom = () => {
     try {
       const { token, payload } = extractUserInfo();
       const result = await getMessagesService(chatId, token);
-      
+
       if (result.success) {
         const transformedMessages = transformMessages(
           result.messages,
@@ -358,23 +464,40 @@ const ChatRoom = () => {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if ((!newMessage.trim() && !selectedImage) || sendingMessage) return;
+  const handleSendMessage = async (eventOrData) => {
+    if (eventOrData && typeof eventOrData.preventDefault === "function") {
+      eventOrData.preventDefault();
+    }
+
+    if (
+      (!newMessage.trim() && !selectedImage && !selectedGif) ||
+      sendingMessage
+    )
+      return;
 
     const messageText = newMessage.trim();
     const imageFile = selectedImage;
+    const gifData = selectedGif;
+
+    let messageType = "text";
+    if (gifData) {
+      messageType = "gif";
+    } else if (imageFile) {
+      messageType = "image";
+    }
 
     const clientTempId = `client-temp-${Date.now()}-${Math.random()}`;
 
     setNewMessage("");
     handleImageRemove();
+    handleGifRemove();
     setSendingMessage(true);
 
     try {
       const { token, payload } = extractUserInfo();
 
       let imageUrl = null;
+
       if (imageFile) {
         const uploadResult = await uploadImage(imageFile, token);
         if (uploadResult.success) {
@@ -390,20 +513,37 @@ const ChatRoom = () => {
         sender: "currentUser",
         message: messageText,
         timestamp: new Date().toISOString(),
-        type: imageUrl ? "image" : "text",
+        type: messageType,
         imageUrl: imageUrl,
+        gifUrl: gifData?.url || null,
+        gifTitle: gifData?.title || null,
       };
       setMessages((prev) => [...prev, tempMessage]);
 
       const messageData = {
         chatId,
-        text: messageText,
-        messageType: imageUrl ? "image" : "text",
-        imageUrl: imageUrl,
+        text: messageText || (gifData ? gifData.title || "" : ""),
+        messageType: messageType,
         senderRole: payload.role,
         senderId: payload.userId,
         clientTempId,
       };
+
+      if (imageUrl) {
+        messageData.imageUrl = imageUrl;
+      }
+
+      if (gifData) {
+        messageData.gifData = {
+          id: gifData.id,
+          url: gifData.url,
+          title: gifData.title,
+          width: gifData.width,
+          height: gifData.height,
+        };
+        messageData.gifUrl = gifData.url;
+        messageData.gifTitle = gifData.title;
+      }
 
       if (isSocketConnected) {
         emitMessage({
@@ -420,25 +560,36 @@ const ChatRoom = () => {
 
       if (result.success) {
         setMessages((prev) => {
-          const filtered = prev.filter((msg) => msg.clientTempId !== clientTempId);
+          const filtered = prev.filter(
+            (msg) => msg.clientTempId !== clientTempId
+          );
           const serverMessage = {
             id:
               result.message._id || result.message.id || `server-${Date.now()}`,
             sender: "currentUser",
             message: result.message.text || messageText,
             timestamp: result.message.createdAt || new Date().toISOString(),
-            type:
-              result.message.messageType ||
-              result.message.type ||
-              (imageUrl ? "image" : "text"),
+            type: result.message.messageType || messageType,
             imageUrl: result.message.imageUrl || imageUrl,
+            gifUrl:
+              result.message.gifData?.url ||
+              result.message.gifUrl ||
+              gifData?.url ||
+              null,
+            gifTitle:
+              result.message.gifData?.title ||
+              result.message.gifTitle ||
+              gifData?.title ||
+              null,
             clientTempId,
           };
           return [...filtered, serverMessage];
         });
         setError(null);
       } else {
-        setMessages((prev) => prev.filter((msg) => msg.clientTempId !== clientTempId));
+        setMessages((prev) =>
+          prev.filter((msg) => msg.clientTempId !== clientTempId)
+        );
         setError(`Failed to send message: ${result.error}`);
       }
     } catch (err) {
@@ -501,7 +652,7 @@ const ChatRoom = () => {
   useEffect(() => {
     const handleNewMessage = (messageData) => {
       console.log("Received new message from socket:", messageData);
-      console.log("Messages before transformation:", messages);
+
       const transformedMessage = {
         id: messageData._id || messageData.id || `socket-${Date.now()}`,
         sender: determineMessageSender(messageData.sender),
@@ -512,25 +663,31 @@ const ChatRoom = () => {
           new Date().toISOString(),
         type: messageData.messageType || messageData.type || "text",
         imageUrl: messageData.attachments?.url || messageData.imageUrl || null,
+        gifUrl: messageData.gifData?.url || messageData.gifUrl || null,
+        gifTitle: messageData.gifData?.title || messageData.gifTitle || null,
         clientTempId: messageData.clientTempId,
       };
 
       setMessages((prevMessages) => {
         let filtered = prevMessages;
+
         if (transformedMessage.clientTempId) {
           filtered = prevMessages.filter(
             (msg) => msg.clientTempId !== transformedMessage.clientTempId
           );
         }
+
         const exists = filtered.some((msg) => {
           return (
             msg.id === transformedMessage.id ||
             (msg.message === transformedMessage.message &&
+              msg.gifUrl === transformedMessage.gifUrl &&
               Math.abs(
                 new Date(msg.timestamp) - new Date(transformedMessage.timestamp)
               ) < 5000)
           );
         });
+
         if (exists) return filtered;
         return [...filtered, transformedMessage];
       });
@@ -569,12 +726,46 @@ const ChatRoom = () => {
   }, [chatId, isSocketConnected]);
 
   const groupedMessages = messages
-    .filter(
-      (message) =>
-        !(
-          (message.type === "text" && !message.message)
-        )
-    )
+    .filter((message) => {
+      console.log("Filtering message:", {
+        id: message.id,
+        type: message.type,
+        hasMessage: !!message.message?.trim(),
+        hasImageUrl: !!message.imageUrl,
+        hasGifUrl: !!message.gifUrl,
+        gifData: message.gifData,
+        message: message,
+      });
+
+      if (message.type === "text") {
+        return !!message.message?.trim();
+      }
+
+      if (message.type === "image") {
+        return !!message.imageUrl;
+      }
+
+      if (message.type === "gif") {
+        const hasGifUrl = !!(
+          message.gifUrl ||
+          (message.gifData && message.gifData.url)
+        );
+        const hasTextContent = !!message.message?.trim();
+
+        console.log(`GIF message ${message.id} filter check:`, {
+          hasGifUrl,
+          hasTextContent,
+          willShow: hasGifUrl || hasTextContent,
+          gifUrl: message.gifUrl,
+          gifData: message.gifData,
+          message: message.message,
+        });
+
+        return hasGifUrl || hasTextContent;
+      }
+
+      return !!(message.message?.trim() || message.imageUrl || message.gifUrl);
+    })
     .reduce((groups, message) => {
       const date = formatDate(message.timestamp);
       if (!groups[date]) {
@@ -584,6 +775,7 @@ const ChatRoom = () => {
       return groups;
     }, {});
 
+  console.log("Final grouped messages:", groupedMessages);
   const currentOrderDetails = fetchedOrderDetails;
   const hasMessages = messages.length > 0;
 
@@ -640,6 +832,9 @@ const ChatRoom = () => {
                   onImageSelect={handleImageSelect}
                   onImageRemove={handleImageRemove}
                   imagePreview={imagePreview}
+                  selectedGif={selectedGif}
+                  onGifSelect={handleGifSelect}
+                  onGifRemove={handleGifRemove}
                 />
               </div>
             </div>

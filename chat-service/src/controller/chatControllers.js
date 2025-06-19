@@ -343,7 +343,8 @@ export const createMessageController = async (req, res) => {
     req.headers.authorization?.split(" ")[1] || req.headers.authorization;
   const { role, userId } = req.user;
   let sender;
-  const { chatId, messageType, text, imageUrl} = req.body;
+  const { chatId, messageType, text, imageUrl, gifData, gifUrl, gifTitle } =
+    req.body;
   const io = req.app.get("io");
   let textMessage = text || "";
   let attachments = null;
@@ -359,7 +360,7 @@ export const createMessageController = async (req, res) => {
         url: imageUrl,
         name: imageUrl.split("/").pop(),
         size: 0,
-      }
+      };
     } else {
       if (!chatId || !text) {
         logger.warn("Chat ID or text not provided");
@@ -388,6 +389,10 @@ export const createMessageController = async (req, res) => {
       sender,
       attachments: attachments || null,
       messageType: messageType || "text",
+
+      gifData: messageType === "gif" ? gifData : undefined,
+      gifUrl: messageType === "gif" ? gifUrl : undefined,
+      gifTitle: messageType === "gif" ? gifTitle : undefined,
     });
     if (!newMessage.success) {
       logger.warn("Message creation failed");
@@ -398,30 +403,30 @@ export const createMessageController = async (req, res) => {
       text: text,
       sender: sender,
     });
-    
+
     if (io) {
       const messageData = {
         ...newMessage.message,
         chatId,
         sender,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       const objectMessage = messageData.toObject
-      ? newMessage.message.toObject()
-      : newMessage.message;
-      
-      io.to(`chat_${chatId}`).emit('new_message', objectMessage);
+        ? newMessage.message.toObject()
+        : newMessage.message;
+
+      io.to(`chat_${chatId}`).emit("new_message", objectMessage);
       logger.info(`WebSocket: Emitted new_message event to all clients`);
-    
-      io.to(`user_${sender.id}`).emit('update_chat', {
+
+      io.to(`user_${sender.id}`).emit("update_chat", {
         chatId,
         lastMessage: {
           text,
           sender,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
-      
+
       logger.info(`WebSocket: Emitted new_message event to chat_${chatId}`);
     } else {
       logger.warn("WebSocket: io instance not available");
@@ -513,21 +518,23 @@ export const uploadImageChatController = async (req, res) => {
 
   try {
     const baseUrl = GLOBAL_SERVICE_URL.endsWith("/")
-  ? GLOBAL_SERVICE_URL.slice(0, -1)
-  : GLOBAL_SERVICE_URL;
+      ? GLOBAL_SERVICE_URL.slice(0, -1)
+      : GLOBAL_SERVICE_URL;
     const imageUrl = `${baseUrl}/chat/uploads/chat/${req.file.filename}`;
 
     logger.info("Image uploaded successfully", imageUrl);
 
     const io = req.app.get("io");
     if (io) {
-      io.to(`chat_${chatId}`).emit('new_message', {
+      io.to(`chat_${chatId}`).emit("new_message", {
         chatId,
         imageUrl,
         createdAt: new Date().toISOString(),
-        sender: { type: "user", id: req.user.userId }
+        sender: { type: "user", id: req.user.userId },
       });
-      logger.info(`WebSocket: Emitted new_message event for image upload to chat_${chatId}`);
+      logger.info(
+        `WebSocket: Emitted new_message event for image upload to chat_${chatId}`
+      );
     } else {
       logger.warn("WebSocket: io instance not available");
     }
