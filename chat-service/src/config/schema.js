@@ -73,7 +73,6 @@ const messageSchema = new mongoose.Schema(
     },
     text: { type: String, required: false },
 
-    // Add both gifData object and individual gif fields
     gifData: {
       id: { type: String },
       url: { type: String },
@@ -81,8 +80,8 @@ const messageSchema = new mongoose.Schema(
       width: { type: Number },
       height: { type: Number },
     },
-    gifUrl: { type: String }, // Add this
-    gifTitle: { type: String }, // Add this
+    gifUrl: { type: String },
+    gifTitle: { type: String },
 
     attachments: {
       type: {

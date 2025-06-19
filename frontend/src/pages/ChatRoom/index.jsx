@@ -222,7 +222,7 @@ const ChatRoom = () => {
           gifData: msg.gifData,
           gifUrl: msg.gifUrl,
           gifTitle: msg.gifTitle,
-          imageUrl: msg.mediaUrl,
+          imageUrl: msg.imageUrl,
           attachments: msg.attachments,
           text: msg.text || msg.message,
           fullMessage: msg,
@@ -265,23 +265,21 @@ const ChatRoom = () => {
       let gifUrl = null;
       let gifTitle = null;
 
-      if (msg.gifData && msg.gifData.url) {
+      if (msg.gifData?.url) {
         gifUrl = msg.gifData.url;
         gifTitle = msg.gifData.title;
       } else if (msg.gifUrl) {
         gifUrl = msg.gifUrl;
         gifTitle = msg.gifTitle;
-      } else if (msg.attachments) {
-        if (msg.attachments.gifUrl) {
-          gifUrl = msg.attachments.gifUrl;
-          gifTitle = msg.attachments.gifTitle;
-        } else if (
-          msg.attachments.url &&
-          (msg.messageType === "gif" || msg.type === "gif")
-        ) {
-          gifUrl = msg.attachments.url;
-          gifTitle = msg.attachments.title || msg.text || msg.message;
-        }
+      } else if (msg.attachments?.gifUrl) {
+        gifUrl = msg.attachments.gifUrl;
+        gifTitle = msg.attachments.gifTitle;
+      } else if (
+        msg.attachments?.url &&
+        (msg.messageType === "gif" || msg.type === "gif")
+      ) {
+        gifUrl = msg.attachments.url;
+        gifTitle = msg.attachments.title || msg.text || msg.message;
       } else if (
         (msg.messageType === "gif" || msg.type === "gif") &&
         msg.imageUrl
@@ -289,6 +287,14 @@ const ChatRoom = () => {
         gifUrl = msg.imageUrl;
         gifTitle = msg.text || msg.message;
       }
+
+      const gifData = gifUrl
+        ? {
+            url: gifUrl,
+            title: gifTitle || "",
+            id: msg.gifData?.id || msg._id || msg.id || `gif-${Date.now()}`,
+          }
+        : null;
 
       const messageType = msg.messageType || msg.type || "text";
       let finalImageUrl = null;
@@ -306,10 +312,9 @@ const ChatRoom = () => {
         timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
         type: messageType,
         imageUrl: finalImageUrl,
-        gifUrl: gifUrl,
-        gifTitle: gifTitle,
-        gifData:
-          msg.gifData || (gifUrl ? { url: gifUrl, title: gifTitle } : null),
+        gifUrl,
+        gifTitle,
+        gifData,
       };
 
       if (transformedMessage.type === "gif") {
@@ -337,6 +342,7 @@ const ChatRoom = () => {
     try {
       const tokenPayload = JSON.parse(atob(token.split(".")[1]));
       console.log("Message data before sending:", messageData);
+
       const enhancedMessageData = {
         ...messageData,
         sender: {
@@ -345,6 +351,13 @@ const ChatRoom = () => {
           role: tokenPayload.role,
         },
       };
+
+      if (messageData.messageType === "gif") {
+        console.log("GIF message detected, including extra fields:");
+        console.log("gifUrl:", messageData.gifUrl);
+        console.log("gifData:", messageData.gifData);
+        console.log("gifTitle:", messageData.gifTitle);
+      }
 
       const response = await fetch(`${API_URL}/chat/message`, {
         method: "POST",
@@ -724,17 +737,14 @@ const ChatRoom = () => {
         message: message,
       });
 
-      // Text messages: must have content
       if (message.type === "text") {
         return !!message.message?.trim();
       }
 
-      // Image messages: must have imageUrl
       if (message.type === "image") {
         return !!message.imageUrl;
       }
 
-      // GIF messages: must have gifUrl OR text content (fallback)
       if (message.type === "gif") {
         const hasGifUrl = !!(
           message.gifUrl ||

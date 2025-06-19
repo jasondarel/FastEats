@@ -35,7 +35,11 @@ const MessageBubble = ({ message, formatTime }) => {
     window.open(mediaUrl, "_blank");
   };
 
-  const hasTextContent = message.message && message.message.trim() !== "";
+  const hasTextContent =
+    message.message &&
+    message.message.trim() !== "" &&
+    !(message.type === "gif" && message.message === message.gifTitle);
+
   const isMediaMessage = message.type === "image" || message.type === "gif";
 
   let mediaUrl = null;
@@ -80,11 +84,7 @@ const MessageBubble = ({ message, formatTime }) => {
             {!imageError ? (
               <img
                 src={mediaUrl}
-                alt={
-                  message.type === "gif"
-                    ? message.gifTitle || "GIF"
-                    : "Shared image"
-                }
+                alt={message.type === "gif" ? "GIF" : "Shared image"}
                 className={`w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity ${
                   imageLoading ? "hidden" : "block"
                 }`}
@@ -125,6 +125,7 @@ const MessageBubble = ({ message, formatTime }) => {
           </div>
         )}
 
+        {/* Only show text content if it's not just the GIF title */}
         {hasTextContent && (
           <div className="px-4 py-3">
             <p className="text-sm leading-relaxed">{message.message}</p>

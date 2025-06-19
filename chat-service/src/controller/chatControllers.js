@@ -343,7 +343,8 @@ export const createMessageController = async (req, res) => {
     req.headers.authorization?.split(" ")[1] || req.headers.authorization;
   const { role, userId } = req.user;
   let sender;
-  const { chatId, messageType, text, imageUrl } = req.body;
+  const { chatId, messageType, text, imageUrl, gifData, gifUrl, gifTitle } =
+    req.body;
   const io = req.app.get("io");
   let textMessage = text || "";
   let attachments = null;
@@ -388,6 +389,10 @@ export const createMessageController = async (req, res) => {
       sender,
       attachments: attachments || null,
       messageType: messageType || "text",
+
+      gifData: messageType === "gif" ? gifData : undefined,
+      gifUrl: messageType === "gif" ? gifUrl : undefined,
+      gifTitle: messageType === "gif" ? gifTitle : undefined,
     });
     if (!newMessage.success) {
       logger.warn("Message creation failed");
