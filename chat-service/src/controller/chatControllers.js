@@ -400,9 +400,13 @@ export const createMessageController = async (req, res) => {
     }
 
     await updateLastMessageChatService(chatId, {
-      text: text,
-      sender: sender,
+      text: textMessage,
+      sender: sender.type,
+      messageType: messageType || "text",
+      timestamp: new Date(),
     });
+
+    console.log("messageType:", messageType);
 
     if (io) {
       const messageData = {

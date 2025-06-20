@@ -28,10 +28,21 @@ const chatSchema = new mongoose.Schema(
     lastMessage: {
       text: { type: String, default: "" },
       sender: {
-        type: String,
-        enum: ["user", "restaurant"],
+        type: {
+          type: String,
+          enum: ["user", "restaurant"],
+          required: true,
+        },
+        id: {
+          type: Number,
+          required: true,
+        },
       },
       timestamp: { type: Date, default: Date.now },
+      messageType: {
+        type: String,
+        enum: ["text", "image", "gif", "order_update", "system"],
+      },
     },
 
     unreadCountUser: { type: Number, default: 0 },

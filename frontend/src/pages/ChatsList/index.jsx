@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useEffect, useState } from "react";
-import { FaComments, FaComment, FaStore } from "react-icons/fa";
+import { FaComments, FaComment, FaStore, FaImage } from "react-icons/fa";
+import { MdGif } from "react-icons/md";
 import Sidebar from "../../components/Sidebar";
 import ChatCard from "./components/ChatCard";
 import LoadingState from "../../components/LoadingState";
@@ -42,6 +43,33 @@ const ChatsList = () => {
     fetchChats();
   }, []);
 
+  const getMessageDisplay = (lastMessage) => {
+    if (!lastMessage) {
+      return {
+        text: "No messages yet",
+        icon: null,
+      };
+    }
+
+    switch (lastMessage.messageType) {
+      case "gif":
+        return {
+          text: "GIF",
+          icon: <MdGif className="text-gray-500 text-lg mr-1" />,
+        };
+      case "image":
+        return {
+          text: "Image",
+          icon: <FaImage className="text-gray-500 text-sm mr-1" />,
+        };
+      default:
+        return {
+          text: lastMessage.text || "No messages yet",
+          icon: null,
+        };
+    }
+  };
+
   const transformedChats = chats.map((chat) => {
     const getOrderStatus = () => {
       if (chat.orderDetails?.status) {
@@ -81,6 +109,10 @@ const ChatsList = () => {
       return "Waiting";
     };
 
+    console.log("Raw lastMessage from chat:", chat.lastMessage);
+
+    const messageDisplay = getMessageDisplay(chat.lastMessage);
+
     return {
       chat_id: chat._id,
       order_id: chat.orderId || -1,
@@ -89,7 +121,8 @@ const ChatsList = () => {
       created_at: chat.createdAt,
       updated_at: chat.updatedAt,
       lastMessageTime: chat.lastMessage?.timestamp || chat.updatedAt,
-      lastMessage: chat.lastMessage?.text || "No messages yet",
+      lastMessage: messageDisplay.text,
+      lastMessageIcon: messageDisplay.icon,
       unreadCount: chat.unreadCountUser || 0,
       restaurant: {
         restaurant_id: chat.restaurant?.restaurant_id,
@@ -242,7 +275,6 @@ const ChatsList = () => {
           </div>
         ) : (
           <div className="w-full max-w-6xl space-y-8">
-            {/* Active Chats Section */}
             {sortedActiveChats.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -263,13 +295,11 @@ const ChatsList = () => {
               </div>
             )}
 
-            {/* Separator between sections */}
             {sortedActiveChats.length > 0 &&
               sortedCompletedChats.length > 0 && (
                 <div className="border-t border-gray-200 my-6"></div>
               )}
 
-            {/* Completed Chats Section */}
             {sortedCompletedChats.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
