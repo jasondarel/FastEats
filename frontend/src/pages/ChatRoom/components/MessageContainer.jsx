@@ -8,9 +8,8 @@ const MessagesContainer = ({
   loading,
   groupedMessages,
   formatTime,
-  formatDate,
+  formatPrice,
 }) => {
-  console.log("Rendering MessagesContainer with groupedMessages:", groupedMessages);
   if (loading && Object.keys(groupedMessages).length === 0) {
     return (
       <div className="text-center py-8">
@@ -48,6 +47,7 @@ const MessagesContainer = ({
                 key={message.id}
                 message={message}
                 formatTime={formatTime}
+                formatPrice={formatPrice}
               />
             ))}
           </div>

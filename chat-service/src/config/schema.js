@@ -41,7 +41,26 @@ const chatSchema = new mongoose.Schema(
       timestamp: { type: Date, default: Date.now },
       messageType: {
         type: String,
-        enum: ["text", "image", "gif", "order_update", "system"],
+        enum: ["text", "image", "gif", "order_details", "system"],
+      },
+    },
+
+    orderDetails: {
+      items: {
+        type: [
+          {
+            name: String,
+            quantity: Number,
+            price: Number,
+          },
+        ],
+        default: [],
+      },
+
+      totalPrice: Number,
+      status: {
+        type: String,
+        enum: ["pending", "preparing", "delivered", "cancelled"],
       },
     },
 
@@ -79,9 +98,36 @@ const messageSchema = new mongoose.Schema(
 
     messageType: {
       type: String,
-      enum: ["text", "image", "gif", "order_update", "system"],
+      enum: ["text", "image", "gif", "order_details", "system"],
       default: "text",
     },
+    orderDetails: {
+      type: {
+        items: {
+          type: [
+            {
+              name: String,
+              quantity: Number,
+              price: Number,
+            },
+          ],
+          default: [],
+        },
+
+        totalPrice: Number,
+        status: {
+          type: String,
+          enum: ["pending", "preparing", "delivered", "cancelled"],
+        },
+      },
+      required: false,
+    },
+    orderId: {
+      type: Number,
+      ref: "Order",
+      required: false,
+    },
+
     text: { type: String, required: false },
 
     gifData: {

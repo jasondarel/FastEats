@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
 import React, { useState } from "react";
-import { FaPaperPlane, FaImage, FaTimes } from "react-icons/fa";
+import { FaPaperPlane, FaImage, FaTimes, FaReceipt } from "react-icons/fa";
 import { HiOutlineGif } from "react-icons/hi2";
 import GifPicker from "./GifPicker";
 
@@ -22,6 +20,9 @@ const MessageInput = ({
   selectedGif,
   onGifSelect,
   onGifRemove,
+
+  onAttachOrderDetails,
+  canAttachOrderDetails = true,
 }) => {
   const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
 
@@ -143,11 +144,23 @@ const MessageInput = ({
                 ? "Add a caption..."
                 : "Type your message..."
             }
-            className="w-full border border-gray-300 rounded-full px-4 py-3 pr-20 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 bg-white"
+            className="w-full border border-gray-300 rounded-full px-4 py-3 pr-28 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 bg-white"
             disabled={sendingMessage}
           />
 
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
+            {canAttachOrderDetails && (
+              <button
+                type="button"
+                onClick={onAttachOrderDetails}
+                className="p-1 text-gray-400 hover:text-yellow-500 transition-colors"
+                disabled={sendingMessage}
+                title="Attach Order Details"
+              >
+                <FaReceipt size={16} />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleGifPickerToggle}

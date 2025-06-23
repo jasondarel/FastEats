@@ -1,32 +1,22 @@
 import React, { useEffect, useState } from "react";
+import OrderDetailsCard from "./OrderDetailsCard";
 
-const MessageBubble = ({ message, formatTime }) => {
+const MessageBubble = ({ message, formatTime, formatPrice }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const messageType = message.messageType || message.type;
 
-  useEffect(() => {
-    if (message.type === "gif") {
-      console.log("MessageBubble received GIF message:", {
-        id: message.id,
-        type: message.type,
-        gifUrl: message.gifUrl,
-        gifTitle: message.gifTitle,
-        gifData: message.gifData,
-        message: message.message,
-        fullMessage: message,
-      });
-    }
-  }, [message]);
+  useEffect(() => {}, [message]);
 
   const handleImageError = () => {
-    const mediaUrl = message.type === "gif" ? message.gifUrl : message.imageUrl;
+    const mediaUrl = messageType === "gif" ? message.gifUrl : message.imageUrl;
     console.log("Image/GIF failed to load:", mediaUrl);
     setImageError(true);
     setImageLoading(false);
   };
 
   const handleImageLoad = () => {
-    const mediaUrl = message.type === "gif" ? message.gifUrl : message.imageUrl;
+    const mediaUrl = messageType === "gif" ? message.gifUrl : message.imageUrl;
     console.log("Image/GIF loaded successfully:", mediaUrl);
     setImageLoading(false);
   };
@@ -38,27 +28,60 @@ const MessageBubble = ({ message, formatTime }) => {
   const hasTextContent =
     message.message &&
     message.message.trim() !== "" &&
-    !(message.type === "gif" && message.message === message.gifTitle);
+    !(messageType === "gif" && message.message === message.gifTitle);
 
-  const isMediaMessage = message.type === "image" || message.type === "gif";
+  const isMediaMessage = messageType === "image" || messageType === "gif";
 
   let mediaUrl = null;
-  if (message.type === "gif") {
+  if (messageType === "gif") {
     mediaUrl = message.gifUrl || (message.gifData && message.gifData.url);
-  } else if (message.type === "image") {
+  } else if (messageType === "image") {
     mediaUrl = message.imageUrl;
   }
 
-  if (isMediaMessage) {
-    console.log("Rendering media message:", {
-      type: message.type,
-      mediaUrl,
-      hasTextContent,
-      isMediaMessage,
-      gifUrl: message.gifUrl,
-      gifData: message.gifData,
-      imageUrl: message.imageUrl,
-    });
+  if (messageType === "order_details" && message.orderDetails) {
+    return (
+      <div
+        className={`flex ${
+          message.sender === "currentUser" ? "justify-end" : "justify-start"
+        }`}
+      >
+        <div
+          className={`max-w-md rounded-2xl ${
+            message.sender === "currentUser"
+              ? "bg-yellow-500 text-white rounded-br-md"
+              : "bg-gray-100 text-gray-800 rounded-bl-md"
+          } mb-2 overflow-hidden`}
+        >
+          <div className="p-4">
+            <OrderDetailsCard
+              orderDetails={message.orderDetails}
+              formatPrice={formatPrice}
+              formatTime={formatTime}
+              isInMessage={true}
+            />
+
+            {message.message && message.message.trim() && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm leading-relaxed">{message.message}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 pb-3">
+            <p
+              className={`text-xs ${
+                message.sender === "currentUser"
+                  ? "text-yellow-100"
+                  : "text-gray-500"
+              }`}
+            >
+              {formatTime(message.timestamp)}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -84,7 +107,7 @@ const MessageBubble = ({ message, formatTime }) => {
             {!imageError ? (
               <img
                 src={mediaUrl}
-                alt={message.type === "gif" ? "GIF" : "Shared image"}
+                alt={messageType === "gif" ? "GIF" : "Shared image"}
                 className={`w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity ${
                   imageLoading ? "hidden" : "block"
                 }`}
@@ -96,16 +119,16 @@ const MessageBubble = ({ message, formatTime }) => {
               <div className="flex items-center justify-center h-32 bg-gray-200 text-gray-500">
                 <div className="text-center">
                   <span className="text-sm">
-                    Failed to load {message.type === "gif" ? "GIF" : "image"}
+                    Failed to load {messageType === "gif" ? "GIF" : "image"}
                   </span>
-                  {message.type === "gif" && (
+                  {messageType === "gif" && (
                     <div className="text-xs mt-1">URL: {mediaUrl}</div>
                   )}
                 </div>
               </div>
             )}
 
-            {message.type === "gif" && !imageError && !imageLoading && (
+            {messageType === "gif" && !imageError && !imageLoading && (
               <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
                 GIF
               </div>
@@ -114,7 +137,7 @@ const MessageBubble = ({ message, formatTime }) => {
         )}
 
         {/* Show debug info for GIF messages without media URL */}
-        {message.type === "gif" && !mediaUrl && (
+        {messageType === "gif" && !mediaUrl && (
           <div className="p-4 bg-red-100 text-red-800 text-xs">
             <div>GIF Message Debug:</div>
             <div>gifUrl: {message.gifUrl || "null"}</div>
