@@ -5,8 +5,35 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const messageType = message.messageType || message.type;
+  const [role, setRole] = useState("");
 
-  useEffect(() => {}, [message]);
+  const fetchUser = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("http://localhost:5000/user/user", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch user profile. Status: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      setRole(data.user.role);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   const handleImageError = () => {
     const mediaUrl = messageType === "gif" ? message.gifUrl : message.imageUrl;
@@ -39,6 +66,8 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
     mediaUrl = message.imageUrl;
   }
 
+  console.log("message.orderDetails:", message.orderDetails);
+
   if (messageType === "order_details" && message.orderDetails) {
     return (
       <div
@@ -59,6 +88,7 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
               formatPrice={formatPrice}
               formatTime={formatTime}
               isInMessage={true}
+              currentUserRole={role}
             />
 
             {message.message && message.message.trim() && (
@@ -136,7 +166,6 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
           </div>
         )}
 
-        {/* Show debug info for GIF messages without media URL */}
         {messageType === "gif" && !mediaUrl && (
           <div className="p-4 bg-red-100 text-red-800 text-xs">
             <div>GIF Message Debug:</div>
@@ -148,7 +177,6 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
           </div>
         )}
 
-        {/* Only show text content if it's not just the GIF title */}
         {hasTextContent && (
           <div className="px-4 py-3">
             <p className="text-sm leading-relaxed">{message.message}</p>

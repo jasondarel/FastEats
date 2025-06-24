@@ -46,22 +46,26 @@ const chatSchema = new mongoose.Schema(
     },
 
     orderDetails: {
-      items: {
-        type: [
+      type: {
+        orderId: Number,
+        orderType: String,
+        restaurantName: String,
+        restaurantImage: String,
+        totalPrice: Number,
+        status: {
+          type: String,
+          enum: ["pending", "preparing", "delivered", "cancelled"],
+        },
+        items: [
           {
             name: String,
             quantity: Number,
             price: Number,
+            image: String,
           },
         ],
-        default: [],
       },
-
-      totalPrice: Number,
-      status: {
-        type: String,
-        enum: ["pending", "preparing", "delivered", "cancelled"],
-      },
+      required: false,
     },
 
     unreadCountUser: { type: Number, default: 0 },
@@ -103,25 +107,27 @@ const messageSchema = new mongoose.Schema(
     },
     orderDetails: {
       type: {
-        items: {
-          type: [
-            {
-              name: String,
-              quantity: Number,
-              price: Number,
-            },
-          ],
-          default: [],
-        },
-
+        orderId: Number,
+        orderType: String,
+        restaurantName: String,
+        restaurantImage: String,
         totalPrice: Number,
         status: {
           type: String,
           enum: ["pending", "preparing", "delivered", "cancelled"],
         },
+        items: [
+          {
+            name: String,
+            quantity: Number,
+            price: Number,
+            image: String,
+          },
+        ],
       },
       required: false,
     },
+
     orderId: {
       type: Number,
       ref: "Order",

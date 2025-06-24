@@ -87,9 +87,6 @@ const ChatRoom = () => {
       return;
     }
 
-    const messageText = `Shared order details for Order #${
-      orderDetailsToAttach.orderId || chatId
-    }`;
     const clientTempId = `client-temp-${Date.now()}-${Math.random()}`;
 
     setSendingMessage(true);
@@ -108,20 +105,18 @@ const ChatRoom = () => {
       };
       setMessages((prev) => [...prev, tempMessage]);
 
-      // FIXED: Change messageType from "text" to "order_details"
       const messageData = {
         chatId,
         text: messageText,
-        messageType: "order_details", // ← This was "text" before
+        messageType: "order_details",
         senderRole: payload.role,
         senderId: payload.userId,
         clientTempId,
-        // Include order details directly in the message data
         orderDetails: orderDetailsToAttach,
-        // You can also include metadata if your backend expects it
+
         metadata: {
           type: "order_details",
-          orderDetails: orderDetailsToAttach,
+          originalOrderDetails: orderDetailsToAttach,
         },
       };
 
@@ -397,6 +392,7 @@ const ChatRoom = () => {
           timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
           type: "order_details",
           orderDetails: msg.orderDetails,
+          originalOrderDetails: msg.metadata?.originalOrderDetails,
         };
       }
 
@@ -798,6 +794,11 @@ const ChatRoom = () => {
 
   const groupedMessages = messages
     .filter((message) => {
+      // Always include order_details messages regardless of text content
+      if (message.type === "order_details") {
+        return !!message.orderDetails;
+      }
+
       if (message.type === "text") {
         return !!message.message?.trim();
       }
