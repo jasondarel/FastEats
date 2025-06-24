@@ -98,7 +98,7 @@ const ChatRoom = () => {
         id: clientTempId,
         clientTempId: clientTempId,
         sender: "currentUser",
-        message: messageText,
+        message: "", // Empty message for order details
         timestamp: new Date().toISOString(),
         type: "order_details",
         orderDetails: orderDetailsToAttach,
@@ -107,7 +107,7 @@ const ChatRoom = () => {
 
       const messageData = {
         chatId,
-        text: messageText,
+        text: "", // Empty text for order details
         messageType: "order_details",
         senderRole: payload.role,
         senderId: payload.userId,
@@ -144,7 +144,7 @@ const ChatRoom = () => {
             id:
               result.message._id || result.message.id || `server-${Date.now()}`,
             sender: "currentUser",
-            message: result.message.text || messageText,
+            message: result.message.text || "", // Empty message
             timestamp: result.message.createdAt || new Date().toISOString(),
             type: "order_details",
             orderDetails: result.message.orderDetails || orderDetailsToAttach,
