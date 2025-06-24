@@ -62,6 +62,10 @@ const ChatsList = () => {
           text: "Image",
           icon: <FaImage className="text-gray-500 text-sm mr-1" />,
         };
+      case "order_details":
+        return {
+          text: "Order Details",
+        };
       default:
         return {
           text: lastMessage.text || "No messages yet",

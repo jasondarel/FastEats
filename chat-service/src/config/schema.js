@@ -41,8 +41,31 @@ const chatSchema = new mongoose.Schema(
       timestamp: { type: Date, default: Date.now },
       messageType: {
         type: String,
-        enum: ["text", "image", "gif", "order_update", "system"],
+        enum: ["text", "image", "gif", "order_details", "system"],
       },
+    },
+
+    orderDetails: {
+      type: {
+        orderId: Number,
+        orderType: String,
+        restaurantName: String,
+        restaurantImage: String,
+        totalPrice: Number,
+        status: {
+          type: String,
+          enum: ["pending", "preparing", "delivered", "cancelled"],
+        },
+        items: [
+          {
+            name: String,
+            quantity: Number,
+            price: Number,
+            image: String,
+          },
+        ],
+      },
+      required: false,
     },
 
     unreadCountUser: { type: Number, default: 0 },
@@ -79,9 +102,38 @@ const messageSchema = new mongoose.Schema(
 
     messageType: {
       type: String,
-      enum: ["text", "image", "gif", "order_update", "system"],
+      enum: ["text", "image", "gif", "order_details", "system"],
       default: "text",
     },
+    orderDetails: {
+      type: {
+        orderId: Number,
+        orderType: String,
+        restaurantName: String,
+        restaurantImage: String,
+        totalPrice: Number,
+        status: {
+          type: String,
+          enum: ["pending", "preparing", "delivered", "cancelled"],
+        },
+        items: [
+          {
+            name: String,
+            quantity: Number,
+            price: Number,
+            image: String,
+          },
+        ],
+      },
+      required: false,
+    },
+
+    orderId: {
+      type: Number,
+      ref: "Order",
+      required: false,
+    },
+
     text: { type: String, required: false },
 
     gifData: {

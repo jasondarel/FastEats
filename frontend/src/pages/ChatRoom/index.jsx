@@ -1,6 +1,5 @@
-/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import ChatHeader from "./components/ChatHeader";
 import MessagesContainer from "./components/MessageContainer";
@@ -10,6 +9,7 @@ import ErrorAlert from "./components/ErrorAlert";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useChatSocket } from "./services/useChatSocket";
 import { getChatByIdService } from "../../service/chatServices/chatService";
+import OrderDetailsCard from "./components/OrderDetailsCard";
 import { API_URL } from "../../config/api";
 
 const ChatRoom = () => {
@@ -67,6 +67,104 @@ const ChatRoom = () => {
       currency: "IDR",
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  console.log(
+    "Attaching orderDetails:",
+    orderDetails || fetchedOrderDetails?.orderDetails
+  );
+
+  const handleAttachOrderDetails = async () => {
+    if (sendingMessage) return;
+
+    const orderDetailsToAttach =
+      orderDetails || fetchedOrderDetails?.orderDetails || null;
+
+    console.log("Order details to attach:", orderDetailsToAttach);
+
+    if (!orderDetailsToAttach) {
+      setError("No order details available to attach");
+      return;
+    }
+
+    const clientTempId = `client-temp-${Date.now()}-${Math.random()}`;
+
+    setSendingMessage(true);
+
+    try {
+      const { token, payload } = extractUserInfo();
+
+      const tempMessage = {
+        id: clientTempId,
+        clientTempId: clientTempId,
+        sender: "currentUser",
+        message: messageText,
+        timestamp: new Date().toISOString(),
+        type: "order_details",
+        orderDetails: orderDetailsToAttach,
+      };
+      setMessages((prev) => [...prev, tempMessage]);
+
+      const messageData = {
+        chatId,
+        text: messageText,
+        messageType: "order_details",
+        senderRole: payload.role,
+        senderId: payload.userId,
+        clientTempId,
+        orderDetails: orderDetailsToAttach,
+
+        metadata: {
+          type: "order_details",
+          originalOrderDetails: orderDetailsToAttach,
+        },
+      };
+
+      console.log("Attempting to send message with data:", messageData);
+
+      if (isSocketConnected) {
+        emitMessage({
+          ...messageData,
+          sender: {
+            type: payload.role,
+            id: payload.userId,
+          },
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const result = await createMessageService(messageData, token);
+
+      if (result.success) {
+        setMessages((prev) => {
+          const filtered = prev.filter(
+            (msg) => msg.clientTempId !== clientTempId
+          );
+          const serverMessage = {
+            id:
+              result.message._id || result.message.id || `server-${Date.now()}`,
+            sender: "currentUser",
+            message: result.message.text || messageText,
+            timestamp: result.message.createdAt || new Date().toISOString(),
+            type: "order_details",
+            orderDetails: result.message.orderDetails || orderDetailsToAttach,
+            clientTempId,
+          };
+          return [...filtered, serverMessage];
+        });
+        setError(null);
+      } else {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.clientTempId !== clientTempId)
+        );
+        setError(`Failed to attach order details: ${result.error}`);
+      }
+    } catch (err) {
+      setMessages((prev) => prev.filter((msg) => !msg.clientTempId));
+      setError(`${err.message}`);
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const formatTime = (dateString) => {
@@ -209,26 +307,7 @@ const ChatRoom = () => {
   };
 
   const transformMessages = (apiMessages, currentRole, currentUserId) => {
-    console.log("=== TRANSFORM MESSAGES DEBUG ===");
-    console.log("Current Role:", currentRole);
-    console.log("Current User ID:", currentUserId);
-    console.log("Total messages to transform:", apiMessages.length);
-
-    apiMessages.forEach((msg, index) => {
-      if (msg.messageType === "gif" || msg.type === "gif") {
-        console.log(`GIF Message ${index} - RAW SERVER DATA:`, {
-          id: msg._id || msg.id,
-          messageType: msg.messageType || msg.type,
-          gifData: msg.gifData,
-          gifUrl: msg.gifUrl,
-          gifTitle: msg.gifTitle,
-          imageUrl: msg.imageUrl,
-          attachments: msg.attachments,
-          text: msg.text || msg.message,
-          fullMessage: msg,
-        });
-      }
-    });
+    apiMessages.forEach((msg, index) => {});
 
     return apiMessages.map((msg, index) => {
       let isCurrentUserMessage = false;
@@ -305,6 +384,18 @@ const ChatRoom = () => {
         finalImageUrl = msg.attachments?.url || msg.imageUrl || null;
       }
 
+      if (messageType === "order_details") {
+        return {
+          id: msg._id || msg.id || `msg-${Date.now()}-${Math.random()}`,
+          sender: isCurrentUserMessage ? "currentUser" : "otherUser",
+          message: msg.text || msg.message || "",
+          timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
+          type: "order_details",
+          orderDetails: msg.orderDetails,
+          originalOrderDetails: msg.metadata?.originalOrderDetails,
+        };
+      }
+
       const transformedMessage = {
         id: msg._id || msg.id || `msg-${Date.now()}-${Math.random()}`,
         sender: isCurrentUserMessage ? "currentUser" : "otherUser",
@@ -316,23 +407,6 @@ const ChatRoom = () => {
         gifTitle,
         gifData,
       };
-
-      if (transformedMessage.type === "gif") {
-        console.log(`Transformed GIF Message:`, {
-          id: transformedMessage.id,
-          type: transformedMessage.type,
-          gifUrl: transformedMessage.gifUrl,
-          gifTitle: transformedMessage.gifTitle,
-          gifData: transformedMessage.gifData,
-          message: transformedMessage.message,
-          hasGifContent: !!(
-            transformedMessage.gifUrl || transformedMessage.message?.trim()
-          ),
-          originalAttachments: msg.attachments,
-          originalImageUrl: msg.imageUrl,
-          originalMessage: msg,
-        });
-      }
 
       return transformedMessage;
     });
@@ -351,13 +425,6 @@ const ChatRoom = () => {
           role: tokenPayload.role,
         },
       };
-
-      if (messageData.messageType === "gif") {
-        console.log("GIF message detected, including extra fields:");
-        console.log("gifUrl:", messageData.gifUrl);
-        console.log("gifData:", messageData.gifData);
-        console.log("gifTitle:", messageData.gifTitle);
-      }
 
       const response = await fetch(`${API_URL}/chat/message`, {
         method: "POST",
@@ -727,15 +794,10 @@ const ChatRoom = () => {
 
   const groupedMessages = messages
     .filter((message) => {
-      console.log("Filtering message:", {
-        id: message.id,
-        type: message.type,
-        hasMessage: !!message.message?.trim(),
-        hasImageUrl: !!message.imageUrl,
-        hasGifUrl: !!message.gifUrl,
-        gifData: message.gifData,
-        message: message,
-      });
+      // Always include order_details messages regardless of text content
+      if (message.type === "order_details") {
+        return !!message.orderDetails;
+      }
 
       if (message.type === "text") {
         return !!message.message?.trim();
@@ -752,15 +814,6 @@ const ChatRoom = () => {
         );
         const hasTextContent = !!message.message?.trim();
 
-        console.log(`GIF message ${message.id} filter check:`, {
-          hasGifUrl,
-          hasTextContent,
-          willShow: hasGifUrl || hasTextContent,
-          gifUrl: message.gifUrl,
-          gifData: message.gifData,
-          message: message.message,
-        });
-
         return hasGifUrl || hasTextContent;
       }
 
@@ -775,7 +828,6 @@ const ChatRoom = () => {
       return groups;
     }, {});
 
-  console.log("Final grouped messages:", groupedMessages);
   const currentOrderDetails = fetchedOrderDetails;
   const hasMessages = messages.length > 0;
 
@@ -814,6 +866,7 @@ const ChatRoom = () => {
                     groupedMessages={groupedMessages}
                     formatTime={formatTime}
                     formatDate={formatDate}
+                    formatPrice={formatPrice}
                   />
                   <div ref={messagesEndRef} />
                 </div>
@@ -835,6 +888,10 @@ const ChatRoom = () => {
                   selectedGif={selectedGif}
                   onGifSelect={handleGifSelect}
                   onGifRemove={handleGifRemove}
+                  onAttachOrderDetails={handleAttachOrderDetails}
+                  canAttachOrderDetails={
+                    !!(orderDetails || fetchedOrderDetails?.orderDetails)
+                  }
                 />
               </div>
             </div>

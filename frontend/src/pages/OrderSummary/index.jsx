@@ -1,4 +1,4 @@
-import  { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import BackButton from "../../components/BackButton";
 import OrderStatus from "./components/OrderStatus";
@@ -200,7 +200,7 @@ const OrderSummary = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-amber-50 rounded-xl shadow-lg">
-      <BackButton to="/order-list" />
+      <BackButton />
       <div className="mt-4">
         <OrderHeader orderId={order.order_id} status={order.status} />
         <OrderStatus currentStep={currentStep} />

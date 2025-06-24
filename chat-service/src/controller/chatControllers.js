@@ -361,6 +361,11 @@ export const createMessageController = async (req, res) => {
         name: imageUrl.split("/").pop(),
         size: 0,
       };
+    } else if (messageType === "order_details") {
+      if (!chatId) {
+        logger.warn("Chat ID is required for order update");
+        return responseError(res, 400, "Chat ID is required");
+      }
     } else {
       if (!chatId || !text) {
         logger.warn("Chat ID or text not provided");
@@ -393,7 +398,11 @@ export const createMessageController = async (req, res) => {
       gifData: messageType === "gif" ? gifData : undefined,
       gifUrl: messageType === "gif" ? gifUrl : undefined,
       gifTitle: messageType === "gif" ? gifTitle : undefined,
+
+      orderDetails:
+        messageType === "order_details" ? req.body.orderDetails : undefined,
     });
+
     if (!newMessage.success) {
       logger.warn("Message creation failed");
       return responseError(res, 400, "Message creation failed");

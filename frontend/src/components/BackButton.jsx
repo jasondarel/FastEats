@@ -20,7 +20,7 @@ const BackButton = ({
   return (
     <button
       onClick={handleGoBack}
-      className={`flex items-center justify-center top-8 right-8 w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition ${position} ${className}`}
+      className={`hover:cursor-pointer flex items-center justify-center top-8 right-8 w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition ${position} ${className}`}
       aria-label="Go back"
     >
       <svg
