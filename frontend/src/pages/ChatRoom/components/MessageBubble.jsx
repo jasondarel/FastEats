@@ -66,8 +66,6 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
     mediaUrl = message.imageUrl;
   }
 
-  console.log("message.orderDetails:", message.orderDetails);
-
   if (messageType === "order_details" && message.orderDetails) {
     return (
       <div

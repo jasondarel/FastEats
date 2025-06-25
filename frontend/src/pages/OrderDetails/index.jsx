@@ -40,7 +40,6 @@ const OrderDetails = () => {
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
 
-  // Handle shipping validation change
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
     setIsShippingValid(isValid);
@@ -91,6 +90,7 @@ const OrderDetails = () => {
     try {
       const existingChatsResponse = await getChatsService(token);
       console.log("Existing chats response:", existingChatsResponse);
+
       if (existingChatsResponse.success) {
         const existingChat = existingChatsResponse.dataChats?.find(
           (chat) => String(chat.orderId) === String(orderId)
@@ -98,7 +98,42 @@ const OrderDetails = () => {
 
         if (existingChat) {
           console.log("Chat already exists, navigating to:", existingChat._id);
-          navigate(`/chat/${existingChat._id}`);
+
+          const itemCount =
+            order.items?.reduce(
+              (total, item) => total + (item.item_quantity || 0),
+              0
+            ) ||
+            order.item_quantity ||
+            1;
+
+          const totalPrice =
+            order.items?.reduce((total, item) => {
+              const menuPrice = parseFloat(
+                item.menuDetails?.menu_price || item.menu?.menu_price || 0
+              );
+              const quantity = item.item_quantity || 0;
+              return total + menuPrice * quantity;
+            }, 0) ||
+            parseFloat(order.menu?.menu_price || 0) *
+              (order.item_quantity || 1);
+
+          navigate(`/chat/${existingChat._id}`, {
+            state: {
+              restaurantName:
+                order.restaurant?.restaurant_name ||
+                existingChat.restaurant?.restaurant_name,
+              restaurantImage: order.restaurant?.restaurant_image
+                ? `http://localhost:5000/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
+                : existingChat.restaurant?.restaurant_image
+                ? `http://localhost:5000/restaurant/uploads/restaurant/${existingChat.restaurant.restaurant_image}`
+                : null,
+              orderId: order.order_id,
+              orderType: order.order_type || "CHECKOUT",
+              totalPrice,
+              itemCount,
+            },
+          });
           return;
         }
       }
@@ -109,7 +144,37 @@ const OrderDetails = () => {
       if (chatResult.success && chatResult.dataChat?.chat) {
         const chatId = chatResult.dataChat.chat._id;
         console.log("Chat created successfully, navigating to:", chatId);
-        navigate(`/chat/${chatId}`);
+
+        const itemCount =
+          order.items?.reduce(
+            (total, item) => total + (item.item_quantity || 0),
+            0
+          ) ||
+          order.item_quantity ||
+          1;
+
+        const totalPrice =
+          order.items?.reduce((total, item) => {
+            const menuPrice = parseFloat(
+              item.menuDetails?.menu_price || item.menu?.menu_price || 0
+            );
+            const quantity = item.item_quantity || 0;
+            return total + menuPrice * quantity;
+          }, 0) ||
+          parseFloat(order.menu?.menu_price || 0) * (order.item_quantity || 1);
+
+        navigate(`/chat/${chatId}`, {
+          state: {
+            restaurantName: order.restaurant?.restaurant_name,
+            restaurantImage: order.restaurant?.restaurant_image
+              ? `http://localhost:5000/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
+              : null,
+            orderId: order.order_id,
+            orderType: order.order_type || "CHECKOUT",
+            totalPrice,
+            itemCount,
+          },
+        });
       } else {
         throw new Error("Failed to create chat - invalid response");
       }
@@ -154,7 +219,6 @@ const OrderDetails = () => {
     }
   }, [orderId]);
 
-  // Handle socket order updates
   const handleOrderUpdate = useCallback(
     (updatedOrder) => {
       console.log("=== SOCKET ORDER UPDATE ===");
@@ -166,18 +230,16 @@ const OrderDetails = () => {
         String(updatedOrder.order_id) === String(orderId)
       );
 
-      // Convert both IDs to strings for comparison (handles type mismatch)
       if (String(updatedOrder.order_id) === String(orderId)) {
         console.log("✅ IDs match, updating order state...");
 
         setOrder((prevOrder) => {
           console.log("Previous order state:", prevOrder);
 
-          // Deep merge to ensure all properties are updated correctly
           const newOrder = {
             ...prevOrder,
             ...updatedOrder,
-            // Ensure nested objects are properly merged
+
             menu: updatedOrder.menu
               ? { ...prevOrder?.menu, ...updatedOrder.menu }
               : prevOrder?.menu,
@@ -191,7 +253,6 @@ const OrderDetails = () => {
           return newOrder;
         });
 
-        // Force re-render to ensure UI updates
         setForceUpdate((prev) => prev + 1);
       } else {
         console.log("❌ Order IDs don't match - ignoring update");
@@ -201,7 +262,6 @@ const OrderDetails = () => {
     [orderId]
   );
 
-  // Initialize Midtrans Snap
   useEffect(() => {
     const snapScript = MIDTRANS_SNAP_URL;
     const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -249,7 +309,6 @@ const OrderDetails = () => {
 
             try {
               alert("Pembayaran berhasil!");
-              // Refetch order data to get updated status
               await fetchOrderDetails();
             } catch (chatError) {
               console.error("Failed to create chat:", chatError);
@@ -332,7 +391,6 @@ const OrderDetails = () => {
     }
   };
 
-  // SOCKET.IO: Listen for real-time order updates
   useEffect(() => {
     if (!token || !orderId) {
       console.log("Missing token or orderId, skipping socket connection");
@@ -347,16 +405,14 @@ const OrderDetails = () => {
     socketRef.current = io(ORDER_URL, {
       transports: ["websocket"],
       auth: {
-        token: token, // Pass token for authentication if needed
+        token: token,
       },
     });
 
-    // Connection event handlers
     socketRef.current.on("connect", () => {
       console.log("✅ Socket connected successfully");
       console.log("Socket ID:", socketRef.current.id);
 
-      // Optional: Join a room specific to this order
       socketRef.current.emit("joinOrder", orderId);
     });
 
@@ -368,10 +424,8 @@ const OrderDetails = () => {
       console.error("❌ Socket connection error:", err);
     });
 
-    // Listen for order updates
     socketRef.current.on("orderUpdated", handleOrderUpdate);
 
-    // Listen for order completions (if your backend emits this event)
     socketRef.current.on("orderCompleted", (completedOrder) => {
       console.log("Order completed event received:", completedOrder);
       if (String(completedOrder.order_id) === String(orderId)) {
@@ -379,7 +433,6 @@ const OrderDetails = () => {
       }
     });
 
-    // Listen for status changes specifically
     socketRef.current.on("statusChanged", (statusUpdate) => {
       console.log("Status change event received:", statusUpdate);
       if (String(statusUpdate.order_id) === String(orderId)) {
@@ -402,18 +455,15 @@ const OrderDetails = () => {
     };
   }, [token, orderId, handleOrderUpdate]);
 
-  // Fetch initial order details
   useEffect(() => {
     console.log("Fetching details for order ID:", orderId);
     fetchOrderDetails();
   }, [fetchOrderDetails]);
 
-  // Debug: Log when order state changes
   useEffect(() => {
     console.log("🔄 Order state updated:", order);
   }, [order, forceUpdate]);
 
-  // Check if shipping component should be shown (only for orders that need payment)
   const shouldShowShipping =
     order && ["Waiting", "Pending"].includes(order.status);
 
@@ -469,7 +519,6 @@ const OrderDetails = () => {
                   status={order.status}
                   className="px-4 py-2 rounded-full text-sm font-medium"
                 />
-                {/* Debug info - remove in production */}
                 <span className="text-xs text-gray-500">
                   {new Date().toLocaleTimeString()}
                 </span>
@@ -478,7 +527,9 @@ const OrderDetails = () => {
 
             <OrderStatusAnimation status={order.status} />
 
-            {order.status?.toLowerCase() === "preparing" && (
+            {["preparing", "delivering"].includes(
+              order.status?.toLowerCase()
+            ) && (
               <div className="flex justify-center gap-2 mb-4">
                 <button
                   onClick={handleChatWithRestaurant}

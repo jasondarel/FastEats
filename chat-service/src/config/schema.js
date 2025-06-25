@@ -31,11 +31,11 @@ const chatSchema = new mongoose.Schema(
         type: {
           type: String,
           enum: ["user", "restaurant"],
-          required: true,
+          required: false,
         },
         id: {
           type: Number,
-          required: true,
+          required: false,
         },
       },
       timestamp: { type: Date, default: Date.now },

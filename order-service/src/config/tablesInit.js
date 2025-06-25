@@ -36,7 +36,7 @@ const createTables = async () => {
             menu_id INT,
             restaurant_id INT,
             item_quantity INT DEFAULT 1,
-            status TEXT DEFAULT 'Waiting', -- 'Waiting', 'Pending', 'Preparing', 'Completed', 'Cancelled'
+            status TEXT DEFAULT 'Waiting', -- 'Waiting', 'Pending', 'Preparing', 'Delivering', 'Completed', 'Cancelled'
             order_type TEXT DEFAULT 'CHECKOUT', -- 'CHECKOUT', 'CART'
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
@@ -88,7 +88,7 @@ const createTables = async () => {
       );
   `);
 
-      await client.query(`
+    await client.query(`
         CREATE TABLE IF NOT EXISTS snaps (
             snap_id SERIAL PRIMARY KEY,
             order_id INT NOT NULL,
@@ -96,7 +96,7 @@ const createTables = async () => {
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW(),
             FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
-        );`)
+        );`);
 
     logger.info("✅ Tables created successfully!");
   } catch (error) {

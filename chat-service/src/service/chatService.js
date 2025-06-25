@@ -45,9 +45,21 @@ export const createChatService = async (chatData) => {
     if (chatData.userId) chatData.userId = Number(chatData.userId);
     if (chatData.orderId) chatData.orderId = Number(chatData.orderId);
 
-    const newChat = new Chat(chatData);
+    const chatWithDefaults = {
+      ...chatData,
+      lastMessage: {
+        sender: {
+          id: chatData.userId,
+          type: "user",
+        },
+        content: "Chat started",
+        timestamp: new Date(),
+      },
+    };
 
+    const newChat = new Chat(chatWithDefaults);
     const savedChat = await newChat.save();
+
     return { success: true, chat: savedChat };
   } catch (error) {
     logger.error("Error creating chat:", error);
