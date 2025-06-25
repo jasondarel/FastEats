@@ -3,7 +3,7 @@ import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import OrderCard from "./components/OrderCard";
 import LoadingState from "../../components/LoadingState";
-import { API_URL,ORDER_URL } from "../../config/api";
+import { API_URL, ORDER_URL } from "../../config/api";
 import SortButton from "../../components/SortButton";
 import DateFilterButton from "../../components/DateFilterButton";
 import io from "socket.io-client";
@@ -190,19 +190,33 @@ const OrderList = () => {
     setSelectedDate(null);
   };
 
-  const getSortedAndFilteredOrders = () => {
-    const activeOrders = filteredOrders.filter(
-      (order) => order.status !== "Completed" && order.status !== "Cancelled"
+  const getCategorizedOrders = () => {
+    const preparingOrders = filteredOrders.filter(
+      (order) =>
+        order.status === "Preparing" ||
+        order.status === "Confirmed" ||
+        order.status === "Accepted"
+    );
+
+    const deliveringOrders = filteredOrders.filter(
+      (order) =>
+        order.status === "Delivering" ||
+        order.status === "Out for Delivery" ||
+        order.status === "On the Way"
     );
 
     const completedOrders = filteredOrders.filter(
-      (order) => order.status === "Completed" || order.status === "Cancelled"
+      (order) =>
+        order.status === "Completed" ||
+        order.status === "Cancelled" ||
+        order.status === "Delivered"
     );
 
-    return { activeOrders, completedOrders };
+    return { preparingOrders, deliveringOrders, completedOrders };
   };
 
-  const { activeOrders, completedOrders } = getSortedAndFilteredOrders();
+  const { preparingOrders, deliveringOrders, completedOrders } =
+    getCategorizedOrders();
 
   if (loading) {
     return (
@@ -333,26 +347,45 @@ const OrderList = () => {
           </div>
         ) : (
           <div className="w-full max-w-6xl space-y-8">
-            {activeOrders.length > 0 && (
+            {preparingOrders.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3 pb-2 border-b border-yellow-200">
-                  Active Orders
+                <h3 className="text-xl font-bold text-blue-600 mb-3 pb-2 border-b border-blue-200">
+                  Preparing Orders
                   {selectedDate && (
                     <span className="text-base font-normal text-gray-600 ml-2">
-                      ({activeOrders.length})
+                      ({preparingOrders.length})
                     </span>
                   )}
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {activeOrders.map((order) => (
+                  {preparingOrders.map((order) => (
                     <OrderCard key={order.order_id} order={order} />
                   ))}
                 </div>
               </div>
             )}
+
+            {deliveringOrders.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold text-orange-600 mb-3 pb-2 border-b border-orange-200">
+                  Delivering Orders
+                  {selectedDate && (
+                    <span className="text-base font-normal text-gray-600 ml-2">
+                      ({deliveringOrders.length})
+                    </span>
+                  )}
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {deliveringOrders.map((order) => (
+                    <OrderCard key={order.order_id} order={order} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {completedOrders.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3 pb-2 border-b border-yellow-200">
+                <h3 className="text-xl font-bold text-green-600 mb-3 pb-2 border-b border-green-200">
                   Completed Orders
                   {selectedDate && (
                     <span className="text-base font-normal text-gray-600 ml-2">

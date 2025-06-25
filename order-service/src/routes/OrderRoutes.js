@@ -24,7 +24,8 @@ import {
   checkoutCartController,
   getCartItemsController,
   getAllOrdersWithItemsController,
-  getOrderWithItemsByOrderIdController
+  getOrderWithItemsByOrderIdController,
+  deliverOrderController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -41,13 +42,19 @@ router.post("/order", authMiddleware, createOrderController);
 router.put("/orders/:order_id", updateOrder);
 router.delete("/orders/:order_id", deleteOrder);
 
-
 router.patch("/cancel-order/:order_id", authMiddleware, cancelOrderController);
 router.patch(
   "/complete-order/:order_id",
   authMiddleware,
   completeOrderController
 );
+
+router.patch(
+  "/deliver-order/:order_id",
+  authMiddleware,
+  deliverOrderController
+);
+
 router.post(
   "/pay-order-confirmation",
   authMiddleware,
@@ -58,7 +65,6 @@ router.get("/thanks", thanksController);
 router.get("/check-midtrans-status", checkMidtransStatusController);
 router.post("/save-snap-token", saveSnapTokenController);
 router.get("/snap/:order_id", getSnapTokenController);
-
 
 router.get(
   "/restaurant-dashboard",
@@ -71,7 +77,6 @@ router.get(
   getRestaurantOrderController
 );
 
-
 router.get("/cart/:cart_id", authMiddleware, getCartController);
 router.post("/cart", authMiddleware, createCartController);
 router.delete("/cart/:restaurant_id", authMiddleware, deleteCartController);
@@ -80,6 +85,10 @@ router.get("/cart-item", authMiddleware, getCartItemsController);
 router.delete("/cart-item/:menu_id", authMiddleware, deleteCartItemController);
 router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);
 
-router.get("/order-items/:order_id", authMiddleware, getOrderWithItemsByOrderIdController);
+router.get(
+  "/order-items/:order_id",
+  authMiddleware,
+  getOrderWithItemsByOrderIdController
+);
 
 export default router;

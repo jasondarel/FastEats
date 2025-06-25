@@ -9,6 +9,10 @@ import PaymentDetails from "./components/PaymentDetails";
 import { API_URL, ORDER_URL } from "../../config/api";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+import {
+  getChatsService,
+  createChatService,
+} from "../../service/chatServices/chatsListService";
 
 const OrderSummary = () => {
   const [orderData, setOrderData] = useState(null);
@@ -69,7 +73,6 @@ const OrderSummary = () => {
       }
     });
 
-    // Listen for order completions
     socketRef.current.on("orderCompleted", (completedOrder) => {
       if (
         completedOrder.order_id === order_id ||
@@ -82,7 +85,6 @@ const OrderSummary = () => {
       }
     });
 
-    // Optionally handle socket errors
     socketRef.current.on("connect_error", (err) => {
       console.error("Socket connection error:", err);
     });
@@ -115,14 +117,118 @@ const OrderSummary = () => {
     })}`;
   };
 
-  const handleChatWithCustomer = () => {
-    navigate(`/chat/${order_id}`);
+  const handleChatWithCustomer = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const existingChatsResponse = await getChatsService(token);
+
+      if (existingChatsResponse.success) {
+        const existingChat = existingChatsResponse.dataChats?.find(
+          (chat) => String(chat.orderId) === String(order_id)
+        );
+
+        if (existingChat) {
+          console.log("Chat already exists, navigating to:", existingChat._id);
+
+          let itemCount = 0;
+          let totalPrice = 0;
+
+          if (Array.isArray(order.menu)) {
+            itemCount = order.menu.reduce(
+              (total, item) =>
+                total + (item.item_quantity || item.quantity || 1),
+              0
+            );
+            totalPrice = order.menu.reduce((total, item) => {
+              const menuPrice = parseFloat(item.menu_price || 0);
+              const quantity = item.item_quantity || item.quantity || 1;
+              return total + menuPrice * quantity;
+            }, 0);
+          } else if (order.menu) {
+            itemCount = order.item_quantity || 1;
+            totalPrice = parseFloat(order.menu.menu_price || 0) * itemCount;
+          } else {
+            itemCount = order.item_quantity || 1;
+            totalPrice = 0;
+          }
+
+          navigate(`/chat/${existingChat._id}`, {
+            state: {
+              customerName:
+                order.user?.name || existingChat.user?.name || "Customer",
+              customerImage:
+                order.user?.profile_photo ||
+                existingChat.user?.profile_photo ||
+                null,
+              orderId: order.order_id || order_id,
+              orderType: order.order_type || "CHECKOUT",
+              totalPrice,
+              itemCount,
+            },
+          });
+          return;
+        }
+      }
+
+      console.log("Creating new chat for order:", order_id);
+      const chatResult = await createChatService(order_id, token);
+
+      if (chatResult.success && chatResult.dataChat?.chat) {
+        const chatId = chatResult.dataChat.chat._id;
+        console.log("Chat created successfully, navigating to:", chatId);
+
+        const itemCount =
+          order.items?.reduce(
+            (total, item) => total + (item.item_quantity || 0),
+            0
+          ) ||
+          order.item_quantity ||
+          1;
+
+        const totalPrice =
+          order.items?.reduce((total, item) => {
+            const menuPrice = parseFloat(
+              item.menuDetails?.menu_price || item.menu?.menu_price || 0
+            );
+            const quantity = item.item_quantity || 0;
+            return total + menuPrice * quantity;
+          }, 0) ||
+          parseFloat(order.menu?.menu_price || 0) * (order.item_quantity || 1);
+
+        navigate(`/chat/${chatId}`, {
+          state: {
+            customerName: order.user?.name || "Customer",
+            customerImage: order.user?.profile_photo || null,
+            orderId: order.order_id || order_id,
+            orderType: order.order_type || "CHECKOUT",
+            totalPrice,
+            itemCount,
+          },
+        });
+      } else {
+        throw new Error("Failed to create chat - invalid response");
+      }
+    } catch (error) {
+      console.error("Error handling chat with customer:", error);
+
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to open chat with customer. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d97706",
+      });
+    }
   };
 
-  const handleCompleteOrder = async () => {
+  const handleDeliverOrder = async () => {
     try {
       const response = await fetch(
-        `${API_URL}/order/complete-order/${order_id}`,
+        `${API_URL}/order/deliver-order/${order_id}`,
         {
           method: "PATCH",
           headers: {
@@ -162,6 +268,7 @@ const OrderSummary = () => {
     const statusMap = {
       Pending: "Payment Pending",
       Processing: "Preparing",
+      Delivering: "Delivering",
       Completed: "Completed",
       Cancelled: "Cancelled",
     };
@@ -250,9 +357,9 @@ const OrderSummary = () => {
           {order.status === "Preparing" && (
             <button
               className="px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 hover:cursor-pointer transition"
-              onClick={handleCompleteOrder}
+              onClick={handleDeliverOrder}
             >
-              Complete Order
+              Deliver Order
             </button>
           )}
         </div>

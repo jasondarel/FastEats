@@ -6,6 +6,7 @@ import pool from "../config/dbInit.js";
 import {
   cancelOrderService,
   completeOrderService,
+  deliverOrderService,
   createOrderService,
   deleteOrderService,
   getCompletedOrdersByRestaurantIdService,
@@ -596,8 +597,8 @@ export const cancelOrderController = async (req, res) => {
   }
 };
 
-export const completeOrderController = async (req, res) => {
-  logger.info("COMPLETE ORDER CONTROLLER");
+export const deliverOrderController = async (req, res) => {
+  logger.info("DELIVER ORDER CONTROLLER");
   try {
     const { userId } = req.user;
     const order_id = req.params.order_id;
@@ -634,6 +635,75 @@ export const completeOrderController = async (req, res) => {
       return responseError(
         res,
         403,
+        "You are not authorized to deliver this order"
+      );
+    }
+
+    if (order.status === "Delivering") {
+      logger.warn(`Order ${order_id} is already being delivered`);
+      return responseError(res, 400, "Order is already being delivered");
+    }
+
+    if (order.status !== "Preparing") {
+      logger.warn(
+        `Order ${order_id} cannot be delivered (Current status: ${order.status})`
+      );
+      return responseError(
+        res,
+        400,
+        "Order cannot be delivered from current status"
+      );
+    }
+
+    logger.info(`Setting order ${order_id} to delivering...`);
+    const result = await deliverOrderService(order_id);
+    if (!result) {
+      logger.error(`Failed to set order ${order_id} to delivering`);
+      return responseError(res, 500, "Failed to set order to delivering");
+    }
+
+    logger.info(`Order ${order_id} is now being delivered`);
+    const updatedOrder = await getAllOrderWithItemsByOrderIdService(order_id);
+
+    const io = req.app.get("io");
+    io.emit("orderDelivering", {
+      order_id: updatedOrder.order_id,
+      status: updatedOrder.status,
+      delivering_at: new Date(),
+    });
+
+    return responseSuccess(res, 200, "Order is now being delivered");
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    return responseError(res, 500, "Internal server error");
+  }
+};
+
+export const completeOrderController = async (req, res) => {
+  logger.info("COMPLETE ORDER CONTROLLER");
+  try {
+    const { userId } = req.user;
+    const order_id = req.params.order_id;
+
+    if (!order_id || isNaN(order_id)) {
+      logger.error("Invalid order_id provided");
+      return responseError(res, 400, "Invalid order ID");
+    }
+
+    logger.info(`Fetching order ${order_id}...`);
+    const order = await getAllOrderWithItemsByOrderIdService(order_id);
+    if (!order) {
+      logger.warn(`Order ${order_id} not found`);
+      return responseError(res, 404, "Order not found");
+    }
+
+    if (order.user_id !== userId) {
+      logger.warn(
+        `Unauthorized access attempt by user ${userId} on order ${order_id}. Order belongs to user ${order.user_id}`
+      );
+      return responseError(
+        res,
+        403,
         "You are not authorized to complete this order"
       );
     }
@@ -643,11 +713,15 @@ export const completeOrderController = async (req, res) => {
       return responseError(res, 400, "Order is already completed");
     }
 
-    if (order.status !== "Preparing") {
+    if (order.status !== "Delivering") {
       logger.warn(
         `Order ${order_id} cannot be completed (Current status: ${order.status})`
       );
-      return responseError(res, 400, "Order cannot be completed");
+      return responseError(
+        res,
+        400,
+        "Order must be in 'Delivering' status to be completed"
+      );
     }
 
     logger.info(`Completing order ${order_id}...`);
@@ -667,12 +741,25 @@ export const completeOrderController = async (req, res) => {
       completed_at: new Date(),
     });
 
+    const restaurantResponse = await getRestaurantInformation(
+      GLOBAL_SERVICE_URL,
+      order.restaurant_id,
+      internalAPIKey,
+      `Restaurant with ID ${order.restaurant_id} not found`
+    );
+
+    if (!restaurantResponse?.restaurant) {
+      logger.warn(`Restaurant with ID ${order.restaurant_id} not found`);
+      return responseError(res, 500, "Restaurant information not available");
+    }
+    const restaurant = restaurantResponse.restaurant;
+
     const [ownerResult, customerResult] = await Promise.all([
       getUserInformation(
         GLOBAL_SERVICE_URL,
-        userId,
+        restaurant.owner_id,
         internalAPIKey,
-        `Owner with ID ${userId} not found`
+        `Owner with ID ${restaurant.owner_id} not found`
       ),
       getUserInformation(
         GLOBAL_SERVICE_URL,
@@ -683,14 +770,15 @@ export const completeOrderController = async (req, res) => {
     ]);
 
     if (!ownerResult?.user) {
-      logger.warn(`Owner not found for user ${userId}`);
-      return responseError(res, 404, "Owner not found");
+      logger.warn(`Owner not found for user ${restaurant.owner_id}`);
+      return responseError(res, 500, "Owner information not available");
     }
 
     if (!customerResult?.user) {
       logger.warn(`Customer not found for user ${updatedOrder.user_id}`);
-      return responseError(res, 404, "Customer not found");
+      return responseError(res, 500, "Customer information not available");
     }
+
     const itemsWithMenuDetails = await Promise.all(
       updatedOrder.items.map(async (item) => {
         try {

@@ -50,6 +50,45 @@ const OrderDetails = () => {
     setShippingData(data);
   }, []);
 
+  const handleCompleteOrder = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/order/complete-order/${orderId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Success!",
+          text: "Order completed successfully!",
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#d97706",
+        });
+        const updatedOrderData = await response.json();
+        setOrder(updatedOrderData);
+        navigate("/orders");
+      } else {
+        throw new Error("Failed to complete order");
+      }
+    } catch (err) {
+      console.error("Error completing order:", err);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to complete the order. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d97706",
+      });
+    }
+  };
+
   const handleCancel = async (orderId) => {
     Swal.fire({
       title: "Cancel Order?",
@@ -574,6 +613,17 @@ const OrderDetails = () => {
             </div>
 
             <OrderTimestamp createdAt={order.created_at} />
+
+            <div className="flex justify-end gap-4">
+              {order.status.toLowerCase() === "delivering" && (
+                <button
+                  className="px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 hover:cursor-pointer transition"
+                  onClick={handleCompleteOrder}
+                >
+                  Complete Order
+                </button>
+              )}
+            </div>
 
             <div className="mt-8">
               <OrderActions

@@ -118,20 +118,6 @@ const OrderCard = ({ order }) => {
           </div>
         </div>
       </div>
-
-      {/* Action buttons section - visible only on active orders */}
-      {!isCompleted && (
-        <div className="px-4 pb-4">
-          <div className="flex justify-end space-x-2 ">
-            <ChatButton
-              order={order}
-              variant="secondary"
-              size="sm"
-              className="hover:cursor-pointer"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

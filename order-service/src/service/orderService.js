@@ -1,5 +1,8 @@
 import pool from "../config/dbInit.js";
-import { COMPLETED_ORDER_ROUTING_KEY, PREPARING_ORDER_ROUTING_KEY } from "../config/rabbitMQInit.js";
+import {
+  COMPLETED_ORDER_ROUTING_KEY,
+  PREPARING_ORDER_ROUTING_KEY,
+} from "../config/rabbitMQInit.js";
 
 export const createOrderService = async (order) => {
   const result = await pool.query(
@@ -39,7 +42,7 @@ export const getOrderByIdService = async (orderId) => {
 
 export const getOrdersByRestaurantIdService = async (restaurantId) => {
   const result = await pool.query(
-    "SELECT * FROM orders WHERE restaurant_id = $1 AND (status = 'Preparing' OR status = 'Completed')",
+    "SELECT * FROM orders WHERE restaurant_id = $1 AND (status = 'Preparing' OR status = 'Completed' OR status = 'Delivering')",
     [restaurantId]
   );
   return result.rows;
@@ -85,9 +88,17 @@ export const cancelOrderService = async (orderId) => {
   return result.rows[0];
 };
 
+export const deliverOrderService = async (orderId) => {
+  const result = await pool.query(
+    "UPDATE orders SET status = 'Delivering' WHERE order_id = $1 RETURNING *",
+    [orderId]
+  );
+  return result.rows[0];
+};
+
 export const completeOrderService = async (orderId) => {
   const result = await pool.query(
-    "update orders set status = 'Completed' where order_id = $1 RETURNING *",
+    "UPDATE orders SET status = 'Completed' WHERE order_id = $1 RETURNING *",
     [orderId]
   );
   return result.rows[0];
@@ -101,7 +112,7 @@ export const getOrderJobsByRoutingKeyService = async (routingKey, status) => {
     [routingKey, status]
   );
   return result.rows;
-}
+};
 
 export const updateOrderJobStatusService = async (jobId, status) => {
   const result = await pool.query(
@@ -111,25 +122,25 @@ export const updateOrderJobStatusService = async (jobId, status) => {
     [status, jobId]
   );
   return result.rows[0];
-}
+};
 
-export const createPreparingOrderJobService = async(payload) => {
+export const createPreparingOrderJobService = async (payload) => {
   const result = await pool.query(
     `INSERT INTO order_jobs (payload, routing_key)
     VALUES ($1, $2) RETURNING *`,
     [payload, PREPARING_ORDER_ROUTING_KEY]
   );
   return result.rows[0];
-}
+};
 
-export const createCompletedOrderJobService = async(payload) => {
+export const createCompletedOrderJobService = async (payload) => {
   const result = await pool.query(
     `INSERT INTO order_jobs (payload, routing_key)
     VALUES ($1, $2) RETURNING *`,
     [payload, COMPLETED_ORDER_ROUTING_KEY]
   );
   return result.rows[0];
-}
+};
 
 export const pendingOrderService = async (orderId) => {
   const result = await pool.query(
@@ -242,7 +253,7 @@ export const deleteUserCartService = async (userId) => {
     [userId]
   );
   return result.rows[0];
-}
+};
 
 export const getOrderItemsByOrderIdService = async (orderId) => {
   const result = await pool.query(
@@ -253,7 +264,7 @@ export const getOrderItemsByOrderIdService = async (orderId) => {
   return result.rows;
 };
 
-export const getAllOrdersWithItemsService = async() => {
+export const getAllOrdersWithItemsService = async () => {
   const result = await pool.query(
     `SELECT 
     o.order_id,
@@ -280,9 +291,9 @@ ORDER BY o.created_at DESC;
 `
   );
   return result.rows;
-}
+};
 
-export const getAllOrderWithItemsByOrderIdService = async(orderId) => {
+export const getAllOrderWithItemsByOrderIdService = async (orderId) => {
   const result = await pool.query(
     `SELECT 
     o.order_id,
@@ -318,7 +329,7 @@ export const getAllOrderWithItemsByOrderIdService = async(orderId) => {
     order_type: rawOrder.order_type,
     created_at: rawOrder.created_at,
     updated_at: rawOrder.updated_at,
-    items: rawOrder.items
+    items: rawOrder.items,
   };
   return formattedOrder;
 };
