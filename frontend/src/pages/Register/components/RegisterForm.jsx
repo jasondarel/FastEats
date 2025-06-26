@@ -92,7 +92,6 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, []);
 
-  // Fetch villages when district changes
   const fetchVillages = useCallback(async (districtId) => {
     if (!districtId) {
       setAvailableVillages([]);
@@ -114,11 +113,9 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, []);
 
-  // Handle province selection
   useEffect(() => {
     if (restaurantProvince) {
       fetchCities(restaurantProvince);
-      // Reset dependent fields
       setRestaurantCity("");
       setRestaurantDistrict("");
       setRestaurantVillage("");
@@ -134,11 +131,9 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, [restaurantProvince, fetchCities]);
 
-  // Handle city selection
   useEffect(() => {
     if (restaurantCity) {
       fetchDistricts(restaurantCity);
-      // Reset dependent fields
       setRestaurantDistrict("");
       setRestaurantVillage("");
       setAvailableVillages([]);
@@ -150,11 +145,9 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, [restaurantCity, fetchDistricts]);
 
-  // Handle district selection
   useEffect(() => {
     if (restaurantDistrict) {
       fetchVillages(restaurantDistrict);
-      // Reset dependent field
       setRestaurantVillage("");
     } else {
       setAvailableVillages([]);
@@ -336,69 +329,69 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         </form>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">
+          <div className="max-w-2xl mx-auto space-y-8">
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-700 mb-4 border-b border-gray-200 pb-2">
                 Personal Information
               </h3>
 
-              <div>
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-                <ErrorMessage error={errors.name} />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <ErrorMessage error={errors.name} />
+                </div>
 
-              <div>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-                <ErrorMessage error={errors.email} />
-              </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <ErrorMessage error={errors.email} />
+                </div>
 
-              <div>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-                <ErrorMessage error={errors.password} />
-              </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <ErrorMessage error={errors.password} />
+                </div>
 
-              <div>
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-                <ErrorMessage error={errors.confirmPassword} />
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full p-3 border rounded-lg focus:border-0 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <ErrorMessage error={errors.confirmPassword} />
+                </div>
               </div>
             </div>
 
-            {/* Right Column - Restaurant Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-700 mb-4 border-b border-gray-200 pb-2">
                 Restaurant Information
               </h3>
 
-              <div>
+              <div className="mb-4">
                 <input
                   type="text"
                   placeholder="Restaurant Name"
@@ -410,48 +403,49 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
                 <ErrorMessage error={errors.restaurantName} />
               </div>
 
-              {/* Address Fields */}
-              {renderSelectField(
-                restaurantProvince,
-                (e) => setRestaurantProvince(e.target.value),
-                provinces,
-                "Select Province",
-                false,
-                loadingStates.provinces,
-                errors.restaurantProvince
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {renderSelectField(
+                  restaurantProvince,
+                  (e) => setRestaurantProvince(e.target.value),
+                  provinces,
+                  "Select Province",
+                  false,
+                  loadingStates.provinces,
+                  errors.restaurantProvince
+                )}
 
-              {renderSelectField(
-                restaurantCity,
-                (e) => setRestaurantCity(e.target.value),
-                availableCities,
-                "Select City/Regency",
-                !restaurantProvince,
-                loadingStates.cities,
-                errors.restaurantCity
-              )}
+                {renderSelectField(
+                  restaurantCity,
+                  (e) => setRestaurantCity(e.target.value),
+                  availableCities,
+                  "Select City/Regency",
+                  !restaurantProvince,
+                  loadingStates.cities,
+                  errors.restaurantCity
+                )}
 
-              {renderSelectField(
-                restaurantDistrict,
-                (e) => setRestaurantDistrict(e.target.value),
-                availableDistricts,
-                "Select District",
-                !restaurantCity,
-                loadingStates.districts,
-                errors.restaurantDistrict
-              )}
+                {renderSelectField(
+                  restaurantDistrict,
+                  (e) => setRestaurantDistrict(e.target.value),
+                  availableDistricts,
+                  "Select District",
+                  !restaurantCity,
+                  loadingStates.districts,
+                  errors.restaurantDistrict
+                )}
 
-              {renderSelectField(
-                restaurantVillage,
-                (e) => setRestaurantVillage(e.target.value),
-                availableVillages,
-                "Select Village",
-                !restaurantDistrict,
-                loadingStates.villages,
-                errors.restaurantVillage
-              )}
+                {renderSelectField(
+                  restaurantVillage,
+                  (e) => setRestaurantVillage(e.target.value),
+                  availableVillages,
+                  "Select Village",
+                  !restaurantDistrict,
+                  loadingStates.villages,
+                  errors.restaurantVillage
+                )}
+              </div>
 
-              <div>
+              <div className="mb-4">
                 <textarea
                   placeholder="Detailed Address (Street, House Number, etc.)"
                   value={restaurantAlamat}
@@ -477,13 +471,15 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full p-3 mt-8 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 font-medium"
-          >
-            Register as Seller
-          </button>
-          <ErrorMessage error={errors.general} center />
+          <div className="max-w-2xl mx-auto mt-8">
+            <button
+              type="submit"
+              className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 font-medium"
+            >
+              Register as Seller
+            </button>
+            <ErrorMessage error={errors.general} center />
+          </div>
         </form>
       )}
 
