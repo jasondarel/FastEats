@@ -3,14 +3,14 @@
 import { CheckIcon } from "lucide-react";
 
 const OrderStatus = ({ currentStep }) => {
-  const steps = ["Waiting", "Pending", "Preparing", "Completed"];
+  const steps = ["Waiting", "Pending", "Preparing", "Delivering", "Completed"];
 
   return (
     <div className="flex justify-between mb-8 relative before:content-[''] before:absolute before:top-4 before:left-0 before:right-0 before:h-[2px] before:bg-gray-300">
       {steps.map((step, index) => {
         const stepIndex = steps.indexOf(currentStep);
         const isActive = step === currentStep;
-        const isCompleted = steps.indexOf(step) < stepIndex;
+        const isCompleted = index < stepIndex;
 
         return (
           <div key={index} className="flex flex-col items-center relative z-10">
@@ -23,12 +23,14 @@ const OrderStatus = ({ currentStep }) => {
                   : "bg-gray-300 text-gray-600"
               }`}
             >
-              {index === 0 ? (
+              {step === "Waiting" ? (
                 "📦"
-              ) : index === 1 ? (
+              ) : step === "Pending" ? (
                 "⌛"
-              ) : index === 2 ? (
-                "🚚"
+              ) : step === "Preparing" ? (
+                "🍳"
+              ) : step === "Delivering" ? (
+                "🛵"
               ) : (
                 <CheckIcon />
               )}
