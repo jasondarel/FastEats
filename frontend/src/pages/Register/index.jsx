@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import RegisterForm from "../Register/components/RegisterForm";
 import AuthLayout from "./components/AuthLayout";
-import {registerService} from "../../service/userServices/registerService";
+import { registerService } from "../../service/userServices/registerService";
 
 const Register = () => {
   const [errors, setErrors] = useState({});
@@ -48,9 +48,15 @@ const Register = () => {
 
       if (userType === "seller" && additionalData) {
         formData.append("restaurantName", additionalData.restaurantName);
-        formData.append("restaurantProvince", additionalData.restaurantProvince);
+        formData.append(
+          "restaurantProvince",
+          additionalData.restaurantProvince
+        );
         formData.append("restaurantCity", additionalData.restaurantCity);
-        formData.append("restaurantDistrict", additionalData.restaurantDistrict);
+        formData.append(
+          "restaurantDistrict",
+          additionalData.restaurantDistrict
+        );
         formData.append("restaurantVillage", additionalData.restaurantVillage);
         formData.append("restaurantAddress", additionalData.restaurantAddress);
 
@@ -73,9 +79,7 @@ const Register = () => {
         console.log("Registration result:", result);
         console.log("OTP Token:", otpToken);
         if (result.isConfirmed) {
-          navigate(
-            `/otp-verification?token=${otpToken}&email=${email}`
-          );
+          navigate(`/otp-verification?token=${otpToken}&email=${email}`);
         }
       });
     } catch (error) {

@@ -11,13 +11,11 @@ import {
 } from "../../../service/utilServices/utilService";
 
 const RegisterForm = ({ onRegister, errors, userType }) => {
-  // User form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Restaurant form states
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantProvince, setRestaurantProvince] = useState("");
   const [restaurantCity, setRestaurantCity] = useState("");
@@ -27,13 +25,11 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
   const [restaurantImage, setRestaurantImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Location data states
   const [provinces, setProvinces] = useState([]);
   const [availableCities, setAvailableCities] = useState([]);
   const [availableDistricts, setAvailableDistricts] = useState([]);
   const [availableVillages, setAvailableVillages] = useState([]);
 
-  // Loading states
   const [loadingStates, setLoadingStates] = useState({
     provinces: false,
     cities: false,
@@ -41,7 +37,6 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     villages: false,
   });
 
-  // Fetch provinces on component mount
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingStates((prev) => ({ ...prev, provinces: true }));
@@ -61,7 +56,6 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, [userType]);
 
-  // Fetch cities when province changes
   const fetchCities = useCallback(async (provinceId) => {
     if (!provinceId) {
       setAvailableCities([]);
@@ -80,7 +74,6 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
     }
   }, []);
 
-  // Fetch districts when city changes
   const fetchDistricts = useCallback(async (cityId) => {
     if (!cityId) {
       setAvailableDistricts([]);

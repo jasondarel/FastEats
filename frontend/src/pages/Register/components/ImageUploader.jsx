@@ -1,5 +1,4 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
 import React from "react";
 import ErrorMessage from "./ErrorMessage";
 
@@ -22,12 +21,13 @@ const ImageUploader = ({
           <img
             src={imagePreview}
             alt="Restaurant Preview"
-            className="h-48 w-full object-cover rounded-lg"
+            className="h-48 w-full max-w-full object-cover rounded-lg shadow"
           />
           <button
             type="button"
             onClick={onImageRemove}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+            aria-label="Remove image"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -46,9 +46,9 @@ const ImageUploader = ({
       ) : (
         <label
           htmlFor="file-upload"
-          className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-yellow-400 hover:bg-gray-50 transition-colors"
+          className="block w-full cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center hover:border-yellow-400 hover:bg-gray-50 transition-colors"
         >
-          <div className="space-y-1 text-center">
+          <div className="space-y-2">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
               stroke="currentColor"
@@ -63,13 +63,13 @@ const ImageUploader = ({
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="flex text-sm text-gray-600">
+            <p className="text-sm text-gray-600">
               <span className="font-medium text-yellow-500 hover:text-yellow-600">
                 Upload an image
-              </span>
-              <p className="pl-1">or drag and drop</p>
-            </div>
-            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+              </span>{" "}
+              or drag and drop
+            </p>
+            <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
           </div>
           <input
             id="file-upload"
