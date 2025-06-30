@@ -291,14 +291,6 @@ const Cart = () => {
                 </p>
               </div>
             </div>
-            {Array.isArray(cartItems) && cartItems.length > 0 && (
-              <button
-                onClick={removeAllItems}
-                className="text-red-500 text-sm font-medium hover:text-red-700 flex items-center"
-              >
-                <FaTrash className="mr-1" /> Remove all
-              </button>
-            )}
           </div>
         </div>
 
@@ -361,10 +353,10 @@ const Cart = () => {
 
             <div className="flex gap-3 justify-end">
               <button
-                className="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition"
-                onClick={() => window.history.back()}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition hover:cursor-pointer"
+                onClick={() => removeAllItems()}
               >
-                Cancel
+                Empty Cart
               </button>
               <button
                 className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition"
