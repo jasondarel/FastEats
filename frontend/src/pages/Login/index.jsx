@@ -163,7 +163,7 @@ const Login = () => {
       <BackgroundImage imagePath="/foodbg.jpg" />
 
       <AuthCard logoSrc="/logo_FastEats.png" title="Login">
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4 w-full">
           <FormInput
             type="email"
             placeholder="Email"
