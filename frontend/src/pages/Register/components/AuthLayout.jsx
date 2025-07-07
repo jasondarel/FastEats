@@ -47,20 +47,19 @@ const AuthLayout = ({ children, isSellerRegister }) => {
   const currentTheme = isSellerRegister ? themes.seller : themes.customer;
 
   return (
-    <div className="min-h-screen w-full overflow-y-auto bg-gray-900 relative">
+    <div className="min-h-screen w-full lg:w-1/2 overflow-y-auto relative">
       <div
-        className="fixed inset-0 w-full h-full bg-gray-900 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/foodbg.jpg')" }}
+        className="fixed inset-0 w-full h-full"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-gray-900/75 to-black/80"></div>
+        <div className="absolute inset-0"></div>
         <div
-          className={`absolute inset-0 ${currentTheme.bgGradient} animate-pulse`}
+          className={`absolute inset-0  animate-pulse`}
         ></div>
       </div>
 
       <div className="relative z-10 flex items-center justify-start w-full h-full">
         <div
-          className={`w-1/2 h-full min-h-screen p-6 sm:p-8 ${currentTheme.panelGradient} shadow-2xl overflow-y-auto flex flex-col justify-center relative backdrop-blur-sm border-r border-gray-100`}
+          className={`w-full h-full min-h-screen p-4 sm:p-8 ${currentTheme.panelGradient} shadow-2xl overflow-y-auto flex flex-col justify-center relative backdrop-blur-sm border-r border-gray-100`}
         >
           <div className="absolute inset-0 opacity-5">
             <div
@@ -89,24 +88,24 @@ const AuthLayout = ({ children, isSellerRegister }) => {
           ></div>
 
           <div
-            className={`${isSellerRegister ? "mx-20" : "mx-40"} relative z-10`}
+            className="flex flex-col items-center justify-center w-full "
           >
-            <div className="text-center mb-8 transform hover:scale-105 transition-transform duration-300">
+            <div className="text-center mb-4 transform hover:scale-105 transition-transform duration-300">
               <div className="relative inline-block">
                 <div
                   className={`absolute inset-0 bg-gradient-to-r ${currentTheme.logoGradient} rounded-2xl blur-lg opacity-30 animate-pulse`}
                 ></div>
-                <div className="relative bg-white p-4 rounded-2xl shadow-xl border border-gray-100">
+                <div className="relative bg-white p-2 rounded-2xl shadow-xl border border-gray-100">
                   <img
                     src="/logo_FastEats.png"
                     alt="Logo"
-                    className="w-32 mx-auto drop-shadow-lg"
+                    className="w-30 md:w-26 mx-auto drop-shadow-lg"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="relative">
+            <div className="w-[90%] sm:w-[80%] md:w-[50%] lg:w-[90%] xl:w-[70%]">
               <div
                 className={`absolute inset-0 bg-gradient-to-r ${currentTheme.formBg} rounded-3xl opacity-50 blur-sm`}
               ></div>

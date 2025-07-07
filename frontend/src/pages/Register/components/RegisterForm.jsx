@@ -265,7 +265,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
 
   return (
     <>
-      <h2 className="text-2xl font-semibold text-center mb-6">
+      <h2 className="text-2xl font-semibold text-center mb-4">
         Register as {userType === "user" ? "Customer" : "Seller"}
       </h2>
 
@@ -335,7 +335,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
                 Personal Information
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <input
                     type="text"
@@ -403,7 +403,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
                 <ErrorMessage error={errors.restaurantName} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 gap-4 mb-4">
                 {renderSelectField(
                   restaurantProvince,
                   (e) => setRestaurantProvince(e.target.value),
@@ -483,7 +483,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         </form>
       )}
 
-      <p className="mt-6 text-center text-gray-600">
+      <p className="mt-4 text-center text-gray-600">
         Already have an account?{" "}
         <Link
           to="/login"
