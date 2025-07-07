@@ -3,7 +3,11 @@ import React from "react";
 const AuthCard = ({ children, logoSrc, title }) => {
   return (
     <div className="relative z-10 flex items-center justify-start w-full h-full">
-      <div className="w-1/2 h-full min-h-screen p-8 bg-gradient-to-br from-white via-white to-gray-50 shadow-2xl overflow-y-auto flex flex-col justify-center relative backdrop-blur-sm border-r border-gray-100">
+      <div className="w-full h-full min-h-screen p-8 
+          bg-gradient-to-br from-white via-white to-gray-50 
+          lg:bg-black lg:w-1/2
+          shadow-2xl overflow-y-auto flex flex-col justify-center 
+          relative backdrop-blur-sm border-r border-gray-100 items-center">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-transparent to-yellow-600"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.1),transparent_70%)]"></div>
@@ -19,7 +23,7 @@ const AuthCard = ({ children, logoSrc, title }) => {
           style={{ animationDelay: "2s" }}
         ></div>
 
-        <div className="mx-40 relative z-10">
+        <div className="relative w-[90%] sm:w-[80%] md:w-[50%] lg:w-[80%] xl:w-[70%]">
           <div className="text-center mb-8 transform hover:scale-105 transition-transform duration-300">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>

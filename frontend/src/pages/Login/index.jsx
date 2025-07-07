@@ -159,11 +159,11 @@ const Login = () => {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-screen overflow-hidden">
+    <div className="inset-0 w-screen h-screen">
       <BackgroundImage imagePath="/foodbg.jpg" />
 
       <AuthCard logoSrc="/logo_FastEats.png" title="Login">
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4 w-full">
           <FormInput
             type="email"
             placeholder="Email"
