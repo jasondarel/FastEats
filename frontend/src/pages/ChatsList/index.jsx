@@ -1,18 +1,21 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaComments, FaComment, FaStore, FaImage } from "react-icons/fa";
 import { MdGif } from "react-icons/md";
 import Sidebar from "../../components/Sidebar";
 import ChatCard from "./components/ChatCard";
 import LoadingState from "../../components/LoadingState";
 import { getChatsService } from "../../service/chatServices/chatsListService";
+import { CHAT_URL } from "../../config/api";
 import { useSelector } from "react-redux";
+import io from "socket.io-client";
 
 const ChatsList = () => {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useSelector((state) => state.auth);
+  const socketRef = useRef(null);
 
   const fetchChats = async () => {
     setLoading(true);
@@ -40,6 +43,27 @@ const ChatsList = () => {
   };
 
   useEffect(() => {
+    socketRef.current = io(CHAT_URL, {
+      transports: ["websocket"],
+    });
+
+    socketRef.current.on("refresh_chat_list", ({updatedChat}) => {
+      setChats((prevChats) => {
+        const matchField = updatedChat._id ? '_id' : 'orderId';
+        const matchValue = updatedChat._id || updatedChat.orderId;
+        const exists = prevChats.some((chat) => chat[matchField] === matchValue);
+        if (exists) {
+          return prevChats.map((chat) =>
+            chat[matchField] === matchValue
+              ? { ...chat, ...updatedChat }
+              : chat
+          );
+        } else {
+          return [updatedChat, ...prevChats];
+        }
+      });
+    });
+
     fetchChats();
   }, []);
 
