@@ -70,6 +70,14 @@ const AuthLayout = ({ children, isSellerRegister }) => {
             ></div>
           </div>
 
+          <div className="absolute left-6 top-6">
+            <img
+              src="/logo_FastEats.png"
+              alt="Logo"
+              className="w-23 mx-auto drop-shadow-lg"
+            />
+          </div>
+
           <div
             className={`absolute top-10 right-10 w-24 h-24 ${currentTheme.animatedCircles[0]} rounded-full opacity-15 animate-bounce`}
             style={{ animationDuration: "3s" }}
@@ -90,21 +98,6 @@ const AuthLayout = ({ children, isSellerRegister }) => {
           <div
             className="flex flex-col items-center justify-center w-full "
           >
-            <div className="text-center mb-4 transform hover:scale-105 transition-transform duration-300">
-              <div className="relative inline-block">
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${currentTheme.logoGradient} rounded-2xl blur-lg opacity-30 animate-pulse`}
-                ></div>
-                <div className="relative bg-white p-2 rounded-2xl shadow-xl border border-gray-100">
-                  <img
-                    src="/logo_FastEats.png"
-                    alt="Logo"
-                    className="w-30 md:w-26 mx-auto drop-shadow-lg"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div className="w-[90%] sm:w-[80%] md:w-[50%] lg:w-[90%] xl:w-[70%]">
               <div
                 className={`absolute inset-0 bg-gradient-to-r ${currentTheme.formBg} rounded-3xl opacity-50 blur-sm`}
