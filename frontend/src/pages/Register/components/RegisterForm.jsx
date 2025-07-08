@@ -265,12 +265,12 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
 
   return (
     <>
-      <h2 className="text-2xl font-semibold text-center mb-4">
+      <h2 className="text-2xl font-semibold text-center">
         Register as {userType === "user" ? "Customer" : "Seller"}
       </h2>
 
       {userType === "user" ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <input
               type="text"
@@ -329,7 +329,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
         </form>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="max-w-2xl mx-auto space-y-8">
+          <div className="max-w-2xl mx-autospace-y-4">
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-700 mb-4 border-b border-gray-200 pb-2">
                 Personal Information
@@ -471,7 +471,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto mt-8">
+          <div className="max-w-2xl mx-auto mt-4">
             <button
               type="submit"
               className="w-full p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 font-medium"
