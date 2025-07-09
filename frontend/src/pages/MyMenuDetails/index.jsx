@@ -342,40 +342,41 @@ const MyMenuDetails = () => {
       </div>
     );
 
-  return (
-    <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-5 relative">
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl mt-16">
-          <BackButton to="/my-menu" />
+ return (
+  <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
+    <Sidebar />
+    <BackButton to="/my-menu" />
+    <main className="flex-1 p-5 relative mt-20 ml-10">
+      <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl">
+       
+        <MenuHeader
+          menu={menu}
+          onToggleAvailability={handleToggleAvailability}
+          onShowEditForm={() => setShowEditForm(true)}
+          onDeleteMenu={handleDeleteMenu}
+        />
 
-          <MenuHeader
-            menu={menu}
-            onToggleAvailability={handleToggleAvailability}
-            onShowEditForm={() => setShowEditForm(true)}
-            onDeleteMenu={handleDeleteMenu}
-          />
+        <MenuImage menu={menu} />
 
-          <MenuImage menu={menu} />
+        <MenuInfo menu={menu} />
 
-          <MenuInfo menu={menu} />
+        <MenuStats menu={menu} />
+      </div>
+    </main>
 
-          <MenuStats menu={menu} />
-        </div>
-      </main>
+    <EditMenuForm
+      showEditForm={showEditForm}
+      setShowEditForm={setShowEditForm}
+      formData={formData}
+      handleInputChange={handleInputChange}
+      handleImageChange={handleImageChange}
+      handleUpdateMenu={handleUpdateMenu}
+      previewImage={previewImage}
+      menu={menu}
+    />
+  </div>
+);
 
-      <EditMenuForm
-        showEditForm={showEditForm}
-        setShowEditForm={setShowEditForm}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleImageChange={handleImageChange}
-        handleUpdateMenu={handleUpdateMenu}
-        previewImage={previewImage}
-        menu={menu}
-      />
-    </div>
-  );
 };
 
 export default MyMenuDetails;
