@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../../config/api";
+import CategorySelector from "./CategorySelector";
 
 const EditMenuForm = ({
   showEditForm,
@@ -28,6 +29,16 @@ const EditMenuForm = ({
     }, 300);
   };
 
+  const handleCategorySelect = (categoryValue) => {
+    const syntheticEvent = {
+      target: {
+        name: 'menuCategory',
+        value: categoryValue
+      }
+    };
+    handleInputChange(syntheticEvent);
+  };
+
   if (!showEditForm) return null;
 
   return (
@@ -42,7 +53,7 @@ const EditMenuForm = ({
       }}
     >
       <div
-        className={`bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden transition-all duration-300 ${
+        className={`bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden transition-all duration-300 ${
           isVisible
             ? "transform scale-100 translate-y-0"
             : "transform scale-95 translate-y-10"
@@ -73,7 +84,7 @@ const EditMenuForm = ({
           </button>
         </div>
 
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
           <form onSubmit={handleUpdateMenu} className="space-y-6">
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all hover:shadow-md duration-300">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -111,7 +122,7 @@ const EditMenuForm = ({
               </div>
             </div>
 
-            <div className="transition-all duration-200 transform hover:translate-x-1">
+            <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
                 Menu Name<span className="text-red-500 ml-1">*</span>
               </label>
@@ -126,60 +137,49 @@ const EditMenuForm = ({
               />
             </div>
 
-            <div className="transition-all duration-200 transform hover:translate-x-1">
+            <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
-                Description
+                Description<span className="text-red-500 ml-1">*</span>
               </label>
               <textarea
                 name="menuDesc"
                 value={formData.menuDesc}
                 onChange={handleInputChange}
-                rows="4"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-shadow duration-200 hover:shadow-md resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg h-32 resize-none focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-shadow duration-200 hover:shadow-md"
                 placeholder="Enter menu item description"
+                required
               ></textarea>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="transition-all duration-200 transform hover:translate-x-1">
-                <label className="block font-semibold text-gray-700 mb-2 text-sm">
-                  Price (Rp)<span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                    Rp
-                  </span>
-                  <input
-                    type="number"
-                    name="menuPrice"
-                    value={formData.menuPrice}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-shadow duration-200 hover:shadow-md"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div className="transition-all duration-200 transform hover:translate-x-1">
-                <label className="block font-semibold text-gray-700 mb-2 text-sm">
-                  Category<span className="text-red-500 ml-1">*</span>
-                </label>
-                <select
-                  name="menuCategory"
-                  value={formData.menuCategory}
+            <div className="transition-all duration-200 transform">
+              <label className="block font-semibold text-gray-700 mb-2 text-sm">
+                Price (Rp)<span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  name="menuPrice"
+                  value={formData.menuPrice}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-shadow duration-200 hover:shadow-md"
-                >
-                  <option value="">Select a category</option>
-                  <option value="Food">Food</option>
-                  <option value="Drink">Drink</option>
-                  <option value="Dessert">Dessert</option>
-                  <option value="Others">Others</option>
-                </select>
+                  min="0"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-shadow duration-200 hover:shadow-md"
+                  placeholder="0"
+                />
               </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 transition-all duration-200 hover:shadow-md">
+              <h3 className="block font-semibold text-gray-700 mb-2 text-sm">
+                Category<span className="text-red-500 ml-1">*</span>
+              </h3>
+              <CategorySelector
+                selectedCategory={formData.menuCategory}
+                onCategorySelect={handleCategorySelect}
+              />
             </div>
 
             <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
