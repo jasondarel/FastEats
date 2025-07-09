@@ -728,12 +728,14 @@ const ChatRoom = () => {
           messageData.createdAt ||
           messageData.timestamp ||
           new Date().toISOString(),
+        orderDetails: messageData.orderDetails || null,
         type: messageData.messageType || messageData.type || "text",
         imageUrl: messageData.attachments?.url || messageData.imageUrl || null,
         gifUrl: messageData.gifData?.url || messageData.gifUrl || null,
         gifTitle: messageData.gifData?.title || messageData.gifTitle || null,
         clientTempId: messageData.clientTempId,
       };
+      console.log("Transformed message:", transformedMessage);
 
       setMessages((prevMessages) => {
         let filtered = prevMessages;
