@@ -418,7 +418,7 @@ export const updateProfileController = async (req, res) => {
     const errors = await validateUpdateProfileRequest(req.body);
     if (Object.keys(errors).length > 0) {
       logger.warn("Validation failed", errors);
-      return responseError(res, 400, "Validation failed", errors);
+      return responseError(res, 400, "Validation failed", "errors", errors);
     }
 
     if(!req.body.address) {

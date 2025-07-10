@@ -6,7 +6,6 @@ import StatusBadge from "../../../components/StatusBadge";
 import { API_URL } from "../../../config/api";
 
 const ChatCard = ({ chat, role = "seller" }) => {
-  console.log("Role in ChatCard:", role);
   const navigate = useNavigate();
   const isCompleted = chat.orderDetails?.status === "Completed" || false;
 

@@ -20,6 +20,7 @@ import {
   getDistrictsService,
   getVillagesService,
 } from "../../../service/utilServices/utilService";
+import { useSelector } from "react-redux";
 
 const ProfileForm = ({
   profile,
@@ -29,6 +30,7 @@ const ProfileForm = ({
   updateOriginalProfile,
   setProfile,
 }) => {
+  const { user } = useSelector((state) => state.auth);
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -121,11 +123,13 @@ const ProfileForm = ({
     isLoading,
     disabled,
     icon,
+    required = true,
+    backgroundColor = "bg-white",
   }) => (
     <div>
       <label className="block text-gray-700 font-medium mb-1">{label}</label>
       <div className="relative">
-        <div className="flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500">
+        <div className={`flex items-center border border-gray-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-yellow-500 ${backgroundColor}`}>
           {icon}
           <select
             name={name}
@@ -133,7 +137,7 @@ const ProfileForm = ({
             onChange={onChange}
             disabled={disabled || isLoading}
             className="w-full p-3 focus:outline-none appearance-none bg-transparent cursor-pointer disabled:cursor-not-allowed disabled:text-gray-400"
-            required
+            required={required}
           >
             <option value="">{isLoading ? "Loading..." : placeholder}</option>
             {options.map((option) => (
@@ -169,8 +173,19 @@ const ProfileForm = ({
         }
       });
     } catch (error) {
-      console.error(error);
-      alert("Update failed");
+      const errors = error.response.data.errors || {
+        general: "An error occurred",
+      };
+      const firstError = Object.values(errors);
+      if (firstError) {
+        Swal.fire({
+          title: "Error",
+          text: firstError,
+          icon: "error",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#ef4444",
+        });
+      }
     }
   };
 
@@ -203,7 +218,9 @@ const ProfileForm = ({
         options={provinces}
         placeholder="Select Province"
         isLoading={isLoadingProvinces}
-        disabled={false}
+        disabled={user.role === "seller" ? true : false}
+        required={user.role === "seller" ? false : true}
+        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
         icon={<FaGlobeAmericas className="ml-3 text-gray-500" />}
       />
       <CustomSelect
@@ -214,7 +231,9 @@ const ProfileForm = ({
         options={cities}
         placeholder="Select City"
         isLoading={isLoadingCities}
-        disabled={!profile.province}
+        disabled={!profile.province || user.role === "seller" ? true : false}
+        required={user.role === "seller" ? false : true}
+        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
         icon={<FaCity className="ml-3 text-gray-500" />}
       />
       <CustomSelect
@@ -225,7 +244,9 @@ const ProfileForm = ({
         options={districts}
         placeholder="Select District"
         isLoading={isLoadingDistricts}
-        disabled={!profile.city}
+        disabled={!profile.city || user.role === "seller" ? true : false}
+        required={user.role === "seller" ? false : true}
+        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
         icon={<FaBuilding className="ml-3 text-gray-500" />}
       />
       <CustomSelect
@@ -236,7 +257,9 @@ const ProfileForm = ({
         options={villages}
         placeholder="Select Village"
         isLoading={isLoadingVillages}
-        disabled={!profile.district}
+        disabled={!profile.district || user.role === "seller" ? true : false}
+        required={user.role === "seller" ? false : true}
+        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
         icon={<FaTree className="ml-3 text-gray-500" />}
       />
       <InputField

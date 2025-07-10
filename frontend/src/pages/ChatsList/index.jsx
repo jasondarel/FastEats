@@ -137,8 +137,6 @@ const ChatsList = () => {
       return "Waiting";
     };
 
-    console.log("Raw lastMessage from chat:", chat.lastMessage);
-
     const messageDisplay = getMessageDisplay(chat.lastMessage);
 
     return {
