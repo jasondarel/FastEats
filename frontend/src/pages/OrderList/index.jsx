@@ -14,6 +14,7 @@ const OrderList = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorCode, setErrorCode] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedDate, setSelectedDate] = useState(null);
@@ -102,6 +103,7 @@ const OrderList = () => {
         setOrders(data.orders);
         setFilteredOrders(data.orders);
       } else {
+        setErrorCode(data.code || 404);
         setError(data.message || "Failed to fetch orders");
       }
     } catch (err) {
@@ -269,7 +271,9 @@ const OrderList = () => {
             </div>
           </div>
           <div className="text-center py-10 px-4 bg-white rounded-lg shadow w-full max-w-6xl">
-            <h3 className="text-xl font-semibold text-red-600 mb-2">Error</h3>
+            {!errorCode && (
+              <h3 className="text-xl font-semibold text-red-600 mb-2">Error</h3>
+            )}
             <p className="text-gray-600">{error}</p>
             <button
               onClick={fetchOrders}
