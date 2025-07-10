@@ -5,7 +5,7 @@ import ImageUploader from "./ImageUploader";
 import CategorySelector from "./CategorySelector";
 
 const CreateMenuForm = ({ onClose, onSubmit }) => {
-  // Form state
+  
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
   const [menuPrice, setMenuPrice] = useState("");
@@ -13,7 +13,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Animation effect when component mounts
+  
   useEffect(() => {
     setIsVisible(true);
   }, []);
@@ -21,7 +21,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Create FormData object
+    
     const formData = new FormData();
     formData.append("menuName", menuName);
     formData.append("menuDescription", menuDesc);
@@ -31,7 +31,6 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
       formData.append("menuImage", menuImage);
     }
 
-    // Submit the form data to the parent component
     onSubmit(formData);
   };
 
@@ -91,8 +90,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
               <ImageUploader onImageChange={(file) => setMenuImage(file)} />
             </div>
 
-            {/* Input Name */}
-            <div className="transition-all duration-200 transform hover:translate-x-1">
+            <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
                 Menu Name<span className="text-red-500 ml-1">*</span>
               </label>
@@ -106,8 +104,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
               />
             </div>
 
-            {/* Input Description */}
-            <div className="transition-all duration-200 transform hover:translate-x-1">
+            <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
                 Description<span className="text-red-500 ml-1">*</span>
               </label>
@@ -120,8 +117,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
               />
             </div>
 
-            {/* Input price */}
-            <div className="transition-all duration-200 transform hover:translate-x-1">
+            <div className="transition-all duration-200 transform ">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
                 Price (Rp)<span className="text-red-500 ml-1">*</span>
               </label>
@@ -140,7 +136,6 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
               </div>
             </div>
 
-            {/* Menu Category */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 transition-all duration-200 hover:shadow-md">
               <h3 className="block font-semibold text-gray-700 mb-2 text-sm">
                 Category<span className="text-red-500 ml-1">*</span>
@@ -151,7 +146,6 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
               />
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
               <button
                 type="button"
