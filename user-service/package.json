@@ -7,13 +7,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/server.js",
     "check-types": "echo 'No type checking configured'",
-    "prod": "cross-env NODE_ENV=production node src/server.js"
+    "prod": "cross-env NODE_ENV=production node src/server.js",
+    "migrate:dev": "dotenv -e .env.dev -- npx prisma migrate dev",
+    "reset:dev": "dotenv -e .env.dev -- npx prisma migrate reset --force",
+    "generate:dev": "dotenv -e .env.dev -- npx prisma generate",
+    "pull:dev": "dotenv -e .env.dev -- npx prisma db pull"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.11.1",
     "amqplib": "^0.10.5",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
@@ -30,6 +35,7 @@
   },
   "devDependencies": {
     "dotenv-cli": "^8.0.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "prisma": "^6.11.1"
   }
 }

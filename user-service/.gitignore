@@ -3,3 +3,18 @@ node_modules/
 .env
 .env.*
 logs/
+/src/generated/prisma
+
+# Prisma
+.prisma/
+.prisma/client/
+
+# Prisma Migrations
+migrations/
+migrations/*
+/prisma/generated
+
+
+/src/generated/prisma
+
+/src/generated/prisma

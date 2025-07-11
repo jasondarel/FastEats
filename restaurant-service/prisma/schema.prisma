@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model restaurants {
+  restaurant_id        Int         @id @default(autoincrement())
+  restaurant_name      String      @db.VarChar(255)
+  restaurant_province  String      @default("Unknown")
+  restaurant_city      String      @default("Unknown")
+  restaurant_district  String      @default("Unknown")
+  restaurant_village   String      @default("Unknown")
+  restaurant_address   String
+  restaurant_image     String?     @db.VarChar(500)
+  owner_id             Int         @unique
+  is_open              Boolean     @default(false)
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @default(now())
+  menu_items           menu_item[]
+}
+
+model menu_item {
+  menu_id         Int         @id @default(autoincrement())
+  menu_name       String      @db.VarChar(255)
+  menu_description String?
+  menu_image      String?     @db.VarChar(500)
+  restaurant_id   Int
+  menu_category   String      @db.VarChar(255)
+  is_available    Boolean     @default(false)
+  menu_price      Decimal     @db.Decimal(10,2)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @default(now())
+  restaurants     restaurants @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade)
+}

@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model carts {
+  cart_id        Int          @id @default(autoincrement())
+  user_id        Int
+  restaurant_id  Int
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @default(now())
+  cart_items     cart_items[]
+
+  @@unique([user_id, restaurant_id])
+}
+
+model cart_items {
+  cart_item_id Int      @id @default(autoincrement())
+  cart_id      Int
+  menu_id      Int
+  quantity     Int      @default(1)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+  carts        carts    @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade)
+}
+
+model orders {
+  order_id                Int           @id @default(autoincrement())
+  user_id                 Int?
+  menu_id                 Int?
+  menu_name               String?       @db.VarChar(100)
+  menu_price              Decimal       @db.Decimal(10,2)
+  menu_category           String        @db.VarChar(100)
+  menu_image              String?       @db.VarChar(500)
+  restaurant_id           Int?
+  restaurant_name         String        @db.VarChar(255)
+  restaurant_province     String        @default("Unknown") @db.VarChar(200)
+  restaurant_city         String        @default("Unknown") @db.VarChar(200)
+  restaurant_district     String        @default("Unknown") @db.VarChar(200)
+  restaurant_village      String        @default("Unknown") @db.VarChar(200)
+  restaurant_address      String        @db.Text
+  restaurant_image        String?       @db.VarChar(500)
+  owner_id                Int
+  item_quantity           Int           @default(1)
+  status                  String        @default("Waiting")
+  order_type              String        @default("CHECKOUT")
+  created_at              DateTime      @default(now())
+  updated_at              DateTime      @default(now())
+  order_items             order_items[]
+  transactions            transactions[]
+  snaps                   snaps[]
+}
+
+model order_jobs {
+  id          Int      @id @default(autoincrement())
+  payload     Json
+  routing_key String
+  status      String   @default("pending")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+}
+
+model order_items {
+  order_item_id Int    @id @default(autoincrement())
+  order_id      Int
+  menu_id       Int?
+  item_quantity Int    @default(1)
+  orders        orders @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+}
+
+model transactions {
+  transaction_id    Int      @id @default(autoincrement())
+  order_id          Int
+  currency          String?  @db.VarChar(10)
+  transaction_time  DateTime?
+  expiry_time       DateTime?
+  amount            Decimal? @db.Decimal(15,2)
+  bank              String?  @db.VarChar(50)
+  va_number         String?  @db.VarChar(50)
+  payment_type      String?  @db.VarChar(50)
+  shipping_province String   @default("unknown") @db.VarChar(50)
+  shipping_city     String   @default("unknown") @db.VarChar(50)
+  shipping_district String   @default("unknown") @db.VarChar(50)
+  shipping_village  String   @default("unknown") @db.VarChar(50)
+  shipping_address  String   @default("unknown") @db.VarChar(255)
+  shipping_phone    String   @default("unknown") @db.VarChar(50)
+  shipping_name     String   @default("unknown") @db.VarChar(100)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+  orders            orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+}
+
+model snaps {
+  snap_id    Int      @id @default(autoincrement())
+  order_id   Int
+  snap_token String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  orders     orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+}
