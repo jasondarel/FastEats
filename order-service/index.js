@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import OrderRoutes from "./src/routes/OrderRoutes.js";
 import envInit from "./src/config/envInit.js";
-import createTables from "./src/config/tablesInit.js";
+// import createTables from "./src/config/tablesInit.js";
 import { createDatabase, testDatabase } from "./src/config/dbInit.js";
 import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
 import { Server as SocketIOServer } from "socket.io";
@@ -43,7 +43,7 @@ app.use(OrderRoutes);
   try {
     await createDatabase();
     await testDatabase();
-    await createTables();
+    // await createTables();
     await rabbitMQInit();
 
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");

@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import createTables from "./config/tablesInit.js";
+// import createTables from "./config/tablesInit.js";
 import userRoutes from "./route/userRoute.js";
 import fileUpload from "express-fileupload";
 import { rabbitMQInit } from "./config/rabbitMQInit.js";
@@ -32,7 +32,7 @@ logger.info(`${process.env.SERVICE_NAME || "User/Auth Service"} running on port 
   try {
     await createDatabase();
     await testDatabase();
-    await createTables();
+    // await createTables();
 
     await redisInit();
     await rabbitMQInit();

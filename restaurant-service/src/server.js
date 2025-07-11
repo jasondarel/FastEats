@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { restaurantRoutes } from "./route/restaurantRoutes.js";
-import createTables from "./config/tablesInit.js";
+// import createTables from "./config/tablesInit.js";
 import { createDatabase, testDatabase } from "./config/dbInit.js";
 import { menuRoutes } from "./route/menuRoutes.js";import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -40,7 +40,7 @@ app.use("/", menuRoutes);
   try {
     await createDatabase();
     await testDatabase();
-    await createTables();
+    // await createTables();
     
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
 
