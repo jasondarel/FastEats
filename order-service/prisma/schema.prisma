@@ -40,6 +40,7 @@ model orders {
   user_id                 Int?
   menu_id                 Int?
   menu_name               String?       @db.VarChar(100)
+  menu_description        String?       @db.Text
   menu_price              Decimal       @db.Decimal(10,2)
   menu_category           String        @db.VarChar(100)
   menu_image              String?       @db.VarChar(500)
@@ -51,7 +52,7 @@ model orders {
   restaurant_village      String        @default("Unknown") @db.VarChar(200)
   restaurant_address      String        @db.Text
   restaurant_image        String?       @db.VarChar(500)
-  owner_id                Int
+  seller_id                Int
   item_quantity           Int           @default(1)
   status                  String        @default("Waiting")
   order_type              String        @default("CHECKOUT")

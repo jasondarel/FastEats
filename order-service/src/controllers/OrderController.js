@@ -135,6 +135,23 @@ export const createOrderController = async (req, res) => {
       );
     }
 
+    console.log("Restauant Data: ", restaurantResponse.data.restaurant);
+    console.log("Menu Data: ", menuResponse.data.menu);
+
+    orderReq.restaurantName = restaurantResponse.data.restaurant.restaurant_name;
+    orderReq.restaurantProvince = restaurantResponse.data.restaurant.restaurant_province;
+    orderReq.restaurantCity = restaurantResponse.data.restaurant.restaurant_city;
+    orderReq.restaurantDistrict = restaurantResponse.data.restaurant.restaurant_district;
+    orderReq.restaurantVillage = restaurantResponse.data.restaurant.restaurant_village;
+    orderReq.sellerId = restaurantResponse.data.restaurant.owner_id;
+    orderReq.restaurantAddress = restaurantResponse.data.restaurant.restaurant_address;
+    orderReq.restaurantImage = restaurantResponse.data.restaurant.restaurant_image;
+    orderReq.menuName = menuResponse.data.menu.menu_name;
+    orderReq.menuDescription = menuResponse.data.menu.menu_description;
+    orderReq.menuPrice = menuResponse.data.menu.menu_price;
+    orderReq.menuImage = menuResponse.data.menu.menu_image;
+    orderReq.menuCategory = menuResponse.data.menu.menu_category;
+
     try {
       logger.info("Inserting order into database", {
         userId,

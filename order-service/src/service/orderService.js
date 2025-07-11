@@ -6,13 +6,26 @@ import {
 
 export const createOrderService = async (order) => {
   const result = await pool.query(
-    "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image, menu_name, menu_description, menu_price, menu_image, menu_category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *",
     [
       order.userId,
       order.menuId,
       order.restaurantId,
       order.quantity,
       order.orderType,
+      order.restaurantName,
+      order.restaurantProvince,
+      order.restaurantCity,
+      order.restaurantDistrict,
+      order.restaurantVillage,
+      order.restaurantAddress,
+      order.sellerId,
+      order.restaurantImage,
+      order.menuName,
+      order.menuDescription,
+      order.menuPrice,
+      order.menuImage,
+      order.menuCategory,
     ]
   );
   return result.rows[0];
