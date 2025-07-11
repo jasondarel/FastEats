@@ -171,8 +171,7 @@ export const createOrderController = async (req, res) => {
 
       const orderItem = await createOrderItemService(
         order.order_id,
-        orderReq.menuId,
-        orderReq.quantity
+        orderReq
       );
 
       if (!orderItem) {

@@ -32,7 +32,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/orders", authMiddleware, getAllOrdersWithItemsController);
-router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
+router.get("/order/:order_id", authMiddleware, getOrderByIdController);
 router.get(
   "/orders-by-restaurant",
   authMiddleware,

@@ -38,12 +38,6 @@ model cart_items {
 model orders {
   order_id                Int           @id @default(autoincrement())
   user_id                 Int?
-  menu_id                 Int?
-  menu_name               String?       @db.VarChar(100)
-  menu_description        String?       @db.Text
-  menu_price              Decimal       @db.Decimal(10,2)
-  menu_category           String        @db.VarChar(100)
-  menu_image              String?       @db.VarChar(500)
   restaurant_id           Int?
   restaurant_name         String        @db.VarChar(255)
   restaurant_province     String        @default("Unknown") @db.VarChar(200)
@@ -52,7 +46,7 @@ model orders {
   restaurant_village      String        @default("Unknown") @db.VarChar(200)
   restaurant_address      String        @db.Text
   restaurant_image        String?       @db.VarChar(500)
-  seller_id                Int
+  seller_id               Int
   item_quantity           Int           @default(1)
   status                  String        @default("Waiting")
   order_type              String        @default("CHECKOUT")
@@ -76,6 +70,11 @@ model order_items {
   order_item_id Int    @id @default(autoincrement())
   order_id      Int
   menu_id       Int?
+  menu_name               String?       @db.VarChar(100)
+  menu_description        String?       @db.Text
+  menu_price              Decimal       @db.Decimal(10,2)
+  menu_category           String        @db.VarChar(100)
+  menu_image              String?       @db.VarChar(500)
   item_quantity Int    @default(1)
   orders        orders @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
 }

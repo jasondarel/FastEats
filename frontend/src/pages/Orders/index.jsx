@@ -47,7 +47,7 @@ const Orders = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await getAllOrdersWithItems(token);
-      console.log("Fetched orders:", response.data.orders);
+      console.log("Fetched orders:", response.data);
       setOrders(response.data.data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
