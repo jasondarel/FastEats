@@ -42,22 +42,24 @@ const ProfileForm = ({
   const [isLoadingVillages, setIsLoadingVillages] = useState(false);
 
   useEffect(() => {
-    const loadProvinces = async () => {
-      setIsLoadingProvinces(true);
-      try {
-        const response = await getProvincesService();
-        setProvinces(response.data || []);
-      } catch (error) {
-        console.error("Error loading provinces:", error);
-      } finally {
-        setIsLoadingProvinces(false);
-      }
-    };
-    loadProvinces();
-  }, []);
+    if (user.role !== "seller") {
+      const loadProvinces = async () => {
+        setIsLoadingProvinces(true);
+        try {
+          const response = await getProvincesService();
+          setProvinces(response.data || []);
+        } catch (error) {
+          console.error("Error loading provinces:", error);
+        } finally {
+          setIsLoadingProvinces(false);
+        }
+      };
+      loadProvinces();
+    }
+  }, [user.role]);
 
   useEffect(() => {
-    if (profile.province) {
+    if (user.role !== "seller" && profile.province) {
       setIsLoadingCities(true);
       getCitiesService(profile.province)
         .then((response) => {
@@ -74,10 +76,10 @@ const ProfileForm = ({
       setDistricts([]);
       setVillages([]);
     }
-  }, [profile.province]);
+  }, [profile.province, user.role]);
 
   useEffect(() => {
-    if (profile.city) {
+    if (user.role !== "seller" && profile.city) {
       setIsLoadingDistricts(true);
       getDistrictsService(profile.city)
         .then((response) => {
@@ -93,10 +95,10 @@ const ProfileForm = ({
       setDistricts([]);
       setVillages([]);
     }
-  }, [profile.city]);
+  }, [profile.city, user.role]);
 
   useEffect(() => {
-    if (profile.district) {
+    if (user.role !== "seller" && profile.district) {
       setIsLoadingVillages(true);
       getVillagesService(profile.district)
         .then((response) => {
@@ -111,7 +113,7 @@ const ProfileForm = ({
     } else {
       setVillages([]);
     }
-  }, [profile.district]);
+  }, [profile.district, user.role]);
 
   const CustomSelect = ({
     label,
@@ -210,58 +212,55 @@ const ProfileForm = ({
         value={profile.phone_number}
         onChange={handleChange}
       />
-      <CustomSelect
-        label="Province"
-        name="province"
-        value={profile.province}
-        onChange={handleChange}
-        options={provinces}
-        placeholder="Select Province"
-        isLoading={isLoadingProvinces}
-        disabled={user.role === "seller" ? true : false}
-        required={user.role === "seller" ? false : true}
-        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
-        icon={<FaGlobeAmericas className="ml-3 text-gray-500" />}
-      />
-      <CustomSelect
-        label="City"
-        name="city"
-        value={profile.city}
-        onChange={handleChange}
-        options={cities}
-        placeholder="Select City"
-        isLoading={isLoadingCities}
-        disabled={!profile.province || user.role === "seller" ? true : false}
-        required={user.role === "seller" ? false : true}
-        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
-        icon={<FaCity className="ml-3 text-gray-500" />}
-      />
-      <CustomSelect
-        label="District"
-        name="district"
-        value={profile.district}
-        onChange={handleChange}
-        options={districts}
-        placeholder="Select District"
-        isLoading={isLoadingDistricts}
-        disabled={!profile.city || user.role === "seller" ? true : false}
-        required={user.role === "seller" ? false : true}
-        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
-        icon={<FaBuilding className="ml-3 text-gray-500" />}
-      />
-      <CustomSelect
-        label="Village"
-        name="village"
-        value={profile.village}
-        onChange={handleChange}
-        options={villages}
-        placeholder="Select Village"
-        isLoading={isLoadingVillages}
-        disabled={!profile.district || user.role === "seller" ? true : false}
-        required={user.role === "seller" ? false : true}
-        backgroundColor={user.role === "seller" ? "bg-gray-200" : "bg-white"}
-        icon={<FaTree className="ml-3 text-gray-500" />}
-      />
+
+      {user.role !== "seller" && (
+        <>
+          <CustomSelect
+            label="Province"
+            name="province"
+            value={profile.province}
+            onChange={handleChange}
+            options={provinces}
+            placeholder="Select Province"
+            isLoading={isLoadingProvinces}
+            icon={<FaGlobeAmericas className="ml-3 text-gray-500" />}
+          />
+          <CustomSelect
+            label="City"
+            name="city"
+            value={profile.city}
+            onChange={handleChange}
+            options={cities}
+            placeholder="Select City"
+            isLoading={isLoadingCities}
+            disabled={!profile.province}
+            icon={<FaCity className="ml-3 text-gray-500" />}
+          />
+          <CustomSelect
+            label="District"
+            name="district"
+            value={profile.district}
+            onChange={handleChange}
+            options={districts}
+            placeholder="Select District"
+            isLoading={isLoadingDistricts}
+            disabled={!profile.city}
+            icon={<FaBuilding className="ml-3 text-gray-500" />}
+          />
+          <CustomSelect
+            label="Village"
+            name="village"
+            value={profile.village}
+            onChange={handleChange}
+            options={villages}
+            placeholder="Select Village"
+            isLoading={isLoadingVillages}
+            disabled={!profile.district}
+            icon={<FaTree className="ml-3 text-gray-500" />}
+          />
+        </>
+      )}
+
       <InputField
         label="Address Detail"
         icon={<FaHome className="ml-3 text-gray-500" />}
