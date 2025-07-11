@@ -932,6 +932,7 @@ export const getOrderByIdController = async (req, res) => {
 export const payOrderConfirmationController = async (req, res) => {
   logger.info("PAY ORDER CONFIRMATION CONTROLLER");
   try {
+    const tax = 2000;
     const { userId } = req.user;
     const {
       order_id,
@@ -974,12 +975,13 @@ export const payOrderConfirmationController = async (req, res) => {
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
+    const totalPrice = itemPrice + 2000;
     const response = await axios.post(
       process.env.MIDTRANS_SNAP_URL,
       {
         transaction_details: {
           order_id,
-          gross_amount: itemPrice,
+          gross_amount: totalPrice,
         },
         custom_field1: [
           shipping_province,
