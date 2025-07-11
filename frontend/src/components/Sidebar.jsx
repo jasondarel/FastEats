@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -32,6 +33,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
     email: "",
     profile_photo: "",
   });
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -69,11 +71,10 @@ const Sidebar = ({ isTaskbarOpen }) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-
+        setLoadingProfile(true);
         const response = await axios.get("http://localhost:5002/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setProfile({
           name: response.data.user.name,
           email: response.data.user.email,
@@ -81,6 +82,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
         });
       } catch (error) {
         console.error("Error fetching profile data:", error);
+      } finally {
+        setLoadingProfile(false);
       }
     };
 
@@ -384,15 +387,30 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   className="w-full h-full object-cover"
                 />
               </div>
-
-              <div className="flex flex-col ml-2 flex-grow min-w-0">
-                <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
-                  {profile.name || "guest"}
-                </h2>
-                <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
-                  {profile.email}
-                </h2>
-              </div>
+              
+              {loadingProfile ? (
+                <div className="flex flex-col ml-2 flex-grow min-w-0 text-yellow-200 italic">
+                  loading...
+                </div>
+              ) : profile && profile.name ? (
+                <div className="flex flex-col ml-2 flex-grow min-w-0">
+                  <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    {profile.name}
+                  </h2>
+                  <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
+                    {profile.email}
+                  </h2>
+                </div>
+              ) : (
+                <div className="flex flex-col ml-2 flex-grow min-w-0">
+                  <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    guest
+                  </h2>
+                  <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
+                    guest@email.com
+                  </h2>
+                </div>
+              )}
 
               <svg
                 xmlns="http://www.w3.org/2000/svg"
