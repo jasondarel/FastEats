@@ -12,6 +12,7 @@ import {
   getVillageService
 } from "../../../service/utilServices/utilService";
 import { getProfileService } from "../../../service/userServices/profileService";
+import { LuTriangleAlert } from "react-icons/lu";
 
 const OrderShipping = ({ 
   onShippingValidationChange, 
@@ -100,8 +101,9 @@ const OrderShipping = ({
           village: userResponse.village || "Not specified",
           address: userResponse.address || "Not specified",
           fullName: userResponse.name || userResponse.data.name || "User",
-          phone: userResponse.phone_number || userResponse.data.phone_number || "Not specified",
+          phone: userResponse?.phone_number || userResponse?.data?.phone_number || "Unknown Phone Number",
         };
+        console.log("User Info: ", userInfo);
         setCurrentUserInfoDetail({
           province: await getProvinceName(userResponse.province),
           city: await getCityName(userResponse.city),
@@ -109,6 +111,7 @@ const OrderShipping = ({
           village: await getVillageName(userResponse.village),
           address: userResponse.address || "Not specified",
           fullName: userResponse.name || userResponse.data.name || "User",
+          phone: userResponse?.phone_number || userResponse?.data?.phone_number || "Unknown Phone Number",
         })
         setCurrentUserInfo(userInfo);
       }
@@ -388,18 +391,17 @@ const OrderShipping = ({
                   currentUserInfo.district === "Not specified" ||
                   currentUserInfo.village === "Not specified" ||
                   currentUserInfo.address === "Not specified") && (
-                  <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm text-yellow-700">
-                          Your profile is missing some address information. Please use "Different Address" option or update your profile.
-                        </p>
-                      </div>
+                  <div className="mt-3 p-4 bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50 border-l-4 border-amber-400 rounded-lg flex items-center gap-4 shadow-sm">
+                    <div className="flex items-center justify-center bg-amber-100 rounded-full h-12 w-12">
+                      <LuTriangleAlert className="text-amber-600" size={25} />
+                    </div>
+                    <div className="flex flex-col gap-2 flex-1">
+                      <p className="text-sm text-yellow-800 font-medium">
+                        Your profile is missing some address information. Please use the <span className="font-semibold">"Different Address"</span> option or update your profile.
+                      </p>
+                      <a href="/profile" className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-md shadow transition-colors duration-150 w-fit">
+                        Update Profile
+                      </a>
                     </div>
                   </div>
                 )}
