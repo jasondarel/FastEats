@@ -24,7 +24,6 @@ const PaymentForm = () => {
 
     const [isFormValid, setIsFormValid] = useState(false);
     
-    // Fetch current payment data on component mount
     useEffect(() => {
         const fetchPaymentData = async () => {
             try {
@@ -46,20 +45,13 @@ const PaymentForm = () => {
                 setDana(data.user.dana || "");
             } catch (err) {
                 console.error("Error fetching payment data:", err);
-                Swal.fire({
-                    title: "Error!",
-                    text: "Failed to load payment information",
-                    icon: "error",
-                    confirmButtonText: "Ok",
-                    confirmButtonColor: "#ef4444",
-                });
+              
             }
         };
 
         fetchPaymentData();
     }, [token]);
 
-    // Validation effect
     useEffect(() => {
         let newErrors = {
             bcaAccount: "",
@@ -67,7 +59,6 @@ const PaymentForm = () => {
             dana: "",
         };
 
-        // BCA Account validation (10 digits)
         if (bcaAccount && !/^\d{10}$/.test(bcaAccount)) {
             newErrors.bcaAccount = "BCA account must be exactly 10 digits";
         }
@@ -76,14 +67,12 @@ const PaymentForm = () => {
             newErrors.gopay = "GoPay number must be between 10 and 13 digits";
         }
         
-        // DANA validation (10-13 digits)
         if (dana && !/^\d{10,13}$/.test(dana)) {
             newErrors.dana = "DANA number must be between 10 and 13 digits";
         }
 
         setErrors(newErrors);
 
-        // Check if form is valid and changes were made
         const hasErrors = Object.values(newErrors).some((error) => error !== "");
         setIsFormValid(isChanged && !hasErrors);
     }, [bcaAccount, gopay, dana, isChanged]);

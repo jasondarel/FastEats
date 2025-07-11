@@ -63,14 +63,6 @@ const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
         Payment Details
       </h2>
 
-      {process.env.NODE_ENV === "development" && (
-        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Debug: Order Type: {order.order_type}</p>
-          <p>Menu Items: {menuItems ? menuItems.length : "null"}</p>
-          <p>Order Items: {order.items ? order.items.length : "null"}</p>
-          <p>Calculated Subtotal: {subtotal}</p>
-        </div>
-      )}
 
       {paymentItems.map((item, index) => (
         <div key={index} className="flex justify-between mb-2">
@@ -111,20 +103,7 @@ const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
               </span>
             </div>
           )}
-          {transaction.expiry_time && (
-            <div className="flex justify-between">
-              <span className="text-amber-700">Expires</span>
-              <span className="font-semibold text-amber-900">
-                {new Date(transaction.expiry_time).toLocaleString("id-ID", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-          )}
+         
         </div>
       )}
     </div>
