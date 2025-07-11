@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id            Int           @id @default(autoincrement())
+  name          String
+  email         String        @unique
+  is_verified   Boolean       @default(false)
+  password_hash String
+  role          String        @default("user")
+  created_at    DateTime      @default(now())
+  user_details  user_details?
+  user_payments user_payments?
+}
+
+model user_details {
+  user_id      Int      @id
+  profile_photo String?
+  province     String   @default("Unknown")
+  city         String   @default("Unknown")
+  district     String   @default("Unknown")
+  village      String   @default("Unknown")
+  address      String   @default("Unknown")
+  phone_number String?
+  updated_at   DateTime @default(now())
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model user_payments {
+  user_id     Int      @id
+  bank_bca    String  @default("1234567890")
+  gopay       String  @default("1234567890")
+  dana        String  @default("1234567890")
+  updated_at  DateTime @default(now())
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
