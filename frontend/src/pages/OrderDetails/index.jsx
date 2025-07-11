@@ -26,6 +26,7 @@ import LoadingState from "../../components/LoadingState";
 import { API_URL, ORDER_URL } from "../../config/api";
 import { MIDTRANS_SNAP_URL } from "../../config/api";
 import io from "socket.io-client";
+import OrderSummary from "./components/OrderSummary";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -318,7 +319,6 @@ const OrderDetails = () => {
 
   const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
     console.log("Confirming payment for order ID:", orderId);
-
     try {
       setPaymentLoading(true);
 
@@ -611,6 +611,9 @@ const OrderDetails = () => {
                 />
               )}
             </div>
+            {isShippingValid && (
+              <OrderSummary order={order}/>
+            )}
 
             <OrderTimestamp createdAt={order.created_at} />
 
