@@ -256,6 +256,25 @@ export const deleteCartItemServiceByMenuId = async (menu_id) => {
   return result.rows[0];
 };
 
+export const getCartItemServiceByMenuId = async (cartId, menuId) => {
+  const result = await pool.query(
+    `SELECT * FROM cart_items ci
+    WHERE ci.cart_id = $1 AND ci.menu_id = $2`,
+    [cartId, menuId]
+  );
+  return result.rows[0];
+}
+
+export const updateCartItemQuantityServiceByMenuId = async (menuId, quantity) => {
+  const result = await pool.query(
+    `UPDATE cart_items
+     SET quantity = $1, updated_at = NOW()
+     WHERE menu_id = $2 RETURNING *`,
+    [quantity, menuId]
+  );
+  return result.rows[0];
+}
+
 export const deleteCartExceptionService = async (userId, restaurantId) => {
   const result = await pool.query(
     `DELETE FROM carts WHERE user_id = $1 AND restaurant_id != $2 RETURNING *`,

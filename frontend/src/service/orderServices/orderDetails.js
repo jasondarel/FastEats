@@ -105,7 +105,6 @@ const createCartService = async (restaurantId, token) => {
       },
     }
   );
-  console.log("createCartService response:", response.data);
   return response;
 };
 

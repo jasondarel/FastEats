@@ -33,6 +33,8 @@ import {
   getAllOrderWithItemsByOrderIdService,
   createPreparingOrderJobService,
   createCompletedOrderJobService,
+  updateCartItemQuantityServiceByMenuId,
+  getCartItemServiceByMenuId,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -428,11 +430,53 @@ export const deleteCartController = async (req, res) => {
   }
 };
 
+export const updateCartItemQuantityController = async (req, res) => {
+  logger.info("UPDATE CART ITEM QUANTITY CONTROLLER");
+  try {
+    const { userId, role } = req.user;
+    const { menu_id } = req.params;
+    const { quantity } = req.body;
+
+    if (role !== "user") {
+      logger.warn("Unauthorized access attempt");
+      return responseError(res, 403, "You are not authorized to update a cart item");
+    }
+
+    if (!menu_id || !quantity) {
+      return responseError(res, 400, "menu_id and quantity are required");
+    }
+
+    logger.info(
+      `Updating cart item for user ${userId} and menu id ${menu_id} with quantity ${quantity}...`
+    );
+    const updatedCartItem = await updateCartItemQuantityServiceByMenuId(menu_id, quantity);
+    
+    if (!updatedCartItem) {
+      logger.warn(`Cart item ${menu_id} not found`);
+      return responseError(res, 404, "Cart item not found");
+    }
+
+    logger.info(`Cart item updated: ${updatedCartItem?.cart_item_id}...`);
+
+    return responseSuccess(
+      res,
+      200,
+      "Cart item updated successfully",
+      "cartItem",
+      updatedCartItem
+    );
+  } catch (error) {
+    logger.error("Internal server error:", error);
+    return responseError(res, 500, "Internal server error");
+  }
+}
+
 export const createCartItemController = async (req, res) => {
   logger.info("CREATE CART ITEM CONTROLLER");
   try {
     const { userId, role } = req.user;
     const { cartId, menuId, quantity, note } = req.body;
+
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       return responseError(res, 403, "You are not authorized to create a cart");
@@ -458,6 +502,25 @@ export const createCartItemController = async (req, res) => {
         res,
         400,
         "cartId, menuId, and quantity are required"
+      );
+    }
+
+    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId);
+    if (existedCartItem) {
+      logger.warn("Cart item already exists", {
+        userId,
+        cartId,
+        menuId,
+      });
+      const updatedQuantity = Number(existedCartItem.quantity) + Number(quantity);
+      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(menuId, updatedQuantity);
+      logger.info("Cart item quantity updated successfully");
+      return responseSuccess(
+        res,
+        200,
+        "Cart item already exists, quantity updated",
+        "cartItem",
+        updatedCartItem
       );
     }
 
@@ -489,6 +552,7 @@ export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { menu_id } = req.params;
+    console.log("Menu ID:", menu_id);
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -503,6 +567,7 @@ export const deleteCartItemController = async (req, res) => {
       `Deleting cart item for user ${userId} and menu id ${menu_id}...`
     );
     const cartItem = await deleteCartItemServiceByMenuId(menu_id);
+    console.log("Cart Item:", cartItem);
 
     if (!cartItem) {
       logger.warn(`Cart item ${menu_id} not found`);
