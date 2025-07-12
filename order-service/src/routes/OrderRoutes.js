@@ -26,13 +26,14 @@ import {
   getAllOrdersWithItemsController,
   getOrderWithItemsByOrderIdController,
   deliverOrderController,
+  updateCartItemQuantityController,
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/orders", authMiddleware, getAllOrdersWithItemsController);
-router.get("/orders/:order_id", authMiddleware, getOrderByIdController);
+router.get("/order/:order_id", authMiddleware, getOrderByIdController);
 router.get(
   "/orders-by-restaurant",
   authMiddleware,
@@ -81,6 +82,7 @@ router.get("/cart/:cart_id", authMiddleware, getCartController);
 router.post("/cart", authMiddleware, createCartController);
 router.delete("/cart/:restaurant_id", authMiddleware, deleteCartController);
 router.post("/cart-item", authMiddleware, createCartItemController);
+router.put("/cart-item/:menu_id", authMiddleware, updateCartItemQuantityController);
 router.get("/cart-item", authMiddleware, getCartItemsController);
 router.delete("/cart-item/:menu_id", authMiddleware, deleteCartItemController);
 router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);

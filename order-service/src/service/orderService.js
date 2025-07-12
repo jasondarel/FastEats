@@ -1,27 +1,44 @@
+import { raw } from "express";
 import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,
   PREPARING_ORDER_ROUTING_KEY,
 } from "../config/rabbitMQInit.js";
 
-export const createOrderService = async (order) => {
-  const result = await pool.query(
-    "INSERT INTO orders (user_id, menu_id, restaurant_id, item_quantity, order_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+export const createOrderService = async (paramPool=pool, order) => {
+  const result = await paramPool.query(
+    "INSERT INTO orders (user_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
     [
       order.userId,
-      order.menuId,
       order.restaurantId,
       order.quantity,
       order.orderType,
+      order.restaurantName,
+      order.restaurantProvince,
+      order.restaurantCity,
+      order.restaurantDistrict,
+      order.restaurantVillage,
+      order.restaurantAddress,
+      order.sellerId,
+      order.restaurantImage,
     ]
   );
   return result.rows[0];
 };
 
-export const createOrderItemService = async (orderId, menuId, quantity) => {
-  const result = await pool.query(
-    "INSERT INTO order_items (order_id, menu_id, item_quantity) VALUES ($1, $2, $3) RETURNING *",
-    [orderId, menuId, quantity]
+export const createOrderItemService = async (paramPool=pool, orderId, orderReq) => {
+  const result = await paramPool.query(
+    "INSERT INTO order_items (order_id, menu_id, item_quantity, menu_name, menu_description, menu_price, menu_image, menu_category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+    [
+      orderId, 
+      orderReq.menuId, 
+      orderReq.quantity,
+      orderReq.menuName,
+      orderReq.menuDescription,
+      orderReq.menuPrice,
+      orderReq.menuImage,
+      orderReq.menuCategory,
+    ]
   );
   return result.rows[0];
 };
@@ -239,6 +256,25 @@ export const deleteCartItemServiceByMenuId = async (menu_id) => {
   return result.rows[0];
 };
 
+export const getCartItemServiceByMenuId = async (cartId, menuId) => {
+  const result = await pool.query(
+    `SELECT * FROM cart_items ci
+    WHERE ci.cart_id = $1 AND ci.menu_id = $2`,
+    [cartId, menuId]
+  );
+  return result.rows[0];
+}
+
+export const updateCartItemQuantityServiceByMenuId = async (menuId, quantity) => {
+  const result = await pool.query(
+    `UPDATE cart_items
+     SET quantity = $1, updated_at = NOW()
+     WHERE menu_id = $2 RETURNING *`,
+    [quantity, menuId]
+  );
+  return result.rows[0];
+}
+
 export const deleteCartExceptionService = async (userId, restaurantId) => {
   const result = await pool.query(
     `DELETE FROM carts WHERE user_id = $1 AND restaurant_id != $2 RETURNING *`,
@@ -296,40 +332,29 @@ ORDER BY o.created_at DESC;
 export const getAllOrderWithItemsByOrderIdService = async (orderId) => {
   const result = await pool.query(
     `SELECT 
-    o.order_id,
-    o.user_id,
-    o.restaurant_id,
-    o.status,
-    o.order_type,
-    o.created_at,
-    o.updated_at,
-    COALESCE(
+      o.*, 
+      COALESCE(
         json_agg(
-            json_build_object(
-                'order_item_id', oi.order_item_id,
-                'menu_id', oi.menu_id,
-                'item_quantity', oi.item_quantity
-            )
+          json_build_object(
+            'order_item_id', oi.order_item_id,
+            'menu_id', oi.menu_id,
+            'item_quantity', oi.item_quantity,
+            'menu_name', oi.menu_name,
+            'menu_description', oi.menu_description,
+            'menu_price', oi.menu_price,
+            'menu_image', oi.menu_image,
+            'menu_category', oi.menu_category
+          )
         ) FILTER (WHERE oi.order_item_id IS NOT NULL),
         '[]'
-    ) AS items
-  FROM orders o
-  LEFT JOIN order_items oi ON o.order_id = oi.order_id
-  WHERE o.order_id = $1
-  GROUP BY o.order_id
-  ORDER BY o.created_at DESC;`,
+      ) AS items
+    FROM orders o
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.order_id = $1
+    GROUP BY o.order_id
+    ORDER BY o.created_at DESC;`,
     [orderId]
   );
   const rawOrder = result.rows[0];
-  const formattedOrder = {
-    order_id: rawOrder.order_id,
-    user_id: rawOrder.user_id,
-    restaurant_id: rawOrder.restaurant_id,
-    status: rawOrder.status,
-    order_type: rawOrder.order_type,
-    created_at: rawOrder.created_at,
-    updated_at: rawOrder.updated_at,
-    items: rawOrder.items,
-  };
-  return formattedOrder;
+  return rawOrder;
 };

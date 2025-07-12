@@ -8,6 +8,7 @@ import {
   createCartService,
   createCartItemService,
   deleteCartItemService,
+  updateCartItemQuantityService,
 } from "../../service/orderServices/orderDetails";
 import { API_URL } from "../../config/api";
 
@@ -129,25 +130,6 @@ const Cart = () => {
     }
   };
 
-  const updateQuantity = async (cartItemId, menuId, newQuantity, note) => {
-    if (newQuantity < 1) return;
-
-    try {
-      const token = getToken();
-
-      await deleteCartItemService(cartItemId, token);
-
-      if (newQuantity > 0) {
-        await createCartItemService(cartId, menuId, newQuantity, note, token);
-      }
-
-      await fetchCartItems(cartId);
-    } catch (err) {
-      setError("Error updating quantity. Please try again.");
-      console.error("Error updating quantity:", err);
-    }
-  };
-
   const removeItem = async (menuId) => {
     try {
       const token = getToken();
@@ -161,6 +143,33 @@ const Cart = () => {
       console.error("Error removing item:", err);
     }
   };
+
+  const updateQuantity = async (cartItemId, menuId, newQuantity, note) => {
+  if (newQuantity < 1) return;
+
+  try {
+    const token = getToken();
+    if (newQuantity > 0) {
+      const updatedCartItem = await updateCartItemQuantityService(menuId, newQuantity, token);
+      console.log("updateCartItemQuantityService response:", updatedCartItem.data);
+      
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.menu_id === menuId 
+            ? { 
+                ...item, 
+                total_quantity: newQuantity,
+                ...(updatedCartItem.data?.cartItem || updatedCartItem.data || {})
+              }
+            : item
+        )
+      );
+    }
+  } catch (err) {
+    setError("Error updating quantity. Please try again.");
+    console.error("Error updating quantity:", err);
+  }
+};
 
   const removeAllItems = async () => {
     try {
@@ -323,13 +332,16 @@ const Cart = () => {
                 <CartItem
                   key={item.cart_item_id}
                   item={item}
-                  onUpdateQuantity={(newQuantity) =>
+                  onUpdateQuantity={(newQuantity) =>{
+                    console.log("Updating quantity for item:", item);
+                    console.log("New quantity:", newQuantity);
                     updateQuantity(
                       item.cart_item_id,
                       item.menu_id,
                       newQuantity,
                       item.note
-                    )
+                    );
+                  }
                   }
                   onRemoveItem={() => removeItem(item.menu_id)}
                 />
