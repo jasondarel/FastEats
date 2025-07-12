@@ -297,38 +297,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
     if (!order) {
       logger.warn("Order not found:", order_id);
       return responseError(res, 404, "Order not found");
-    }
-
-    if (role === "seller" || role === "Seller") {
-      const restaurant = await axios.get(
-        `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${order.restaurant_id}`,
-        {
-          headers: {
-            Authorization: req.headers.authorization,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (restaurant.data.restaurant.owner_id !== userId) {
-        logger.warn("Unauthorized access attempt by user:", userId);
-        return responseError(
-          res,
-          403,
-          "You are not authorized to view this order"
-        );
-      }
-    } else {
-      if (order.user_id !== userId) {
-        logger.warn("Unauthorized access attempt by user:", userId);
-        return responseError(
-          res,
-          403,
-          "You are not authorized to view this order"
-        );
-      }
-    }
-
+    } 
     logger.info("Fetching menu data for order items...");
     return responseSuccess(
       res,
@@ -1825,6 +1794,8 @@ export const checkoutCartController = async (req, res) => {
   logger.info("CHECKOUT CART CONTROLLER");
   const { userId, role } = req.user;
   const { cart_id } = req.params;
+  const authHeader = req.headers.authorization;
+  const token = authHeader.split(" ")[1];
 
   if (role !== "user") {
     logger.warn("Unauthorized access attempt by user");
@@ -1835,6 +1806,7 @@ export const checkoutCartController = async (req, res) => {
     logger.warn("Missing cart_id");
     return responseError(res, 400, "Missing cart_id");
   }
+
   try {
     const cart = await getCartService(cart_id, userId);
     if (!cart) {
@@ -1861,30 +1833,133 @@ export const checkoutCartController = async (req, res) => {
     }, {});
 
     const finalCartItems = Object.values(groupedCartItems);
-    logger.info("Creating order from cart id:", cart_id);
-    const order = await createOrderService({
-      userId: userId,
-      restaurantId: cart.restaurant_id,
-      orderType: "CART",
-    });
-    if (!order) {
-      logger.error("Failed to create order from cart");
-      return responseError(res, 500, "Failed to create order from cart");
+
+    const menuData = new Map();
+    let restaurantResponse;
+    
+    if (finalCartItems.length > 0) {
+      try {
+        for (const item of finalCartItems) {
+          const menuId = item.menu_id;
+          
+          logger.info("Fetching menu data", { menuId });
+          const menuRes = await axios.get(
+            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-Id/${menuId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!menuRes.data?.menu) {
+            logger.error("Menu not found", { menuId });
+            return responseError(res, 404, `Menu with ID ${menuId} not found`);
+          }
+          
+          menuData.set(menuId, menuRes.data.menu);
+
+          if (!restaurantResponse) {
+            const restaurantId = menuRes.data.menu.restaurant_id;
+            logger.info("Fetching restaurant data", { restaurantId });
+
+            const restaurantRes = await axios.get(
+              `${GLOBAL_SERVICE_URL}/restaurant/restaurant/${restaurantId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (!restaurantRes.data?.restaurant) {
+              logger.error("Restaurant not found", { restaurantId });
+              return responseError(res, 404, `Restaurant with ID ${restaurantId} not found`);
+            }
+            restaurantResponse = restaurantRes.data.restaurant;
+          }
+        }
+      } catch (error) {
+        logger.error("Failed to fetch menu or restaurant data", {
+          error: error.message,
+          stack: error.stack,
+        });
+        return responseError(res, 500, "Failed to validate cart items");
+      }
     }
 
-    await Promise.all(
-      finalCartItems.map((item) =>
-        createOrderItemService(
-          order.order_id,
-          item.menu_id,
-          item.total_quantity
-        )
-      )
-    );
-    logger.info("Order items created successfully");
+    logger.info("Creating order from cart id:", cart_id);
+    let order;
 
-    logger.info("Resetting cart");
-    await deleteUserCartService(userId);
+    const totalQuantity = finalCartItems.reduce(
+      (acc, item) => acc + item.total_quantity,
+      0
+    );
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      order = await createOrderService(client, {
+        userId: userId,
+        restaurantId: cart.restaurant_id,
+        orderType: "CART",
+        restaurantName: restaurantResponse.restaurant_name,
+        restaurantCity: restaurantResponse.restaurant_city,
+        restaurantProvince: restaurantResponse.restaurant_province,
+        restaurantDistrict: restaurantResponse.restaurant_district,
+        restaurantVillage: restaurantResponse.restaurant_village,
+        restaurantAddress: restaurantResponse.restaurant_address,
+        restaurantImage: restaurantResponse.restaurant_image,
+        quantity: totalQuantity,
+        sellerId: restaurantResponse.owner_id,
+      });
+
+      if (!order || !order.order_id) {
+        throw new Error("Failed to create order from cart - no order ID returned");
+      }
+      logger.info("Order created successfully:", { orderId: order.order_id });
+
+      await Promise.all(
+        finalCartItems.map(async (item) => {
+          const menuInfo = menuData.get(item.menu_id);
+          if (!menuInfo) {
+            throw new Error(`Menu data not found for menu_id: ${item.menu_id}`);
+          }
+
+          return createOrderItemService(
+            client,
+            order.order_id,
+            {
+              menuId: item.menu_id,
+              quantity: item.total_quantity,
+              menuName: menuInfo.menu_name,
+              menuDescription: menuInfo.menu_description,
+              menuPrice: menuInfo.menu_price,
+              menuImage: menuInfo.menu_image,
+              menuCategory: menuInfo.menu_category,
+            }
+          );
+        })
+      );
+
+      logger.info("Order items created successfully");
+      logger.info("Resetting cart");
+      await deleteUserCartService(userId);
+      await client.query('COMMIT');
+      client.release();
+    } catch (err) {
+      await client.query('ROLLBACK');
+      client.release();
+      logger.error("Transaction failed, rolled back:", {
+        error: err.message,
+        stack: err.stack,
+        orderId: order?.order_id
+      });
+      throw err;
+    }
 
     logger.info("Order created successfully:", order);
     return responseSuccess(
@@ -1895,7 +1970,10 @@ export const checkoutCartController = async (req, res) => {
       order
     );
   } catch (err) {
-    logger.error("Error fetching cart:", err);
-    return responseError(res, 500, "Internal server error");
+    logger.error("Error in checkout cart controller:", {
+      error: err.message,
+      stack: err.stack
+    });
+    return responseError(res, 500, err.message || "Internal server error");
   }
 };

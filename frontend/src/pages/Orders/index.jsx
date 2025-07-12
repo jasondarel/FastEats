@@ -146,7 +146,7 @@ const Orders = () => {
             !error &&
             sortedOrders.map((order) => (
               <OrderItem
-                key={order.id}
+                key={order.order_id || order.id}
                 order={order}
                 onOrderClick={() => handleOrderClick(order.order_id)}
                 onOrderAgain={handleOrderAgain}

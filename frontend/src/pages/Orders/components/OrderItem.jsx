@@ -33,41 +33,24 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   useEffect(() => {
     const fetchMenuDetails = async () => {
       const details = {};
-
-      if (order.items && order.items.length > 0) {
-        await Promise.all(
-          order.items.map(async (item) => {
-            if (!details[item.menu_id]) {
-              try {
-                const res = await axios.get(
-                  `${API_URL}/restaurant/menu-by-id/${item.menu_id}`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      "Content-Type": "application/json",
-                    },
-                  }
-                );
-                console.log(`Menu ${item.menu_id} response:`, res.data);
-
-                if (res.data.success) {
-                  console.log("Menu image path:", res.data.menu.menu_image);
-                  console.log(
-                    "Full image URL would be:",
-                    `${API_URL}/restaurant/uploads/menu/${res.data.menu.menu_image}`
-                  );
-                  details[item.menu_id] = res.data.menu;
-                }
-              } catch (error) {
-                console.error(
-                  `Error fetching menu for ID ${item.menu_id}:`,
-                  error
-                );
-              }
-            }
-          })
-        );
+      const res = await axios.get(
+        `${API_URL}/order/order-items/${order.order_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const orderItems = res.data.order || [];
+      if (orderItems) {
+        orderItems.items.forEach((item) => {
+          if (item.menu_id && !details[item.menu_id]) {
+            details[item.menu_id] = item;
+          }
+        });
       }
+      console.log("Order items:", orderItems);
 
       setMenuDetails(details);
       setLoading(false);
@@ -138,7 +121,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
             <FaShoppingBag className="text-yellow-600 text-lg" />
           </div>
           <div>
-            <h4 className="font-bold leading-3 text-sm">Order</h4>
+            <h4 className="font-bold leading-3 text-sm">Order #{order.order_id}</h4>
             <p className="text-sm text-slate-700">
               {formatDate(order.created_at)}
             </p>
@@ -163,6 +146,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           <>
             {order.items?.slice(0, 2).map((item, idx) => {
               const menu = menuDetails[item.menu_id];
+              console.log("Menu details for item:", menu);
               return (
                 <div className="flex" key={item.order_item_id || idx}>
                   <img
@@ -177,8 +161,8 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                     className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-gray-200"
                     onError={(e) => {
                       console.log("Image failed to load:", e.target.src);
-                      e.target.onerror = null; // Prevent infinite error loop
-                      e.target.src = placeholderImage; // Use inline SVG placeholder
+                      e.target.onerror = null;
+                      e.target.src = placeholderImage;
                     }}
                   />
                   <div className="pt-2 pl-4 flex-1 min-w-0">

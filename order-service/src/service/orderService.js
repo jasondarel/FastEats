@@ -1,11 +1,12 @@
+import { raw } from "express";
 import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,
   PREPARING_ORDER_ROUTING_KEY,
 } from "../config/rabbitMQInit.js";
 
-export const createOrderService = async (order) => {
-  const result = await pool.query(
+export const createOrderService = async (paramPool=pool, order) => {
+  const result = await paramPool.query(
     "INSERT INTO orders (user_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
     [
       order.userId,
@@ -25,8 +26,8 @@ export const createOrderService = async (order) => {
   return result.rows[0];
 };
 
-export const createOrderItemService = async (orderId, orderReq) => {
-  const result = await pool.query(
+export const createOrderItemService = async (paramPool=pool, orderId, orderReq) => {
+  const result = await paramPool.query(
     "INSERT INTO order_items (order_id, menu_id, item_quantity, menu_name, menu_description, menu_price, menu_image, menu_category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
     [
       orderId, 
@@ -312,40 +313,29 @@ ORDER BY o.created_at DESC;
 export const getAllOrderWithItemsByOrderIdService = async (orderId) => {
   const result = await pool.query(
     `SELECT 
-    o.order_id,
-    o.user_id,
-    o.restaurant_id,
-    o.status,
-    o.order_type,
-    o.created_at,
-    o.updated_at,
-    COALESCE(
+      o.*, 
+      COALESCE(
         json_agg(
-            json_build_object(
-                'order_item_id', oi.order_item_id,
-                'menu_id', oi.menu_id,
-                'item_quantity', oi.item_quantity
-            )
+          json_build_object(
+            'order_item_id', oi.order_item_id,
+            'menu_id', oi.menu_id,
+            'item_quantity', oi.item_quantity,
+            'menu_name', oi.menu_name,
+            'menu_description', oi.menu_description,
+            'menu_price', oi.menu_price,
+            'menu_image', oi.menu_image,
+            'menu_category', oi.menu_category
+          )
         ) FILTER (WHERE oi.order_item_id IS NOT NULL),
         '[]'
-    ) AS items
-  FROM orders o
-  LEFT JOIN order_items oi ON o.order_id = oi.order_id
-  WHERE o.order_id = $1
-  GROUP BY o.order_id
-  ORDER BY o.created_at DESC;`,
+      ) AS items
+    FROM orders o
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    WHERE o.order_id = $1
+    GROUP BY o.order_id
+    ORDER BY o.created_at DESC;`,
     [orderId]
   );
   const rawOrder = result.rows[0];
-  const formattedOrder = {
-    order_id: rawOrder.order_id,
-    user_id: rawOrder.user_id,
-    restaurant_id: rawOrder.restaurant_id,
-    status: rawOrder.status,
-    order_type: rawOrder.order_type,
-    created_at: rawOrder.created_at,
-    updated_at: rawOrder.updated_at,
-    items: rawOrder.items,
-  };
-  return formattedOrder;
+  return rawOrder;
 };
