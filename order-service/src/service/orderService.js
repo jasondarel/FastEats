@@ -6,6 +6,7 @@ import {
 } from "../config/rabbitMQInit.js";
 
 export const createOrderService = async (paramPool=pool, order) => {
+  console.log("Creating order with data:", order);
   const result = await paramPool.query(
     "INSERT INTO orders (user_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
     [
