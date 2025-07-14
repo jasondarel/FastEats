@@ -56,12 +56,14 @@ const internalAPIKey = process.env.INTERNAL_API_KEY;
 
 export const createOrderController = async (req, res) => {
   logger.info("CREATE ORDER CONTROLLER");
+  const client = await pool.connect();
   try {
     const userId = req.user?.userId;
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       logger.warn("Unauthorized access attempt", { userId });
+      client.release();
       return responseError(res, 401, "Unauthorized: Missing or invalid token");
     }
 
@@ -71,6 +73,7 @@ export const createOrderController = async (req, res) => {
 
     if (!orderReq.menuId || !orderReq.quantity) {
       logger.warn("Order creation failed: Missing required fields", { userId });
+      client.release();
       return responseError(res, 400, "Missing required fields");
     }
 
@@ -79,6 +82,7 @@ export const createOrderController = async (req, res) => {
         menuId: orderReq.menuId,
         userId,
       });
+      client.release();
       return responseError(res, 400, "Invalid menuId");
     }
 
@@ -101,6 +105,7 @@ export const createOrderController = async (req, res) => {
         menuId: orderReq.menuId,
         error: error.message,
       });
+      client.release();
       return responseError(res, 500, "Failed to fetch menu data");
     }
 
@@ -120,6 +125,7 @@ export const createOrderController = async (req, res) => {
       );
     } catch (error) {
       logger.error("Failed to fetch restaurant data", { error: error.message });
+      client.release();
       return responseError(res, 500, "Failed to fetch restaurant data");
     }
 
@@ -130,15 +136,13 @@ export const createOrderController = async (req, res) => {
         userId,
         restaurantId: orderReq.restaurantId,
       });
+      client.release();
       return responseError(
         res,
         403,
         "You cannot order from your own restaurant"
       );
     }
-
-    console.log("Restauant Data: ", restaurantResponse.data.restaurant);
-    console.log("Menu Data: ", menuResponse.data.menu);
 
     orderReq.restaurantName = restaurantResponse.data.restaurant.restaurant_name;
     orderReq.restaurantProvince = restaurantResponse.data.restaurant.restaurant_province;
@@ -155,14 +159,18 @@ export const createOrderController = async (req, res) => {
     orderReq.menuCategory = menuResponse.data.menu.menu_category;
 
     try {
+      await client.query('BEGIN');
+
       logger.info("Inserting order into database", {
         userId,
         restaurantId: orderReq.restaurantId,
       });
-      const order = await createOrderService(orderReq);
+      const order = await createOrderService(client, orderReq);
 
       if (!order) {
         logger.error("Failed to create order", { userId });
+        await client.query('ROLLBACK');
+        client.release();
         return responseError(res, 500, "Failed to create order");
       }
       logger.info("Creating order item", {
@@ -172,6 +180,7 @@ export const createOrderController = async (req, res) => {
       });
 
       const orderItem = await createOrderItemService(
+        client,
         order.order_id,
         orderReq
       );
@@ -181,18 +190,25 @@ export const createOrderController = async (req, res) => {
           orderId: order.order_id,
           menuId: orderReq.menuId,
         });
+        await client.query('ROLLBACK');
+        client.release();
+        return responseError(res, 500, "Failed to create order item");
       }
 
+      await client.query('COMMIT');
       logger.info("Order and order item created successfully", {
         orderId: order.order_id,
         userId,
       });
 
+      client.release();
       return responseSuccess(res, 201, "Order created successfully", "order", {
         ...order,
         items: orderItem ? [orderItem] : [],
       });
     } catch (error) {
+      await client.query('ROLLBACK');
+      client.release();
       logger.error("Database error while creating order", {
         error: error.message,
       });
