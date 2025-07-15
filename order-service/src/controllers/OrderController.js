@@ -906,10 +906,10 @@ export const getOrderByIdController = async (req, res) => {
   logger.info("GET ORDER BY ID CONTROLLER");
   const { userId } = req.user;
   const { order_id } = req.params;
-  const token = req.headers.authorization?.split(" ")[1];
+
   try {
     const result = await getOrderByIdService(order_id);
-
+     
     if (!result) {
       logger.warn(`Order ${order_id} not found`);
       return responseError(res, 404, "Order Not Found");
@@ -927,18 +927,14 @@ export const getOrderByIdController = async (req, res) => {
     }
 
     if (result.order_type === "CHECKOUT") {
-      const menu = await axios.get(
-        `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${result.menu_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const orderItems = await getOrderItemsByOrderIdService(result.order_id);
+      if (!orderItems || orderItems.length === 0) {
+        logger.warn(`No items found for order ${order_id}`);
+        return responseError(res, 404, "No items found for this order");
+      }
       const order = {
         ...result,
-        menu: menu.data.menu,
+        ...orderItems[0]
       };
       logger.info(`Order ${order_id} fetched successfully`);
       return responseSuccess(
@@ -949,32 +945,10 @@ export const getOrderByIdController = async (req, res) => {
         order
       );
     } else if (result.order_type === "CART") {
-      const orderItems = await pool.query(
-        "SELECT * FROM order_items WHERE order_id = $1",
-        [order_id]
-      );
-
-      const orderItemsWithMenu = await Promise.all(
-        orderItems.rows.map(async (item) => {
-          const menu = await axios.get(
-            `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          return {
-            ...item,
-            menu: menu.data.menu,
-          };
-        })
-      );
-
+      const orderItems = await getOrderItemsByOrderIdService(result.order_id);
       const order = {
         ...result,
-        items: orderItemsWithMenu,
+        items: orderItems,
       };
 
       logger.info(`Cart order ${order_id} fetched successfully`);
