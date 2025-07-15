@@ -97,7 +97,6 @@ const OrderList = () => {
       });
 
       const data = await response.json();
-      console.log("Fetched orders:", data);
 
       if (data.success) {
         setOrders(data.orders);

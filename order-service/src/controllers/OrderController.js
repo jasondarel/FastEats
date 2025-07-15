@@ -35,6 +35,7 @@ import {
   createCompletedOrderJobService,
   updateCartItemQuantityServiceByMenuId,
   getCartItemServiceByMenuId,
+  getOrdersBySellerIdService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -49,6 +50,7 @@ import {
   getRestaurantInformation,
   getUserInformation,
 } from "../../../packages/shared/apiService.js";
+import { get } from "http";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
@@ -1396,75 +1398,25 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       );
     }
 
-    const restaurantResponse = await axios.get(
-      `${GLOBAL_SERVICE_URL}/restaurant/restaurant`,
-      {
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const restaurant = restaurantResponse.data.restaurant;
-    const restaurant_id = restaurant.restaurant_id;
-
-    if (restaurant.owner_id !== userId) {
-      logger.warn("Unauthorized access attempt by user", { userId });
-      return responseError(
-        res,
-        403,
-        "You are not authorized to view these orders"
-      );
-    }
-
-    const orders = await getOrdersByRestaurantIdService(restaurant_id);
-    if (orders.length === 0) {
-      logger.warn("No orders found");
-      return responseError(res, 404, "No orders found");
+    const sellerOrders = await getOrdersBySellerIdService(userId, "Preparing");
+    if (sellerOrders.length === 0) {
+      logger.warn("No orders found for seller", { userId });
+      return responseError(res, 404, "No orders found for this seller");
     }
 
     const ordersWithDetails = await Promise.all(
-      orders.map(async (order) => {
+      sellerOrders.map(async (order) => {
+        let items;
+        items = await getOrderItemsByOrderIdService(order.order_id);
+        if (!items || items.length === 0) {
+          logger.warn(`No items found for order ${order.order_id}`);
+          return {
+            ...order,
+            error: "No items found for this order",
+          };
+        }
         try {
-          let orderItems = [];
-          let menuItems = [];
-          let userInfo = null;
-
-          if (order.order_type === "CART") {
-            orderItems = await getOrderItemsByOrderIdService(order.order_id);
-
-            const menuPromises = orderItems.map((item) =>
-              axios.get(
-                `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
-                {
-                  headers: {
-                    Authorization: token,
-                    "Content-Type": "application/json",
-                  },
-                }
-              )
-            );
-
-            const menuResponses = await Promise.all(menuPromises);
-            menuItems = menuResponses.map((response) => response.data.menu);
-          } else {
-            orderItems = [order];
-
-            const menuResponse = await axios.get(
-              `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
-              {
-                headers: {
-                  Authorization: token,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-
-            menuItems = [menuResponse.data.menu];
-          }
-
-          const userResponse = await axios.get(
+          const user = await axios.get(
             `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
             {
               headers: {
@@ -1473,27 +1425,21 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
               },
             }
           );
-
-          userInfo = userResponse.data.user;
           return {
             ...order,
-            items: order.order_type === "CART" ? orderItems : null,
-            menu: menuItems,
-            user: userInfo,
+            user: user.data.user,
+            items: items,
           };
         } catch (err) {
-          logger.error(
-            `Error processing order ${order.order_id}:`,
-            err.message
-          );
+          logger.error(`Error processing order ${order.order_id}:`, err.message);
           return {
             ...order,
-            error: "Failed to fetch complete details for this order",
+            error: "Failed to fetch user info for this order",
           };
         }
       })
     );
-
+    
     logger.info("Orders fetched successfully");
     return responseSuccess(
       res,
@@ -1663,39 +1609,12 @@ export const getRestaurantOrderController = async (req, res) => {
     }
 
     let ordersInfo = [];
-    let menu = [];
 
     if (order.order_type === "CART") {
       ordersInfo = await getOrderItemsByOrderIdService(order.order_id);
-
-      const menuPromises = ordersInfo.map((item) =>
-        axios.get(
-          `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${item.menu_id}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        )
-      );
-
-      const menuResponses = await Promise.all(menuPromises);
-      menu = menuResponses.map((response) => response.data.menu);
     } else {
-      ordersInfo = order;
-
-      const menuResponse = await axios.get(
-        `${GLOBAL_SERVICE_URL}/restaurant/menu-by-id/${order.menu_id}`,
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      menu.push(menuResponse.data.menu);
+      const orderItems = await getOrderItemsByOrderIdService(order.order_id);
+      ordersInfo = orderItems[0];
     }
 
     logger.info("Order items and menu fetched");
@@ -1738,7 +1657,6 @@ export const getRestaurantOrderController = async (req, res) => {
     const finalOrder = {
       ...order,
       items: ordersInfo,
-      menu,
       user: userResponse.data.user,
       transaction,
     };

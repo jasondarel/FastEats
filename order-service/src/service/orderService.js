@@ -301,6 +301,15 @@ export const getOrderItemsByOrderIdService = async (orderId) => {
   return result.rows;
 };
 
+export const getOrdersBySellerIdService = async (sellerId, status) => {
+  const result = await pool.query(
+    `SELECT * FROM orders o
+    WHERE o.seller_id = $1 AND o.status = $2`,
+    [sellerId, status]
+  );
+  return result.rows;
+}
+
 export const getAllOrdersWithItemsService = async () => {
   const result = await pool.query(
     `SELECT 
