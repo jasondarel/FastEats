@@ -3,7 +3,6 @@ import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaShoppingBag } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
-import ChatButton from "../../../components/ChatButton";
 
 const OrderCard = ({ order }) => {
   const navigate = useNavigate();
@@ -29,42 +28,23 @@ const OrderCard = ({ order }) => {
     }).format(price);
   };
 
-  // Calculate items and total price based on order type
   let itemCount = 0;
   let totalPrice = 0;
 
-  if (order.order_type === "CART" && order.items) {
-    // For CART orders, get count from items array
-    itemCount = order.items.reduce(
+  itemCount = order.items.reduce(
       (total, item) => total + (item.item_quantity || 0),
       0
     );
 
-    // Calculate price from items and menu data
-    totalPrice = order.items.reduce((total, item) => {
-      const menuItem = order.menu?.find(
-        (menu) => menu.menu_id === item.menu_id
-      );
-      const menuPrice = parseFloat(menuItem?.menu_price || 0);
-      const quantity = item.item_quantity || 0;
-      return total + menuPrice * quantity;
-    }, 0);
-  } else if (order.order_type === "CHECKOUT") {
-    // For CHECKOUT orders, use the direct properties
-    itemCount = order.item_quantity || 1;
+  totalPrice = order.items.reduce((total, item) => {
+    const menuPrice = parseFloat(item.menu_price || 0);
+    const quantity = item.item_quantity || 0;
+    return total + menuPrice * quantity;
+  }, 0);
 
-    // Price is menu_price * item_quantity
-    const menuItem = order.menu?.[0];
-    const menuPrice = parseFloat(menuItem?.menu_price || 0);
-    totalPrice = menuPrice * itemCount;
-  }
-
-  // Check if order has a status
   const status = order.status || "Pending";
   const isCompleted = status === "Completed" || status === "Cancelled";
-  // const firstItemImage = getFirstItemImage();
 
-  // Handle order card click (exclude chat button area)
   const handleCardClick = () => {
     navigate(`/order-summary/${order.order_id}`);
   };
