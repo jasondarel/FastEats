@@ -30,12 +30,12 @@ const OrderActions = ({
   const totalPrice = () => {
     let total = 0;
     if (order.order_type === "CHECKOUT") {
-      total = order.menu.menu_price * (order.item_quantity || 0);
+      total = order.menu_price * (order.item_quantity || 0);
     } else {
       if (order && order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
-          if (item && item.menu && item.menu.menu_price && item.item_quantity) {
-            const price = item.menu.menu_price * item.item_quantity;
+          if (item && item.menu_price && item.item_quantity) {
+            const price = item.menu_price * item.item_quantity;
             total += price;
           }
         });

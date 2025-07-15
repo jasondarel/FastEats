@@ -318,7 +318,6 @@ const OrderDetails = () => {
   }, []);
 
   const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
-    console.log("Confirming payment for order ID:", orderId);
     try {
       setPaymentLoading(true);
 
@@ -611,7 +610,7 @@ const OrderDetails = () => {
                 />
               )}
             </div>
-            
+
             {isShippingValid && (
               <OrderSummary order={order}/>
             )}
