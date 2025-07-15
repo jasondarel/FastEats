@@ -611,6 +611,7 @@ const OrderDetails = () => {
                 />
               )}
             </div>
+            
             {isShippingValid && (
               <OrderSummary order={order}/>
             )}
