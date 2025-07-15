@@ -3,6 +3,7 @@ const OrderSummary = ({
     order
 }) => {
   return (
+    console.log("Order Summary Component Rendered"),
     <div className="mt-8 p-6 bg-gradient-to-r from-amber-100 to-amber-50 rounded-xl shadow-sm border border-amber-200">
         <h3 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-2">
         Order Summary
@@ -18,9 +19,17 @@ const OrderSummary = ({
             <span className="text-amber-700 font-medium">Subtotal</span>
             <span className="text-amber-900 font-semibold">
             Rp{" "}
-            {(
-                parseFloat(order.menu.menu_price) * order.item_quantity
-            ).toLocaleString("id-ID")}
+            {order.order_type === "CHECKOUT"
+              ? (
+                (parseFloat(order.menu_price) * order.item_quantity).toLocaleString("id-ID")
+              )
+             : (
+                order.items.reduce(
+                  (sum, item) =>
+                    sum + parseFloat(item.menu_price) * item.item_quantity,
+                  0
+                ).toLocaleString("id-ID")
+             )}
             </span>
         </div>
         <div className="flex justify-between items-center border-b border-amber-100 pb-2">
@@ -33,9 +42,18 @@ const OrderSummary = ({
             <span className="text-lg font-bold text-amber-800">Total</span>
             <span className="text-lg font-bold text-amber-900">
             Rp{" "}
-            {(
-                parseFloat(order.menu.menu_price) * order.item_quantity + 2000
-            ).toLocaleString("id-ID")}
+            {order.order_type === "CHECKOUT"
+              ? (
+                  (parseFloat(order.menu_price) * order.item_quantity + 2000
+                  ).toLocaleString("id-ID")
+                )
+              : (
+                  order.items.reduce(
+                    (sum, item) =>
+                      sum + parseFloat(item.menu_price) * item.item_quantity,
+                    0
+                  ) + 2000
+                ).toLocaleString("id-ID")}
             </span>
         </div>
         </div>
