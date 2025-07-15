@@ -986,7 +986,7 @@ export const payOrderConfirmationController = async (req, res) => {
       shipping_phone,
       shipping_name,
     } = req.body;
-
+    
     const order = await getOrderByIdService(order_id);
     if (!order) {
       logger.warn(`Order ${order_id} not found`);
@@ -1015,7 +1015,7 @@ export const payOrderConfirmationController = async (req, res) => {
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
-    const totalPrice = itemPrice + 2000;
+    const totalPrice = itemPrice + tax;
     const response = await axios.post(
       process.env.MIDTRANS_SNAP_URL,
       {

@@ -130,13 +130,14 @@ const OrderShipping = ({
 
   useEffect(() => {
     const isShippingValid = () => {
+      console.log("Checking shipping validity with useCurrentInfo:", useCurrentInfo);
       if (useCurrentInfo) {
         return currentUserInfo && 
-          currentUserInfo.province !== "Not specified" && 
-          currentUserInfo.city !== "Not specified" && 
-          currentUserInfo.district !== "Not specified" && 
-          currentUserInfo.village !== "Not specified" && 
-          currentUserInfo.address !== "Not specified";
+          (currentUserInfo.province !== "Unknown") && 
+          (currentUserInfo.city !== "Unknown") && 
+          (currentUserInfo.district !== "Unknown") && 
+          (currentUserInfo.village !== "Unknown") && 
+          (currentUserInfo.address !== "Unknown")
       }
 
       return (
@@ -386,11 +387,11 @@ const OrderShipping = ({
                   <div><strong>Address:</strong> {currentUserInfoDetail.address}</div>
                 </div>
                 
-                {(currentUserInfo.province === "Not specified" || 
-                  currentUserInfo.city === "Not specified" ||
-                  currentUserInfo.district === "Not specified" ||
-                  currentUserInfo.village === "Not specified" ||
-                  currentUserInfo.address === "Not specified") && (
+                {(currentUserInfo.province === "Unknown" || 
+                  currentUserInfo.city === "Unknown" ||
+                  currentUserInfo.district === "Unknown" ||
+                  currentUserInfo.village === "Unknown" ||
+                  currentUserInfo.address === "Unknown") && (
                   <div className="mt-3 p-4 bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50 border-l-4 border-amber-400 rounded-lg flex items-center gap-4 shadow-sm">
                     <div className="flex items-center justify-center bg-amber-100 rounded-full h-12 w-12">
                       <LuTriangleAlert className="text-amber-600" size={25} />
