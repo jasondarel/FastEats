@@ -670,6 +670,7 @@ export const deliverOrderController = async (req, res) => {
   try {
     const { userId } = req.user;
     const order_id = req.params.order_id;
+    const token = req.headers.authorization?.split(" ")[1];
 
     if (!order_id || isNaN(order_id)) {
       logger.error("Invalid order_id provided");
@@ -686,7 +687,7 @@ export const deliverOrderController = async (req, res) => {
     const restaurantResponse = await getRestaurantInformation(
       GLOBAL_SERVICE_URL,
       order.restaurant_id,
-      internalAPIKey,
+      token,
       `Restaurant with ID ${order.restaurant_id} not found`
     );
 
