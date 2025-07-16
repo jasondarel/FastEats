@@ -43,6 +43,7 @@ const OrderSummary = () => {
         }
 
         const data = await response.json();
+        console.log("Order summary data:", data.order);
         setOrderData(data.order);
         setLoading(false);
       } catch (error) {
@@ -75,13 +76,14 @@ const OrderSummary = () => {
     });
 
     socketRef.current.on("orderCompleted", (completedOrder) => {
+      console.log("Order completed:", completedOrder);
       if (
         completedOrder.order_id === order_id ||
         completedOrder.order_id === Number(order_id)
       ) {
         setOrderData((prev) => {
-          if (!prev || !prev.order) return prev;
-          return { ...prev, order: { ...prev.order, ...completedOrder } };
+          if (!prev) return prev;
+          return { ...prev, status: completedOrder.status };
         });
       }
     });
