@@ -9,6 +9,7 @@ import PaymentDetails from "./components/PaymentDetails";
 import { API_URL, ORDER_URL } from "../../config/api";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
+import { BsChatLeftDots } from "react-icons/bs";
 import {
   getChatsService,
   createChatService,
@@ -42,8 +43,7 @@ const OrderSummary = () => {
         }
 
         const data = await response.json();
-        console.log("Order summary data:", data);
-        setOrderData(data);
+        setOrderData(data.order);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching order summary:", error);
@@ -292,7 +292,7 @@ const OrderSummary = () => {
     );
   }
 
-  if (!orderData || !orderData.success || !orderData.order) {
+  if (!orderData) {
     return (
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg flex justify-center items-center h-96">
         <p className="text-lg font-semibold">No order data found.</p>
@@ -300,8 +300,8 @@ const OrderSummary = () => {
     );
   }
 
-  const order = orderData.order;
-  const menuItems = order.menu;
+  const order = orderData;
+  const menuItems = order.items;
   const user = order.user;
   const transaction = order.transaction;
   const currentStep = getStepStatus(order.status);
@@ -318,24 +318,12 @@ const OrderSummary = () => {
         />
         <div className="flex justify-center gap-4">
           {order.status === "Preparing" && (
-            <div className="flex justify-center gap-2 mb-4">
+            <div className="flex justify-center gap-2 mb-4 items-center">
               <button
                 onClick={handleChatWithCustomer}
                 className="flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white rounded-lg transition-colors duration-200 font-medium text-sm"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
+                <BsChatLeftDots color="white" size={18}/>
                 Chat with Customer
               </button>
             </div>

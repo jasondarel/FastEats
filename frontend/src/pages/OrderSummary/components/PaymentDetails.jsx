@@ -1,59 +1,13 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
-import React from "react";
 
-const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
-  const getItemQuantity = (menuId) => {
-    if (order.order_type === "CHECKOUT") {
-      return order.item_quantity || 1;
-    } else if (order.order_type === "CART") {
-      if (order.orderItems && Array.isArray(order.orderItems)) {
-        const item = order.orderItems.find((item) => item.menu_id === menuId);
-        return item ? item.item_quantity : 1;
-      }
-
-      if (order.items && Array.isArray(order.items)) {
-        const item = order.items.find((item) => item.menu_id === menuId);
-        return item ? item.item_quantity : 1;
-      }
-    }
-    return 1;
-  };
-
-  const calculateSubtotal = () => {
-    if (
-      order.order_type === "CART" &&
-      Array.isArray(menuItems) &&
-      menuItems.length > 0
-    ) {
-      return menuItems.reduce((total, item) => {
-        const quantity = getItemQuantity(item.menu_id);
-        const price = parseFloat(item.menu_price) || 0;
-        return total + price * quantity;
-      }, 0);
-    } else if (
-      order.order_type === "CHECKOUT" &&
-      order.menu_id &&
-      order.item_quantity
-    ) {
-      if (Array.isArray(order.menu) && order.menu.length > 0) {
-        return parseFloat(order.menu[0].menu_price) * order.item_quantity;
-      } else if (order.menu && order.menu.menu_price) {
-        return parseFloat(order.menu.menu_price) * order.item_quantity;
-      }
-    }
-    return 0;
-  };
-
-  const subtotal = calculateSubtotal();
-  const totalAmount = subtotal;
-
+const PaymentDetails = ({ transaction, formatCurrency }) => {
   const paymentItems = [
     {
       label: "Subtotal",
-      value: formatCurrency(subtotal),
+      value: formatCurrency(transaction.transaction_gross),
     },
-    { label: "Tax", value: formatCurrency(0) },
+    { label: "Tax", value: formatCurrency(transaction.tax) },
     { label: "Delivery Fee", value: formatCurrency(0) },
   ];
 
@@ -74,7 +28,7 @@ const PaymentDetails = ({ menuItems, order, transaction, formatCurrency }) => {
       <div className="flex justify-between mt-4 pt-4 border-t border-dashed border-amber-300">
         <span className="font-semibold text-lg text-amber-900">Total</span>
         <span className="font-bold text-xl text-amber-900">
-          {formatCurrency(totalAmount)}
+          {formatCurrency(transaction.transaction_net)}
         </span>
       </div>
 

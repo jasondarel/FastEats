@@ -1637,8 +1637,6 @@ export const getRestaurantOrderController = async (req, res) => {
       return responseError(res, 404, "No items found for this order");
     }
 
-    let ordersInfo = [];
-
     const userResponse = await axios.get(
       `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
       {
@@ -1662,7 +1660,7 @@ export const getRestaurantOrderController = async (req, res) => {
 
     const finalOrder = {
       ...order,
-      items: ordersInfo,
+      items: orderItems,
       user: userResponse.data.user,
       transaction,
     };
