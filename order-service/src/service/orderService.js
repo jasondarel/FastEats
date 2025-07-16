@@ -302,11 +302,20 @@ export const getOrderItemsByOrderIdService = async (orderId) => {
 };
 
 export const getOrdersBySellerIdService = async (sellerId, status) => {
-  const result = await pool.query(
-    `SELECT * FROM orders o
-    WHERE o.seller_id = $1 AND o.status = $2`,
-    [sellerId, status]
-  );
+  let result
+  if (status === "") {
+    result = await pool.query(
+      `SELECT * FROM orders o
+      WHERE o.seller_id = $1 AND o.status NOT IN ('Pending', 'Cancelled')`,
+      [sellerId]
+    );
+  } else {
+    result = await pool.query(
+      `SELECT * FROM orders o
+      WHERE o.seller_id = $1 AND o.status = $2`,
+      [sellerId, status]
+    );
+  }
   return result.rows;
 }
 

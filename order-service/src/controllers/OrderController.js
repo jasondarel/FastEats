@@ -1411,7 +1411,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
       );
     }
 
-    const sellerOrders = await getOrdersBySellerIdService(userId, "Preparing");
+    const sellerOrders = await getOrdersBySellerIdService(userId, "");
     if (sellerOrders.length === 0) {
       logger.warn("No orders found for seller", { userId });
       return responseError(res, 404, "No orders found for this seller");
