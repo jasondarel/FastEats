@@ -378,7 +378,7 @@ const OrderList = () => {
                     </span>
                   )}
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                   {deliveringOrders.map((order) => (
                     <OrderCard key={order.order_id} order={order} />
                   ))}
