@@ -1034,6 +1034,10 @@ export const payOrderConfirmationController = async (req, res) => {
           shipping_phone,
           shipping_name,
         ],
+        custom_field2: [
+          tax,
+          itemPrice
+        ],
         credit_card: { secure: true },
         isProduction: process.env.IS_PRODUCTION,
       },
@@ -1079,6 +1083,7 @@ export const payOrderController = async (req, res) => {
       currency,
       expiry_time,
       custom_field1,
+      custom_field2,
     } = req.body;
 
     const shippingProvince = JSON.parse(custom_field1)[0];
@@ -1088,6 +1093,9 @@ export const payOrderController = async (req, res) => {
     const shippingAddress = JSON.parse(custom_field1)[4];
     const shippingPhone = JSON.parse(custom_field1)[5];
     const shippingName = JSON.parse(custom_field1)[6];
+
+    const tax = JSON.parse(custom_field2)[0];
+    const transactionNet = JSON.parse(custom_field2)[1];
 
     if (!order_id || !status_code || !gross_amount || !signature_key) {
       logger.warn("Missing required payment information");
@@ -1132,6 +1140,8 @@ export const payOrderController = async (req, res) => {
           va_number: va_number,
           payment_type: payment_type,
           transaction_status: transaction_status,
+          transaction_net: transactionNet,
+          tax: tax,
         };
       } else if (payment_type === "qris") {
         newTransaction = {
@@ -1149,6 +1159,8 @@ export const payOrderController = async (req, res) => {
           shipping_phone: shippingPhone,
           shipping_name: shippingName,
           transaction_status: transaction_status,
+          transaction_net: transactionNet,
+          tax: tax,
         };
       }
 
@@ -1587,7 +1599,7 @@ export const getRestaurantDashboardByRestaurantIdController = async (
 
 export const getRestaurantOrderController = async (req, res) => {
   logger.info("GET RESTAURANT ORDER CONTROLLER");
-  const { role } = req.user;
+  const { role, userId } = req.user;
   const { order_id } = req.params;
   const token = req.headers.authorization;
 
@@ -1608,30 +1620,24 @@ export const getRestaurantOrderController = async (req, res) => {
       return responseError(res, 404, "Order not found");
     }
 
-    let ordersInfo = [];
-
-    if (order.order_type === "CART") {
-      ordersInfo = await getOrderItemsByOrderIdService(order.order_id);
-    } else {
-      const orderItems = await getOrderItemsByOrderIdService(order.order_id);
-      ordersInfo = orderItems[0];
-    }
-
-    logger.info("Order items and menu fetched");
-
-    const restaurantId = order.restaurant_id;
-    const isAuthorized = menu.some(
-      (menuItem) => menuItem.restaurant_id === restaurantId
-    );
-
-    if (!isAuthorized) {
-      logger.warn("Unauthorized access attempt by user");
+    if (order.seller_id !== userId) {
+      logger.warn(
+        `Unauthorized access attempt by user ${userId} on order ${order_id}`
+      );
       return responseError(
         res,
         403,
         "You are not authorized to view this order"
       );
     }
+
+    const orderItems = await getOrderItemsByOrderIdService(order.order_id);
+    if (!orderItems || orderItems.length === 0) {
+      logger.warn("No items found for this order");
+      return responseError(res, 404, "No items found for this order");
+    }
+
+    let ordersInfo = [];
 
     const userResponse = await axios.get(
       `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,

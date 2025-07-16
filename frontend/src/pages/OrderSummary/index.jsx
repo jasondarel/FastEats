@@ -42,6 +42,7 @@ const OrderSummary = () => {
         }
 
         const data = await response.json();
+        console.log("Order summary data:", data);
         setOrderData(data);
         setLoading(false);
       } catch (error) {

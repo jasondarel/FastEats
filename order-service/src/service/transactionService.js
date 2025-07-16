@@ -7,25 +7,26 @@ export const createTransactionService = async (transaction) => {
                 currency = $1,
                 transaction_time = $2,
                 expiry_time = $3,
-                amount = $4,
-                bank = $5,
-                va_number = $6,
-                payment_type = $7,
-                shipping_province = $8,
-                shipping_city = $9,
-                shipping_district = $10,
-                shipping_village = $11,
-                shipping_address = $12,
-                shipping_phone = $13,
-                shipping_name = $14,
-                updated_at = NOW()
-            WHERE transaction_id = $15
+                bank = $4,
+                va_number = $5,
+                payment_type = $6,
+                shipping_province = $7,
+                shipping_city = $8,
+                shipping_district = $9,
+                shipping_village = $10,
+                shipping_address = $11,
+                shipping_phone = $12,
+                shipping_name = $13,
+                updated_at = NOW(),
+                transaction_gross = $15,
+                transaction_net = $16,
+                tax = $17
+            WHERE transaction_id = $14
             RETURNING *`,
             [
                 transaction.currency,
                 transaction.transaction_time,
                 transaction.expiry_time,
-                transaction.amount,
                 transaction.bank || null,
                 transaction.va_number || null,
                 transaction.payment_type,
@@ -36,22 +37,24 @@ export const createTransactionService = async (transaction) => {
                 transaction.shipping_address || 'unknown',
                 transaction.shipping_phone || 'unknown',
                 transaction.shipping_name || 'unknown',
-                transaction.id
+                transaction.id,
+                transaction.gross_amount || 0,
+                transaction.transaction_net || 0,
+                transaction.tax || 0
             ]
         );
         return result.rows[0];
     } else {
         const result = await pool.query(
             `INSERT INTO transactions 
-                (order_id, currency, transaction_time, expiry_time, amount, bank, va_number, payment_type, shipping_province, shipping_city, shipping_district, shipping_village, shipping_address, shipping_phone, shipping_name) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+                (order_id, currency, transaction_time, expiry_time, bank, va_number, payment_type, shipping_province, shipping_city, shipping_district, shipping_village, shipping_address, shipping_phone, shipping_name, transaction_gross, transaction_net, tax) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) 
             RETURNING *`,
             [
                 transaction.order_id,
                 transaction.currency,
                 transaction.transaction_time,
                 transaction.expiry_time,
-                transaction.amount,
                 transaction.bank || null,
                 transaction.va_number || null,
                 transaction.payment_type,
@@ -61,7 +64,10 @@ export const createTransactionService = async (transaction) => {
                 transaction.shipping_village || 'unknown',
                 transaction.shipping_address || 'unknown',
                 transaction.shipping_phone || 'unknown',
-                transaction.shipping_name || 'unknown'  
+                transaction.shipping_name || 'unknown',  
+                transaction.gross_amount || 0,
+                transaction.transaction_net || 0,
+                transaction.tax || 0
             ]
         );
         return result.rows[0];
