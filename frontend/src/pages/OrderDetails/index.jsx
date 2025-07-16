@@ -471,6 +471,13 @@ const OrderDetails = () => {
       }
     });
 
+    socketRef.current.on("orderDelivering", (deliveringOrder) => {
+      console.log("Order delivering event received:", deliveringOrder);
+      if (String(deliveringOrder.order_id) === String(orderId)) {
+        handleOrderUpdate(deliveringOrder);
+      }
+    });
+
     socketRef.current.on("statusChanged", (statusUpdate) => {
       console.log("Status change event received:", statusUpdate);
       if (String(statusUpdate.order_id) === String(orderId)) {
@@ -487,6 +494,7 @@ const OrderDetails = () => {
       if (socketRef.current) {
         socketRef.current.off("orderUpdated", handleOrderUpdate);
         socketRef.current.off("orderCompleted");
+        socketRef.current.off("orderDelivering");
         socketRef.current.off("statusChanged");
         socketRef.current.disconnect();
       }
