@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 const OrderInfo = ({ orderDetails, formatDate }) => {
-  const { order, user, transaction } = orderDetails;
-
+  const { order, user, transaction } = orderDetails
   const infoItems = [
     { label: "Order Date", value: formatDate(order.created_at) },
     { label: "Customer", value: `${user.name} (${user.email})` },

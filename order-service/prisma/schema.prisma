@@ -85,7 +85,9 @@ model transactions {
   currency          String?  @db.VarChar(10)
   transaction_time  DateTime?
   expiry_time       DateTime?
-  amount            Decimal? @db.Decimal(15,2)
+  transaction_gross Decimal? @db.Decimal(10,2) @default(0)
+  transaction_net   Decimal? @db.Decimal(10,2) @default(0)
+  tax               Decimal? @db.Decimal(10,2) @default(0)
   bank              String?  @db.VarChar(50)
   va_number         String?  @db.VarChar(50)
   payment_type      String?  @db.VarChar(50)

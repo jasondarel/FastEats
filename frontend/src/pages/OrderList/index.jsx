@@ -288,7 +288,7 @@ const OrderList = () => {
 
   return (
     <div className="flex flex-col md:flex-row p-4 md:p-10 w-full md:pl-64 h-screen overflow-auto bg-yellow-50">
-      <Sidebar />
+      <Sidebar /> 
       <div className="flex flex-col flex-grow w-full overflow-auto md:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="w-full max-w-6xl">
           <h2 className="text-2xl md:text-3xl font-bold text-yellow-600 mb-4 flex items-center">

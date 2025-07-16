@@ -3,44 +3,20 @@
 import React from "react";
 
 const OrderItems = ({ menuItems, order, formatCurrency, API_URL }) => {
-  const getItemQuantity = (menuId) => {
-    if (order.order_type === "CHECKOUT") {
-      return order.item_quantity;
-    } else if (order.order_type === "CART") {
-      if (order.orderItems && Array.isArray(order.orderItems)) {
-        const item = order.orderItems.find((item) => item.menu_id === menuId);
-        return item ? item.item_quantity : 1;
-      }
 
-      if (order.items && Array.isArray(order.items)) {
-        const item = order.items.find((item) => item.menu_id === menuId);
-        return item ? item.item_quantity : 1;
-      }
+  const getItemQuantity = (menuId) => {
+    const targetItem = menuItems.find(item => item.menu_id === menuId);
+    if (targetItem) {
+      return targetItem.item_quantity || 1;
     }
     return 1;
   };
 
   const getTotalQuantity = () => {
     let total = 0;
-    if (order.order_type === "CHECKOUT") {
-      total = order.item_quantity || 0;
-    } else if (order.order_type === "CART") {
-      if (order.orderItems && Array.isArray(order.orderItems)) {
-        order.orderItems.forEach((item) => {
-          if (item && item.item_quantity) {
-            total += item.item_quantity;
-          }
-        });
-      } else if (order.items && Array.isArray(order.items)) {
-        order.items.forEach((item) => {
-          if (item && item.item_quantity) {
-            total += item.item_quantity;
-          }
-        });
-      } else if (Array.isArray(menuItems)) {
-        total = menuItems.length;
-      }
-    }
+    menuItems.forEach(item => {
+      total += item.item_quantity;
+    });
     return total;
   };
 
