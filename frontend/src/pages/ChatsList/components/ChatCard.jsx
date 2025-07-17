@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaStore, FaComment, FaLock } from "react-icons/fa";

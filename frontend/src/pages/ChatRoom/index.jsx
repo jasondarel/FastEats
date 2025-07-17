@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
@@ -11,6 +12,7 @@ import { useChatSocket } from "./services/useChatSocket";
 import { getChatByIdService } from "../../service/chatServices/chatService";
 import OrderDetailsCard from "./components/OrderDetailsCard";
 import { API_URL } from "../../config/api";
+import { useSelector } from "react-redux";
 
 const ChatRoom = () => {
   const { chatId } = useParams();
@@ -31,6 +33,7 @@ const ChatRoom = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const [selectedGif, setSelectedGif] = useState(null);
+  const { user } = useSelector((state) => state.auth);
 
   const orderDetails = location.state || {};
 
@@ -107,7 +110,7 @@ const ChatRoom = () => {
 
       const messageData = {
         chatId,
-        text: "", // Empty text for order details
+        text: "",
         messageType: "order_details",
         senderRole: payload.role,
         senderId: payload.userId,
@@ -854,6 +857,7 @@ const ChatRoom = () => {
             orderDetails={orderDetails}
             currentOrderDetails={currentOrderDetails}
             chatId={chatId}
+            user={user}
             formatPrice={formatPrice}
           />
 

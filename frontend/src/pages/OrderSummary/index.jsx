@@ -140,23 +140,17 @@ const OrderSummary = () => {
           let itemCount = 0;
           let totalPrice = 0;
 
-          if (Array.isArray(order.menu)) {
-            itemCount = order.menu.reduce(
+          if (Array.isArray(orderData.items)) {
+            itemCount = orderData.items.reduce(
               (total, item) =>
-                total + (item.item_quantity || item.quantity || 1),
+                total + (item.item_quantity ||  1),
               0
             );
-            totalPrice = order.menu.reduce((total, item) => {
+            totalPrice = orderData.items.reduce((total, item) => {
               const menuPrice = parseFloat(item.menu_price || 0);
               const quantity = item.item_quantity || item.quantity || 1;
               return total + menuPrice * quantity;
             }, 0);
-          } else if (order.menu) {
-            itemCount = order.item_quantity || 1;
-            totalPrice = parseFloat(order.menu.menu_price || 0) * itemCount;
-          } else {
-            itemCount = order.item_quantity || 1;
-            totalPrice = 0;
           }
 
           navigate(`/chat/${existingChat._id}`, {
