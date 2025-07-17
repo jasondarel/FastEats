@@ -628,7 +628,7 @@ const OrderDetails = () => {
             <div className="flex justify-end gap-4">
               {order.status.toLowerCase() === "delivering" && (
                 <button
-                  className="px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 hover:cursor-pointer transition"
+                  className="mt-8 px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 hover:cursor-pointer transition"
                   onClick={handleCompleteOrder}
                 >
                   Complete Order

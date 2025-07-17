@@ -319,7 +319,7 @@ const OrderSummary = () => {
           formatDate={formatDate}
         />
         <div className="flex justify-center gap-4">
-          {order.status === "Preparing" && (
+          {(order.status === "Preparing" || order.status === "Delivering") && (
             <div className="flex justify-center gap-2 mb-4 items-center">
               <button
                 onClick={handleChatWithCustomer}
