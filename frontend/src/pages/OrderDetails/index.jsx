@@ -128,6 +128,7 @@ const OrderDetails = () => {
 
   const handleChatWithRestaurant = async () => {
     try {
+      console.log("Handling chat with order: ", order);
       const existingChatsResponse = await getChatsService(token);
       console.log("Existing chats response:", existingChatsResponse);
 
@@ -150,14 +151,13 @@ const OrderDetails = () => {
           const totalPrice =
             order.items?.reduce((total, item) => {
               const menuPrice = parseFloat(
-                item.menuDetails?.menu_price || item.menu?.menu_price || 0
+                item.menu_price || 0
               );
               const quantity = item.item_quantity || 0;
               return total + menuPrice * quantity;
             }, 0) ||
-            parseFloat(order.menu?.menu_price || 0) *
+            parseFloat(order.menu_price || 0) *
               (order.item_quantity || 1);
-
           navigate(`/chat/${existingChat._id}`, {
             state: {
               restaurantName:

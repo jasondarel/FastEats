@@ -3,6 +3,7 @@
 import React from "react";
 import { FaArrowLeft, FaStore, FaPhoneAlt } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
+import { IoMdPerson } from "react-icons/io";
 
 const ChatHeader = ({
   onBackClick,
@@ -10,7 +11,11 @@ const ChatHeader = ({
   currentOrderDetails,
   chatId,
   formatPrice,
+  user
 }) => {
+  console.log("ChatHeader orderDetails:", orderDetails);
+  console.log("ChatHeader currentOrderDetails:", currentOrderDetails);
+  console.log("ChatHeader User: ", user);
   const handleCallClick = () => {
     alert("Calling restaurant... (Demo feature)");
   };
@@ -30,30 +35,36 @@ const ChatHeader = ({
 
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
-                {orderDetails.restaurantImage || orderDetails.customerImage ? (
-                  <img
-                    src={
-                      orderDetails.restaurantImage || orderDetails.customerImage
-                    }
-                    alt={
-                      orderDetails.restaurantName ||
-                      orderDetails.customerName ||
-                      "Profile"
-                    }
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                ) : null}
-                <FaStore
-                  className={`text-yellow-600 ${
-                    orderDetails.restaurantImage || orderDetails.customerImage
-                      ? "hidden"
-                      : "flex"
-                  }`}
-                />
+                {user.role === "user" ? (
+                  orderDetails.restaurantImage ? (
+                    <img
+                      src={orderDetails.restaurantImage}
+                      alt={
+                        orderDetails.restaurantName ||
+                        "Restaurant Profile"
+                      }
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <FaStore className="text-yellow-600 flex" />
+                  )
+                ) : (
+                  orderDetails.customerImage ? (
+                    <img
+                      src={orderDetails.customerImage}
+                      alt={orderDetails.customerName || "Customer Profile"}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <IoMdPerson className="text-yellow-600 flex" />
+                  )
+                )}
               </div>
 
               <div>
