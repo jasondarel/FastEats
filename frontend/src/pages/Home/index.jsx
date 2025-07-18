@@ -96,14 +96,8 @@ const Home = () => {
           locationParams = Object.fromEntries(
             Object.entries(locationFilters).filter(([_, value]) => value !== "")
           );
-        } else if (locationFilters.userInteracted) {
-          locationParams = {};
         } else {
-          locationParams = Object.fromEntries(
-            Object.entries(userLocation || {}).filter(
-              ([_, value]) => value !== ""
-            )
-          );
+          locationParams = {};
         }
 
         console.log("Has active filters:", hasActiveFilters);
@@ -114,6 +108,7 @@ const Home = () => {
 
         const response = await getRestaurants(locationParams, token);
         const data = response.data;
+        
         console.log("Fetched restaurants:", data.restaurants);
 
         const openRestaurants = data.restaurants.filter(

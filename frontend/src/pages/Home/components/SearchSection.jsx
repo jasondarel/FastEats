@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect } from "react";
 import { Filter, ChevronDown, MapPin, X } from "lucide-react";
 import SearchBar from "../../../components/SearchBar";
 import {
@@ -38,24 +39,6 @@ const LocationFilterButton = ({ onFiltersChange, userLocation }) => {
     districts: false,
     villages: false,
   });
-
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    console.log("User Location:", userLocation);
-    if (userLocation && userLocation.province && !isInitialized) {
-      const newFilterIds = {
-        province: userLocation.province,
-        city: userLocation.city || "",
-        district: userLocation.district || "",
-        village: userLocation.village || "",
-        userInteracted: false,
-      };
-      setFilterIds(newFilterIds);
-      setIsInitialized(true);
-      onFiltersChange && onFiltersChange(newFilterIds);
-    }
-  }, [userLocation, isInitialized, onFiltersChange]);
 
   useEffect(() => {
     const fetchProvinces = async () => {

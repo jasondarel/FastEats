@@ -328,7 +328,7 @@ const RegisterForm = ({ onRegister, errors, userType }) => {
           <ErrorMessage error={errors.general} center />
         </form>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="">
           <div className="max-w-2xl mx-autospace-y-4">
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-700 mb-4 border-b border-gray-200 pb-2">
