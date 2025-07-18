@@ -108,7 +108,7 @@ export const cancelOrderService = async (orderId) => {
 
 export const deliverOrderService = async (orderId) => {
   const result = await pool.query(
-    "UPDATE orders SET status = 'Delivering' WHERE order_id = $1 RETURNING *",
+    "UPDATE orders SET status = 'Delivering', updated_at = NOW() WHERE order_id = $1 RETURNING *",
     [orderId]
   );
   return result.rows[0];
@@ -116,7 +116,7 @@ export const deliverOrderService = async (orderId) => {
 
 export const completeOrderService = async (orderId) => {
   const result = await pool.query(
-    "UPDATE orders SET status = 'Completed' WHERE order_id = $1 RETURNING *",
+    "UPDATE orders SET status = 'Completed', updated_at = NOW() WHERE order_id = $1 RETURNING *",
     [orderId]
   );
   return result.rows[0];
