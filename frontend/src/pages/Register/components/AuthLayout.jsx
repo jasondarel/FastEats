@@ -1,5 +1,4 @@
-import React from "react";
-
+/* eslint-disable react/prop-types */
 const AuthLayout = ({ children, isSellerRegister }) => {
   const themes = {
     customer: {
@@ -70,7 +69,7 @@ const AuthLayout = ({ children, isSellerRegister }) => {
             ></div>
           </div>
 
-          <div className="absolute left-6 top-6">
+          <div className="absolute left-6 top-6 z-100">
             <img
               src="/logo_FastEats.png"
               alt="Logo"
@@ -98,9 +97,9 @@ const AuthLayout = ({ children, isSellerRegister }) => {
           <div
             className="flex flex-col items-center justify-center w-full "
           >
-            <div className="w-[90%] sm:w-[80%] md:w-[50%] lg:w-[90%] xl:w-[70%]">
+            <div className="w-[90%] sm:w-[80%] md:w-[50%] lg:w-[90%] xl:w-[70%] mt-25 sm:mt-24 md:mt-15 lg:mt-18">
               <div
-                className={`absolute inset-0 bg-gradient-to-r ${currentTheme.formBg} rounded-3xl opacity-50 blur-sm`}
+                className={`absolute inset-0 bg-gradient-to-r rounded-3xl opacity-50 blur-sm`}
               ></div>
               <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/50">
                 {children}
