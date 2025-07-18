@@ -279,7 +279,7 @@ const OrderDetails = () => {
           const newOrder = {
             ...prevOrder,
             ...updatedOrder,
-
+            updated_at: updatedOrder.completed_at || updatedOrder.delivering_at,
             menu: updatedOrder.menu
               ? { ...prevOrder?.menu, ...updatedOrder.menu }
               : prevOrder?.menu,
