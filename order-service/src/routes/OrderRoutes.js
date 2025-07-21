@@ -86,7 +86,6 @@ router.put("/cart-item/:menu_id", authMiddleware, updateCartItemQuantityControll
 router.get("/cart-item", authMiddleware, getCartItemsController);
 router.delete("/cart-item/:menu_id", authMiddleware, deleteCartItemController);
 router.post("/checkout-cart/:cart_id", authMiddleware, checkoutCartController);
-
 router.get(
   "/order-items/:order_id",
   authMiddleware,

@@ -1295,7 +1295,7 @@ export const updateOrder = async (req, res) => {
       "preparing",
       "delivered,",
       "Completed",
-      "cancelled",
+      "Cancelled",
     ];
 
     if (!validStatuses.includes(status)) {
