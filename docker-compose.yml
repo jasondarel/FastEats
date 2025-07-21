@@ -51,6 +51,7 @@ services:
     restart: always
     ports:
       - "6381:6379"
+    command: redis-server --notify-keyspace-events Ex
     volumes:
       - fasteats_redis_data:/data
     networks:
