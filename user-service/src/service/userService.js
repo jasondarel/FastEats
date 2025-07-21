@@ -132,3 +132,28 @@ export const becomeSellerService = async(userId) => {
     );
     return result.rows[0];
 }
+
+export const createGoogleUserService = async(userReq) => {
+    const { name, email, google_id, avatar } = userReq;
+    const result = await pool.query(
+        "INSERT INTO users (name, email, google_id, avatar, is_verified) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [name, email, google_id, avatar, true]
+    );
+    return result.rows[0];
+}
+
+export const getUserByGoogleIdService = async(google_id) => {
+    const result = await pool.query(
+        "SELECT * FROM users WHERE google_id = $1",
+        [google_id]
+    );
+    return result.rows[0];
+}
+
+export const updateUserGoogleInfoService = async(userId, google_id, avatar) => {
+    const result = await pool.query(
+        "UPDATE users SET google_id = $1, avatar = $2 WHERE id = $3 RETURNING *",
+        [google_id, avatar, userId]
+    );
+    return result.rows[0];
+}

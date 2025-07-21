@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home/index";
 import Login from "./pages/Login";
+import GoogleAuthCallback from "./pages/Login/components/GoogleAuthCallback";
 import Register from "./pages/register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -47,6 +48,21 @@ function App() {
           <Route path="/forgot-password-otp" element={<ForgotPasswordOtp />} />
           <Route path="/new-password" element={<NewPassword />} />
           <Route path="/about" element={<About />} />
+          <Route path="/auth/google/success" element={<GoogleAuthCallback />} />
+          <Route
+            path='/auth/google/error'
+            element={
+              <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-red-600 mb-4">Authentication Failed</h2>
+                  <p className="text-gray-600 mb-4">There was an error with Google authentication</p>
+                  <a href="/login" className="text-blue-600 hover:underline">Return to Login</a>
+                </div>
+              </div>
+            }
+          />
+
+          
 
           <Route
             path="/"

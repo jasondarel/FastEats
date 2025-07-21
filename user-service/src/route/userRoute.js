@@ -21,6 +21,8 @@ import {
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
 import {fileURLToPath} from "url";
+import passport from '../config/passportInit.js';
+import { googleAuthController, googleCallbackController } from "../controller/userController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/profile";
@@ -45,5 +47,16 @@ userRoutes.put("/user-payment", authMiddleware, updateUserPaymentController);
 userRoutes.post("/send-reset-password-req", sendResetPasswordReqController);
 userRoutes.get("/verify-reset-password-token", verifyResetPasswordTokenController);
 userRoutes.post("/reset-password", resetPasswordController);
+userRoutes.get("/auth/google", googleAuthController);
+userRoutes.get("/auth/google/callback", 
+  passport.authenticate('google', { 
+    failureRedirect: `${process.env.CLIENT_URL}/auth/google/error` 
+  }),
+  (req, res, next) => {
+    console.log("PASSPORT SUCCESS ✅");
+    next();
+  },
+  googleCallbackController
+);
 
 export default userRoutes;

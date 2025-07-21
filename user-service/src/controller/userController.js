@@ -37,6 +37,7 @@ import { getRedisClient } from "../config/redisInit.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
 import envInit from "../config/envInit.js";
+import passport from '../config/passportInit.js';
 envInit();
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
@@ -667,3 +668,37 @@ export const resetPasswordController = async (req, res) => {
     return responseError(res, 500, "Server error");
   }
 }
+
+
+export const googleAuthController = passport.authenticate('google', {
+  scope: ['profile', 'email']
+});
+
+export const googleCallbackController = async (req, res) => {
+   console.log("=== GOOGLE CALLBACK DEBUG ===");
+  console.log("req.user:", req.user);
+  console.log("CLIENT_URL:", process.env.CLIENT_URL);
+  try {
+    const user = req.user;
+
+    if (!user) {
+      console.log("No user found in request");
+      return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
+    }
+    
+    const token = generateLoginToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    console.log("Generated token:", token);
+
+    const redirectUrl = `${CLIENT_URL}/auth/google/success?token=${token}`;
+    console.log("Redirecting to:", redirectUrl);
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    logger.error("Google auth error", err);
+    return res.redirect(`${CLIENT_URL}/auth/google/error`);
+  }
+};

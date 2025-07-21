@@ -10,3 +10,6 @@ logs/*
 
 !/src/uploads/profile/.gitkeep
 .turbo/
+package-lock.json
+
+/user-service/node_modules

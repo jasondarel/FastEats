@@ -19,12 +19,15 @@ model users {
   name          String
   email         String        @unique
   is_verified   Boolean       @default(false)
-  password_hash String
+  password_hash String?      
   role          String        @default("user")
+  google_id     String?       @unique 
+  avatar        String?                 
   created_at    DateTime      @default(now())
   user_details  user_details?
   user_payments user_payments?
 }
+
 
 model user_details {
   user_id      Int      @id
@@ -45,5 +48,5 @@ model user_payments {
   gopay       String  @default("1234567890")
   dana        String  @default("1234567890")
   updated_at  DateTime @default(now())
-  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
