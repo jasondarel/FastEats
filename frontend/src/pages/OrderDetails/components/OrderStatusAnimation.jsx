@@ -4,7 +4,6 @@ import React from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const OrderStatusAnimation = ({ status }) => {
-  // Function to get Lottie animation URL based on status
   const getLottieAnimation = (status) => {
     switch (status) {
       case "Preparing":

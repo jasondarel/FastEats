@@ -10,6 +10,9 @@ import { Server as SocketIOServer } from "socket.io";
 import http from "http";
 import cron from "node-cron";
 import { publishCompletedOrderMessage, publishPreparingOrderMessage } from "./src/util/orderUtil.js";
+import { redisInit } from "./src/config/redisInit.js";
+import Redis from "ioredis";
+import setupRedisOrderEvents from "./src/events/redis-order-event.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -39,12 +42,15 @@ app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(express.json());
 app.use(OrderRoutes);
 
+setupRedisOrderEvents(io);
+
 (async () => {
   try {
     await createDatabase();
     await testDatabase();
     // await createTables();
     await rabbitMQInit();
+    await redisInit();
 
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
 
