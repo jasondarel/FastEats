@@ -51,6 +51,7 @@ import {
   getUserInformation,
 } from "../../../packages/shared/apiService.js";
 import { get } from "http";
+import { getRedisClient } from "../config/redisInit.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
@@ -1179,6 +1180,37 @@ export const payOrderController = async (req, res) => {
 
       await pendingOrderService(order_id);
 
+      const redisClient = getRedisClient();
+      if (!redisClient) {
+        logger.error("Redis client not initialized");
+        return responseError(res, 500, "Redis client not initialized");
+      }
+      
+      await redisClient.set(
+        `order:${order_id}`,
+        JSON.stringify({
+          order_id: order_id,
+          status: "pending",
+          transaction_status: transaction_status,
+          transaction_time: transaction_time,
+          payment_type: payment_type,
+          gross_amount: gross_amount,
+          shipping_province: shippingProvince,
+          shipping_city: shippingCity,
+          shipping_district: shippingDistrict,
+          shipping_village: shippingVillage,
+          shipping_address: shippingAddress,
+          shipping_phone: shippingPhone,
+          shipping_name: shippingName,
+          tax: tax,
+          transaction_net: transactionNet,
+        }),
+        "NX",
+        "EX",
+        30 * 60
+      );
+      logger.info(`Order ${order_id} set to pending in Redis`);
+
       logger.info(`Transaction ${order_id} set to pending`);
       return responseSuccess(
         res,
@@ -1263,7 +1295,7 @@ export const updateOrder = async (req, res) => {
       "preparing",
       "delivered,",
       "Completed",
-      "cancelled",
+      "Cancelled",
     ];
 
     if (!validStatuses.includes(status)) {
