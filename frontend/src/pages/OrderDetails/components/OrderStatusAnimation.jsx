@@ -4,6 +4,7 @@ import React from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const OrderStatusAnimation = ({ status }) => {
+
   const getLottieAnimation = (status) => {
     switch (status) {
       case "Preparing":
