@@ -1987,3 +1987,33 @@ export const checkoutCartController = async (req, res) => {
     return responseError(res, 500, err.message || "Internal server error");
   }
 };
+
+export const getTTLOrderController = async (req, res) => {
+  logger.info("GET TTL ORDER CONTROLLER");
+  const { order_id } = req.params;
+  const key = `order:${order_id}`;
+  try {
+    const redisClient = getRedisClient();
+    if (!redisClient) {
+      logger.error("Redis client not initialized");
+      return responseError(res, 500, "Redis client not initialized");
+    }
+    const ttl = await redisClient.ttl(key);
+    if (ttl === -2) {
+      logger.warn(`Order ${order_id} not found in Redis`);
+      return responseError(res, 404, "Order not found");
+    }
+
+    logger.info(`Order ${order_id} TTL: ${ttl} seconds`);
+    return responseSuccess(
+      res,
+      200,
+      `Order ${order_id} TTL fetched successfully`,
+      "ttl",
+      ttl
+    );
+  } catch(err) {
+    logger.error("Error fetching TTL for order:", err);
+    return responseError(res, 500, "Internal server error");
+  }
+}
