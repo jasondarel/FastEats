@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 5002;
 
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL],
+    origin: [process.env.CLIENT_URL, process.env.DOMAIN_URL],
   })
 );
 app.use(fileUpload());
