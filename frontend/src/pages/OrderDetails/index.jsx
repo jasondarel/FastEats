@@ -38,8 +38,12 @@ const OrderDetails = () => {
   const [isShippingValid, setIsShippingValid] = useState(true);
   const [shippingData, setShippingData] = useState(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [paymentDeadline, setPaymentDeadline] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const [ttlFetched, setTtlFetched] = useState(false); // Track if TTL has been fetched
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
+  const countdownRef = useRef(null); // Ref to store countdown interval
 
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
@@ -294,6 +298,16 @@ const OrderDetails = () => {
         });
 
         setForceUpdate((prev) => prev + 1);
+
+        if (updatedOrder.status?.toLowerCase() !== "pending") {
+          setPaymentDeadline(null);
+          setTtlFetched(false);
+          setCountdown(null);
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
+        }
       } else {
         console.log("❌ Order IDs don't match - ignoring update");
         console.log("=== END SOCKET UPDATE ===");
@@ -513,6 +527,103 @@ const OrderDetails = () => {
   const shouldShowShipping =
     order && ["Waiting", "Pending"].includes(order.status);
 
+  useEffect(() => {
+    const fetchDeadlineOnce = async () => {
+      if (
+        order &&
+        order.status?.toLowerCase() === "pending" &&
+        !ttlFetched &&
+        token
+      ) {
+        console.log("Fetching TTL deadline for order:", order.order_id);
+        setTtlFetched(true);
+        
+        try {
+          const res = await fetch(`${API_URL}/order/ttl-order/${order.order_id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+          
+          if (typeof data.ttl === "number" && data.ttl > 0) {
+            const deadline = new Date(Date.now() + data.ttl * 1000);
+            console.log("Payment deadline set to:", deadline);
+            setPaymentDeadline(deadline);
+          } else {
+            console.log("Invalid TTL received:", data.ttl);
+            setPaymentDeadline(null);
+          }
+        } catch (err) {
+          console.error("Error fetching TTL:", err);
+          setPaymentDeadline(null);
+        }
+      } else if (order?.status?.toLowerCase() !== "pending") {
+        setPaymentDeadline(null);
+        setTtlFetched(false);
+        setCountdown(null);
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+      }
+    };
+
+    fetchDeadlineOnce();
+  }, [order?.order_id, order?.status, ttlFetched, token]);
+
+  useEffect(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+
+    if (!paymentDeadline) {
+      setCountdown(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = paymentDeadline - now;
+      
+      if (diff <= 0) {
+        setCountdown("00:00:00");
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+        }
+        return false;
+      } else {
+        const hours = String(Math.floor(diff / 3600000)).padStart(2, "0");
+        const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
+        const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+        setCountdown(`${hours}:${minutes}:${seconds}`);
+        return true;
+      }
+    };
+
+    if (updateCountdown()) {
+      countdownRef.current = setInterval(updateCountdown, 1000);
+    }
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [paymentDeadline]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, []);
+
   if (loading) {
     return <LoadingState />;
   }
@@ -572,6 +683,12 @@ const OrderDetails = () => {
             </div>
 
             <OrderStatusAnimation status={order.status} />
+
+            {order.status?.toLowerCase() === "pending" && countdown && (
+              <div className="text-center text-red-600 font-bold mb-4">
+                Payment Deadline: {countdown}
+              </div>
+            )}
 
             {["preparing", "delivering"].includes(
               order.status?.toLowerCase()

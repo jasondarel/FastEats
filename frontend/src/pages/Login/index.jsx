@@ -9,7 +9,7 @@ import AuthLink from "./components/AuthLink";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { loginUser } from "../../app/auth/authThunk";
-import { API_URL } from "../../config/api";
+import { USER_URL } from "../../config/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +19,7 @@ const Login = () => {
   const { loading, error } = useSelector((state) => state.auth);
   const MySwal = withReactContent(Swal);
   const handleGoogleLogin = () => {
-  window.location.href = `${API_URL || 'http://localhost:5000'}/user/auth/google`;
+  window.location.href = `${USER_URL || 'http://localhost:5000'}/auth/google`;
 };
 
   const handleLogin = async (e) => {
