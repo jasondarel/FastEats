@@ -761,11 +761,28 @@ export const completeGoogleRegistration = async (req, res) => {
         });
       }
 
+      if (!req.files || !req.files.restaurantImage) {
+      await pool.query("ROLLBACK");
+      return res.status(400).json({ error: "Restaurant image is required" });
+      }
+
+      const uploadedFile = req.files.restaurantImage;
+
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const fileExt = path.extname(uploadedFile.name);
+      const safeFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+      const filePath = path.join(uploadDir, safeFileName);
+
+      await uploadedFile.mv(filePath);
+
       
       const restaurantData = {
         ...req.body, 
         ownerId: newUser.id,
-        
+        restaurantImage: safeFileName,
         restaurantName: restaurantName,
         restaurantAddress: restaurantAddress,
         restaurant_province: restaurantProvince,
@@ -773,6 +790,8 @@ export const completeGoogleRegistration = async (req, res) => {
         restaurant_district: restaurantDistrict,
         restaurant_village: restaurantVillage,
       };
+
+      restaurantData.restaurantImage = safeFileName;
 
       console.log("Sending restaurant data:", restaurantData);
 
@@ -810,7 +829,13 @@ export const completeGoogleRegistration = async (req, res) => {
       role: newUser.role,
     });
 
-    return res.status(201).json({ message: "Registration successful", token });
+      return responseSuccess(res, 201, "Registration successful", "user", {
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      token,
+    });
+
   } catch (err) {
     await pool.query("ROLLBACK");
     console.error("completeGoogleRegistration error:", err);

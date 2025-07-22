@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // <- for URL query
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux"; 
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import RegisterForm from "./components/RegisterForm";
 import AuthLayout from "./components/AuthLayout";
 import { completeGoogleRegistrationService } from "../../service/userServices/registerService";
+import { loginSuccess } from "../../app/auth/authSlice"; 
 import BackgroundImage from "./components/BackgroundImage";
 
 const RegisterGoogle = () => {
@@ -13,6 +15,7 @@ const RegisterGoogle = () => {
   const [googleProfile, setGoogleProfile] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch(); 
   const MySwal = withReactContent(Swal);
 
   useEffect(() => {
@@ -61,21 +64,65 @@ const RegisterGoogle = () => {
         ...additionalData,
       };
 
-      const newUser = await completeGoogleRegistrationService(
+      const response = await completeGoogleRegistrationService(
         googleProfile,
         registrationPayload
       );
 
+      console.log('Registration response:', response); 
+
+      
+      let newUser, token;
+      
+      if (response.data) {
+        
+        newUser = response.data.user || response.data;
+        token = response.data.token;
+      } else {
+        
+        newUser = response.user || response;
+        token = response.token;
+      }
+
+      console.log('Token:', token);
+
+      
+      if (token) {
+        localStorage.setItem('token', token);
+        dispatch(loginSuccess({
+          token: token,
+          user: {
+            userId: newUser.id || newUser.userId,
+            email: newUser.email,
+            role: newUser.role || userType,
+            name: newUser.name || name
+          }
+        }));
+      }
+
+      console.log('Token 2:', token);
+
+      // Get user name for welcome message  
+      const userName = newUser.name || name || 'User';
+
       Swal.fire({
         title: "Successfully Registered",
-        text: `Welcome, ${newUser.name}!`,
+        text: `Welcome, ${userName}!`,
         icon: "success",
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
       }).then(() => {
-        navigate("/auth/google/success");
+        // Small delay to ensure Redux state is updated
+        setTimeout(() => {
+          if (userType === "seller") {
+            navigate("/restaurant-dashboard", { replace: true });
+          } else {
+            navigate("/home", { replace: true });
+          }
+        }, 100);
       });
     } catch (error) {
+      console.error('Registration error:', error); // Enhanced error logging
       const err = error?.response?.data?.errors || {
         general: "An error occurred",
       };

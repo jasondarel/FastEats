@@ -34,21 +34,28 @@ export const completeGoogleRegistrationService = async (
   registrationData
 ) => {
   try {
+    const formData = new FormData();
+    formData.append("google_id", googleProfile.id);
+    formData.append("email", googleProfile.email);
+    formData.append("avatar", googleProfile.avatar);
+    formData.append("name", registrationData.name);
+    formData.append("role", registrationData.role);
+    formData.append("restaurantName", registrationData.restaurantName);
+    formData.append("restaurantAddress", registrationData.restaurantAddress);
+    formData.append("restaurantProvince", registrationData.restaurantProvince);
+    formData.append("restaurantCity", registrationData.restaurantCity);
+    formData.append("restaurantDistrict", registrationData.restaurantDistrict);
+    formData.append("restaurantVillage", registrationData.restaurantVillage);
+    formData.append("restaurantAlamat", registrationData.restaurantAlamat);
+    formData.append("restaurantImage", registrationData.restaurantImage);
+
     const response = await axios.post(
       `${API_URL}/user/register/google`,
+      formData,
       {
-        google_id: googleProfile.id,
-        email: googleProfile.email,
-        avatar: googleProfile.avatar,
-        name: registrationData.name,
-        role: registrationData.role,
-        restaurantName: registrationData.restaurantName,
-        restaurantAddress: registrationData.restaurantAddress,
-        restaurantProvince: registrationData.restaurantProvince,
-        restaurantCity: registrationData.restaurantCity,
-        restaurantDistrict: registrationData.restaurantDistrict,
-        restaurantVillage: registrationData.restaurantVillage,
-        restaurantAlamat: registrationData.restaurantAlamat,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
 
@@ -59,19 +66,20 @@ export const completeGoogleRegistrationService = async (
   } catch (error) {
     console.error("Google registration error:", error);
     console.log("Payload sent to /user/register/google:", {
-  google_id: googleProfile.id,
-  email: googleProfile.email,
-  avatar: googleProfile.avatar,
-  name: registrationData.name,
-  role: registrationData.role,
-  restaurantName: registrationData.restaurantName,
-  restaurantAddress: registrationData.restaurantAddress,
-  restaurantProvince: registrationData.restaurantProvince,
-  restaurantCity: registrationData.restaurantCity,
-  restaurantDistrict: registrationData.restaurantDistrict,
-  restaurantVillage: registrationData.restaurantVillage,
-  restaurantAlamat: registrationData.restaurantAlamat,
-});
+    google_id: googleProfile.id,
+    email: googleProfile.email,
+    avatar: googleProfile.avatar,
+    name: registrationData.name,
+    role: registrationData.role,
+    restaurantImage: registrationData.restaurantImage,
+    restaurantName: registrationData.restaurantName,
+    restaurantAddress: registrationData.restaurantAddress,
+    restaurantProvince: registrationData.restaurantProvince,
+    restaurantCity: registrationData.restaurantCity,
+    restaurantDistrict: registrationData.restaurantDistrict,
+    restaurantVillage: registrationData.restaurantVillage,
+    restaurantAlamat: registrationData.restaurantAlamat,
+  });
 
     throw (
       error.response?.data?.errors ||
