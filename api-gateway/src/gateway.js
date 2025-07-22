@@ -2,11 +2,22 @@ import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import logger from "./config/loggerInit.js";
 import envInit from "./config/envInit.js";
+import cors from "cors";
+import http from "http";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
+const server = http.createServer(app);
+
+app.use(cors({
+  origin: [
+    process.env.CLIENT_URL,
+    process.env.DOMAIN_URL
+  ],
+  credentials: true
+}));
 
 logger.info(`PORT: ${process.env.PORT}`);
 logger.info(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
@@ -47,6 +58,12 @@ const userProxy = createProxyMiddleware({
 const orderProxy = createProxyMiddleware({
   target: process.env.ORDER_SERVICE_URL || 'http://localhost:5004',
   changeOrigin: true,
+  pathRewrite: (path, req) => {
+    if (path.startsWith('/order/socket.io')) {
+      return path.replace('/order', '');
+    }
+    return path;
+  },
   onProxyReq: (proxyReq, req) => {
     logger.info(`Order Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
@@ -77,6 +94,12 @@ const notificationProxy = createProxyMiddleware({
 const chatProxy = createProxyMiddleware({
   target: process.env.CHAT_SERVICE_URL || 'http://localhost:5005',
   changeOrigin: true,
+  pathRewrite: (path, req) => {
+    if (path.startsWith('/chat/socket.io')) {
+      return path.replace('/chat', '');
+    }
+    return path;
+  },
   onProxyReq: (proxyReq, req) => {
     logger.info(`Chat Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
@@ -110,7 +133,7 @@ app.get('/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`API Gateway running on port ${PORT}`);
   logger.info('Available routes:');
   logger.info('- /restaurant/* -> Restaurant Service');
@@ -119,4 +142,12 @@ app.listen(PORT, () => {
   logger.info('- /health -> Gateway Health Check');
   logger.info('- /notification/* -> Notification Service');
   logger.info('- /chat/* -> Chat Service');
+});
+
+server.on('upgrade', (req, socket, head) => {
+  if (req.url.startsWith('/chat')) {
+    chatProxy.upgrade(req, socket, head);
+  } else if (req.url.startsWith('/order')) {
+    orderProxy.upgrade(req, socket, head);
+  }
 });

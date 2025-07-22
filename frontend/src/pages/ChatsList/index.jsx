@@ -6,7 +6,7 @@ import Sidebar from "../../components/Sidebar";
 import ChatCard from "./components/ChatCard";
 import LoadingState from "../../components/LoadingState";
 import { getChatsService } from "../../service/chatServices/chatsListService";
-import { CHAT_URL } from "../../config/api";
+import { API_URL } from "../../config/api";
 import { useSelector } from "react-redux";
 import io from "socket.io-client";
 
@@ -43,8 +43,12 @@ const ChatsList = () => {
   };
 
   useEffect(() => {
-    socketRef.current = io(CHAT_URL, {
-      transports: ["websocket"],
+    socketRef.current = io(API_URL, {
+      path: "/chat/socket.io",
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     socketRef.current.on("refresh_chat_list", ({updatedChat}) => {
