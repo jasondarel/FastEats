@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import io from "socket.io-client";
-import { CHAT_URL } from "../../../config/api";
+import { API_URL, CHAT_URL } from "../../../config/api";
 
 export const useChatSocket = (
   chatId,
@@ -21,7 +21,8 @@ export const useChatSocket = (
     try {
       console.log("Attempting to connect to Socket.IO server at:", CHAT_URL);
 
-      socketRef.current = io(CHAT_URL, {
+      socketRef.current = io(API_URL, {
+        path: "/chat/socket.io",
         transports: ["websocket", "polling"],
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,

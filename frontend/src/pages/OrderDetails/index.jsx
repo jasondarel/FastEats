@@ -453,13 +453,18 @@ const OrderDetails = () => {
     console.log("ORDER_URL:", ORDER_URL);
     console.log("Token:", token ? "Present" : "Missing");
     console.log("OrderId:", orderId);
-
-    socketRef.current = io(ORDER_URL, {
-      transports: ["websocket"],
+    
+    socketRef.current = io(API_URL, {
+      path: "/order/socket.io",
+      transports: ["websocket", "polling"],
       auth: {
         token: token,
       },
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
+    
 
     socketRef.current.on("connect", () => {
       console.log("✅ Socket connected successfully");

@@ -58,8 +58,12 @@ const OrderSummary = () => {
 
   useEffect(() => {
     if (!order_id) return;
-    socketRef.current = io(ORDER_URL, {
-      transports: ["websocket"],
+    socketRef.current = io(API_URL, {
+      path: "/order/socket.io",
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     socketRef.current.on("orderUpdated", (updatedOrder) => {
