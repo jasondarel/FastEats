@@ -19,7 +19,7 @@ const Login = () => {
   const { loading, error } = useSelector((state) => state.auth);
   const MySwal = withReactContent(Swal);
   const handleGoogleLogin = () => {
-  window.location.href = `${USER_URL || 'http://localhost:5000'}/auth/google`;
+  window.location.href = `${'http://localhost:5000'}/user/auth/google`;
 };
 
   const handleLogin = async (e) => {
