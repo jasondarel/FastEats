@@ -22,7 +22,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
 import {fileURLToPath} from "url";
 import passport from '../config/passportInit.js';
-import { googleAuthController, googleCallbackController } from "../controller/userController.js";
+import { googleAuthController, googleCallbackController, completeGoogleRegistration } from "../controller/userController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/profile";
@@ -48,15 +48,35 @@ userRoutes.post("/send-reset-password-req", sendResetPasswordReqController);
 userRoutes.get("/verify-reset-password-token", verifyResetPasswordTokenController);
 userRoutes.post("/reset-password", resetPasswordController);
 userRoutes.get("/auth/google", googleAuthController);
-userRoutes.get("/auth/google/callback", 
-  passport.authenticate('google', { 
-    failureRedirect: `${process.env.CLIENT_URL}/auth/google/error` 
-  }),
-  (req, res, next) => {
-    console.log("PASSPORT SUCCESS ✅");
-    next();
-  },
-  googleCallbackController
-);
+userRoutes.get("/auth/google/callback", (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      console.error('Passport authentication error:', err);
+      return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
+    }
+    
+    if (!user) {
+      console.log("No user returned from passport");
+      return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
+    }
+    
+    if (user.isNewUser) {
+      console.log("New user detected, redirecting to registration");
+      const googleData = encodeURIComponent(JSON.stringify(user.googleProfile));
+      return res.redirect(`${process.env.CLIENT_URL}/register-google?data=${googleData}`);
+    }
+    
+    req.logIn(user, (loginErr) => {
+      if (loginErr) {
+        console.error('Login error:', loginErr);
+        return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
+      }
+      
+      googleCallbackController(req, res);
+    });
+  })(req, res, next);
+});
+
+userRoutes.post("/register/google", completeGoogleRegistration);
 
 export default userRoutes;

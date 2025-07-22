@@ -6,6 +6,7 @@ import Home from "./pages/Home/index";
 import Login from "./pages/Login";
 import GoogleAuthCallback from "./pages/Login/components/GoogleAuthCallback";
 import Register from "./pages/Register";
+import RegisterGoogle from "./pages/RegisterGoogle";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
@@ -42,6 +43,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register-google" element={<RegisterGoogle />} />
+          <Route path="/chats" element={<ChatsList />} />
           <Route path="/otp-verification" element={<OtpVerifPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
