@@ -669,15 +669,15 @@ export const resetPasswordController = async (req, res) => {
   }
 }
 
-
 export const googleAuthController = passport.authenticate('google', {
   scope: ['profile', 'email']
 });
 
 export const googleCallbackController = async (req, res) => {
-   console.log("=== GOOGLE CALLBACK DEBUG ===");
+  console.log("=== GOOGLE CALLBACK DEBUG ===");
   console.log("req.user:", req.user);
   console.log("CLIENT_URL:", process.env.CLIENT_URL);
+  
   try {
     const user = req.user;
 
@@ -685,6 +685,16 @@ export const googleCallbackController = async (req, res) => {
       console.log("No user found in request");
       return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
     }
+    
+    
+    if (user.isNewUser) {
+      console.log("New user detected, redirecting to registration");
+      
+      
+      const googleData = encodeURIComponent(JSON.stringify(user.googleProfile));
+      return res.redirect(`${process.env.CLIENT_URL}/register-google?data=${googleData}`);
+    }
+    
     
     const token = generateLoginToken({
       userId: user.id,
@@ -694,11 +704,141 @@ export const googleCallbackController = async (req, res) => {
 
     console.log("Generated token:", token);
 
-    const redirectUrl = `${CLIENT_URL}/auth/google/success?token=${token}`;
+    const redirectUrl = `${process.env.CLIENT_URL}/auth/google/success?token=${token}`;
     console.log("Redirecting to:", redirectUrl);
     return res.redirect(redirectUrl);
   } catch (err) {
-    logger.error("Google auth error", err);
-    return res.redirect(`${CLIENT_URL}/auth/google/error`);
+    console.error("Google auth error", err);
+    return res.redirect(`${process.env.CLIENT_URL}/auth/google/error`);
+  }
+};
+
+export const completeGoogleRegistration = async (req, res) => {
+  try {
+    await pool.query("BEGIN");
+    const {
+      google_id,
+      email,
+      name,
+      avatar,
+      role,
+      restaurantName,
+      restaurantAddress,
+      restaurantProvince,
+      restaurantCity,
+      restaurantDistrict,
+      restaurantVillage,
+    } = req.body;
+
+    if (!email || !google_id || !name) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const existing = await getUserByEmailService(email);
+    if (existing) {
+      await pool.query("ROLLBACK");
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const newUserResult = await pool.query(
+      `INSERT INTO users (name, email, avatar, google_id, role)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, name, email, role`,
+      [name, email, avatar, google_id, role]
+    );
+
+    const newUser = newUserResult.rows[0];
+
+    
+    await pool.query(`INSERT INTO user_details (user_id) VALUES ($1)`, [newUser.id]);
+
+    if (role === "seller") {
+      
+      if (!restaurantName || !restaurantAddress || !restaurantProvince || !restaurantCity || !restaurantDistrict || !restaurantVillage) {
+        await pool.query("ROLLBACK");
+        return res.status(400).json({ 
+          error: "Missing required restaurant fields for seller registration" 
+        });
+      }
+
+      if (!req.files || !req.files.restaurantImage) {
+      await pool.query("ROLLBACK");
+      return res.status(400).json({ error: "Restaurant image is required" });
+      }
+
+      const uploadedFile = req.files.restaurantImage;
+
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const fileExt = path.extname(uploadedFile.name);
+      const safeFileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+      const filePath = path.join(uploadDir, safeFileName);
+
+      await uploadedFile.mv(filePath);
+
+      
+      const restaurantData = {
+        ...req.body, 
+        ownerId: newUser.id,
+        restaurantImage: safeFileName,
+        restaurantName: restaurantName,
+        restaurantAddress: restaurantAddress,
+        restaurant_province: restaurantProvince,
+        restaurant_city: restaurantCity,
+        restaurant_district: restaurantDistrict,
+        restaurant_village: restaurantVillage,
+      };
+
+      restaurantData.restaurantImage = safeFileName;
+
+      console.log("Sending restaurant data:", restaurantData);
+
+      try {
+        await axios.post(`${GLOBAL_SERVICE_URL}/restaurant/restaurant`, restaurantData);
+        
+        await createUserPaymentService(newUser.id);
+        await pool.query("COMMIT");
+        
+      } catch (err) {
+        await pool.query("ROLLBACK");
+        console.error("Failed to create restaurant via Google OAuth");
+        console.log("restaurantData:", restaurantData);
+        
+        if (err.response) {
+          console.error("Status:", err.response.status);
+          console.error("Data:", err.response.data);
+          console.error("Headers:", err.response.headers);
+          
+          return res.status(400).json({ 
+            error: err.response.data.message || "Failed to create restaurant" 
+          });
+        } else {
+          console.error("Error message:", err.message);
+          return res.status(500).json({ error: "Failed to create restaurant" });
+        }
+      }
+    } else {
+      await pool.query("COMMIT");
+    }
+
+    const token = generateLoginToken({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+    });
+
+      return responseSuccess(res, 201, "Registration successful", "user", {
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      token,
+    });
+
+  } catch (err) {
+    await pool.query("ROLLBACK");
+    console.error("completeGoogleRegistration error:", err);
+    return res.status(500).json({ error: "Something went wrong during registration" });
   }
 };
