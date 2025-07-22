@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: [process.env.CLIENT_URL, process.env.DOMAIN_URL],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   }
 });

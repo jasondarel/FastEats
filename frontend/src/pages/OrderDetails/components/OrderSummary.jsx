@@ -3,7 +3,6 @@ const OrderSummary = ({
     order
 }) => {
   return (
-    console.log("Order Summary Component Rendered"),
     <div className="mt-8 p-6 bg-gradient-to-r from-amber-100 to-amber-50 rounded-xl shadow-sm border border-amber-200">
         <h3 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-2">
         Order Summary

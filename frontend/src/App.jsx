@@ -5,7 +5,7 @@ import "./App.css";
 import Home from "./pages/Home/index";
 import Login from "./pages/Login";
 import GoogleAuthCallback from "./pages/Login/components/GoogleAuthCallback";
-import Register from "./pages/register";
+import Register from "./pages/Register";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import React from "react";
