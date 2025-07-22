@@ -16,7 +16,7 @@ passport.use(new GoogleStrategy({
     let user = await getUserByEmailService(profile.emails[0].value);
     
     if (user) {
-      
+      // Existing user - update Google ID if not present
       if (!user.google_id) {
         const result = await pool.query(
           "UPDATE users SET google_id = $1, avatar = $2 WHERE id = $3 RETURNING *",
@@ -26,17 +26,17 @@ passport.use(new GoogleStrategy({
       }
       return done(null, user);
     } else {
-      
-      const result = await pool.query(
-        "INSERT INTO users (name, email, google_id, avatar, is_verified) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [profile.displayName, profile.emails[0].value, profile.id, profile.photos[0].value, true]
-      );
-      const newUser = result.rows[0];
-      
-      
-      await createUserDetailsService({ user_id: newUser.id });
-      
-      return done(null, newUser);
+      // User doesn't exist - return Google profile info for registration
+      const googleUserData = {
+        isNewUser: true,
+        googleProfile: {
+          id: profile.id,
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          avatar: profile.photos[0].value
+        }
+      };
+      return done(null, googleUserData);
     }
   } catch (error) {
     return done(error, null);
@@ -44,16 +44,30 @@ passport.use(new GoogleStrategy({
 }));
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  // Handle new users who don't have an id yet
+  if (user.isNewUser) {
+    done(null, { isNewUser: true, googleProfile: user.googleProfile });
+  } else {
+    done(null, user.id);
+  }
 });
 
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (data, done) => {
   try {
+    if (typeof data === 'object' && data.isNewUser) {
+      return done(null, data);
+    }
+    
     const result = await pool.query(
       "SELECT id, name, email, role, google_id, avatar FROM users WHERE id = $1",
-      [id]
+      [data]
     );
-    done(null, result.rows[0]);
+    const user = result.rows[0];
+    if (!user) {
+      done(null, false);
+    } else {
+      done(null, user);
+    }
   } catch (error) {
     done(error, null);
   }

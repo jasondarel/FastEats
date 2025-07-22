@@ -11,14 +11,26 @@ const GoogleAuthCallback = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const error = searchParams.get('error');
+    
+    if (error === 'account_not_found' || error === 'user_not_exists') {
+      navigate('/register-google');
+      return;
+    }
     
     if (token) {
       try {
-        // Decode token to get user info
+        
         const payload = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payload));
         
-        // Store token and user info in Redux
+        
+        if (decodedPayload.isNewUser || decodedPayload.needsRegistration) {
+          navigate('/register-google');
+          return;
+        }
+        
+        
         dispatch(loginSuccess({
           token: token,
           user: {
@@ -28,7 +40,7 @@ const GoogleAuthCallback = () => {
           }
         }));
 
-        // Store token in localStorage
+        
         localStorage.setItem('token', token);
 
         Swal.fire({
@@ -38,7 +50,6 @@ const GoogleAuthCallback = () => {
           confirmButtonText: 'Ok',
           confirmButtonColor: '#efb100',
         }).then(() => {
-          // Navigate based on role
           if (decodedPayload.role === 'seller') {
             navigate('/restaurant-dashboard');
           } else {
@@ -57,7 +68,6 @@ const GoogleAuthCallback = () => {
         navigate('/login');
       }
     } else {
-      // Handle error case
       Swal.fire({
         title: 'Authentication Failed',
         text: 'Google authentication was unsuccessful',

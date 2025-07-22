@@ -157,3 +157,30 @@ export const updateUserGoogleInfoService = async(userId, google_id, avatar) => {
     );
     return result.rows[0];
 }
+
+export const completeGoogleRegistrationService = async (googleProfile, additionalData = {}) => {
+    const { id: google_id, name, email, avatar } = googleProfile;
+    const { role = 'user' } = additionalData; 
+    
+    try {
+        
+        const existingUser = await getUserByEmailService(email);
+        if (existingUser) {
+            throw new Error('User already exists with this email');
+        }
+        
+        
+        const result = await pool.query(
+            "INSERT INTO users (name, email, google_id, avatar, role, is_verified) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            [name, email, google_id, avatar, role, true]
+        );
+        const newUser = result.rows[0];
+        
+        
+        await createUserDetailsService({ user_id: newUser.id });
+        
+        return newUser;
+    } catch (error) {
+        throw error;
+    }
+};  
