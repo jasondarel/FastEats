@@ -2,11 +2,20 @@ import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import logger from "./config/loggerInit.js";
 import envInit from "./config/envInit.js";
+import cors from "cors";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
+
+app.use(cors({
+  origin: [
+    process.env.CLIENT_URL,
+    process.env.DOMAIN_URL
+  ],
+  credentials: true
+}));
 
 logger.info(`PORT: ${process.env.PORT}`);
 logger.info(`RESTAURANT_SERVICE_URL: ${process.env.RESTAURANT_SERVICE_URL}`);
