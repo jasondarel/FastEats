@@ -6,7 +6,7 @@ import OrderHeader from "./components/OrderHeader";
 import OrderInfo from "./components/OrderInfo";
 import OrderItems from "./components/OrderItems";
 import PaymentDetails from "./components/PaymentDetails";
-import { API_URL, ORDER_URL } from "../../config/api";
+import { API_URL} from "../../config/api";
 import Swal from "sweetalert2";
 import io from "socket.io-client";
 import { BsChatLeftDots } from "react-icons/bs";
@@ -155,29 +155,28 @@ const OrderSummary = () => {
               const quantity = item.item_quantity || item.quantity || 1;
               return total + menuPrice * quantity;
             }, 0);
+            navigate(`/chat/${existingChat._id}`, {
+              state: {
+                customerName:
+                  order.user?.name || existingChat.user?.name || "Customer",
+                customerImage:
+                  order.user?.profile_photo ||
+                  existingChat.user?.profile_photo ||
+                  null,
+                orderId: order.order_id || order_id,
+                orderType: order.order_type || "CHECKOUT",
+                totalPrice,
+                itemCount,
+              },
+            });
+            return;
           }
-
-          navigate(`/chat/${existingChat._id}`, {
-            state: {
-              customerName:
-                order.user?.name || existingChat.user?.name || "Customer",
-              customerImage:
-                order.user?.profile_photo ||
-                existingChat.user?.profile_photo ||
-                null,
-              orderId: order.order_id || order_id,
-              orderType: order.order_type || "CHECKOUT",
-              totalPrice,
-              itemCount,
-            },
-          });
-          return;
         }
       }
 
       console.log("Creating new chat for order:", order_id);
       const chatResult = await createChatService(order_id, token);
-
+      
       if (chatResult.success && chatResult.dataChat?.chat) {
         const chatId = chatResult.dataChat.chat._id;
         console.log("Chat created successfully, navigating to:", chatId);
@@ -193,12 +192,12 @@ const OrderSummary = () => {
         const totalPrice =
           order.items?.reduce((total, item) => {
             const menuPrice = parseFloat(
-              item.menuDetails?.menu_price || item.menu?.menu_price || 0
+              item.menu_price || item.menu?.menu_price || 0
             );
             const quantity = item.item_quantity || 0;
             return total + menuPrice * quantity;
           }, 0) ||
-          parseFloat(order.menu?.menu_price || 0) * (order.item_quantity || 1);
+          parseFloat(order.menu_price || 0) * (order.item_quantity || 1);
 
         navigate(`/chat/${chatId}`, {
           state: {

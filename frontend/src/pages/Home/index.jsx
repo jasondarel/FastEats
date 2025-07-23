@@ -94,7 +94,7 @@ const Home = () => {
 
         if (hasActiveFilters) {
           locationParams = Object.fromEntries(
-            Object.entries(locationFilters).filter(([_, value]) => value !== "")
+            Object.entries(locationFilters).filter(([, value]) => value !== "")
           );
         } else {
           locationParams = {};

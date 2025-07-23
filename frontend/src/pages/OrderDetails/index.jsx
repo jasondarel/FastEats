@@ -182,12 +182,10 @@ const OrderDetails = () => {
         }
       }
 
-      console.log("Creating new chat for order:", orderId);
       const chatResult = await createChatService(orderId, token);
-
+  
       if (chatResult.success && chatResult.dataChat?.chat) {
         const chatId = chatResult.dataChat.chat._id;
-        console.log("Chat created successfully, navigating to:", chatId);
 
         const itemCount =
           order.items?.reduce(
@@ -200,12 +198,12 @@ const OrderDetails = () => {
         const totalPrice =
           order.items?.reduce((total, item) => {
             const menuPrice = parseFloat(
-              item.menuDetails?.menu_price || item.menu?.menu_price || 0
+              item.menu_price || item.menu?.menu_price || 0
             );
             const quantity = item.item_quantity || 0;
             return total + menuPrice * quantity;
           }, 0) ||
-          parseFloat(order.menu?.menu_price || 0) * (order.item_quantity || 1);
+          parseFloat(order.menu_price || 0) * (order.item_quantity || 1);
 
         navigate(`/chat/${chatId}`, {
           state: {
