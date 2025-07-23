@@ -1,6 +1,6 @@
-import Sidebar from "../../components/Sidebar";
-import LoadingState from "../../components/LoadingState";
-import ChatHeader from "./components/ChatHeader";
+import Sidebar from "../../../components/Sidebar";
+import LoadingState from "../../../components/LoadingState";
+import ChatHeader from "./ChatHeader";
 
 const LoadingPage = () => {
   return (
