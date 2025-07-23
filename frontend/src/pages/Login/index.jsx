@@ -9,7 +9,6 @@ import AuthLink from "./components/AuthLink";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { loginUser } from "../../app/auth/authThunk";
-import { USER_URL } from "../../config/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
