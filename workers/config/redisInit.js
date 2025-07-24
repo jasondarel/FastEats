@@ -4,12 +4,16 @@ import envInit from "./envInit.js";
 
 envInit();
 
+console.log("🔧 Initializing Redis...");
+
 const REDIS_HOST = process.env.REDIS_HOST || "127.0.0.1";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 let redisClient;
 
 export const redisInit = async () => {
+  console.log(`🔧 Redis Host: ${REDIS_HOST}`)
+console.log(`🔧 Redis Port: ${REDIS_PORT}`);
   try {
     redisClient = new Redis({
       host: REDIS_HOST,
