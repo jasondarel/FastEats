@@ -15,7 +15,7 @@ export const redisInit = async () => {
       host: REDIS_HOST,
       port: REDIS_PORT,
       retryStrategy: (times) => {
-        const delay = Math.min(times * 100, 3000); // Exponential backoff max 3s
+        const delay = Math.min(times * 100, 3000);
         logger.warn(`🔄 Redis reconnecting in ${delay}ms (attempt: ${times})`);
         return delay;
       },
