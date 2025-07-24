@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import logger from '../config/loggerInit.js';
 import envInit from '../config/envInit.js';
+import { responseError } from '../util/responseUtil.js';
 
 envInit();
 
@@ -10,17 +11,14 @@ const authMiddleware = (req, res, next) => {
     const authHeader = req.header('Authorization');
     if (!authHeader) {
         logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip} (missing token)`);
-        return res.status(401).json({
-        success: false,
-        message: "Access Unauthorized"
-        });
+        return responseError(res, 401, "Access Unauthorized");
     }
 
     const token = authHeader.replace('Bearer ', '');
     if (token === internalAPIKey) {
         req.user = {
-        role: "internal_service",
-        source: "internal",
+            role: "internal_service",
+            source: "internal",
         };
         return next();
     }
@@ -31,10 +29,7 @@ const authMiddleware = (req, res, next) => {
         return next();
     } catch (error) {
         logger.error(`[AUTH] Invalid token: ${error.message}`);
-        return res.status(403).json({
-        success: false,
-        message: "Invalid Token"
-        });
+        return responseError(res, 403, "Invalid Token");
     }
 };
 

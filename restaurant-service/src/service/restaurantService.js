@@ -14,7 +14,6 @@ export const isRestaurantAvailableByName = async (restaurantName) => {
     return result.rowCount > 0;
 }
 
-
 export const isRestaurantAvailableById = async (restaurantId) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_id = $1`,
@@ -38,7 +37,6 @@ export const createRestaurantService = async (restaurantReq) => {
             restaurantReq.restaurantImage,
         ]
     );
-    
     return result.rows[0];
 };
 
@@ -63,7 +61,6 @@ export const updateRestaurantService = async (restaurantReq, id) => {
     if (result.rows.length === 0) {
         return null;
     }
-
     return result.rows[0];
 };
 
@@ -72,11 +69,9 @@ export const deleteRestaurantService = async (id) => {
         `DELETE FROM restaurants WHERE restaurant_id = $1 RETURNING *`,
         [id]
     );
-
     if (result.rows.length === 0) {
         return null;
     }
-
     return result.rows[0];
 };
 
@@ -122,7 +117,6 @@ export const getRestaurantsService = async (ownerId, filters = null) => {
                 paramIndex++;
             }
         }
-
         const result = await pool.query(query, params);
         return result.rows;
     } catch (error) {
@@ -147,7 +141,6 @@ export const getRestaurantByOwnerIdService = async (ownerId) => {
 
 export const getRestaurantByRestaurantIdService = async (restaurantId) => {
     try {
-        // Validasi sebelum query
         if (!restaurantId || isNaN(restaurantId)) {
             throw new Error(`Invalid restaurantId: ${restaurantId}`);
         }
@@ -156,7 +149,6 @@ export const getRestaurantByRestaurantIdService = async (restaurantId) => {
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
             [parseInt(restaurantId, 10)]
         );
-
         return result.rows[0] || null;
     } catch (error) {
         console.error("❌ Error fetching restaurant by restaurant_id:", error);
@@ -171,7 +163,6 @@ export const getRestaurantService = async (Id) => {
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
             [Id]
         );
-
         return result.rows[0] || null;
     } catch (error) {
         throw error;
@@ -184,7 +175,6 @@ export const updateOpenRestaurantService = async (restaurantId, isIopen) => {
             `UPDATE restaurants SET is_open = $1 WHERE restaurant_id = $2 RETURNING *`,
             [isIopen, restaurantId]
         );
-
         return result.rows[0];
     } catch (error) {
         console.error("❌ Error updating restaurant:", error);
