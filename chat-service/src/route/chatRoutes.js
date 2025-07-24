@@ -15,12 +15,10 @@ const router = express.Router();
 router.get("/", (req, res) => {
     res.send(`Welcome to ${process.env.SERVICE_NAME || "Service"} Service`);
 });
-
 router.get("/chats", authMiddleware, getChatsController);
 router.post("/chat", authMiddleware, createChatController);
 router.post("/upload-image", authMiddleware, multerMiddleware("image"), uploadImageChatController);
 router.get("/chat/:chat_id", authMiddleware, getChatByIdController);
-
 router.post("/message", authMiddleware, createMessageController);
 router.get("/message", authMiddleware, getMessageController);
 

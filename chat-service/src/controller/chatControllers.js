@@ -1,6 +1,4 @@
 import {
-  getChatsServiceByUserId,
-  getChatsServiceByRestaurantId,
   createChatService,
   getChatByIdService,
   createMessageService,
@@ -13,8 +11,7 @@ import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
 import {
-  getRestaurantByOwnerIdInformation,
-  getRestaurantInformation,
+  getRestaurantByOwnerIdInformation
 } from "../../../packages/shared/apiService.js";
 import { getSellerChatsUtil, getUserChatsUtil } from "../util/chatUtil.js";
 

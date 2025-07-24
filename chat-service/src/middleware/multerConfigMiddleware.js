@@ -2,11 +2,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-/**
- * @param {string} fileName
- * @param {string} uploadLocation
- */
-
 const multerUpload = (fileName, uploadLocation) => {
     const __dirname = path.dirname(fileName);
     const uploadDir = path.resolve(__dirname, uploadLocation);
@@ -31,7 +26,6 @@ const multerUpload = (fileName, uploadLocation) => {
             cb(new Error('Unsupported file type'), false);
         }
     };
-
     return multer({ 
         storage,
         fileFilter
