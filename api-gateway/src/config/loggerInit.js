@@ -1,10 +1,11 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
+import envInit from "./envInit.js";
+envInit();
 
-// Function to initialize logger
 const initLogger = () => {
   return winston.createLogger({
-    level: "info",
+    level: process.env.LOGGER_LEVEL || "info",
     format: winston.format.combine(
       winston.format.timestamp(),
       winston.format.printf(({ level, message, timestamp, stack }) => {
@@ -13,11 +14,11 @@ const initLogger = () => {
     ),
     transports: [
       new DailyRotateFile({
-        filename: "logs/user-service-%DATE%.log", // Log file format
-        datePattern: "YYYY-MM-DD", // Rotate logs daily
-        maxSize: "20m", // Max size per file
-        maxFiles: "14d", // Keep logs for 14 days
-        zippedArchive: true, // Compress old logs
+        filename: "logs/user-service-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        maxSize: "20m",
+        maxFiles: "14d",
+        zippedArchive: true,
       }),
       new winston.transports.Console(),
     ],

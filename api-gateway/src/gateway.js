@@ -117,7 +117,6 @@ app.use('/user', userProxy);
 app.use('/order', orderProxy);
 app.use('/notification', notificationProxy);
 app.use('/chat', chatProxy);
-
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK',
