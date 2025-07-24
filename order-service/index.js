@@ -3,7 +3,6 @@ import express from "express";
 import cors from "cors";
 import OrderRoutes from "./src/routes/OrderRoutes.js";
 import envInit from "./src/config/envInit.js";
-// import createTables from "./src/config/tablesInit.js";
 import { createDatabase, testDatabase } from "./src/config/dbInit.js";
 import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
 import { Server as SocketIOServer } from "socket.io";
@@ -16,7 +15,6 @@ logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
@@ -26,7 +24,6 @@ const io = new SocketIOServer(server, {
 });
 
 app.set("io", io);
-
 io.on("connection", (socket) => {
   logger.info(`🟢 New client connected: ${socket.id}`);
 
@@ -34,7 +31,6 @@ io.on("connection", (socket) => {
     logger.info(`🔴 Client disconnected: ${socket.id}`);
   });
 });
-
 app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(express.json());
 app.use(OrderRoutes);
@@ -43,12 +39,9 @@ app.use(OrderRoutes);
   try {
     await createDatabase();
     await testDatabase();
-    // await createTables();
     await rabbitMQInit();
 
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
-
-    // Start server after all initializations
     server.listen(PORT, () => {
       logger.info(`🚀 Server with WebSocket running on http://localhost:${PORT}`);
     });

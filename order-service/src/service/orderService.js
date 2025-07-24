@@ -1,4 +1,3 @@
-import { raw } from "express";
 import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,

@@ -4,7 +4,6 @@ import logger from "../config/loggerInit.js";
 import { getAllOrderWithItemsByOrderIdService, getOrderJobsByRoutingKeyService, updateOrderJobStatusService } from "../service/orderService.js";
 import envInit from "../config/envInit.js";
 envInit();
-import axios from "axios";
 import { getUserInformation, getRestaurantInformation, getMenuInformation } from "../../../packages/shared/apiService.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;

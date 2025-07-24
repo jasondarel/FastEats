@@ -1,6 +1,5 @@
 import envInit from "../config/envInit.js";
 envInit();
-
 import axios from "axios";
 import pool from "../config/dbInit.js";
 import {
@@ -9,7 +8,6 @@ import {
   deliverOrderService,
   createOrderService,
   deleteOrderService,
-  getCompletedOrdersByRestaurantIdService,
   getOrderByIdService,
   getOrdersByRestaurantIdService,
   getSnapTokenService,
@@ -50,7 +48,6 @@ import {
   getRestaurantInformation,
   getUserInformation,
 } from "../../../packages/shared/apiService.js";
-import { get } from "http";
 import { getRedisClient } from "../config/redisInit.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
