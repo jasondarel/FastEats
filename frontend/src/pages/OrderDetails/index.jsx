@@ -21,6 +21,7 @@ import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
 import OrderShipping from "./components/OrderShipping";
+import RestaurantRating from './components/RestaurantRating';
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
 import { API_URL, ORDER_URL } from "../../config/api";
@@ -40,10 +41,10 @@ const OrderDetails = () => {
   const [forceUpdate, setForceUpdate] = useState(0);
   const [paymentDeadline, setPaymentDeadline] = useState(null);
   const [countdown, setCountdown] = useState(null);
-  const [ttlFetched, setTtlFetched] = useState(false); // Track if TTL has been fetched
+  const [ttlFetched, setTtlFetched] = useState(false); 
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
-  const countdownRef = useRef(null); // Ref to store countdown interval
+  const countdownRef = useRef(null); 
 
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
@@ -753,6 +754,48 @@ const OrderDetails = () => {
                 >
                   Complete Order
                 </button>
+              )}
+            </div>
+
+             <div className="mt-8 flex justify-end gap-4">
+              {order.status.toLowerCase() === "completed" && (
+               <RestaurantRating 
+                  order={order} 
+                  onSubmitRating={async (ratingData) => {
+                    try {
+                      const response = await fetch(`${API_URL}/order/rate-restaurant`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(ratingData),
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error('Failed to submit rating');
+                      }
+                      
+                      Swal.fire({
+                        title: 'Thank you!',
+                        text: 'Your rating has been submitted successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d97706',
+                      });
+                    } catch (error) {
+                      console.error('Error submitting rating:', error);
+                      Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to submit rating. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d97706',
+                      });
+                      throw error; 
+                    }
+                  }}
+                />
               )}
             </div>
 
