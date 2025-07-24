@@ -5,7 +5,6 @@ import {
   getMessageService,
   updateLastMessageChatService,
 } from "../service/chatService.js";
-import {} from "../validator/chatValidators.js";
 import axios from "axios";
 import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";

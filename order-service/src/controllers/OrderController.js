@@ -898,7 +898,7 @@ export const completeOrderController = async (req, res) => {
 
     return responseSuccess(res, 200, "Order completed successfully");
   } catch (error) {
-    logger.error("Internal server error:", error);
+    logger.error("Internal server error", error);
     return responseError(res, 500, "Internal server error");
   }
 };
@@ -1237,6 +1237,12 @@ export const payOrderController = async (req, res) => {
             500,
             "Failed to create preparing order jobs"
           );
+        }
+
+        const redisClient = getRedisClient();
+        if (redisClient) {
+          await redisClient.del(`order:${order_id}`);
+          logger.info(`Redis key order:${order_id} deleted after payment success`);
         }
 
         logger.info("Order paid successfully");
