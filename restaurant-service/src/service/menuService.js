@@ -13,7 +13,6 @@ export const createMenuService = async (menuReq) => {
       menuReq.menuImage,
     ]
   );
-
   return result.rows[0];
 };
 
@@ -22,7 +21,6 @@ export const updateAvailableMenuService = async (menuId, isAvailable) => {
     `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
     [isAvailable, menuId]
   );
-
   return result.rows[0];
 }
 

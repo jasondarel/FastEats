@@ -16,13 +16,15 @@ import {
     getUserPaymentController,
     sendResetPasswordReqController,
     verifyResetPasswordTokenController,
-    resetPasswordController
+    resetPasswordController,
+    completeGoogleRegistrationController,
+    googleAuthController, 
+    googleCallbackController,
 } from "../controller/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
 import {fileURLToPath} from "url";
 import passport from '../config/passportInit.js';
-import { googleAuthController, googleCallbackController, completeGoogleRegistration } from "../controller/userController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const uploadLocation = "../uploads/profile";
@@ -77,6 +79,6 @@ userRoutes.get("/auth/google/callback", (req, res, next) => {
   })(req, res, next);
 });
 
-userRoutes.post("/register/google", completeGoogleRegistration);
+userRoutes.post("/register/google", completeGoogleRegistrationController);
 
 export default userRoutes;

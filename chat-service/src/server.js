@@ -131,7 +131,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
-
 app.use("/", chatRoutes);
 
 (async () => {

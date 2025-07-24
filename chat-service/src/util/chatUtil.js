@@ -1,6 +1,6 @@
 import axios from "axios";
 import logger from "../config/loggerInit.js";
-import { responseError, responseSuccess } from "./responseUtil.js";
+import { responseError } from "./responseUtil.js";
 import envInit from "../config/envInit.js";
 envInit();
 import { getChatsServiceByRestaurantId, getChatsServiceByUserId } from "../service/chatService.js";

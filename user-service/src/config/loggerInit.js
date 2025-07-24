@@ -12,11 +12,11 @@ const initLogger = () => {
     ),
     transports: [
       new DailyRotateFile({
-        filename: "logs/user-service-%DATE%.log", // Log file format
-        datePattern: "YYYY-MM-DD", // Rotate logs daily
-        maxSize: "20m", // Max size per file
-        maxFiles: "14d", // Keep logs for 14 days
-        zippedArchive: true, // Compress old logs
+        filename: "logs/user-service-%DATE%.log",
+        datePattern: "YYYY-MM-DD",
+        maxSize: "20m",
+        maxFiles: "14d",
+        zippedArchive: true,
       }),
       new winston.transports.Console(),
     ],

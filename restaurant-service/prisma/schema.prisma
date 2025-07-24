@@ -28,6 +28,7 @@ model restaurants {
   created_at           DateTime    @default(now())
   updated_at           DateTime    @default(now())
   menu_items           menu_item[]
+  ratings              restaurant_rating[]
 }
 
 model menu_item {
@@ -42,4 +43,17 @@ model menu_item {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @default(now())
   restaurants     restaurants @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade)
+}
+
+model restaurant_rating {
+  id             Int          @id @default(autoincrement())
+  restaurant_id  Int
+  user_id        Int
+  order_id       Int
+  rating         Int          
+  comment        String?      
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  @@unique([user_id, restaurant_id, order_id])
+  restaurant   restaurants   @relation(fields: [restaurant_id], references: [restaurant_id])
 }

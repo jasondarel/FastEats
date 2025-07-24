@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { getUserByEmailService, createUserDetailsService } from '../service/userService.js';
+import { getUserByEmailService } from '../service/userService.js';
 import pool from './dbInit.js';
 import envInit from './envInit.js';
 
@@ -16,7 +16,6 @@ passport.use(new GoogleStrategy({
     let user = await getUserByEmailService(profile.emails[0].value);
     
     if (user) {
-      // Existing user - update Google ID if not present
       if (!user.google_id) {
         const result = await pool.query(
           "UPDATE users SET google_id = $1, avatar = $2 WHERE id = $3 RETURNING *",
@@ -26,7 +25,6 @@ passport.use(new GoogleStrategy({
       }
       return done(null, user);
     } else {
-      // User doesn't exist - return Google profile info for registration
       const googleUserData = {
         isNewUser: true,
         googleProfile: {
@@ -44,7 +42,6 @@ passport.use(new GoogleStrategy({
 }));
 
 passport.serializeUser((user, done) => {
-  // Handle new users who don't have an id yet
   if (user.isNewUser) {
     done(null, { isNewUser: true, googleProfile: user.googleProfile });
   } else {

@@ -17,7 +17,6 @@ const multerMiddleware = (fieldName) => (req, res, next) => {
             } else if (err.message === "Unsupported file type") {
                 return responseError(res, 400, "Invalid file type. Only JPEG, PNG, and PDF files are allowed.");
             }
-            
             return responseError(res, 500, "File upload failed due to an unexpected error.");
         }
         next();

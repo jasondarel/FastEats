@@ -1,5 +1,4 @@
 import { 
-    isOwnerAvailable, 
     isRestaurantAvailableByName, 
     isRestaurantAvailableByNameId 
 } from "../service/restaurantService.js";

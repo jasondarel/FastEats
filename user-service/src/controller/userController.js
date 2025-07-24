@@ -41,8 +41,6 @@ import passport from '../config/passportInit.js';
 envInit();
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
-const CLIENT_URL = process.env.CLIENT_URL;
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.resolve(__dirname, "../../../restaurant-service/src/uploads/restaurant");
@@ -74,9 +72,6 @@ export const registerController = async (req, res) => {
       userId: response.id,
     });
     await redisClient.expire(redisKey, 300);
-
-    // const redisData = await redisClient.hgetall(redisKey);
-
     const emailPayload = {
       email: req.body.email,
       token: emailVerificationToken,
@@ -713,7 +708,7 @@ export const googleCallbackController = async (req, res) => {
   }
 };
 
-export const completeGoogleRegistration = async (req, res) => {
+export const completeGoogleRegistrationController = async (req, res) => {
   try {
     await pool.query("BEGIN");
     const {

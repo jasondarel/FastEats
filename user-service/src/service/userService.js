@@ -163,12 +163,10 @@ export const completeGoogleRegistrationService = async (googleProfile, additiona
     const { role = 'user' } = additionalData; 
     
     try {
-        
         const existingUser = await getUserByEmailService(email);
         if (existingUser) {
             throw new Error('User already exists with this email');
         }
-        
         
         const result = await pool.query(
             "INSERT INTO users (name, email, google_id, avatar, role, is_verified) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
