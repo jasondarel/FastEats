@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const RestaurantRating = ({ order, onSubmitRating }) => {
+  console.log('RestaurantRating component rendered with order:', order);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState('');
@@ -30,16 +31,13 @@ const RestaurantRating = ({ order, onSubmitRating }) => {
       
       if (onSubmitRating) {
         await onSubmitRating({
-          orderId: order.order_id,
           rating,
           review,
-          restaurantId: order.restaurant?.restaurant_id
         });
       }
-      
       setHasRated(true);
     } catch (error) {
-      console.error('Error submitting rating:', error);
+      console.error('Error submitting rating:');
     } finally {
       setIsSubmitting(false);
     }

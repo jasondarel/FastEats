@@ -28,6 +28,7 @@ import { API_URL, ORDER_URL } from "../../config/api";
 import { MIDTRANS_SNAP_URL } from "../../config/api";
 import io from "socket.io-client";
 import OrderSummary from "./components/OrderSummary";
+import axios from "axios";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -763,16 +764,14 @@ const OrderDetails = () => {
                   order={order} 
                   onSubmitRating={async (ratingData) => {
                     try {
-                      const response = await fetch(`${API_URL}/order/rate-restaurant`, {
-                        method: 'POST',
+                      const response = await axios.post(`${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`, ratingData, {
                         headers: {
                           'Content-Type': 'application/json',
                           'Authorization': `Bearer ${token}`,
                         },
-                        body: JSON.stringify(ratingData),
                       });
                       
-                      if (!response.ok) {
+                      if (!response.data || !response.data.success) {
                         throw new Error('Failed to submit rating');
                       }
                       
@@ -785,9 +784,10 @@ const OrderDetails = () => {
                       });
                     } catch (error) {
                       console.error('Error submitting rating:', error);
+                      const message = error.response?.data?.message || 'Failed to submit rating';
                       Swal.fire({
                         title: 'Error!',
-                        text: 'Failed to submit rating. Please try again.',
+                        text: message,
                         icon: 'error',
                         confirmButtonText: 'OK',
                         confirmButtonColor: '#d97706',
