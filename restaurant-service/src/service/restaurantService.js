@@ -181,3 +181,41 @@ export const updateOpenRestaurantService = async (restaurantId, isIopen) => {
         throw error;
     }
 }
+
+export const createRestaurantRateService = async ({
+    orderId,
+    rating,
+    review,
+    restaurantId,
+    userId
+}) => {
+    try {
+        const result = await pool.query(
+            `INSERT INTO restaurant_rating (order_id, rating, comment, restaurant_id, user_id, created_at, updated_at) 
+            VALUES ($1, $2, $3, $4, $5, now(), now()) RETURNING *`,
+            [orderId, rating, review, restaurantId, userId]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error("❌ Error creating restaurant rating:", error);
+        throw error;
+    }
+}
+
+export const getRestaurantRateService = async ({
+    restaurantId,
+    userId,
+    orderId
+}) => {
+    try {
+        const result = await pool.query(
+            `SELECT * FROM restaurant_rating 
+            WHERE restaurant_id = $1 AND user_id = $2 AND order_id = $3`,
+            [restaurantId, userId, orderId]
+        );
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error("❌ Error fetching restaurant rating:", error);
+        throw error;
+    }
+}

@@ -1,14 +1,21 @@
+import envInit from "../config/envInit.js";
+envInit();
 import { 
     createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService,
     getRestaurantByRestaurantIdService,
     getRestaurantsService,
     updateRestaurantService,
-    updateOpenRestaurantService
+    updateOpenRestaurantService,
+    createRestaurantRateService,
+    getRestaurantRateService
 } from "../service/restaurantService.js";
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
+import { getOrderInformation } from "../../../packages/shared/apiService.js";
+
+const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL || "http://localhost:3000";
 
 export const createRestaurantController = async(req, res) => {
     logger.info("CREATE RESTAURANT CONTROLLER");
@@ -229,6 +236,131 @@ export const updateOpenRestaurantController = async (req, res) => {
         return responseSuccess(res, 200, "Restaurant is now open", "dataRestaurant", updatedRestaurant);
     } catch (err) {
         logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
+    }
+}
+
+export const createRestaurantRatingController = async(req, res) => {
+    logger.info("CREATE RESTAURANT RATING CONTROLLER");
+    const { orderId, restaurantId } = req.query;
+    const { rating, review } = req.body;
+    const { userId, role } = req.user;
+    const token = req.headers.authorization;
+    
+    try {
+        if (role !== "user") {
+            logger.warn("Only customers can rate a restaurant");
+            return responseError(res, 403, "Only customers can rate a restaurant");
+        }
+        
+        if (!orderId || !restaurantId) {
+            logger.warn("orderId and restaurantId are required");
+            return responseError(res, 400, "orderId and restaurantId are required");
+        }
+
+        if (!rating || rating < 1 || rating > 5) {
+            logger.warn("Rating must be between 1 and 5");
+            return responseError(res, 400, "Rating must be between 1 and 5");
+        }
+
+        const order = await getOrderInformation(GLOBAL_SERVICE_URL, orderId, token)
+        if (!order) {
+            logger.warn("Order not found");
+            return responseError(res, 404, "Order not found");
+        }
+        
+        if (order.order.restaurant_id != restaurantId) {
+            logger.warn("Order does not belong to this restaurant");
+            return responseError(res, 400, "Order does not belong to this restaurant");
+        }
+
+        if (order.order.user_id !== userId) {
+            logger.warn("You are not authorized to rate this order");
+            return responseError(res, 403, "You are not authorized to rate this order");
+        }
+
+        if (order.order.status !== "Completed") {
+            logger.warn("Order must be delivered to rate a restaurant");
+            return responseError(res, 400, "Order must be delivered to rate a restaurant");
+        }
+
+        const existingRating = await getRestaurantRateService({
+            restaurantId,
+            userId,
+            orderId
+        })
+        if (existingRating) {
+            logger.warn("You have already rated this restaurant");
+            return responseError(res, 400, "You have already rated this restaurant");
+        }
+
+        const restaurantRating = await createRestaurantRateService({
+            orderId,
+            rating,
+            review,
+            restaurantId,
+            userId
+        })
+        if (!restaurantRating) {
+            logger.error("Failed to create restaurant rating");
+            return responseError(res, 500, "Failed to create restaurant rating");
+        }
+        logger.info("Restaurant rating created successfully");
+        return responseSuccess(res, 201, "Restaurant rating created successfully", "restaurantRating", restaurantRating);
+    } catch (err) {
+        logger.error("Error fetching order information", err);
+        return responseError(res, 500, "Internal server error");
+    }
+}
+
+export const getRestaurantRatingController = async(req, res) => {
+    logger.info("GET RESTAURANT RATING CONTROLLER");
+    const { orderId, restaurantId } = req.query;
+    const { userId, role } = req.user;
+    const token = req.headers.authorization;
+    
+    try {
+        if (!orderId || !restaurantId) {
+            logger.warn("orderId and restaurantId are required");
+            return responseError(res, 400, "orderId and restaurantId are required");
+        }
+
+        const order = await getOrderInformation(GLOBAL_SERVICE_URL, orderId, token)
+        if (!order) {
+            logger.warn("Order not found");
+            return responseError(res, 404, "Order not found");
+        }
+        
+        if (order.order.restaurant_id != restaurantId) {
+            logger.warn("Order does not belong to this restaurant");
+            return responseError(res, 400, "Order does not belong to this restaurant");
+        }
+
+        if (role === "user") {
+            if (order.order.user_id !== userId) {
+                logger.warn("You are not authorized to view this rating");
+                return responseError(res, 403, "You are not authorized to view this rating");
+            }
+        } else {
+            if (order.order.seller_id !== userId) {
+                logger.warn("You are not authorized to view this rating");
+                return responseError(res, 403, "You are not authorized to view this rating");
+            }
+        }
+
+        const existingRating = await getRestaurantRateService({
+            restaurantId,
+            userId,
+            orderId
+        })
+        if (!existingRating) {
+            logger.warn("Rating not found for this order");
+            return responseError(res, 404, "Rating not found for this order");
+        }
+        logger.info("Get Restaurant rating success");
+        return responseSuccess(res, 200, "Get restaurant rating success", "restaurantRating", existingRating);
+    } catch (err) {
+        logger.error("Error fetching restaurant rating", err);
         return responseError(res, 500, "Internal server error");
     }
 }

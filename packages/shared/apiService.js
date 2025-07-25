@@ -49,3 +49,12 @@ export const getMenuInformation = async (url, menuId, token, message=`Menu with 
     );
     return menuData;
 }
+
+export const getOrderInformation = async (url, orderId, token, message=`Order with ID ${orderId} not found`) => {
+    const orderData = await fetchWithLogging(
+        `${url}/order/order/${orderId}`,
+        token,
+        message
+    );
+    return orderData;
+}

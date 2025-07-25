@@ -8,7 +8,9 @@ import {
     getRestaurantByRestaurantIdController,
     updateRestaurantController,
     deleteRestaurantController,
-    updateOpenRestaurantController
+    updateOpenRestaurantController,
+    createRestaurantRatingController,
+    getRestaurantRatingController
 } from '../controller/restaurantControllers.js';
 import { fileURLToPath } from 'url';
 import multerUpload from '../config/multerInit.js';
@@ -30,5 +32,7 @@ router.get("/restaurant", authMiddleware, getRestaurantController)
 router.get("/restaurant/:restaurantId", authMiddleware, getRestaurantByRestaurantIdController)
 router.get("/restaurant-owner/:ownerId", authMiddleware, getRestaurantByOwnerIdController)
 router.patch("/is-open", authMiddleware, updateOpenRestaurantController)
+router.get("/rate", authMiddleware, getRestaurantRatingController)
+router.post("/rate", authMiddleware, createRestaurantRatingController)
 
 export {router as restaurantRoutes};
