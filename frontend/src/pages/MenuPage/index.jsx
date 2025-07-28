@@ -10,6 +10,8 @@ import ErrorMessage from "./components/ErrorMessage";
 import LoadingState from "../../components/LoadingState";
 import AlphabetSort from "../../components/AlphabetSort";
 import useMenuData from "./components/useMenuData";
+import useRestaurantData from "./components/useRestaurantData";
+import RestaurantHeader from "./components/RestaurantHeader";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
@@ -23,9 +25,9 @@ const MenuPage = () => {
   const [cartError, setCartError] = useState(null);
   const [isCreatingCart, setIsCreatingCart] = useState(false);
 
-  const { menuItems, error, isLoading } = useMenuData(restaurantId);
+  const { menuItems, error: menuError, isLoading: menuLoading } = useMenuData(restaurantId);
+  const { restaurant, averageRating, error: restaurantError, isLoading: restaurantLoading } = useRestaurantData(restaurantId);
 
-  // Helper function to extract user ID from JWT token
   const getUserIdFromToken = (token) => {
     try {
       const base64Url = token.split(".")[1];
@@ -40,7 +42,6 @@ const MenuPage = () => {
       );
 
       const payload = JSON.parse(jsonPayload);
-      // Different JWT implementations use different fields for user ID
       return payload.userId || payload.sub || payload.id || null;
     } catch (error) {
       console.error("Error extracting user ID from token:", error);
@@ -71,9 +72,9 @@ const MenuPage = () => {
 
       console.log("Cart created successfully:", response.data);
 
-      // Get current user ID
+      
       const userId = getUserIdFromToken(token);
-      // Save cart info to localStorage to track active cart
+      
       localStorage.setItem(
         "activeCart",
         JSON.stringify({
@@ -82,7 +83,7 @@ const MenuPage = () => {
             response.data._id ||
             response.data.id,
           restaurantId: restaurantId,
-          userId: userId, // Store user ID with cart info
+          userId: userId, 
           createdAt: new Date().toISOString(),
         })
       );
@@ -108,10 +109,10 @@ const MenuPage = () => {
     }
   };
 
-  // Reset cart state when user changes
+  
   useEffect(() => {
     const handleUserChange = () => {
-      // Check if the active cart belongs to the current user
+      
       const token = localStorage.getItem("token");
       const currentUserId = token ? getUserIdFromToken(token) : null;
       const activeCart = localStorage.getItem("activeCart");
@@ -120,7 +121,7 @@ const MenuPage = () => {
         try {
           const parsedCart = JSON.parse(activeCart);
           if (parsedCart.userId !== currentUserId) {
-            // If cart belongs to different user, reset cart state
+            
             setCartCreated(false);
           }
         } catch (e) {
@@ -129,10 +130,8 @@ const MenuPage = () => {
       }
     };
 
-    // Run on component mount
     handleUserChange();
 
-    // Listen for login/logout events
     window.addEventListener("storage", (e) => {
       if (e.key === "token") {
         handleUserChange();
@@ -177,7 +176,10 @@ const MenuPage = () => {
         : b.menu_name.localeCompare(a.menu_name);
     });
 
-  if (isLoading || isCreatingCart) {
+  const isLoading = menuLoading || restaurantLoading || isCreatingCart;
+  const error = menuError || restaurantError;
+
+  if (isLoading) {
     return <LoadingState />;
   }
 
@@ -186,6 +188,14 @@ const MenuPage = () => {
       <Sidebar />
       <BackButton to="/home" />
       <main className="flex-1 p-5 relative mt-20 px-10">
+        {/* Restaurant Header */}
+        <RestaurantHeader 
+          restaurant={restaurant} 
+          averageRating={averageRating}
+          menuData={menuItems}
+          restaurantId={restaurantId}
+        />
+        
         <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
         {error && <ErrorMessage message={error} />}
         {cartError && <ErrorMessage message={cartError} />}
