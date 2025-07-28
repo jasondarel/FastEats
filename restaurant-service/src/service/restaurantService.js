@@ -219,3 +219,17 @@ export const getRestaurantRateService = async ({
         throw error;
     }
 }
+
+export const getAllRestaurantRateService = async (restaurantId) => {
+    try {
+        const result = await pool.query(
+            `SELECT * FROM restaurant_rating 
+            WHERE restaurant_id = $1`,
+            [restaurantId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("❌ Error fetching all restaurant ratings:", error);
+        throw error;
+    }
+}

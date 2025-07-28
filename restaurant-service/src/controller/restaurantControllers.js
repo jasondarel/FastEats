@@ -7,13 +7,14 @@ import {
     updateRestaurantService,
     updateOpenRestaurantService,
     createRestaurantRateService,
-    getRestaurantRateService
+    getRestaurantRateService,
+    getAllRestaurantRateService
 } from "../service/restaurantService.js";
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
-import { getOrderInformation } from "../../../packages/shared/apiService.js";
+import { getOrderInformation, getUserInformation } from "../../../packages/shared/apiService.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL || "http://localhost:3000";
 
@@ -362,5 +363,73 @@ export const getRestaurantRatingController = async(req, res) => {
     } catch (err) {
         logger.error("Error fetching restaurant rating", err);
         return responseError(res, 500, "Internal server error");
+    }
+}
+
+export const getRestaurantDetailRatingController = async (req, res) => {
+    logger.info("GET RESTAURANT DETAIL RATING CONTROLLER");
+    const { restaurantId } = req.query;
+    const { userId, role } = req.user;
+    try {
+        if (!restaurantId || isNaN(restaurantId)) {
+            logger.warn("Invalid restaurantId");
+            return responseError(res, 400, "Invalid restaurantId");
+        }
+
+        if (role === "seller") {
+            const restaurant = await getRestaurantByOwnerIdService(userId);
+            if (!restaurant) {
+                logger.warn("Restaurant not found for this owner");
+                return responseError(res, 404, "Restaurant not found for this owner");
+            }
+        }
+
+        let details = {};
+        const ratings = await getAllRestaurantRateService(restaurantId);
+        details.averageRating = ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length || 0;
+
+        if (role === "user") {
+            details.ratings = await Promise.all(
+                ratings.map(async (rating) => {
+                    const user = await getUserInformation(
+                        GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
+                    const order = await getOrderInformation(
+                        GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
+                    return {
+                        ...rating,
+                        name: user.user ? user.user.name : "Unknown User",
+                        profilePhoto: user.user ? user.user.profile_photo : null,
+                        order_quantity: order.order.item_quantity || 1,
+                        order_items: order.order.items || [],
+                    };
+                })
+            );
+        } else if (role === "seller") {
+            details.ratings = await Promise.all(
+                ratings.map(async (rating) => {
+                    console.log(rating);
+                    const user = await getUserInformation(
+                        GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
+                    const order = await getOrderInformation(
+                        GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
+                    return {
+                        ...rating,
+                        user: user.user || { userId: rating.user_id, name: "Unknown User" },
+                        order: order.order || { orderId: rating.order_id, items: [], item_quantity: 1 }
+                    };
+                })
+            );
+        }
+
+        if (!ratings || ratings.length === 0) {
+            logger.warn("No ratings found for this restaurant");
+            return responseError(res, 404, "No ratings found for this restaurant");
+        }
+
+        logger.info("Get restaurant detail rating success");
+        return responseSuccess(res, 200, "Get restaurant detail rating success", "data", details);
+    } catch (err) {
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal Server Error");
     }
 }

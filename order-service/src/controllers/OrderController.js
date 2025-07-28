@@ -905,7 +905,7 @@ export const completeOrderController = async (req, res) => {
 
 export const getOrderByIdController = async (req, res) => {
   logger.info("GET ORDER BY ID CONTROLLER");
-  const { userId } = req.user;
+  const { userId, role } = req.user;
   const { order_id } = req.params;
 
   try {
@@ -916,16 +916,19 @@ export const getOrderByIdController = async (req, res) => {
       return responseError(res, 404, "Order Not Found");
     }
 
-    if (result.user_id !== userId) {
-      logger.warn(
-        `Unauthorized access attempt by user ${userId} on order ${order_id}`
-      );
-      return responseError(
-        res,
-        403,
-        "You are not authorized to view this order"
-      );
-    }
+    if (role === "user") {
+        if (result.user_id !== userId) {
+          logger.warn(
+            `Unauthorized access attempt by user ${userId} on order ${order_id}`
+          );
+        }
+      } else if (role === "seller") {
+        if (result.seller_id !== userId) {
+          logger.warn(
+            `Unauthorized access attempt by seller ${userId} on order ${order_id}`
+          );
+        }
+      }
 
     if (result.order_type === "CHECKOUT") {
       const orderItems = await getOrderItemsByOrderIdService(result.order_id);
