@@ -395,12 +395,14 @@ export const getRestaurantDetailRatingController = async (req, res) => {
                         GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
                     const order = await getOrderInformation(
                         GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
+                        console.log('Rating details:',  order);
                     return {
                         ...rating,
                         name: user.user ? user.user.name : "Unknown User",
                         profilePhoto: user.user ? user.user.profile_photo : null,
                         order_quantity: order.order.item_quantity || 1,
                         order_items: order.order.items || [],
+                        menu_id: order.menu_id ?? order.order?.menu_id ?? null,
                     };
                 })
             );

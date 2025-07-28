@@ -11,6 +11,7 @@ import OrderButtons from "./components/OrderButtons";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
+import RestaurantRating from "./components/RestaurantRating"; 
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
 import {
   createCartService,
@@ -113,7 +114,7 @@ const MenuDetails = () => {
             parsedCart.userId === currentUserId &&
             parsedCart.restaurantId.toString() === menu.restaurant_id.toString()
           ) {
-            activeCartId = parsedCart.cartId; //ada
+            activeCartId = parsedCart.cartId; 
           }
         } catch (e) {
           console.error("Error parsing activeCart from localStorage:", e);
@@ -218,10 +219,10 @@ const MenuDetails = () => {
     }
   };
 
-  // Helper function to extract user ID from JWT token
+  
   const getUserIdFromToken = (token) => {
     try {
-      // Simple JWT parsing (assumes token has 3 parts separated by dots)
+      
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = decodeURIComponent(
@@ -298,25 +299,31 @@ const MenuDetails = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-3xl mx-auto p-6 bg-white shadow-lg shadow-slate-300 inset-shadow-xs inset-shadow-slate-300 rounded-xl">
-        <BackButton to={`/restaurant/${menu.restaurant_id}/menu`} />
-        <MenuHeader menu={menu} />
-        <MenuImage menu={menu} />
-        <MenuInfo menu={menu} />
+      <div className="w-full max-w-3xl mx-auto space-y-6">
+        {/* Main Menu Details Card */}
+        <div className="p-6 bg-white shadow-lg shadow-slate-300 inset-shadow-xs inset-shadow-slate-300 rounded-xl">
+          <BackButton to={`/restaurant/${menu.restaurant_id}/menu`} />
+          <MenuHeader menu={menu} />
+          <MenuImage menu={menu} />
+          <MenuInfo menu={menu} />
 
-        <div className="space-y-4">
-          <QuantitySelector
-            quantity={quantity}
-            onQuantityChange={handleQuantityChange}
-            onReset={resetQuantity}
-          />
-          <OrderButtons
-            menu={menu}
-            quantity={quantity}
-            onAddToCart={handleAddToCart}
-            onOrderNow={handleOrderNow}
-          />
+          <div className="space-y-4">
+            <QuantitySelector
+              quantity={quantity}
+              onQuantityChange={handleQuantityChange}
+              onReset={resetQuantity}
+            />
+            <OrderButtons
+              menu={menu}
+              quantity={quantity}
+              onAddToCart={handleAddToCart}
+              onOrderNow={handleOrderNow}
+            />
+          </div>
         </div>
+
+        {/* Restaurant Rating Component */}
+        <RestaurantRating restaurantId={menu.restaurant_id} menuId={menu.menu_id || menu_id} />
       </div>
     </div>
   );
