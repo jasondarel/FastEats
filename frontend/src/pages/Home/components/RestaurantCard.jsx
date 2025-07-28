@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useLocation from "../hooks/useLocation";
 import {
   FaMapMarkerAlt,
@@ -15,6 +15,8 @@ import {
 
 const RestaurantCard = ({ restaurant, onClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [averageRating, setAverageRating] = useState(null);
+  const [isLoadingRating, setIsLoadingRating] = useState(true);
 
   const locationData = {
     province_id: restaurant.restaurant_province,
@@ -28,6 +30,42 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     locationData,
     isExpanded
   );
+
+  useEffect(() => {
+    const fetchRestaurantRating = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsLoadingRating(false);
+          return;
+        }
+
+        const response = await fetch(
+          `http://localhost:5000/restaurant/detail-rate?restaurantId=${restaurant.restaurant_id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setAverageRating(data.data.averageRating);
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant rating:", error);
+      } finally {
+        setIsLoadingRating(false);
+      }
+    };
+
+    if (restaurant.restaurant_id) {
+      fetchRestaurantRating();
+    }
+  }, [restaurant.restaurant_id]);
 
   const handleCardClick = (e) => {
     if (e.target.closest(".toggle-button")) {
@@ -73,11 +111,12 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           </span>
         </div>
 
-        {restaurant.rating && (
+        {/* Updated rating display */}
+        {!isLoadingRating && averageRating !== null && averageRating > 0 && (
           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
             <FaStar className="text-yellow-500 text-xs" />
             <span className="text-xs font-semibold text-gray-800">
-              {restaurant.rating}
+              {averageRating.toFixed(1)}
             </span>
           </div>
         )}
