@@ -14,6 +14,7 @@ import EmptyChatsState from "./components/EmptyChatsState";
 import ChatListSection from "./components/ChatListSection";
 import LoadingPage from "./components/LoadingPage";
 import ErrorPage from "./components/ErrorPage";
+import e from "cors";
 
 const ChatsList = () => {
   const [chats, setChats] = useState([]);
@@ -215,34 +216,32 @@ const ChatsList = () => {
       if (chat.orderDetails?.status) {
         const orderStatus = chat.orderDetails.status.toLowerCase();
         if (
-          orderStatus === "completed" ||
-          orderStatus === "delivered" ||
-          orderStatus === "finished"
+          orderStatus === "completed"
         ) {
           return "Completed";
         } else if (
-          orderStatus === "preparing" ||
-          orderStatus === "accepted" ||
-          orderStatus === "cooking"
+          orderStatus === "preparing"
         ) {
           return "Preparing";
         } else if (orderStatus === "pending" || orderStatus === "waiting") {
           return "Waiting";
+        } else if (orderStatus === "cancelled") {
+          return "Cancelled";
         }
       }
 
       if (chat.status) {
         const chatStatus = chat.status.toLowerCase();
         if (
-          chatStatus === "resolved" ||
-          chatStatus === "completed" ||
-          chatStatus === "closed"
+          chatStatus === "completed" 
         ) {
           return "Completed";
         } else if (chatStatus === "active" || chatStatus === "ongoing") {
           return "Preparing";
-        } else {
+        } else if ( chatStatus === "pending" || chatStatus === "waiting") {
           return "Waiting";
+        } else if (chatStatus === "cancelled") {
+          return "Cancelled";
         }
       }
 
@@ -284,11 +283,19 @@ const ChatsList = () => {
     (chat) => chat.status === "Completed"
   );
 
+  const cancelledChats = transformedChats.filter(
+    (chat) => chat.status === "Cancelled"
+  );
+
   const sortedActiveChats = activeChats.sort(
     (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
   );
 
   const sortedCompletedChats = completedChats.sort(
+    (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+  );
+
+  const sortedCancelledChats = cancelledChats.sort(
     (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
   );
 
@@ -328,8 +335,20 @@ const ChatsList = () => {
               isActive={false}
               userRole={user?.role}
               chatRefs={chatRefs}
-              showNotice={true}
             />
+
+            {sortedCompletedChats.length > 0 && sortedCancelledChats.length > 0 && (
+              <div className="border-t border-gray-200 my-6"></div>
+            )}
+
+            <ChatListSection 
+              chats={sortedCancelledChats}
+              title="Cancelled Orders"
+              isActive={false}
+              userRole={user?.role}
+              chatRefs={chatRefs}
+            />
+              
           </div>
         )}
       </div>

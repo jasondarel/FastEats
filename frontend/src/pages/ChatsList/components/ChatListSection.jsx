@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import ChatCard from "./ChatCard";
 import ChatSectionHeader from "./ChatSectionHeader";
-import CompletedChatsNotice from "./CompletedChatsNotice";
 
 const ChatListSection = ({ 
   chats, 
@@ -20,7 +19,6 @@ const ChatListSection = ({
         count={chats.length} 
         isActive={isActive} 
       />
-      {showNotice && <CompletedChatsNotice />}
       <div className="space-y-3">
         {chats.map((chat) => {
           const chatId = chat.chat_id || chat.order_id;
