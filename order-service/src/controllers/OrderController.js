@@ -896,7 +896,7 @@ export const completeOrderController = async (req, res) => {
 
     await createCompletedOrderJobService(orderDetails);
 
-    return responseSuccess(res, 200, "Order completed successfully");
+    return responseSuccess(res, 200, "Order completed successfully", "order", orderDetails);
   } catch (error) {
     logger.error("Internal server error", error);
     return responseError(res, 500, "Internal server error");
