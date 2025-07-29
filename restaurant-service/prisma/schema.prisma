@@ -43,6 +43,25 @@ model menu_item {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @default(now())
   restaurants     restaurants @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade)
+  adds_on_categories menu_adds_on_category[]
+}
+
+model menu_adds_on_category {
+  category_id     Int              @id @default(autoincrement())
+  category_name   String           @db.VarChar(100)
+  is_required     Boolean          @default(false)
+  max_selectable  Int              @default(1)
+  menu_id         Int
+  menu_item       menu_item        @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade)
+  adds_on_items   menu_adds_on_item[]
+}
+
+model menu_adds_on_item {
+  item_id         Int                    @id @default(autoincrement())
+  adds_on_name    String                 @db.VarChar(100)
+  adds_on_price   Decimal                @db.Decimal(10,2)
+  category_id     Int
+  category        menu_adds_on_category  @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
 }
 
 model restaurant_rating {
@@ -53,7 +72,7 @@ model restaurant_rating {
   rating         Int          
   comment        String?      
   created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  updated_at     DateTime     @default(now())
   @@unique([user_id, restaurant_id, order_id])
   restaurant   restaurants   @relation(fields: [restaurant_id], references: [restaurant_id])
 }
