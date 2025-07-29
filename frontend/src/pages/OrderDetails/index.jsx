@@ -21,7 +21,6 @@ import OrderMenuDetails from "./components/OrderMenuDetails";
 import OrderActions from "./components/OrderActions";
 import OrderTimestamp from "./components/OrderTimestamp";
 import OrderShipping from "./components/OrderShipping";
-import RestaurantRating from './components/RestaurantRating';
 import Swal from "sweetalert2";
 import LoadingState from "../../components/LoadingState";
 import { API_URL, ORDER_URL } from "../../config/api";
@@ -29,6 +28,146 @@ import { MIDTRANS_SNAP_URL } from "../../config/api";
 import io from "socket.io-client";
 import OrderSummary from "./components/OrderSummary";
 import axios from "axios";
+import RestaurantRating from "./components/RestaurantRating";
+
+// Restaurant Rating Component
+// const RestaurantRating = ({ order, onSubmitRating }) => {
+//   const [rating, setRating] = useState(0);
+//   const [comment, setComment] = useState('');
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [hasRated, setHasRated] = useState(false);
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+    
+//     if (rating === 0) {
+//       Swal.fire({
+//         title: 'Please select a rating',
+//         text: 'You must provide a star rating before submitting.',
+//         icon: 'warning',
+//         confirmButtonText: 'OK',
+//         confirmButtonColor: '#d97706',
+//       });
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+    
+//     try {
+//       const ratingData = {
+//         rating: rating,
+//         comment: comment.trim(),
+//         restaurantId: order.restaurant_id,
+//         orderId: order.order_id
+//       };
+      
+//       await onSubmitRating(ratingData);
+      
+//       // Mark as rated and reset form
+//       setHasRated(true);
+//       setRating(0);
+//       setComment('');
+//     } catch (error) {
+//       // Error is handled in parent component
+//       console.error('Rating submission failed:', error);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   if (hasRated) {
+//     return (
+//       <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+//         <div className="text-center">
+//           <div className="text-green-600 text-2xl mb-2">✓</div>
+//           <h3 className="text-lg font-semibold text-green-800 mb-2">
+//             Thank you for your rating!
+//           </h3>
+//           <p className="text-green-700">
+//             Your feedback helps us improve our service.
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
+//       <h3 className="text-lg font-semibold text-amber-900 mb-4">
+//         Rate Your Experience at {order.restaurant?.restaurant_name}
+//       </h3>
+      
+//       <form onSubmit={handleSubmit}>
+//         {/* Star Rating */}
+//         <div className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-2">
+//             Rate the restaurant (1-5 stars) *
+//           </label>
+//           <div className="flex gap-1">
+//             {[1, 2, 3, 4, 5].map((star) => (
+//               <button
+//                 key={star}
+//                 type="button"
+//                 onClick={() => setRating(star)}
+//                 className={`text-3xl transition-colors duration-200 ${
+//                   star <= rating ? 'text-yellow-400 hover:text-yellow-500' : 'text-gray-300 hover:text-yellow-300'
+//                 }`}
+//                 title={`${star} star${star > 1 ? 's' : ''}`}
+//               >
+//                 ★
+//               </button>
+//             ))}
+//           </div>
+//           {rating > 0 && (
+//             <p className="text-sm text-gray-600 mt-1">
+//               You selected {rating} star{rating > 1 ? 's' : ''}
+//             </p>
+//           )}
+//         </div>
+
+//         {/* Comment */}
+//         <div className="mb-6">
+//           <label className="block text-sm font-medium text-gray-700 mb-2">
+//             Share your experience (optional)
+//           </label>
+//           <textarea
+//             value={comment}
+//             onChange={(e) => setComment(e.target.value)}
+//             placeholder="Tell us about your experience with the food, service, delivery time, etc..."
+//             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+//             rows="4"
+//             maxLength="500"
+//           />
+//           <div className="text-xs text-gray-500 mt-1">
+//             {comment.length}/500 characters
+//           </div>
+//         </div>
+
+//         {/* Submit Button */}
+//         <div className="flex justify-end">
+//           <button
+//             type="submit"
+//             disabled={isSubmitting || rating === 0}
+//             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+//               isSubmitting || rating === 0
+//                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+//                 : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-lg'
+//             }`}
+//           >
+//             {isSubmitting ? (
+//               <div className="flex items-center gap-2">
+//                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+//                 Submitting...
+//               </div>
+//             ) : (
+//               'Submit Rating'
+//             )}
+//           </button>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// };
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -73,14 +212,17 @@ const OrderDetails = () => {
       if (response.ok) {
         Swal.fire({
           title: "Success!",
-          text: "Order completed successfully!",
+          text: "Order completed successfully! You can rate the restaurant service below.",
           icon: "success",
           confirmButtonText: "OK",
           confirmButtonColor: "#d97706",
         });
         const updatedOrderData = await response.json();
-        setOrder(updatedOrderData);
-        navigate("/orders");
+        setOrder({
+          ...order,
+          status: "Completed",
+        });
+        // Don't navigate away - let user rate the restaurant
       } else {
         throw new Error("Failed to complete order");
       }
@@ -443,6 +585,47 @@ const OrderDetails = () => {
     }
   };
 
+  // Handle rating submission
+  const handleRatingSubmission = async (ratingData) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`, 
+        ratingData, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (!response.data || !response.data.success) {
+        throw new Error('Failed to submit rating');
+      }
+      
+      Swal.fire({
+        title: 'Thank you!',
+        text: 'Your rating has been submitted successfully.',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d97706',
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      const message = error.response?.data?.message || 'Failed to submit rating';
+      Swal.fire({
+        title: 'Error!',
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d97706',
+      });
+      throw error; 
+    }
+  };
+
   useEffect(() => {
     if (!token || !orderId) {
       console.log("Missing token or orderId, skipping socket connection");
@@ -758,46 +941,15 @@ const OrderDetails = () => {
               )}
             </div>
 
-             <div className="mt-8 flex justify-end gap-4">
-              {order.status.toLowerCase() === "completed" && (
-               <RestaurantRating 
+            {/* Restaurant Rating Section - Only show when order is completed */}
+            {order.status.toLowerCase() === "completed" && (
+              <div className="mt-8 border-t border-amber-200 pt-8">
+                <RestaurantRating 
                   order={order} 
-                  onSubmitRating={async (ratingData) => {
-                    try {
-                      const response = await axios.post(`${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`, ratingData, {
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`,
-                        },
-                      });
-                      
-                      if (!response.data || !response.data.success) {
-                        throw new Error('Failed to submit rating');
-                      }
-                      
-                      Swal.fire({
-                        title: 'Thank you!',
-                        text: 'Your rating has been submitted successfully.',
-                        icon: 'success',
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#d97706',
-                      });
-                    } catch (error) {
-                      console.error('Error submitting rating:', error);
-                      const message = error.response?.data?.message || 'Failed to submit rating';
-                      Swal.fire({
-                        title: 'Error!',
-                        text: message,
-                        icon: 'error',
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#d97706',
-                      });
-                      throw error; 
-                    }
-                  }}
+                  onSubmitRating={handleRatingSubmission}
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="mt-8">
               <OrderActions
