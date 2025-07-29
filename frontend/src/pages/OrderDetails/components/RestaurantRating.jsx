@@ -255,7 +255,7 @@ const RestaurantRating = ({ order, onSubmitRating }) => {
           <textarea
             id="review"
             rows={4}
-            className="w-full px-4 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none transition-all duration-200 placeholder-amber-400 bg-white/80 backdrop-blur-sm text-base"
+            className="w-full px-4 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none transition-all duration-200 placeholder-amber-400 bg-white/80 backdrop-blur-sm text-base focus:outline-none"
             placeholder="Tell us about your experience with the food, delivery, and service..."
             value={review}
             onChange={(e) => setReview(e.target.value)}

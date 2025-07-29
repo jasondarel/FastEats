@@ -5,9 +5,8 @@ const PaymentDetails = ({ transaction, formatCurrency }) => {
   const paymentItems = [
     {
       label: "Subtotal",
-      value: formatCurrency(transaction.transaction_gross),
+      value: formatCurrency(transaction.transaction_net),
     },
-    { label: "Tax", value: formatCurrency(transaction.tax) },
     { label: "Delivery Fee", value: formatCurrency(0) },
   ];
 
