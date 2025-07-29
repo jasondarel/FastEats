@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { Star, User, MessageSquare, ChefHat } from 'lucide-react';
+import { Star, User, MessageSquare, ChefHat, Filter } from 'lucide-react';
 import { getRestaurantRatingService } from '../services/ratingService';
 
 const RestaurantRating = ({ restaurantId, menuId }) => {
@@ -11,6 +11,8 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [selectedStarFilter, setSelectedStarFilter] = useState('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
     const fetchRatings = async () => {
@@ -89,6 +91,11 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
     }
   }, [ratings, menuId]);
 
+  // Apply star rating filter
+  const starFilteredRatings = selectedStarFilter === 'all' 
+    ? filteredRatings 
+    : filteredRatings.filter(rating => rating.rating === parseInt(selectedStarFilter));
+
   const renderStars = (rating, size = 'w-4 h-4') => {
     return (
       <div className="flex items-center gap-1">
@@ -115,7 +122,16 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
     });
   };
 
-  const displayedReviews = showAllReviews ? filteredRatings : filteredRatings.slice(0, 3);
+  const getStarFilterCounts = () => {
+    const counts = { all: filteredRatings.length };
+    for (let i = 1; i <= 5; i++) {
+      counts[i] = filteredRatings.filter(rating => rating.rating === i).length;
+    }
+    return counts;
+  };
+
+  const starCounts = getStarFilterCounts();
+  const displayedReviews = showAllReviews ? starFilteredRatings : starFilteredRatings.slice(0, 3);
 
   if (loading) {
     return (
@@ -194,6 +210,75 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
         </div>
       </div>
 
+      {/* Star Rating Filter */}
+      <div className="mb-6">
+        <div className="relative">
+          <button
+            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            className="hover:cursor-pointer flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+          >
+            <Filter className="w-4 h-4 text-amber-600" />
+            <span className="text-sm font-medium text-amber-700">
+              {selectedStarFilter === 'all' 
+                ? 'All Ratings' 
+                : `${selectedStarFilter} Star${selectedStarFilter !== '1' ? 's' : ''}`
+              }
+            </span>
+            <span className="text-xs text-amber-700 bg-amber-200 px-2 py-1 rounded-full">
+              {starFilteredRatings.length}
+            </span>
+          </button>
+
+          {showFilterDropdown && (
+            <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    setSelectedStarFilter('all');
+                    setShowFilterDropdown(false);
+                    setShowAllReviews(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
+                    selectedStarFilter === 'all' 
+                      ? 'bg-yellow-50 text-yellow-700' 
+                      : 'hover:bg-gray-50 text-gray-700'
+                  }`}
+                >
+                  <span>All Ratings</span>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    {starCounts.all}
+                  </span>
+                </button>
+                
+                {[5, 4, 3, 2, 1].map((stars) => (
+                  <button
+                    key={stars}
+                    onClick={() => {
+                      setSelectedStarFilter(stars.toString());
+                      setShowFilterDropdown(false);
+                      setShowAllReviews(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors hover:cursor-pointer ${
+                      selectedStarFilter === stars.toString()
+                        ? 'bg-yellow-50 text-yellow-700'
+                        : 'hover:bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 ">
+                      {renderStars(stars, 'w-3 h-3')}
+                      <span>{stars} Star{stars !== 1 ? 's' : ''}</span>
+                    </div>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      {starCounts[stars]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="space-y-4">
         {displayedReviews.map((rating, index) => (
           <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
@@ -250,7 +335,23 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
         ))}
       </div>
 
-      {filteredRatings.length > 3 && (
+      {starFilteredRatings.length === 0 && selectedStarFilter !== 'all' && (
+        <div className="text-center text-gray-500 py-8">
+          <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          <p>No {selectedStarFilter} star reviews found.</p>
+          <button
+            onClick={() => {
+              setSelectedStarFilter('all');
+              setShowAllReviews(false);
+            }}
+            className="text-yellow-600 hover:text-yellow-700 text-sm mt-2"
+          >
+            Show all reviews
+          </button>
+        </div>
+      )}
+
+      {starFilteredRatings.length > 3 && (
         <div className="text-center mt-4">
           <button
             onClick={() => setShowAllReviews(!showAllReviews)}
@@ -258,10 +359,18 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
           >
             {showAllReviews 
               ? 'Show Less Reviews' 
-              : `Show All ${filteredRatings.length} Reviews`
+              : `Show All ${starFilteredRatings.length} Reviews`
             }
           </button>
         </div>
+      )}
+
+      {/* Click outside to close dropdown */}
+      {showFilterDropdown && (
+        <div 
+          className="fixed inset-0 z-0" 
+          onClick={() => setShowFilterDropdown(false)}
+        />
       )}
     </div>
   );
