@@ -8,6 +8,8 @@ import {
   updateAvailableMenuService,
   createAddsOnCategoryService,
   createAddsOnItemService,
+  getAddsOnCategoriesService,
+  getAddsOnItemsService,
 } from "../service/menuService.js";
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import {
@@ -164,6 +166,15 @@ export const getMenuByMenuIdController = async (req, res) => {
     if (!result) {
       logger.warn("Menu not found");
       return responseError(res, 404, "Menu not found");
+    }
+
+    const addsOnCategories = await getAddsOnCategoriesService(menuId);
+    if (addsOnCategories) {
+      for (const category of addsOnCategories) {
+        const addsOnItems = await getAddsOnItemsService(category.category_id);
+        category.addsOnItems = addsOnItems;
+      }
+      result.addsOnCategories = addsOnCategories;
     }
 
     logger.info("Menu retrieved successfully");
