@@ -16,6 +16,20 @@ export const createMenuService = async (menuReq) => {
   return result.rows[0];
 };
 
+export const createAddsOnCategoryService = async ({
+  menuId,
+  categoryName,
+  isRequired= false,
+  maxSelectable=1
+}) => {
+  const result = await pool.query(
+    `INSERT INTO menu_adds_on_category (menu_id, category_name, is_required, max_selectable) 
+        VALUES ($1, $2, $3, $4) RETURNING *`,
+    [menuId, categoryName, isRequired, maxSelectable]
+  );
+  return result.rows[0];
+}
+
 export const updateAvailableMenuService = async (menuId, isAvailable) => {
   const result = await pool.query(
     `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
