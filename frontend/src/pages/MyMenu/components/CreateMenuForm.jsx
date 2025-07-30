@@ -28,7 +28,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
       const newCategory = {
         id: Date.now(),
         name: newCategoryName.trim(),
-        toppings: []
+        adds: []
       };
       setToppingCategories([...toppingCategories, newCategory]);
       setNewCategoryName("");
@@ -53,7 +53,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
       setToppingCategories(categories => 
         categories.map(cat => 
           cat.id === selectedToppingCategory 
-            ? { ...cat, toppings: [...cat.toppings, newTopping] }
+            ? { ...cat, adds: [...cat.adds, newTopping] }
             : cat
         )
       );
@@ -67,7 +67,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
     setToppingCategories(categories =>
       categories.map(cat =>
         cat.id === categoryId
-          ? { ...cat, toppings: cat.toppings.filter(topping => topping.id !== toppingId) }
+          ? { ...cat, adds: cat.adds.filter(topping => topping.id !== toppingId) }
           : cat
       )
     );
@@ -204,12 +204,12 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all duration-200 hover:shadow-md">
               <h3 className="block font-semibold text-gray-700 mb-4 text-sm">
-                Add-ons / Toppings
+                Add-ons
                 <span className="text-gray-500 text-xs font-normal ml-2">(Optional)</span>
               </h3>
               
               <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">1. Create Topping Category</h4>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">1. Create adds-on Category</h4>
                 <div className="flex gap-3">
                   <input
                     type="text"
@@ -235,7 +235,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
               {toppingCategories.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">2. Add Toppings to Category</h4>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">2. Add adds-on to Category</h4>
                   <div className="flex gap-3">
                     <select
                       className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
@@ -245,14 +245,14 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                       <option value="">Select category...</option>
                       {toppingCategories.map((category) => (
                         <option key={category.id} value={category.id}>
-                          {category.name} ({category.toppings.length})
+                          {category.name} ({category.adds.length})
                         </option>
                       ))}
                     </select>
                     <input
                       type="text"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm disabled:bg-gray-100"
-                      placeholder="Topping name (e.g., Extra Cheese)"
+                      placeholder="Adds-on name (e.g., Extra Cheese)"
                       value={newToppingName}
                       onChange={(e) => setNewToppingName(e.target.value)}
                       disabled={!selectedToppingCategory}
@@ -286,16 +286,15 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                 </div>
               )}
 
-              {/* Toppings Display */}
-              {toppingCategories.some(cat => cat.toppings.length > 0) && (
+              {toppingCategories.some(cat => cat.adds.length > 0) && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-600">Added Toppings:</h4>
+                  <h4 className="text-sm font-medium text-gray-600">Added adds:</h4>
                   {toppingCategories.map((category) => (
-                    category.toppings.length > 0 && (
+                    category.adds.length > 0 && (
                       <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-3">
                         <h5 className="font-medium text-gray-800 mb-2 text-sm">{category.name}</h5>
                         <div className="space-y-2">
-                          {category.toppings.map((topping) => (
+                          {category.adds.map((topping) => (
                             <div
                               key={topping.id}
                               className="flex items-center justify-between bg-gray-50 p-2 rounded border"
