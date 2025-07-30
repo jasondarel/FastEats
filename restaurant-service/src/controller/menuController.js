@@ -6,6 +6,8 @@ import {
   getMenuByRestaurantIdService,
   getMenuByMenuIdService,
   updateAvailableMenuService,
+  createAddsOnCategoryService,
+  createAddsOnItemService,
 } from "../service/menuService.js";
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import {
@@ -14,10 +16,12 @@ import {
 } from "../validator/menuValidator.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
+import pool from "../config/dbInit.js";
 
 export const createMenuController = async (req, res) => {
   logger.info("CREATE MENU CONTROLLER");
   const menuReq = req.body;
+  console.log("Menu Request Body:", menuReq);
   const userId = req.user.userId;
   const role = req.user.role;
 
@@ -26,7 +30,11 @@ export const createMenuController = async (req, res) => {
     return responseError(res, 403, "Only sellers can create a menu");
   }
 
+  const client = await pool.connect();
+  
   try {
+    await client.query('BEGIN');
+
     const restaurant = await getRestaurantByOwnerIdService(userId);
     if (!restaurant) {
       logger.warn("Restaurant not found for this owner");
@@ -34,8 +42,17 @@ export const createMenuController = async (req, res) => {
     }
 
     menuReq.restaurantId = restaurant.restaurant_id;
-    if(req.file) {
+    if (req.file) {
       menuReq.menuImage = req.file.filename;
+    }
+
+    if (typeof menuReq.toppingCategories === "string") {
+      try {
+        menuReq.toppingCategories = JSON.parse(menuReq.toppingCategories);
+      } catch (e) {
+        logger.warn("Failed to parse toppingCategories JSON string");
+        return responseError(res, 400, "Invalid toppingCategories format");
+      }
     }
 
     const errors = await validateCreateMenuRequest(menuReq);
@@ -44,17 +61,48 @@ export const createMenuController = async (req, res) => {
       return responseError(res, 400, "Validation failed", errors);
     }
 
-    const newMenu = await createMenuService(menuReq);
+    const newMenu = await createMenuService(client, menuReq);
 
+    if (menuReq.toppingCategories && Array.isArray(menuReq.toppingCategories)) {
+      for (const category of menuReq.toppingCategories) {
+        category.restaurantId = restaurant.restaurant_id;
+        category.menuId = newMenu.menu_id;
+        
+        const newCategory = await createAddsOnCategoryService(client, {
+          menuId: category.menuId,
+          categoryName: category.name,
+          isRequired: category.isRequired,
+          maxSelectable: category.maxSelectable,
+        });
+
+        if (category.adds && Array.isArray(category.adds)) {
+          for (const topping of category.adds) {
+            const newItem = await createAddsOnItemService(client, {
+              categoryId: newCategory.category_id,
+              addsOnName: topping.adds_on_name,
+              addsOnPrice: topping.adds_on_price,
+            });
+          }
+        }
+      }
+    }
+    await client.query('COMMIT');
+    
     logger.info("Menu created successfully");
     return responseSuccess(res, 201, "Menu created successfully", "dataMenu", newMenu);
+
   } catch (err) {
+    await client.query('ROLLBACK');
+    
     if (err.code === "23505") {
-      logger.warn("Menu name already exists"); 
+      logger.warn("Menu name already exists");
       return responseError(res, 400, "Menu name already exists");
     }
+    
     logger.error("Internal Server Error", err);
     return responseError(res, 500, "Internal Server Error");
+  } finally {
+    client.release();
   }
 };
 
