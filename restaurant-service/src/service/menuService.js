@@ -1,7 +1,7 @@
 import pool from "../config/dbInit.js";
 
-export const createMenuService = async (menuReq) => {
-  const result = await pool.query(
+export const createMenuService = async (client=pool, menuReq) => {
+  const result = await client.query(
     `INSERT INTO menu_item (menu_name, menu_description, menu_price, menu_category, restaurant_id, menu_image) 
         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
     [
@@ -16,16 +16,29 @@ export const createMenuService = async (menuReq) => {
   return result.rows[0];
 };
 
-export const createAddsOnCategoryService = async ({
+export const createAddsOnCategoryService = async (client=pool, {
   menuId,
   categoryName,
   isRequired= false,
   maxSelectable=1
 }) => {
-  const result = await pool.query(
+  const result = await client.query(
     `INSERT INTO menu_adds_on_category (menu_id, category_name, is_required, max_selectable) 
         VALUES ($1, $2, $3, $4) RETURNING *`,
     [menuId, categoryName, isRequired, maxSelectable]
+  );
+  return result.rows[0];
+}
+
+export const createAddsOnItemService = async (client=pool, {
+  categoryId,
+  addsOnName,
+  addsOnPrice = 0
+}) => {
+  const result = await client.query(
+    `INSERT INTO menu_adds_on_item (category_id, adds_on_name, adds_on_price) 
+        VALUES ($1, $2, $3) RETURNING *`,
+    [categoryId, addsOnName, addsOnPrice]
   );
   return result.rows[0];
 }
