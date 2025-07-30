@@ -90,6 +90,19 @@ export const getMenuByMenuIdService = async (menuId) => {
   }
 };
 
+export const getAddsOnCategoriesService = async (menuId) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM menu_adds_on_category WHERE menu_id = $1",
+      [menuId]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error("❌ Error fetching adds-on categories:", error);
+    throw error;
+  }
+}
+
 export const updateMenuService = async (menuReq, menuId) => {
   const result = await pool.query(
     `UPDATE menu_item 
