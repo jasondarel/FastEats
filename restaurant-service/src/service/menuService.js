@@ -43,6 +43,14 @@ export const createAddsOnItemService = async (client=pool, {
   return result.rows[0];
 }
 
+export const deleteAddsOnCategoryService = async (client=pool, categoryId) => {
+  const result = await client.query(
+    `DELETE FROM menu_adds_on_category WHERE category_id = $1 RETURNING *`,
+    [categoryId]
+  );
+  return result.rows[0];
+}
+
 export const updateAvailableMenuService = async (menuId, isAvailable) => {
   const result = await pool.query(
     `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
