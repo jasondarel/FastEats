@@ -43,6 +43,22 @@ export const createAddsOnItemService = async (client=pool, {
   return result.rows[0];
 }
 
+export const deleteAddsOnCategoryService = async (client=pool, categoryId) => {
+  const result = await client.query(
+    `DELETE FROM menu_adds_on_category WHERE category_id = $1 RETURNING *`,
+    [categoryId]
+  );
+  return result.rows[0];
+}
+
+export const deleteAddsOnItemService = async (client=pool, itemId) => {
+  const result = await client.query(
+    `DELETE FROM menu_adds_on_item WHERE item_id = $1 RETURNING *`,
+    [itemId]
+  );
+  return result.rows[0];
+}
+
 export const updateAvailableMenuService = async (menuId, isAvailable) => {
   const result = await pool.query(
     `UPDATE menu_item SET is_available = $1 WHERE menu_id = $2 RETURNING *`,
@@ -103,6 +119,38 @@ export const getAddsOnCategoriesService = async (menuId) => {
   }
 }
 
+export const updateAddsOnCategoryService = async (client=pool, {
+  categoryId,
+  categoryName,
+  isRequired = false,
+  maxSelectable = 1
+}) => {
+  const result = await client.query(
+    `UPDATE menu_adds_on_category 
+    SET category_name = $1, 
+        is_required = $2, 
+        max_selectable = $3
+    WHERE category_id = $4 RETURNING *`,
+    [categoryName, isRequired, maxSelectable, categoryId]
+  );
+  return result.rows[0];
+}
+
+export const updateAddsOnItemService = async (client=pool, {
+  itemId,
+  addsOnName,
+  addsOnPrice = 0
+}) => {
+  const result = await client.query(
+    `UPDATE menu_adds_on_item 
+    SET adds_on_name = $1, 
+        adds_on_price = $2
+    WHERE item_id = $3 RETURNING *`,
+    [addsOnName, addsOnPrice, itemId]
+  );
+  return result.rows[0];
+}
+
 export const getAddsOnItemsService = async (categoryId) => {
   try {
     const result = await pool.query(
@@ -116,8 +164,8 @@ export const getAddsOnItemsService = async (categoryId) => {
   }
 }
 
-export const updateMenuService = async (menuReq, menuId) => {
-  const result = await pool.query(
+export const updateMenuService = async (client=pool, menuReq, menuId) => {
+  const result = await client.query(
     `UPDATE menu_item 
     SET menu_name = $1, 
         menu_description = $2, 
