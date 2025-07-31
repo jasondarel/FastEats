@@ -6,6 +6,7 @@ import MenuHeader from "./components/MenuHeader";
 import MenuImage from "./components/MenuImage";
 import MenuInfo from "./components/MenuInfo";
 import MenuStats from "./components/MenuStats";
+import MenuAddOns from "./components/MenuAddOns";
 import EditMenuForm from "./components/EditMenuForm";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -361,6 +362,8 @@ const MyMenuDetails = () => {
         <MenuInfo menu={menu} />
 
         <MenuStats menu={menu} />
+
+        <MenuAddOns menu={menu} />
       </div>
     </main>
 

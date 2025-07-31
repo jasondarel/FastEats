@@ -15,6 +15,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   
   const [toppingCategories, setToppingCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryMaxSelectable, setNewCategoryMaxSelectable] = useState("1");
   const [selectedToppingCategory, setSelectedToppingCategory] = useState(null);
   const [newToppingName, setNewToppingName] = useState("");
   const [newToppingPrice, setNewToppingPrice] = useState("");
@@ -24,15 +25,27 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   }, []);
 
   const handleAddCategory = () => {
-    if (newCategoryName.trim()) {
+    if (newCategoryName.trim() && newCategoryMaxSelectable) {
       const newCategory = {
         id: Date.now(),
         name: newCategoryName.trim(),
+        maxSelectable: parseInt(newCategoryMaxSelectable),
         adds: []
       };
       setToppingCategories([...toppingCategories, newCategory]);
       setNewCategoryName("");
+      setNewCategoryMaxSelectable("1");
     }
+  };
+
+  const handleUpdateCategoryMaxSelectable = (categoryId, newMaxSelectable) => {
+    setToppingCategories(categories =>
+      categories.map(cat =>
+        cat.id === categoryId
+          ? { ...cat, maxSelectable: parseInt(newMaxSelectable) }
+          : cat
+      )
+    );
   };
 
   const handleRemoveCategory = (categoryId) => {
@@ -218,15 +231,26 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                   />
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600 whitespace-nowrap">Max select:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                      value={newCategoryMaxSelectable}
+                      onChange={(e) => setNewCategoryMaxSelectable(e.target.value)}
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddCategory}
                     className={`px-4 py-2 rounded-lg text-white font-medium text-sm transition-all duration-200 ${
-                      newCategoryName.trim()
+                      newCategoryName.trim() && newCategoryMaxSelectable
                         ? "bg-yellow-500 hover:bg-yellow-600 transform hover:scale-105"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
-                    disabled={!newCategoryName.trim()}
+                    disabled={!newCategoryName.trim() || !newCategoryMaxSelectable}
                   >
                     Add Category
                   </button>
@@ -245,7 +269,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                       <option value="">Select category...</option>
                       {toppingCategories.map((category) => (
                         <option key={category.id} value={category.id}>
-                          {category.name} ({category.adds.length})
+                          {category.name} ({category.adds.length}) - Max: {category.max_selectable}
                         </option>
                       ))}
                     </select>
@@ -286,13 +310,53 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                 </div>
               )}
 
-              {toppingCategories.some(cat => cat.adds.length > 0) && (
+              {toppingCategories.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-600">Added adds:</h4>
+                  <h4 className="text-sm font-medium text-gray-600">Category Settings & Added adds:</h4>
                   {toppingCategories.map((category) => (
-                    category.adds.length > 0 && (
-                      <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-3">
-                        <h5 className="font-medium text-gray-800 mb-2 text-sm">{category.name}</h5>
+                    <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <h5 className="font-medium text-gray-800 text-sm">{category.name}</h5>
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-600">Max select:</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="20"
+                              className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                              value={category.maxSelectable}
+                              onChange={(e) => handleUpdateCategoryMaxSelectable(category.id, e.target.value)}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {category.adds.length} items
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCategory(category.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                          title="Remove category"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      {category.adds.length > 0 ? (
                         <div className="space-y-2">
                           {category.adds.map((topping) => (
                             <div
@@ -309,6 +373,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                                 type="button"
                                 onClick={() => handleRemoveTopping(category.id, topping.id)}
                                 className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                                title="Remove item"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -321,15 +386,19 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    d="M6 18L18 6M6 6l12 12"
                                   />
                                 </svg>
                               </button>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )
+                      ) : (
+                        <div className="text-center text-gray-400 text-xs py-2 border border-dashed border-gray-200 rounded">
+                          No items added to this category yet
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
