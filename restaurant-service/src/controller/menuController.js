@@ -10,6 +10,10 @@ import {
   createAddsOnItemService,
   getAddsOnCategoriesService,
   getAddsOnItemsService,
+  updateAddsOnCategoryService,
+  updateAddsOnItemService,
+  deleteAddsOnCategoryService,
+  deleteAddsOnItemService,
 } from "../service/menuService.js";
 import { getRestaurantByOwnerIdService } from "../service/restaurantService.js";
 import {
@@ -200,6 +204,7 @@ export const updateMenuController = async (req, res) => {
   }
 
   try {
+    const client = await pool.connect();
     const menu = await getMenuByMenuIdService(req.params.menuId);
     if (!menu) {
       logger.warn("Menu not found");
@@ -231,12 +236,72 @@ export const updateMenuController = async (req, res) => {
       return responseError(res, 400, "Validation failed", errors);
     }
 
-    const updatedMenu = await updateMenuService(menuReq, menuId);
+    const updatedMenu = await updateMenuService(client, menuReq, menuId);
     if (!updatedMenu) {
       logger.warn("Menu update failed");
       return responseError(res, 404, "Menu update failed");
     }
 
+    menuReq.addsOnCategories = JSON.parse(menuReq.addsOnCategories || "[]");
+    if (menuReq.addsOnCategories && Array.isArray(menuReq.addsOnCategories)) {
+      for (const category of menuReq.addsOnCategories) {
+        category.restaurantId = restaurantId;
+        category.menuId = updatedMenu.menu_id;
+        if (!category.category_id) {
+          if (!category.deleted) {
+            const newCategory = await createAddsOnCategoryService(client, {
+              menuId: category.menuId,
+              categoryName: category.category_name,
+              isRequired: category.is_required,
+              maxSelectable: category.max_selectable,
+            });
+            if (category.addsOnItems && Array.isArray(category.addsOnItems)) {
+              for (const topping of category.addsOnItems) {
+                await createAddsOnItemService(client, {
+                  categoryId: newCategory.category_id,
+                  addsOnName: topping.adds_on_name,
+                  addsOnPrice: topping.adds_on_price,
+                });
+              }
+            }
+          }
+        } else {
+          if (!category.deleted) {
+            const updatedCategory = await updateAddsOnCategoryService(client, {
+              categoryId: category.category_id,
+              categoryName: category.category_name,
+              isRequired: category.is_required,
+              maxSelectable: category.max_selectable,
+            })
+            if (category.addsOnItems && Array.isArray(category.addsOnItems)) {
+              for (const topping of category.addsOnItems) {
+                if (!topping.item_id) {
+                  if (!topping.deleted) {
+                    await createAddsOnItemService(client, {
+                      categoryId: updatedCategory.category_id,
+                      addsOnName: topping.adds_on_name,
+                      addsOnPrice: topping.adds_on_price,
+                    });
+                  }
+                } else {
+                  if (!topping.deleted) {
+                    await updateAddsOnItemService(client, {
+                      itemId: topping.item_id,
+                      addsOnName: topping.adds_on_name,
+                      addsOnPrice: topping.adds_on_price,
+                    })
+                  } else {
+                    await deleteAddsOnItemService(client, topping.item_id);
+                  }
+                }
+              }
+            }
+          } else {
+            await deleteAddsOnCategoryService(client, category.category_id);
+          }
+        }
+      }
+    }
     logger.info("Menu updated successfully");
     return responseSuccess(res, 200, "Menu updated successfully", "dataMenu", updatedMenu);
   } catch (err) {
