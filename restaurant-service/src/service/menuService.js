@@ -120,6 +120,21 @@ export const updateAddsOnCategoryService = async (client=pool, {
   return result.rows[0];
 }
 
+export const updateAddsOnItemService = async (client=pool, {
+  itemId,
+  addsOnName,
+  addsOnPrice = 0
+}) => {
+  const result = await client.query(
+    `UPDATE menu_adds_on_item 
+    SET adds_on_name = $1, 
+        adds_on_price = $2
+    WHERE item_id = $3 RETURNING *`,
+    [addsOnName, addsOnPrice, itemId]
+  );
+  return result.rows[0];
+}
+
 export const getAddsOnItemsService = async (categoryId) => {
   try {
     const result = await pool.query(
