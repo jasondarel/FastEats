@@ -103,6 +103,23 @@ export const getAddsOnCategoriesService = async (menuId) => {
   }
 }
 
+export const updateAddsOnCategoryService = async (client=pool, {
+  categoryId,
+  categoryName,
+  isRequired = false,
+  maxSelectable = 1
+}) => {
+  const result = await client.query(
+    `UPDATE menu_adds_on_category 
+    SET category_name = $1, 
+        is_required = $2, 
+        max_selectable = $3
+    WHERE category_id = $4 RETURNING *`,
+    [categoryName, isRequired, maxSelectable, categoryId]
+  );
+  return result.rows[0];
+}
+
 export const getAddsOnItemsService = async (categoryId) => {
   try {
     const result = await pool.query(
@@ -116,8 +133,8 @@ export const getAddsOnItemsService = async (categoryId) => {
   }
 }
 
-export const updateMenuService = async (menuReq, menuId) => {
-  const result = await pool.query(
+export const updateMenuService = async (client=pool, menuReq, menuId) => {
+  const result = await client.query(
     `UPDATE menu_item 
     SET menu_name = $1, 
         menu_description = $2, 
