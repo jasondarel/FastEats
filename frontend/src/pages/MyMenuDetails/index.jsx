@@ -25,6 +25,7 @@ const MyMenuDetails = () => {
     menuPrice: "",
     menuCategory: "",
     menuImage: null,
+    addsOn: [],
   });
   const [menuImage, setMenuImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -57,6 +58,7 @@ const MyMenuDetails = () => {
         }
 
         const data = await response.json();
+        console.log("Fetched Menu details Data:", data);
 
         if (data.menu) {
           setMenu(data.menu);
@@ -66,6 +68,7 @@ const MyMenuDetails = () => {
             menuPrice: data.menu.menu_price || "",
             menuImage: data.menu.menu_image || "",
             menuCategory: data.menu.menu_category || "",
+            addsOnCategories: data.menu.addsOnCategories || [],
           });
         } else {
           throw new Error(`Menu with ID ${menuId} not found`);
@@ -82,6 +85,62 @@ const MyMenuDetails = () => {
 
     fetchMenuDetails();
   }, [menuId]);
+
+  const handleUpdateAddsOnCategory = (addsOn) => {
+    setFormData((prev) => ({
+      ...prev,
+      addsOnCategories: [...(prev.addsOnCategories || []), addsOn],
+    }));
+  }
+
+  const handleUpdateAddsOnItem = (categoryId, item) => {
+    setFormData((prev) => {  
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        if (cat.category_id === categoryId || cat.id === categoryId) {
+          return {
+            ...cat,
+            addsOnItems: [...(cat.addsOnItems || []), item],
+          };
+        } else {
+          return cat;
+        }
+      });
+      return { ...prev, addsOnCategories: updatedCategories };
+    });
+  }
+
+  const handleRemoveAddsOnCategory = (categoryId) => {
+    setFormData((prev) => {
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        if (cat.category_id === categoryId) {
+          return { ...cat, deleted: true };
+        }
+        return cat;
+      })
+      return { ...prev, addsOnCategories: updatedCategories };
+    })
+  }
+
+  const handleRemoveAddsOnItem = (categoryId, itemId) => {
+    setFormData((prev) => {
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        if (cat.category_id === categoryId) {
+          return {
+            ...cat,
+            addsOnItems: cat.addsOnItems.map((item) => {
+              if (item.item_id === itemId) {
+                return { ...item, deleted: true }
+              } else {
+                return item;
+              }
+            }),
+          };
+        }
+        return cat;
+      });
+      return { ...prev, addsOnCategories: updatedCategories };
+    });
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -161,12 +220,13 @@ const MyMenuDetails = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
-
+      console.log("Form Data Before Update:", formData);
       const formDataObj = new FormData();
       formDataObj.append("menuName", formData.menuName);
       formDataObj.append("menuDescription", formData.menuDesc);
       formDataObj.append("menuCategory", formData.menuCategory);
       formDataObj.append("menuPrice", formData.menuPrice);
+      formDataObj.append("addsOnCategories", JSON.stringify(formData.addsOnCategories));
 
       if (menuImage) {
         formDataObj.append("menuImage", menuImage);
@@ -371,6 +431,10 @@ const MyMenuDetails = () => {
       showEditForm={showEditForm}
       setShowEditForm={setShowEditForm}
       formData={formData}
+      handleUpdateAddsOnCategory={handleUpdateAddsOnCategory}
+      handleUpdateAddsOnItem={handleUpdateAddsOnItem}
+      handleRemoveAddsOnCategory={handleRemoveAddsOnCategory}
+      handleRemoveAddsOnItem={handleRemoveAddsOnItem}
       handleInputChange={handleInputChange}
       handleImageChange={handleImageChange}
       handleUpdateMenu={handleUpdateMenu}

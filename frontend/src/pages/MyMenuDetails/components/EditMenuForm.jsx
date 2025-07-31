@@ -12,10 +12,13 @@ const EditMenuForm = ({
   handleImageChange,
   handleUpdateMenu,
   previewImage,
+  handleUpdateAddsOnCategory,
+  handleUpdateAddsOnItem,
+  handleRemoveAddsOnCategory,
+  handleRemoveAddsOnItem,
   menu,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  
   const [toppingCategories, setToppingCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryMaxSelectable, setNewCategoryMaxSelectable] = useState("1");
@@ -27,12 +30,11 @@ const EditMenuForm = ({
     if (showEditForm) {
       setIsVisible(true);
       if (menu && menu.addsOnCategories) {
-        // Transform existing add-on categories to match the create form structure
         const transformedCategories = menu.addsOnCategories.map(category => ({
           id: category.category_id,
-          name: category.category_name,
-          maxSelectable: category.max_selectable || 1,
-          adds: category.addsOnItems ? category.addsOnItems.map(item => ({
+          category_name: category.category_name,
+          max_selectable: category.max_selectable || 1,
+          addsOnItems: category.addsOnItems ? category.addsOnItems.map(item => ({
             id: item.item_id,
             adds_on_name: item.adds_on_name,
             adds_on_price: parseFloat(item.adds_on_price)
@@ -47,10 +49,11 @@ const EditMenuForm = ({
     if (newCategoryName.trim() && newCategoryMaxSelectable) {
       const newCategory = {
         id: Date.now(),
-        name: newCategoryName.trim(),
-        maxSelectable: parseInt(newCategoryMaxSelectable),
-        adds: []
+        category_name: newCategoryName.trim(),
+        max_selectable: parseInt(newCategoryMaxSelectable),
+        addsOnItems: []
       };
+      handleUpdateAddsOnCategory(newCategory);
       setToppingCategories([...toppingCategories, newCategory]);
       setNewCategoryName("");
       setNewCategoryMaxSelectable("1");
@@ -68,10 +71,12 @@ const EditMenuForm = ({
   };
 
   const handleRemoveCategory = (categoryId) => {
-    setToppingCategories(toppingCategories.filter(cat => cat.id !== categoryId));
-    if (selectedToppingCategory === categoryId) {
-      setSelectedToppingCategory(null);
-    }
+    setToppingCategories(categories =>
+      categories.map(cat =>
+        cat.id === categoryId ? { ...cat, deleted: true } : cat
+      )
+    );
+    handleRemoveAddsOnCategory(categoryId);
   };
 
   const handleAddTopping = () => {
@@ -81,11 +86,11 @@ const EditMenuForm = ({
         adds_on_name: newToppingName.trim(),
         adds_on_price: parseFloat(newToppingPrice),
       };
-      
+      handleUpdateAddsOnItem(selectedToppingCategory, newTopping);
       setToppingCategories(categories => 
         categories.map(cat => 
           cat.id === selectedToppingCategory 
-            ? { ...cat, adds: [...cat.adds, newTopping] }
+            ? { ...cat, addsOnItems: [...cat.addsOnItems, newTopping] }
             : cat
         )
       );
@@ -99,10 +104,17 @@ const EditMenuForm = ({
     setToppingCategories(categories =>
       categories.map(cat =>
         cat.id === categoryId
-          ? { ...cat, adds: cat.adds.filter(topping => topping.id !== toppingId) }
+          ? { ...cat, addsOnItems: cat.addsOnItems.map(item => {
+            if (item.id === toppingId) {
+              return { ...item, deleted: true }
+            } else {
+              return item;
+            }
+          }) }
           : cat
       )
     );
+    handleRemoveAddsOnItem(categoryId, toppingId);
   };
 
   const handleClose = () => {
@@ -133,10 +145,10 @@ const EditMenuForm = ({
     
     const transformedCategories = toppingCategories.map(category => ({
       ...(typeof category.id === 'number' && category.id < 1000000000 ? { category_id: category.id } : {}),
-      name: category.name,
-      maxSelectable: category.maxSelectable,
+      name: category.category_name,
+      maxSelectable: category.max_selectable,
       isRequired: false,
-      adds: category.adds.map(item => ({
+      addsOnItems: category.addsOnItems.map(item => ({
         ...(typeof item.id === 'number' && item.id < 1000000000 ? { item_id: item.id } : {}),
         adds_on_name: item.adds_on_name,
         adds_on_price: item.adds_on_price
@@ -144,9 +156,7 @@ const EditMenuForm = ({
     }));
     
     formDataWithToppings.append("toppingCategories", JSON.stringify(transformedCategories));
-    
-    console.log('Submitting categories:', transformedCategories); // Debug log
-    
+
     handleUpdateMenu(e, formDataWithToppings);
   };
 
@@ -338,6 +348,7 @@ const EditMenuForm = ({
 
               {toppingCategories.length > 0 && (
                 <div className="mb-4">
+                  {console.log('Topping Categories:', toppingCategories)}
                   <h4 className="text-sm font-medium text-gray-600 mb-2">2. Add adds-on to Category</h4>
                   <div className="flex gap-3">
                     <select
@@ -346,9 +357,9 @@ const EditMenuForm = ({
                       onChange={(e) => setSelectedToppingCategory(e.target.value ? parseInt(e.target.value) : null)}
                     >
                       <option value="">Select category...</option>
-                      {toppingCategories.map((category) => (
+                      {toppingCategories.map((category) => !category.deleted && (
                         <option key={category.id} value={category.id}>
-                          {category.name} ({category.adds.length}) - Max: {category.maxSelectable}
+                          {category.category_name} ({category.addsOnItems.length}) - Max: {category.max_selectable}
                         </option>
                       ))}
                     </select>
@@ -392,11 +403,11 @@ const EditMenuForm = ({
               {toppingCategories.length > 0 && (
                 <div className="space-y-4">
                   <h4 className="text-sm font-medium text-gray-600">Category Settings & Added adds:</h4>
-                  {toppingCategories.map((category) => (
+                  {toppingCategories.map((category) => !category.deleted && (
                     <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-4">
-                          <h5 className="font-medium text-gray-800 text-sm">{category.name}</h5>
+                          <h5 className="font-medium text-gray-800 text-sm">{category.category_name}</h5>
                           <div className="flex items-center gap-2">
                             <label className="text-xs text-gray-600">Max select:</label>
                             <input
@@ -404,12 +415,12 @@ const EditMenuForm = ({
                               min="1"
                               max="20"
                               className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                              value={category.maxSelectable}
+                              value={category.max_selectable}
                               onChange={(e) => handleUpdateCategoryMaxSelectable(category.id, e.target.value)}
                             />
                           </div>
                           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {category.adds.length} items
+                            {category.addsOnItems.length} items
                           </span>
                         </div>
                         <button
@@ -435,12 +446,12 @@ const EditMenuForm = ({
                         </button>
                       </div>
                       
-                      {category.adds.length > 0 ? (
+                      {category.addsOnItems.length > 0 ? (
                         <div className="space-y-2">
-                          {category.adds.map((topping) => (
+                          {category.addsOnItems.map((topping) => !topping.deleted && (
                             <div
-                              key={topping.id}
-                              className="flex items-center justify-between bg-gray-50 p-2 rounded border"
+                            key={topping.id}
+                            className="flex items-center justify-between bg-gray-50 p-2 rounded border"
                             >
                               <div className="flex-1">
                                 <span className="font-medium text-gray-800 text-sm">{topping.adds_on_name}</span>
