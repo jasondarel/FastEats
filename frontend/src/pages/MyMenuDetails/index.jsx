@@ -124,19 +124,22 @@ const MyMenuDetails = () => {
   const handleRemoveAddsOnItem = (categoryId, itemId) => {
     setFormData((prev) => {
       const updatedCategories = prev.addsOnCategories.map((cat) => {
-        if (cat.category_id === categoryId) {
+        console.log('Current category:', cat);
+        if (cat.category_id === categoryId || cat.id === categoryId) {
           return {
             ...cat,
             addsOnItems: cat.addsOnItems.map((item) => {
-              if (item.item_id === itemId) {
+              console.log('Current item:', item);
+              if (item.item_id === itemId || item.id === itemId) {
                 return { ...item, deleted: true }
               } else {
                 return item;
               }
             }),
           };
+        } else {
+          return cat;
         }
-        return cat;
       });
       return { ...prev, addsOnCategories: updatedCategories };
     });
