@@ -257,11 +257,13 @@ export const updateMenuController = async (req, res) => {
             });
             if (category.addsOnItems && Array.isArray(category.addsOnItems)) {
               for (const topping of category.addsOnItems) {
-                await createAddsOnItemService(client, {
-                  categoryId: newCategory.category_id,
-                  addsOnName: topping.adds_on_name,
-                  addsOnPrice: topping.adds_on_price,
-                });
+                if (!topping.deleted) {
+                  await createAddsOnItemService(client, {
+                    categoryId: newCategory.category_id,
+                    addsOnName: topping.adds_on_name,
+                    addsOnPrice: topping.adds_on_price,
+                  });
+                }
               }
             }
           }
