@@ -617,52 +617,32 @@ const ChatRoom = () => {
       }
 
       if (isSocketConnected) {
-        emitMessage({
+        const socketMessage = {
           ...messageData,
           sender: {
             type: payload.role,
             id: payload.userId,
           },
           timestamp: new Date().toISOString(),
-        });
+        };
+
+        // Ensure image URL is included in socket message for real-time display
+        if (imageUrl) {
+          socketMessage.imageUrl = imageUrl;
+          socketMessage.attachments = { url: imageUrl };
+        }
+
+        // Ensure GIF data is properly structured for socket
+        if (gifData) {
+          socketMessage.gifData = gifData;
+          socketMessage.gifUrl = gifData.url;
+          socketMessage.gifTitle = gifData.title;
+        }
+
+        emitMessage(socketMessage);
       }
 
       const result = await createMessageService(messageData, token);
-
-      if (result.success) {
-        setMessages((prev) => {
-          const filtered = prev.filter(
-            (msg) => msg.clientTempId !== clientTempId
-          );
-          const serverMessage = {
-            id:
-              result.message._id || result.message.id || `server-${Date.now()}`,
-            sender: "currentUser",
-            message: result.message.text || messageText,
-            timestamp: result.message.createdAt || new Date().toISOString(),
-            type: result.message.messageType || messageType,
-            imageUrl: result.message.imageUrl || imageUrl,
-            gifUrl:
-              result.message.gifData?.url ||
-              result.message.gifUrl ||
-              gifData?.url ||
-              null,
-            gifTitle:
-              result.message.gifData?.title ||
-              result.message.gifTitle ||
-              gifData?.title ||
-              null,
-            clientTempId,
-          };
-          return [...filtered, serverMessage];
-        });
-        setError(null);
-      } else {
-        setMessages((prev) =>
-          prev.filter((msg) => msg.clientTempId !== clientTempId)
-        );
-        setError(`Failed to send message: ${result.error}`);
-      }
     } catch (err) {
       setMessages((prev) => prev.filter((msg) => !msg.clientTempId));
       setError(`${err.message}`);
@@ -724,6 +704,22 @@ const ChatRoom = () => {
     const handleNewMessage = (messageData) => {
       console.log("Received new message from socket:", messageData);
 
+      let messageType = messageData.messageType || messageData.type || "text";
+      let imageUrl = null;
+      let gifUrl = null;
+      let gifTitle = null;
+
+      if (messageType === "image" || messageData.imageUrl) {
+        imageUrl = messageData.attachments?.url || messageData.imageUrl || null;
+        messageType = "image";
+      }
+
+      if (messageType === "gif" || messageData.gifData || messageData.gifUrl) {
+        gifUrl = messageData.gifData?.url || messageData.gifUrl || null;
+        gifTitle = messageData.gifData?.title || messageData.gifTitle || null;
+        messageType = "gif";
+      }
+
       const transformedMessage = {
         id: messageData._id || messageData.id || `socket-${Date.now()}`,
         sender: determineMessageSender(messageData.sender),
@@ -733,17 +729,18 @@ const ChatRoom = () => {
           messageData.timestamp ||
           new Date().toISOString(),
         orderDetails: messageData.orderDetails || null,
-        type: messageData.messageType || messageData.type || "text",
-        imageUrl: messageData.attachments?.url || messageData.imageUrl || null,
-        gifUrl: messageData.gifData?.url || messageData.gifUrl || null,
-        gifTitle: messageData.gifData?.title || messageData.gifTitle || null,
+        type: messageType,
+        imageUrl: imageUrl,
+        gifUrl: gifUrl,
+        gifTitle: gifTitle,
+        gifData: messageData.gifData || (gifUrl ? { url: gifUrl, title: gifTitle } : null),
         clientTempId: messageData.clientTempId,
       };
       console.log("Transformed message:", transformedMessage);
 
       setMessages((prevMessages) => {
         let filtered = prevMessages;
-
+        console.log("Filtering previous messages:", filtered);
         if (transformedMessage.clientTempId) {
           filtered = prevMessages.filter(
             (msg) => msg.clientTempId !== transformedMessage.clientTempId
@@ -754,13 +751,14 @@ const ChatRoom = () => {
           return (
             msg.id === transformedMessage.id ||
             (msg.message === transformedMessage.message &&
+              msg.imageUrl === transformedMessage.imageUrl &&
               msg.gifUrl === transformedMessage.gifUrl &&
               Math.abs(
                 new Date(msg.timestamp) - new Date(transformedMessage.timestamp)
               ) < 5000)
           );
         });
-
+        console.log("Checking if message exists:", exists);
         if (exists) return filtered;
         return [...filtered, transformedMessage];
       });

@@ -39,14 +39,14 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
   }, []);
 
   const handleImageError = () => {
-    const mediaUrl = messageType === "gif" ? message.gifUrl : message.imageUrl;
+    const mediaUrl = messageType === "gif" ? message.gifUrl : `${API_URL}/${message.imageUrl}`;
     console.log("Image/GIF failed to load:", mediaUrl);
     setImageError(true);
     setImageLoading(false);
   };
 
   const handleImageLoad = () => {
-    const mediaUrl = messageType === "gif" ? message.gifUrl : message.imageUrl;
+    const mediaUrl = messageType === "gif" ? message.gifUrl : `${API_URL}/${message.imageUrl}`;
     console.log("Image/GIF loaded successfully:", mediaUrl);
     setImageLoading(false);
   };
@@ -66,7 +66,7 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
   if (messageType === "gif") {
     mediaUrl = message.gifUrl || (message.gifData && message.gifData.url);
   } else if (messageType === "image") {
-    mediaUrl = message.imageUrl;
+    mediaUrl = `${API_URL}/${message.imageUrl}`;
   }
 
   if (messageType === "order_details" && message.orderDetails) {
