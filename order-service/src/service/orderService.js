@@ -56,6 +56,18 @@ export const createOrderAddsOnCategoryService = async (paramPool=pool, {
   return result.rows[0];
 }
 
+export const createOrderAddsOnItemService = async (paramPool=pool, {
+  addsOnName,
+  addsOnPrice,
+  categoryId
+}) => {
+  const result = await paramPool.query(
+    "INSERT INTO order_items_adds_on_item (adds_on_name, adds_on_price, category_id) VALUES ($1, $2, $3) RETURNING *",
+    [addsOnName, addsOnPrice, categoryId]
+  );
+  return result.rows[0];
+}
+
 export const getUserOrdersService = async (userId) => {
   const result = await pool.query("SELECT * FROM orders WHERE user_id = $1", [
     userId,
