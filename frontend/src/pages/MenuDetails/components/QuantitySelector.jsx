@@ -10,7 +10,6 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
     const newValue = e.target.value;
     setInputValue(newValue);
 
-    // Only update the actual quantity if the value is a valid number
     if (newValue !== "" && !isNaN(newValue)) {
       const numValue = parseInt(newValue);
       onQuantityChange(numValue - quantity);
@@ -18,7 +17,6 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
   };
 
   const handleBlur = () => {
-    // When the input loses focus, ensure we have a valid value
     if (inputValue === "" || isNaN(inputValue) || parseInt(inputValue) < 1) {
       setInputValue("1");
       onQuantityChange(1 - quantity);
@@ -28,7 +26,7 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-2">
+    <div className="flex flex-col items-center space-y-2 mt-10">
       <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg">
         <button
           onClick={() => {
