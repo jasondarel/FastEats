@@ -263,16 +263,18 @@ const ChatsList = () => {
       unreadCount: chat.unreadCountUser || 0,
       isAnimating: animatingChats.has(chatId),
       restaurant: {
-        restaurant_id: chat.restaurant?.restaurant_id,
-        restaurant_name: chat.restaurant?.restaurant_name || "Restaurant",
-        restaurant_image: chat.restaurant?.restaurant_image || null,
+        restaurantId: chat.orderDetails?.restaurant_id,
+        restaurantName: chat.orderDetails?.restaurant_name || "Restaurant",
+        restaurantImage: chat.orderDetails?.restaurant_image || null,
         restaurant_address:
-          chat.restaurant?.restaurant_address || "Address not available",
+          chat.orderDetails?.restaurant_address || "Address not available",
       },
       user: chat.user || null,
       orderDetails: chat.orderDetails || null,
     };
   });
+
+  console.log("Transformed Chats:", transformedChats);
 
   const activeChats = transformedChats.filter(
     (chat) => chat.status === "Preparing" || chat.status === "Waiting"
@@ -345,6 +347,7 @@ const ChatsList = () => {
               title="Cancelled Orders"
               isActive={false}
               userRole={user?.role}
+              userName={user?.name}
               chatRefs={chatRefs}
             />
               

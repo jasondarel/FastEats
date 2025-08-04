@@ -8,6 +8,7 @@ const ChatListSection = ({
   isActive = true, 
   userRole, 
   chatRefs,
+  userName,
   showNotice = false 
 }) => {
   if (chats.length === 0) return null;
@@ -37,6 +38,7 @@ const ChatListSection = ({
               <ChatCard
                 chat={chat}
                 role={userRole}
+                userName={userName}
               />
             </div>
           );

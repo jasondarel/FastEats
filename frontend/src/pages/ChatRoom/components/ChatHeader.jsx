@@ -69,9 +69,10 @@ const ChatHeader = ({
 
               <div>
                 <h3 className="font-semibold text-gray-800">
-                  {orderDetails.restaurantName ||
-                    orderDetails.customerName ||
-                    "Restaurant"}
+                  {user.role === "user"
+                    ? orderDetails.restaurantName || "Restaurant"
+                    : orderDetails.customerName || "Customer"
+                    }
                 </h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-500">

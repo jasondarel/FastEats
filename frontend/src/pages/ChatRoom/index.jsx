@@ -36,6 +36,7 @@ const ChatRoom = () => {
   const { user } = useSelector((state) => state.auth);
 
   const orderDetails = location.state || {};
+  console.log("ChatRoom - Order Details:", orderDetails);
 
   const {
     isSocketConnected,

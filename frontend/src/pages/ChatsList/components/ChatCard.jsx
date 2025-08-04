@@ -6,11 +6,14 @@ import { IoMdPerson } from "react-icons/io";
 import StatusBadge from "../../../components/StatusBadge";
 import { API_URL } from "../../../config/api";
 import { useState } from "react";
+import { current } from "@reduxjs/toolkit";
+import { useSelector } from "react-redux";
 
 const ChatCard = ({ chat, role = "seller" }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const isCompleted = chat.orderDetails?.status === "Completed" || false;
+  const { user } = useSelector((state) => state.auth);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -61,6 +64,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
   }
 
   const handleChatClick = () => {
+    console.log("Chat clicked:", chat);
     if (isCompleted) {
       alert("Chat is not available for completed orders");
       return;
@@ -70,6 +74,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
     if (role === "seller") {
       locationState = {
         customerName: chat.user?.name || "Customer",
+        restaurantName: chat.restaurant?.restaurantName || "Restaurant",
         customerImage: chat.user?.profile_photo || null,
         orderId: chat.order_id,
         orderType: chat.order_type,
@@ -78,15 +83,15 @@ const ChatCard = ({ chat, role = "seller" }) => {
       };
     } else {
       locationState = {
-        restaurantName: chat.restaurant?.restaurant_name,
-        restaurantImage: `${API_URL}/restaurant/uploads/restaurant/${chat.restaurant?.restaurant_image}`,
+        restaurantName: chat.restaurant?.restaurantName,
+        restaurantImage: `${API_URL}/restaurant/uploads/restaurant/${chat.restaurant?.restaurantImage}`,
         orderId: chat.order_id,
         orderType: chat.order_type,
         totalPrice,
         itemCount,
       };
     }
-
+    console.log("Navigating to chat with state:", locationState);
     navigate(`/chat/${chat.chat_id}`, {
       state: {
         ...locationState,
@@ -152,10 +157,10 @@ const ChatCard = ({ chat, role = "seller" }) => {
                 </>
               ) : (
                 <>
-                  {restaurantImage ? (
+                  {chat.restaurant.restaurantImage ? (
                     <img
-                      src={`${API_URL}/restaurant/uploads/restaurant/${restaurantImage}`}
-                      alt={chat.restaurant?.restaurant_name}
+                      src={`${API_URL}/restaurant/uploads/restaurant/${chat.restaurant.restaurantImage}`}
+                      alt={chat.restaurant?.restaurantName}
                       className={`h-full w-full object-cover transition-transform duration-300 ${
                         isHovered && !isCompleted ? 'scale-110' : ''
                       }`}
@@ -185,7 +190,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
                 >
                   {role === "seller"
                     ? chat.user?.name || "Customer"
-                    : chat.restaurant?.restaurant_name || "Restaurant"}
+                    : chat.restaurant?.restaurantName || "Restaurant"}
                 </h4>
                 <div className="flex items-center space-x-2 flex-shrink-0">
                   {chat.unreadCount > 0 && !isCompleted && (
