@@ -8,6 +8,7 @@ import WelcomeHeader from "./components/WelcomeHeader";
 import RestaurantGrid from "./components/RestaurantGrid";
 import SearchSection from "./components/SearchSection";
 import { getRestaurants } from "../../service/restaurantService/manageRestaurantService";
+import { API_URL } from "../../config/api";
 
 const Home = () => {
   const [username, setUsername] = useState(null);
@@ -44,7 +45,7 @@ const Home = () => {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/user/profile", {
+        const response = await fetch(`${API_URL}/user/profile`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

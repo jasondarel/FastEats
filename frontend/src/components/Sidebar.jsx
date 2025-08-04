@@ -6,6 +6,7 @@ import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { logout } from "../app/auth/authSlice";
+import { API_URL } from "../config/api";
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
         const token = localStorage.getItem("token");
         if (!token) return;
         setLoadingProfile(true);
-        const response = await axios.get("http://localhost:5002/profile", {
+        const response = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile({
@@ -90,7 +91,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch("http://localhost:5000/user/user", {
+        const response = await fetch(`${API_URL}/user/user`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaPaperPlane, FaImage, FaTimes, FaReceipt } from "react-icons/fa";
 import { HiOutlineGif } from "react-icons/hi2";
 import GifPicker from "./GifPicker";
+import { API_URL } from "../../../config/api";
 
 const MessageInput = ({
   newMessage,
@@ -52,7 +53,7 @@ const MessageInput = ({
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://localhost:5000/user/user", {
+      const response = await fetch(`${API_URL}/user/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

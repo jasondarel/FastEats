@@ -79,7 +79,7 @@ export const deleteRestaurantService = async (id) => {
 
 export const isOwnerAvailable = async(ownerId) => {
     try {
-        const response = await axios.get(`http://localhost:5000/user/is-user-exist/${ownerId}`);
+        const response = await axios.get(`${API_URL}/user/is-user-exist/${ownerId}`);
         if(response.data.success) {
             return true;
         }

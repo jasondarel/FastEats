@@ -2,6 +2,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
+import { API_URL } from "../../../config/api";
 
 const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
   const menu = item.menu || {};
@@ -22,7 +23,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
     <div className="flex items-start p-3 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition">
       <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
         <img
-          src={`http://localhost:5000/restaurant/uploads/menu/${menu_image_url}`}
+          src={`${API_URL}/restaurant/uploads/menu/${menu_image_url}`}
           alt={menu_name}
           className="h-full w-full object-cover"
           onError={(e) => {

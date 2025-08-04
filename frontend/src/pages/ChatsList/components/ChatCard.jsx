@@ -79,7 +79,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
     } else {
       locationState = {
         restaurantName: chat.restaurant?.restaurant_name,
-        restaurantImage: `http://localhost:5000/restaurant/uploads/restaurant/${chat.restaurant?.restaurant_image}`,
+        restaurantImage: `${API_URL}/restaurant/uploads/restaurant/${chat.restaurant?.restaurant_image}`,
         orderId: chat.order_id,
         orderType: chat.order_type,
         totalPrice,

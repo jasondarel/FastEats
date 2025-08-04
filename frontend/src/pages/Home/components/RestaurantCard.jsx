@@ -12,6 +12,7 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
+import { API_URL } from "../../../config/api";
 
 const RestaurantCard = ({ restaurant, onClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -41,7 +42,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/detail-rate?restaurantId=${restaurant.restaurant_id}`,
+          `${API_URL}/restaurant/detail-rate?restaurantId=${restaurant.restaurant_id}`,
           {
             method: "GET",
             headers: {
@@ -89,7 +90,7 @@ const RestaurantCard = ({ restaurant, onClick }) => {
           <>
             <img
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              src={`http://localhost:5000/restaurant/uploads/restaurant/${restaurant.restaurant_image}`}
+              src={`${API_URL}/restaurant/uploads/restaurant/${restaurant.restaurant_image}`}
               alt={restaurant.restaurant_name}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
