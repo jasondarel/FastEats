@@ -42,8 +42,14 @@ const restaurantProxy = createProxyMiddleware({
 
 const userProxy = createProxyMiddleware({
   target: process.env.USER_SERVICE_URL || 'http://localhost:5002',
-  changeOrigin: true,
+  changeOrigin: false,
+  headers: {
+    'X-Forwarded-Host': process.env.DOMAIN_URL || process.env.CLIENT_URL,
+    'X-Forwarded-Proto': 'https'
+  },
   onProxyReq: (proxyReq, req) => {
+    proxyReq.setHeader('X-Original-Host', req.get('Host'));
+    proxyReq.setHeader('X-Forwarded-For', req.ip);
     logger.info(`User Service - Proxying request: ${req.method} ${req.originalUrl}`);
   },
   onProxyRes: (proxyRes, req) => {
