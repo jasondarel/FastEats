@@ -67,16 +67,35 @@ model order_jobs {
 }
 
 model order_items {
-  order_item_id Int    @id @default(autoincrement())
-  order_id      Int
-  menu_id       Int?
-  menu_name               String?       @db.VarChar(100)
-  menu_description        String?       @db.Text
-  menu_price              Decimal       @db.Decimal(10,2)
-  menu_category           String        @db.VarChar(100)
-  menu_image              String?       @db.VarChar(500)
-  item_quantity Int    @default(1)
-  orders        orders @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  order_item_id           Int      @id @default(autoincrement())
+  order_id                Int
+  menu_id                 Int?
+  menu_name               String?  @db.VarChar(100)
+  menu_description        String?  @db.Text
+  menu_price              Decimal  @db.Decimal(10,2)
+  menu_category           String   @db.VarChar(100)
+  menu_image              String?  @db.VarChar(500)
+  item_quantity           Int      @default(1)
+  orders                  orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  adds_on_categories      order_items_adds_on_category[]
+}
+
+model order_items_adds_on_category {
+  category_id     Int              @id @default(autoincrement())
+  category_name   String           @db.VarChar(100)
+  is_required     Boolean          @default(false)
+  max_selectable  Int              @default(1)
+  order_item_id   Int
+  order_item      order_items      @relation(fields: [order_item_id], references: [order_item_id], onDelete: Cascade)
+  adds_on_items   order_items_adds_on_item[]
+}
+
+model order_items_adds_on_item {
+  item_id         Int              @id @default(autoincrement())
+  adds_on_name    String           @db.VarChar(100)
+  adds_on_price   Decimal          @db.Decimal(10,2)
+  category_id     Int
+  category        order_items_adds_on_category  @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
 }
 
 model transactions {
