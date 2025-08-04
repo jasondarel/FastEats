@@ -396,7 +396,7 @@ export const uploadImageChatController = async (req, res) => {
     const baseUrl = GLOBAL_SERVICE_URL.endsWith("/")
       ? GLOBAL_SERVICE_URL.slice(0, -1)
       : GLOBAL_SERVICE_URL;
-    const imageUrl = `${baseUrl}/chat/uploads/chat/${req.file.filename}`;
+    const imageUrl = `chat/uploads/chat/${req.file.filename}`;
 
     logger.info("Image uploaded successfully", imageUrl);
 
