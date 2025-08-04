@@ -343,7 +343,7 @@ export const getOrdersBySellerIdService = async (sellerId, status) => {
   return result.rows;
 }
 
-export const getAllOrdersWithItemsService = async () => {
+export const getAllOrdersWithItemsService = async ({userId}) => {
   const result = await pool.query(
     `SELECT 
     o.order_id,
@@ -365,9 +365,10 @@ export const getAllOrdersWithItemsService = async () => {
     ) AS items
 FROM orders o
 LEFT JOIN order_items oi ON o.order_id = oi.order_id
+WHERE o.user_id = $1
 GROUP BY o.order_id
 ORDER BY o.created_at DESC;
-`
+`, [userId]
   );
   return result.rows;
 };

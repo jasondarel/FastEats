@@ -290,8 +290,9 @@ export const getOrdersController = async (req, res) => {
 
 export const getAllOrdersWithItemsController = async (req, res) => {
   logger.info("GET ALL ORDERS WITH ITEMS CONTROLLER");
+  const { userId, role } = req.user;
   try {
-    const orders = await getAllOrdersWithItemsService();
+    const orders = await getAllOrdersWithItemsService({userId});
     return responseSuccess(
       res,
       200,
