@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import io from "socket.io-client";
 import { API_URL, CHAT_URL } from "../../../config/api";
+import { useSelector } from "react-redux";
 
 export const useChatSocket = (
   chatId,
@@ -8,9 +9,13 @@ export const useChatSocket = (
   currentUserRole,
   orderDetails
 ) => {
+  console.log("useChatSocket initialized with chatId:", chatId);
+  console.log("useChatSocket currentUserId:", currentUserId);
+  console.log("useChatSocket currentUserRole:", currentUserRole);
+  console.log("useChatSocket orderDetails:", orderDetails);
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-
+  const { user } = useSelector((state) => state.auth);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -96,6 +101,9 @@ export const useChatSocket = (
   };
 
   const handleTypingStart = () => {
+    console.log("Handling typing start");
+    console.log("orderDetails:", orderDetails);
+    console.log("current user role:", currentUserRole);
     if (!isTyping) {
       setIsTyping(true);
       if (socketRef.current && socketRef.current.connected) {
@@ -103,9 +111,9 @@ export const useChatSocket = (
           chatId,
           userId: currentUserId,
           username:
-            currentUserRole === "seller"
-              ? orderDetails?.customerName || "Customer"
-              : orderDetails?.restaurantName || "Restaurant",
+            user.role === "user" ?
+              user.name || "User" :
+              orderDetails?.restaurantName || "Restaurant",
           isTyping: true,
         });
       }
