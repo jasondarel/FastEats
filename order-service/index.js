@@ -16,10 +16,17 @@ logger.info(`Using ${process.env.NODE_ENV} mode`);
 const app = express();
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
+
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.DOMAIN_URL,
+].filter(Boolean);
+
 const io = new SocketIOServer(server, {
   cors: {
-    origin: [process.env.CLIENT_URL, process.env.DOMAIN_URL],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true
   }
 });
 
@@ -31,7 +38,14 @@ io.on("connection", (socket) => {
     logger.info(`🔴 Client disconnected: ${socket.id}`);
   });
 });
-app.use(cors({ origin: process.env.CLIENT_URL }));
+
+app.use(cors({ 
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+}));
+
 app.use(express.json());
 app.use(OrderRoutes);
 
