@@ -1,5 +1,8 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import OrderDetailsCard from "./OrderDetailsCard";
+import { API_URL } from "../../../config/api";
 
 const MessageBubble = ({ message, formatTime, formatPrice }) => {
   const [imageError, setImageError] = useState(false);
@@ -10,7 +13,7 @@ const MessageBubble = ({ message, formatTime, formatPrice }) => {
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://localhost:5000/user/user", {
+      const response = await fetch(`${API_URL}/user/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

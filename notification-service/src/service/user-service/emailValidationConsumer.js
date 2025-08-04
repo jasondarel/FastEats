@@ -27,7 +27,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendVerificationEmail = async (email, token, otpCode) => {
-  const verificationLink = `http://localhost:5173/verify-token?token=${token}`;
+  const verificationLink = `${process.env.CLIENT_URL}/verify-token?token=${token}`;
   const subject = "FastEats Email Verification";
   const body = `
     <html>

@@ -1,4 +1,3 @@
-export const API_URL = import.meta.env.VITE_API_SERVICE_URL;
 export const ORDER_URL = import.meta.env.VITE_ORDER_SERVICE_URL;
 export const CHAT_URL = import.meta.env.VITE_CHAT_SERVICE_URL;
 export const ROOT_URL = import.meta.env.VITE_ROOT_URL;
@@ -14,3 +13,4 @@ export const DISTRICT_URL = import.meta.env.VITE_DISTRICT_URL;
 export const VILLAGE_URL = import.meta.env.VITE_VILLAGE_URL;
 export const USER_URL = import.meta.env.VITE_USER_SERVICE_URL;
 export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
+export const API_URL = import.meta.env.VITE_API_SERVICE_URL;

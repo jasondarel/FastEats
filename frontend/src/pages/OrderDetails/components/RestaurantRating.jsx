@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../../../config/api';
 
 const RestaurantRating = ({ order, onSubmitRating }) => {
   console.log('RestaurantRating component rendered with order:', order);
@@ -24,7 +25,7 @@ const RestaurantRating = ({ order, onSubmitRating }) => {
           return;
         }
 
-        const API_URL = 'http://localhost:5000';
+        const API_URL = API_URL;
         const response = await fetch(
           `${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`,
           {

@@ -312,9 +312,9 @@ const OrderDetails = () => {
                 order.restaurant?.restaurant_name ||
                 existingChat.restaurant?.restaurant_name,
               restaurantImage: order.restaurant?.restaurant_image
-                ? `http://localhost:5000/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
+                ? `${API_URL}/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
                 : existingChat.restaurant?.restaurant_image
-                ? `http://localhost:5000/restaurant/uploads/restaurant/${existingChat.restaurant.restaurant_image}`
+                ? `${API_URL}/restaurant/uploads/restaurant/${existingChat.restaurant.restaurant_image}`
                 : null,
               orderId: order.order_id,
               orderType: order.order_type || "CHECKOUT",
@@ -353,7 +353,7 @@ const OrderDetails = () => {
           state: {
             restaurantName: order.restaurant?.restaurant_name,
             restaurantImage: order.restaurant?.restaurant_image
-              ? `http://localhost:5000/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
+              ? `${API_URL}/restaurant/uploads/restaurant/${order.restaurant.restaurant_image}`
               : null,
             orderId: order.order_id,
             orderType: order.order_type || "CHECKOUT",

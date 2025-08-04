@@ -23,7 +23,7 @@ const RestaurantHeader = ({ restaurant }) => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/detail-rate?restaurantId=${restaurant.restaurant_id}`,
+          `${API_URL}/restaurant/detail-rate?restaurantId=${restaurant.restaurant_id}`,
           {
             method: "GET",
             headers: {

@@ -27,7 +27,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendResetPasswordEmail = async (email, token) => {
-  const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+  const resetPasswordLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
   const subject = "FastEats Password Reset Request";
   const body = `
     <html>

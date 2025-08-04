@@ -10,7 +10,7 @@ const setupOrderExpiryListener = () => {
     const REDIS_PORT = process.env.REDIS_PORT || 6379;
     const subscriber = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
     const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "your_internal_api_key";
-    const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL || "http://localhost:5000";
+    const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL || API_URL;
     const redisClient = getRedisClient();
 
     subscriber.subscribe("__keyevent@0__:expired", (err, count) => {

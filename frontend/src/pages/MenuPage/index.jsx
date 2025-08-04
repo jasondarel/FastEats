@@ -12,6 +12,7 @@ import AlphabetSort from "../../components/AlphabetSort";
 import useMenuData from "./components/useMenuData";
 import useRestaurantData from "./components/useRestaurantData";
 import RestaurantHeader from "./components/RestaurantHeader";
+import { API_URL } from "../../config/api";
 
 const MenuPage = () => {
   const { restaurantId } = useParams();
@@ -60,7 +61,7 @@ const MenuPage = () => {
       }
 
       const response = await axios.post(
-        `http://localhost:5000/order/cart`,
+        `${API_URL}/order/cart`,
         { restaurantId },
         {
           headers: {

@@ -34,6 +34,7 @@ export const toggleRestaurantStatus = async (token, isOpen) => {
 
 export const getRestaurants = async(locationData=null, token) => {
   let url = `${API_URL}/restaurant/restaurants`;
+  console.log("URL before params: ", url);
   if (locationData) {
     const params = Object.entries(locationData)
       .filter(([_, value]) => value)

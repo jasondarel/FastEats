@@ -14,7 +14,6 @@ import EmptyChatsState from "./components/EmptyChatsState";
 import ChatListSection from "./components/ChatListSection";
 import LoadingPage from "./components/LoadingPage";
 import ErrorPage from "./components/ErrorPage";
-import e from "cors";
 
 const ChatsList = () => {
   const [chats, setChats] = useState([]);

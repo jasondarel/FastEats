@@ -7,6 +7,10 @@
     "dev": {
       "persistent": true,
       "cache": false
+    },
+    "prod": {
+      "cache": false,
+      "persistent": false
     }
   }
 }

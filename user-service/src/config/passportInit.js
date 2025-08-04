@@ -9,7 +9,7 @@ envInit();
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
+  callbackURL: `${process.env.HOSTED_SERVICE_URL}/user/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     
@@ -37,11 +37,13 @@ passport.use(new GoogleStrategy({
       return done(null, googleUserData);
     }
   } catch (error) {
+    console.error('Google OAuth Error:', error);
     return done(error, null);
   }
 }));
 
 passport.serializeUser((user, done) => {
+  console.log('Serializing user:', user);
   if (user.isNewUser) {
     done(null, { isNewUser: true, googleProfile: user.googleProfile });
   } else {
@@ -51,6 +53,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (data, done) => {
   try {
+    console.log('Deserializing data:', data);
     if (typeof data === 'object' && data.isNewUser) {
       return done(null, data);
     }
@@ -61,11 +64,14 @@ passport.deserializeUser(async (data, done) => {
     );
     const user = result.rows[0];
     if (!user) {
+      console.log('User not found for id:', data);
       done(null, false);
     } else {
+      console.log('User found:', user);
       done(null, user);
     }
   } catch (error) {
+    console.error('Deserialize error:', error);
     done(error, null);
   }
 });
