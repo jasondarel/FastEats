@@ -2,7 +2,10 @@
 /* eslint-disable no-unused-vars */
 import { ShoppingCart, CreditCard } from "lucide-react";
 
-const OrderButtons = ({ menu, quantity, onAddToCart, onOrderNow }) => {
+const OrderButtons = ({ menu, quantity, addOnTotalPrice = 0, onAddToCart, onOrderNow }) => {
+  const basePrice = parseFloat(menu.menu_price) || 0;
+  const totalPrice = (basePrice + addOnTotalPrice) * quantity;
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 mt-6">
       <button
@@ -22,7 +25,7 @@ const OrderButtons = ({ menu, quantity, onAddToCart, onOrderNow }) => {
           transition-colors duration-200 ease-in-out cursor-pointer"
       >
         <CreditCard className="w-5 h-5" />
-        Order Now - Rp {(menu.menu_price * quantity).toLocaleString()}
+        Order Now - Rp {totalPrice.toLocaleString()}
       </button>
     </div>
   );
