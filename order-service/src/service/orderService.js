@@ -76,6 +76,14 @@ export const getOrderAddsOnCategoryService = async (orderItemId) => {
   return result.rows;
 }
 
+export const getOrderAddsOnItemService = async (categoryId) => {
+  const result = await pool.query(
+    "SELECT * FROM order_items_adds_on_item WHERE category_id = $1",
+    [categoryId]
+  );
+  return result.rows;
+}
+
 export const getUserOrdersService = async (userId) => {
   const result = await pool.query("SELECT * FROM orders WHERE user_id = $1", [
     userId,
