@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 import { API_URL } from "../../../config/api";
+import OrderAddOns from "./OrderAddOns";
 
 const OrderMenuDetails = ({ order }) => {
   if (order.order_type === "CHECKOUT") {
@@ -46,6 +47,8 @@ const OrderMenuDetails = ({ order }) => {
             </span>
           </div>
         </div>
+
+        <OrderAddOns addOns={order.addsOn} />
 
         {order.menu_description && (
           <div className="mt-8 p-4 bg-amber-50 rounded-lg">
@@ -110,6 +113,10 @@ const OrderMenuDetails = ({ order }) => {
                 </span>
               </div>
             </div>
+
+            {item.addsOn && (
+              <OrderAddOns addOns={item.addsOn} />
+            )}
 
             {item.menu_description && (
               <div className="mt-8 p-4 bg-amber-50 rounded-lg">

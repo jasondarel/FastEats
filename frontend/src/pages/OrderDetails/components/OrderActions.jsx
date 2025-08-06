@@ -11,6 +11,32 @@ const OrderActions = ({
 }) => {
   if (!order) return null;
 
+  const calculateAddOnPrice = (addOns) => {
+    if (!addOns || !Array.isArray(addOns)) return 0;
+    
+    let total = 0;
+    addOns.forEach(category => {
+      if (category.items && Array.isArray(category.items)) {
+        category.items.forEach(item => {
+          if (item.adds_on_price && parseFloat(item.adds_on_price) > 0) {
+            total += parseFloat(item.adds_on_price) * (item.quantity || 1);
+          }
+        });
+      }
+    });
+    return total;
+  };
+
+  const calculateCartAddOnPrice = (items) => {
+    if (!items || !Array.isArray(items)) return 0;
+    
+    let total = 0;
+    items.forEach(item => {
+      total += calculateAddOnPrice(item.addsOn);
+    });
+    return total;
+  };
+
   const totalQuantity = () => {
     let total = 0;
     if (order.order_type === "CHECKOUT") {
@@ -30,7 +56,9 @@ const OrderActions = ({
   const totalPrice = () => {
     let total = 0;
     if (order.order_type === "CHECKOUT") {
-      total = order.menu_price * (order.item_quantity || 0);
+      const menuPrice = order.menu_price * (order.item_quantity || 0);
+      const addOnPrice = calculateAddOnPrice(order.addsOn);
+      total = menuPrice + addOnPrice;
     } else {
       if (order && order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
@@ -39,6 +67,7 @@ const OrderActions = ({
             total += price;
           }
         });
+        total += calculateCartAddOnPrice(order.items);
       }
     }
     return total;
@@ -120,7 +149,7 @@ const OrderActions = ({
     case "Preparing":
     case "Delivering":
     case "Completed":
-      return null; // No buttons for these statuses
+      return null;
     default:
       return (
         <div className="space-y-4">
@@ -141,8 +170,8 @@ const OrderActions = ({
             onClick={() =>
               onPayConfirmation(
                 order.order_id,
-                order.item_quantity,
-                order.menu.menu_price
+                totalQuantity(),
+                totalPrice()
               )
             }
             disabled={isPayDisabled}

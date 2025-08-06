@@ -25,7 +25,6 @@ const RestaurantRating = ({ order, onSubmitRating }) => {
           return;
         }
 
-        const API_URL = API_URL;
         const response = await fetch(
           `${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`,
           {
