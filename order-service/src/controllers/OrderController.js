@@ -394,14 +394,54 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
     if (!order) {
       logger.warn("Order not found:", order_id);
       return responseError(res, 404, "Order not found");
-    } 
+    }
+
+    let totalAddonPrice = 0;
+    
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        logger.info(`Processing addons for item: ${item.order_item_id}`);
+        
+        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
+        logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
+        
+        if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
+          for (const category of orderItemAddsOnCategory) {
+            const addOnItems = await getOrderAddsOnItemService(category.category_id);
+            logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
+            
+            if (addOnItems && addOnItems.length > 0) {
+              const categoryAddonPrice = addOnItems.reduce((sum, addon) => {
+                const price = parseFloat(addon.adds_on_price) || 0;
+                const quantity = addon.quantity || 1;
+                const itemTotal = price * quantity;
+                
+                logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
+                return sum + itemTotal;
+              }, 0);
+              
+              logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
+              totalAddonPrice += categoryAddonPrice;
+            }
+          }
+        }
+      }
+    }
+    
+    logger.info(`Final total addon price: ${totalAddonPrice}`);
+
+    const orderWithAddons = {
+      ...order,
+      addon_price: totalAddonPrice
+    };
+
     logger.info("Fetching menu data for order items...");
     return responseSuccess(
       res,
       200,
       "Order fetched successfully",
       "order",
-      order
+      orderWithAddons
     );
   } catch (err) {
     logger.error("Error fetching order with items:", err);

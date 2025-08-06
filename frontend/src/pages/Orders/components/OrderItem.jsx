@@ -7,7 +7,6 @@ import StatusBadge from "../../../components/StatusBadge";
 import { API_URL } from "../../../config/api";
 import axios from "axios";
 
-// Base64 encoded small placeholder image as fallback
 const placeholderImage =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlZWVlZWUiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSI+Tm8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPg==";
 
@@ -16,18 +15,21 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const [menuDetails, setMenuDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
+  const [addonPrice, setAddonPrice] = useState(0);
 
-  // Calculate total price based on items and their quantities if not provided
   const calculateTotalPrice = () => {
     if (!order.items || order.items.length === 0 || !menuDetails) return 0;
 
-    return order.items.reduce((total, item) => {
+    const menuTotal = order.items.reduce((total, item) => {
       const menu = menuDetails[item.menu_id];
       if (menu && menu.menu_price) {
         return total + menu.menu_price * (item.item_quantity || 1);
       }
       return total;
     }, 0);
+
+    
+    return menuTotal + addonPrice;
   };
 
   useEffect(() => {
@@ -42,22 +44,30 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           },
         }
       );
-      const orderItems = res.data.order || [];
-      if (orderItems) {
+      const orderItems = res.data.order || {};
+
+      if (orderItems.addon_price !== undefined) {
+        order.addon_price = orderItems.addon_price;
+      }
+
+      if (orderItems.items) {
         orderItems.items.forEach((item) => {
           if (item.menu_id && !details[item.menu_id]) {
             details[item.menu_id] = item;
           }
         });
       }
-      console.log("Order items:", orderItems);
+
+      setAddonPrice(orderItems.addon_price || 0);
+
 
       setMenuDetails(details);
       setLoading(false);
     };
 
+
     fetchMenuDetails();
-  }, [order.items, token]);
+  }, [order.items, token, order.order_id]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -89,11 +99,9 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     0
   );
 
-  // Get the total price with fallbacks
   const orderTotalPrice =
     order.total_price || order.total || calculateTotalPrice() || 0;
 
-  // Debug the image URLs based on actual data
   useEffect(() => {
     if (!loading && order.items && order.items.length > 0) {
       const firstItem = order.items[0];
