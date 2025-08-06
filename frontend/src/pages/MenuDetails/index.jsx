@@ -305,6 +305,15 @@ const MenuDetails = () => {
 
     console.log(menuId, quantity, "Add-ons:", selectedAddOns);
     try {
+      Swal.fire({
+        title: "Processing order...",
+        text: "Please wait",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
       const addOnsData = JSON.stringify(selectedAddOns);
       const response = await insertOrderService(menuId, quantity, token, addOnsData);
 
@@ -314,14 +323,19 @@ const MenuDetails = () => {
         title: "Success!",
         text: `Order placed successfully! Total: Rp ${totalOrderPrice.toLocaleString('id-ID')}`,
         icon: "success",
-        confirmButtonText: "Ok",
+        confirmButtonText: "View Orders",
         confirmButtonColor: "#efb100",
+        showCancelButton: true,
+        cancelButtonText: "Continue Shopping",
       }).then((result) => {
         if (result.isConfirmed) {
           navigate("/orders");
         }
       });
     } catch (error) {
+      Swal.close();
+      let errorMessage = "Failed to place order";
+      
       if (error.response) {
         const { status, data } = error.response;
         console.error("Error response:", data);
@@ -330,23 +344,28 @@ const MenuDetails = () => {
             const validationErrors = Object.values(data.errors)
               .map((msg) => `• ${msg}`)
               .join("\n");
-            alert(`Validation Error:\n${validationErrors}`);
+            errorMessage = `Validation Error:\n${validationErrors}`;
           } else if (data.message) {
-            alert(`Error: ${data.message}`);
+            errorMessage = data.message;
           } else {
-            alert("Invalid request. Please check your input.");
+            errorMessage = "Invalid request. Please check your input.";
           }
         } else if (status === 401) {
-          alert("Unauthorized! Please log in again.");
+          errorMessage = "Your session has expired. Please log in again.";
           localStorage.removeItem("token");
-          navigate("/login");
+          setTimeout(() => navigate("/login"), 2000);
         } else {
-          alert(
-            data.message ||
-              "An unexpected error occurred. Please try again later."
-          );
+          errorMessage = data.message || "An unexpected error occurred. Please try again later.";
         }
       }
+      
+      Swal.fire({
+        title: "Error!",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#efb100",
+      });
     }
   };
 
@@ -388,7 +407,7 @@ const MenuDetails = () => {
           </div>
         </div>
 
-        <RestaurantRating restaurantId={menu.restaurant_id} menuId={menu.menu_id || menu_id} />
+        <RestaurantRating restaurantId={menu.restaurant_id} menuId={menu.menu_id || menuId} />
       </div>
     </div>
   );

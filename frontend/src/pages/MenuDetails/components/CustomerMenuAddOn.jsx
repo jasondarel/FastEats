@@ -9,7 +9,7 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
     if (menu?.addsOnCategories) {
       const initialSelections = {};
       menu.addsOnCategories.forEach(category => {
-        initialSelections[category.category_id] = category.is_multiple ? [] : null;
+        initialSelections[category.category_name] = category.is_multiple ? [] : null;
       });
       setSelectedAddOns(initialSelections);
     }
@@ -19,20 +19,14 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
     let total = 0;
     if (menu?.addsOnCategories) {
       menu.addsOnCategories.forEach(category => {
-        const selections = selectedAddOns[category.category_id];
+        const selections = selectedAddOns[category.category_name];
         if (selections) {
           if (Array.isArray(selections)) {
-            selections.forEach(itemId => {
-              const item = category.addsOnItems?.find(item => item.item_id === itemId);
-              if (item) {
-                total += parseFloat(item.adds_on_price || 0);
-              }
+            selections.forEach(item => {
+              total += parseFloat(item.item_price || 0);
             });
           } else {
-            const item = category.addsOnItems?.find(item => item.item_id === selections);
-            if (item) {
-              total += parseFloat(item.adds_on_price || 0);
-            }
+            total += parseFloat(selections.item_price || 0);
           }
         }
       });
@@ -44,10 +38,10 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
     }
   }, [selectedAddOns, menu, onAddOnsChange]);
 
-  const handleSingleSelection = (categoryId, itemId) => {
+  const handleSingleSelection = (categoryId, itemId, itemPrice, maxSelectable) => {
     setSelectedAddOns(prev => {
       const currentSelection = prev[categoryId];
-      if (currentSelection === itemId) {
+      if (currentSelection?.item_name === itemId) {
         return {
           ...prev,
           [categoryId]: null
@@ -55,26 +49,26 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
       } else {
         return {
           ...prev,
-          [categoryId]: itemId
+          [categoryId]: {item_name: itemId, item_price: itemPrice, max_selectable: maxSelectable}
         };
       }
     });
   };
 
-  const handleMultipleSelection = (categoryId, itemId) => {
+  const handleMultipleSelection = (categoryId, itemId, itemPrice, maxSelectable) => {
     setSelectedAddOns(prev => {
       const currentSelections = prev[categoryId] || [];
-      const isSelected = currentSelections.includes(itemId);
+      const isSelected = currentSelections.some(item => item.item_name === itemId);
       
       if (isSelected) {
         return {
           ...prev,
-          [categoryId]: currentSelections.filter(id => id !== itemId)
+          [categoryId]: currentSelections.filter(item => item.item_name !== itemId)
         };
       } else {
         return {
           ...prev,
-          [categoryId]: [...currentSelections, itemId]
+          [categoryId]: [...currentSelections, {item_name: itemId, item_price: itemPrice, max_selectable: maxSelectable}]
         };
       }
     });
@@ -237,12 +231,12 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                     {category.addsOnItems.map((item) => {
                       const isMultipleCategory = category.is_multiple || category.max_selectable > 1;
                       const isSelected = isMultipleCategory
-                        ? (selectedAddOns[category.category_id] || []).includes(item.item_id)
-                        : selectedAddOns[category.category_id] === item.item_id;
+                        ? (selectedAddOns[category.category_name] || [])?.some(item2 => item2.item_name === item.adds_on_name)
+                        : selectedAddOns[category.category_name]?.item_name === item.adds_on_name;
                       
                       const isDisabled = category.max_selectable && 
-                        Array.isArray(selectedAddOns[category.category_id]) &&
-                        selectedAddOns[category.category_id].length >= category.max_selectable && 
+                        Array.isArray(selectedAddOns[category.category_name]) &&
+                        selectedAddOns[category.category_name].length >= category.max_selectable && 
                         !isSelected;
 
                       return (
@@ -266,9 +260,9 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                                 onChange={() => {
                                   if (!isDisabled) {
                                     if (isMultipleCategory) {
-                                      handleMultipleSelection(category.category_id, item.item_id);
+                                      handleMultipleSelection(category.category_name, item.adds_on_name, item.adds_on_price, category.max_selectable);
                                     } else {
-                                      handleSingleSelection(category.category_id, item.item_id);
+                                      handleSingleSelection(category.category_name, item.adds_on_name, item.adds_on_price, category.max_selectable);
                                     }
                                   }
                                 }}
