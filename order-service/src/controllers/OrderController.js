@@ -34,6 +34,8 @@ import {
   updateCartItemQuantityServiceByMenuId,
   getCartItemServiceByMenuId,
   getOrdersBySellerIdService,
+  createOrderAddsOnCategoryService,
+  createOrderAddsOnItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -69,6 +71,7 @@ export const createOrderController = async (req, res) => {
 
     const token = authHeader.split(" ")[1];
     const orderReq = req.body;
+    const addsOnData = JSON.parse(orderReq.addsOnData || "[]");
     orderReq.orderType = "CHECKOUT";
 
     if (!orderReq.menuId || !orderReq.quantity) {
@@ -193,6 +196,79 @@ export const createOrderController = async (req, res) => {
         await client.query('ROLLBACK');
         client.release();
         return responseError(res, 500, "Failed to create order item");
+      }
+
+      if (addsOnData) {
+        try {
+          for (const [key, value] of Object.entries(addsOnData)) {
+            if (Array.isArray(value)) {
+              const addOnItemCategory = await createOrderAddsOnCategoryService(client, {
+                orderItemId: orderItem.order_item_id,
+                categoryName: key,
+                maxSelectable: value[0].max_selectable,
+                isRequired: value[0].is_required || false,
+              });
+              
+              if (!addOnItemCategory) {
+                logger.error("Failed to create add-on category for order item", {
+                  orderItemId: orderItem.order_item_id,
+                  categoryName: key,
+                });
+                throw new Error(`Failed to create add-on category: ${key}`);
+              }
+              
+              for (const item of value) {
+                const addOnItem = await createOrderAddsOnItemService(client, {
+                  addsOnName: item.item_name,
+                  addsOnPrice: item.item_price,
+                  categoryId: addOnItemCategory.category_id,
+                });
+                
+                if (!addOnItem) {
+                  logger.error("Failed to create add-on item for order item", {
+                    orderItemId: orderItem.order_item_id,
+                    addsOnName: item.item_name,
+                  });
+                  throw new Error(`Failed to create add-on item: ${item.item_name}`);
+                }
+              }
+            } else if (value !== null) {
+              const addOnItemCategory = await createOrderAddsOnCategoryService(client, {
+                orderItemId: orderItem.order_item_id,
+                categoryName: key,
+                maxSelectable: value.max_selectable || 1,
+                isRequired: value.is_required || false,
+              });
+              
+              if (!addOnItemCategory) {
+                logger.error("Failed to create add-on category for order item", {
+                  orderItemId: orderItem.order_item_id,
+                  categoryName: key,
+                });
+                throw new Error(`Failed to create add-on category: ${key}`);
+              }
+              
+              const addOnItem = await createOrderAddsOnItemService(client, {
+                addsOnName: value.item_name,
+                addsOnPrice: value.item_price,
+                categoryId: addOnItemCategory.category_id,
+              });
+              
+              if (!addOnItem) {
+                logger.error("Failed to create add-on item for order item", {
+                  orderItemId: orderItem.order_item_id,
+                  addsOnName: value.item_name,
+                });
+                throw new Error(`Failed to create add-on item: ${value.item_name}`);
+              }
+            }
+          }
+        } catch (addOnError) {
+          logger.error("Error creating add-ons", { error: addOnError.message });
+          await client.query('ROLLBACK');
+          client.release();
+          return responseError(res, 500, `Failed to create add-ons: ${addOnError.message}`);
+        }
       }
 
       await client.query('COMMIT');
