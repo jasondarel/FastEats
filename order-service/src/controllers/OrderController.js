@@ -36,6 +36,8 @@ import {
   getOrdersBySellerIdService,
   createOrderAddsOnCategoryService,
   createOrderAddsOnItemService,
+  getOrderAddsOnCategoryService,
+  getOrderAddsOnItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -987,7 +989,7 @@ export const getOrderByIdController = async (req, res) => {
 
   try {
     const result = await getOrderByIdService(order_id);
-     
+
     if (!result) {
       logger.warn(`Order ${order_id} not found`);
       return responseError(res, 404, "Order Not Found");
@@ -1013,9 +1015,26 @@ export const getOrderByIdController = async (req, res) => {
         logger.warn(`No items found for order ${order_id}`);
         return responseError(res, 404, "No items found for this order");
       }
+
+      let addsOn = [];
+
+      const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(orderItems[0].order_item_id);
+      if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
+        addsOn = await Promise.all(
+          orderItemAddsOnCategory.map(async (category) => {
+            const addOnItems = await getOrderAddsOnItemService(category.category_id);
+            return {
+              ...category,
+              items: addOnItems
+            };
+          })
+        );
+      }
+
       const order = {
         ...result,
-        ...orderItems[0]
+        ...orderItems[0],
+        addsOn: addsOn,
       };
       logger.info(`Order ${order_id} fetched successfully`);
       return responseSuccess(
@@ -1027,9 +1046,28 @@ export const getOrderByIdController = async (req, res) => {
       );
     } else if (result.order_type === "CART") {
       const orderItems = await getOrderItemsByOrderIdService(result.order_id);
+      let addsOn = [];
+      if (orderItems.length > 0) {
+        for (const item of orderItems) {
+            const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
+            if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
+                addsOn = await Promise.all(
+                    orderItemAddsOnCategory.map(async (category) => {
+                        const addOnItems = await getOrderAddsOnItemService(category.category_id);
+                        return {
+                            ...category,
+                            items: addOnItems
+                        };
+                    })
+                );
+            }
+        }
+      }
+
       const order = {
         ...result,
         items: orderItems,
+        addsOn: addsOn,
       };
 
       logger.info(`Cart order ${order_id} fetched successfully`);
