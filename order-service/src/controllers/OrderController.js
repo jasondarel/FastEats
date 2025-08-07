@@ -38,6 +38,8 @@ import {
   createOrderAddsOnItemService,
   getOrderAddsOnCategoryService,
   getOrderAddsOnItemService,
+  createCartAddsOnCategoryService,
+  createCartAddsOnItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -608,23 +610,29 @@ export const updateCartItemQuantityController = async (req, res) => {
 
 export const createCartItemController = async (req, res) => {
   logger.info("CREATE CART ITEM CONTROLLER");
+  const client = await pool.connect();
   try {
     const { userId, role } = req.user;
-    const { cartId, menuId, quantity, note } = req.body;
+    const { cartId, menuId, quantity, note, addsOn } = req.body;
+    const addsOnData = addsOn ? JSON.parse(addsOn) : null;
 
+    console.log("Adds On Data:", addsOnData);
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
+      client.release();
       return responseError(res, 403, "You are not authorized to create a cart");
     }
 
     const cart = await getCartService(cartId, userId);
     if (!cart) {
       logger.warn("Cart not found for user:", userId);
+      client.release();
       return responseError(res, 404, "Cart not found");
     }
 
     if (cart.user_id !== userId) {
       logger.warn("Unauthorized access attempt to cart", { userId, cartId });
+      client.release();
       return responseError(
         res,
         403,
@@ -633,6 +641,7 @@ export const createCartItemController = async (req, res) => {
     }
 
     if (!cartId || !menuId || !quantity) {
+      client.release();
       return responseError(
         res,
         400,
@@ -648,8 +657,9 @@ export const createCartItemController = async (req, res) => {
         menuId,
       });
       const updatedQuantity = Number(existedCartItem.quantity) + Number(quantity);
-      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(menuId, updatedQuantity);
+      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity);
       logger.info("Cart item quantity updated successfully");
+      client.release();
       return responseSuccess(
         res,
         200,
@@ -659,24 +669,124 @@ export const createCartItemController = async (req, res) => {
       );
     }
 
-    logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
-    const cartItem = await createCartItemService(
-      cartId,
-      menuId,
-      quantity,
-      note
-    );
+    try {
+      await client.query('BEGIN');
 
-    logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
+      logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
+      const cartItem = await createCartItemService(
+        client,
+        cartId,
+        menuId,
+        quantity,
+        note
+      );
+      console.log("Cart Item:", cartItem);
+      logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
-    return responseSuccess(
-      res,
-      201,
-      "Add cart item successfully",
-      "cartItem",
-      cartItem
-    );
+      if (!cartItem) {
+        logger.error("Failed to create cart item", { userId, cartId, menuId });
+        await client.query('ROLLBACK');
+        client.release();
+        return responseError(res, 500, "Failed to create cart item");
+      }
+
+      if (addsOnData) {
+        try {
+          for (const [key, value] of Object.entries(addsOnData)) {
+            if (Array.isArray(value)) {
+              const addOnItemCategory = await createCartAddsOnCategoryService(client, {
+                cartItemId: cartItem.cart_item_id,
+                categoryName: key,
+                maxSelectable: value[0].max_selectable,
+                isRequired: value[0].is_required || false,
+              });
+              
+              if (!addOnItemCategory) {
+                logger.error("Failed to create add-on category for cart item", {
+                  cartItemId: cartItem.cart_item_id,
+                  categoryName: key,
+                });
+                throw new Error(`Failed to create add-on category: ${key}`);
+              }
+
+              for (const item of value) {
+                const addOnItem = await createCartAddsOnItemService(client, {
+                  addsOnName: item.item_name,
+                  addsOnPrice: item.item_price,
+                  categoryId: addOnItemCategory.category_id,
+                });
+                
+                if (!addOnItem) {
+                  logger.error("Failed to create add-on item for cart item", {
+                    cartItemId: cartItem.cart_item_id,
+                    addsOnName: item.item_name,
+                  });
+                  throw new Error(`Failed to create add-on item: ${item.item_name}`);
+                }
+              }
+            } else if (value !== null) {
+              const addOnItemCategory = await createCartAddsOnCategoryService(client, {
+                cartItemId: cartItem.cart_item_id,
+                categoryName: key,
+                maxSelectable: value.max_selectable || 1,
+                isRequired: value.is_required || false,
+              });
+              
+              if (!addOnItemCategory) {
+                logger.error("Failed to create add-on category for cart item", {
+                  cartItemId: cartItem.cart_item_id,
+                  categoryName: key,
+                });
+                throw new Error(`Failed to create add-on category: ${key}`);
+              }
+
+              const addOnItem = await createCartAddsOnItemService(client, {
+                addsOnName: value.item_name,
+                addsOnPrice: value.item_price,
+                categoryId: addOnItemCategory.category_id,
+              });
+              
+              if (!addOnItem) {
+                logger.error("Failed to create add-on item for cart item", {
+                  cartItemId: cartItem.cart_item_id,
+                  addsOnName: value.item_name,
+                });
+                throw new Error(`Failed to create add-on item: ${value.item_name}`);
+              }
+            }
+          }
+        } catch(addOnError) {
+          logger.error("Error creating add-ons for cart item:", addOnError.message);
+          await client.query('ROLLBACK');
+          client.release();
+          return responseError(res, 500, `Failed to create add-ons: ${addOnError.message}`);
+        }
+      }
+
+      await client.query('COMMIT');
+      logger.info("Cart item and add-ons created successfully", {
+        cartItemId: cartItem.cart_item_id,
+        userId,
+      });
+
+      client.release();
+      return responseSuccess(
+        res,
+        201,
+        "Add cart item successfully",
+        "cartItem",
+        cartItem
+      );
+    } catch (error) {
+      await client.query('ROLLBACK');
+      client.release();
+      logger.error("Database error while creating cart item", {
+        error: error.message,
+      });
+      return responseError(res, 500, "Database error while creating cart item");
+    }
   } catch (error) {
+    client.release();
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
   }
