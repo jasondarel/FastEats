@@ -209,7 +209,7 @@ export const loginController = async (req, res) => {
         token: emailVerificationToken,
         otp: otp,
       }
-      await publishMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
+      await publishVerificationEmailMessage(emailPayload.email, emailPayload.token, emailPayload.otp);
       logger.warn("Email is not verified");
       return responseError(res, 401, "Email is not verified", "token",  emailVerificationToken);
     }
@@ -303,7 +303,7 @@ export const verifyOtpController = async (req, res) => {
     const redisKey = `email_verification:${email}`;
     const redisClient = getRedisClient();
     const user = await redisClient.hgetall(redisKey);
-
+    
     if (!user) {
       logger.warn("Invalid email");
       return responseError(res, 401, "Invalid email");
