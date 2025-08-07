@@ -145,31 +145,31 @@ const Cart = () => {
   };
 
   const updateQuantity = async (cartItemId, menuId, newQuantity, note) => {
-  if (newQuantity < 1) return;
+    if (newQuantity < 1) return;
 
-  try {
-    const token = getToken();
-    if (newQuantity > 0) {
-      const updatedCartItem = await updateCartItemQuantityService(menuId, newQuantity, token);
-      console.log("updateCartItemQuantityService response:", updatedCartItem.data);
-      
-      setCartItems(prevItems => 
-        prevItems.map(item => 
-          item.menu_id === menuId 
-            ? { 
-                ...item, 
-                total_quantity: newQuantity,
-                ...(updatedCartItem.data?.cartItem || updatedCartItem.data || {})
-              }
-            : item
-        )
-      );
+    try {
+      const token = getToken();
+      if (newQuantity > 0) {
+        const updatedCartItem = await updateCartItemQuantityService(menuId, newQuantity, token);
+        console.log("updateCartItemQuantityService response:", updatedCartItem.data);
+        
+        setCartItems(prevItems => 
+          prevItems.map(item => 
+            item.menu_id === menuId 
+              ? { 
+                  ...item, 
+                  total_quantity: newQuantity,
+                  ...(updatedCartItem.data?.cartItem || updatedCartItem.data || {})
+                }
+              : item
+          )
+        );
+      }
+    } catch (err) {
+      setError("Error updating quantity. Please try again.");
+      console.error("Error updating quantity:", err);
     }
-  } catch (err) {
-    setError("Error updating quantity. Please try again.");
-    console.error("Error updating quantity:", err);
-  }
-};
+  };
 
   const removeAllItems = async () => {
     try {
@@ -188,6 +188,28 @@ const Cart = () => {
       console.error("Error removing all items:", err);
     }
   };
+  const calculateAddOnsPrice = (item) => {
+    if (!item.addsOn || !Array.isArray(item.addsOn)) {
+      return 0;
+    }
+
+    return item.addsOn.reduce((total, addOn) => {
+      if (!addOn.items || !Array.isArray(addOn.items)) return total;
+
+      const addOnItemsTotal = addOn.items.reduce((sum, addOnItem) => {
+        const price = parseFloat(addOnItem.adds_on_price || 0);
+        return sum + price;
+      }, 0);
+
+      return total + addOnItemsTotal;
+    }, 0);
+  };
+
+  const getItemTotalPrice = (item) => {
+    const menuPrice = parseFloat(item.menu ? item.menu.menu_price : item.menu_price || 0);
+    const addOnsPrice = calculateAddOnsPrice(item);
+    return menuPrice + addOnsPrice;
+  };
 
   const calculateTotalItems = () => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
@@ -196,17 +218,9 @@ const Cart = () => {
       const itemQuantity = parseInt(item.total_quantity);
       return total + itemQuantity;
     }, 0);
-    console.log(
-      "Quantity of each item:",
-      cartItems.map((item) => item.quantity)
-    );
     console.log("Total items:", total);
     return total;
   };
-  console.log(
-    "Quantity of each item:",
-    cartItems.map((item) => item.quantity)
-  );
 
   const totalItems = calculateTotalItems();
 
@@ -214,11 +228,9 @@ const Cart = () => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
 
     return cartItems.reduce((total, item) => {
-      const price = item.menu ? item.menu.menu_price : item.menu_price || 0;
-      return (
-        parseInt(total) + parseInt(price) * parseInt(item.total_quantity) ||
-        price * (parseInt(item.total_quantity) || 1)
-      );
+      const itemTotalPrice = getItemTotalPrice(item);
+      const quantity = parseInt(item.total_quantity) || 1;
+      return total + (itemTotalPrice * quantity);
     }, 0);
   };
 
@@ -344,6 +356,8 @@ const Cart = () => {
                   }
                   }
                   onRemoveItem={() => removeItem(item.menu_id)}
+                  calculateAddOnsPrice={calculateAddOnsPrice}
+                  getItemTotalPrice={getItemTotalPrice}
                 />
               ))
             )}

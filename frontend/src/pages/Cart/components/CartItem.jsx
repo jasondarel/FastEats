@@ -4,9 +4,8 @@ import React from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import { API_URL } from "../../../config/api";
 
-const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
+const CartItem = ({ item, onUpdateQuantity, onRemoveItem, calculateAddOnsPrice, getItemTotalPrice }) => {
   const menu = item.menu || {};
-  console.log("Menu props:", menu);
 
   const {
     menu_name = menu.menu_name || item.name || "Menu Item",
@@ -18,6 +17,40 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
       "/placeholder-food.png",
     menu_size = menu.size || item.menu_size || "",
   } = item;
+
+  const addOnsPrice = calculateAddOnsPrice ? calculateAddOnsPrice(item) : 0;
+  const itemTotalPrice = getItemTotalPrice ? getItemTotalPrice(item) : parseFloat(menu_price) + addOnsPrice;
+  const totalPrice = itemTotalPrice * quantity;
+
+  
+  const getAddOnNames = () => {
+    
+    const addOns = item.addsOn;
+    
+    if (!addOns || !Array.isArray(addOns) || addOns.length === 0) {
+      return "";
+    }
+
+    const names = [];
+    
+    addOns.forEach(addOn => {
+      if (addOn.adds_on_name) {
+        names.push(addOn.adds_on_name);
+      } else if (addOn.items && Array.isArray(addOn.items)) {
+        addOn.items.forEach(addOnItem => {
+          if (addOnItem.adds_on_name) {
+            names.push(addOnItem.adds_on_name);
+          }
+        });
+      } else if (addOn.name) {
+        names.push(addOn.name);
+      }
+    });
+
+    return names.length > 0 ? names.join(", ") : "";
+  };
+
+  const addOnNames = getAddOnNames();
 
   return (
     <div className="flex items-start p-3 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition">
@@ -35,17 +68,19 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem }) => {
 
       <div className="flex-1 ml-3">
         <h3 className="font-medium">{menu_name}</h3>
-        {menu_size && (
-          <div className="flex text-sm text-gray-600">{menu_size}</div>
+        {addOnNames && (
+          <div className="text-sm text-gray-600 mt-1">
+            {addOnNames}
+          </div>
         )}
-        {note && (
-          <div className="text-xs text-gray-500 mt-1 italic">Note: {note}</div>
+        {menu_size && (
+          <div className="flex text-sm text-gray-600 mt-1">{menu_size}</div>
         )}
       </div>
 
       <div className="flex flex-col items-end">
         <div className="font-semibold text-yellow-600">
-          Rp {(menu_price * quantity).toLocaleString()}
+          Rp {totalPrice.toLocaleString()}
         </div>
 
         <div className="flex items-center mt-2">
