@@ -43,6 +43,19 @@ export const createOrderItemService = async (paramPool=pool, orderId, orderReq) 
   return result.rows[0];
 };
 
+export const createCartAddsOnCategoryService = async (paramPool=pool, {
+  cartItemId,
+  categoryName,
+  maxSelectable,
+  isRequired,
+}) => {
+  const result = await paramPool.query(
+    "INSERT INTO cart_items_adds_on_category (cart_item_id, category_name, max_selectable, is_required) VALUES ($1, $2, $3, $4) RETURNING *",
+    [cartItemId, categoryName, maxSelectable, isRequired]
+  );
+  return result.rows[0];
+}
+
 export const createOrderAddsOnCategoryService = async (paramPool=pool, {
   orderItemId,
   categoryName,
