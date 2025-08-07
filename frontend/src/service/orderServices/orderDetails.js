@@ -108,14 +108,14 @@ const createCartService = async (restaurantId, token) => {
   return response;
 };
 
-const createCartItemService = async (cartId, menuId, quantity, note, token) => {
+const createCartItemService = async (cartId, menuId, quantity, addsOn=null, token) => {
   const response = await axios.post(
     `${API_URL}/order/cart-item`,
     {
       cartId,
       menuId,
       quantity,
-      note: note || "",
+      addsOn: addsOn,
     },
     {
       headers: {
