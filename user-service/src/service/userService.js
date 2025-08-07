@@ -101,7 +101,7 @@ export const createUserDetailsService = async(userReq) => {
 }
 
 export const updateUserDetailsService = async(userReq, user_id) => {
-    const { profile_photo, address, phone_number, province, city, district, village, name } = userReq;
+    const { profile_photo, address, phone_number, province, city, district, village, fullname="Unknown" } = userReq;
     const result = await pool.query(
         "UPDATE user_details SET profile_photo = $1, address = $2, phone_number = $3, province=$4, city=$5, district=$6, village=$7, updated_at = NOW(), fullname = $9 WHERE user_id = $8 RETURNING *",
         [profile_photo, address, phone_number, province, city, district, village, user_id, fullname]
