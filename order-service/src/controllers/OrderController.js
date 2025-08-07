@@ -616,7 +616,6 @@ export const createCartItemController = async (req, res) => {
     const { cartId, menuId, quantity, note, addsOn } = req.body;
     const addsOnData = addsOn ? JSON.parse(addsOn) : null;
 
-    console.log("Adds On Data:", addsOnData);
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       client.release();
@@ -680,7 +679,6 @@ export const createCartItemController = async (req, res) => {
         quantity,
         note
       );
-      console.log("Cart Item:", cartItem);
       logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
       if (!cartItem) {
