@@ -10,7 +10,7 @@ import PaymentForm from "./components/paymentForm";
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
   const [profile, setProfile] = useState({
-    name: "",
+    fullname: "",
     profile_photo: "",
     address: "",
     phone_number: "",

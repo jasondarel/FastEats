@@ -43,6 +43,47 @@ export const createOrderItemService = async (paramPool=pool, orderId, orderReq) 
   return result.rows[0];
 };
 
+export const createCartAddsOnCategoryService = async (paramPool=pool, {
+  cartItemId,
+  categoryName,
+  maxSelectable,
+  isRequired,
+}) => {
+  const result = await paramPool.query(
+    "INSERT INTO cart_item_adds_on_category (cart_item_id, category_name, max_selectable, is_required) VALUES ($1, $2, $3, $4) RETURNING *",
+    [cartItemId, categoryName, maxSelectable, isRequired]
+  );
+  return result.rows[0];
+}
+
+export const getCartAddsOnCategoryService = async (cartItemId) => {
+  const result = await pool.query(
+    "SELECT * FROM cart_item_adds_on_category WHERE cart_item_id = $1",
+    [cartItemId]
+  );
+  return result.rows;
+}
+
+export const getCartAddsOnItemService = async (categoryId) => {
+  const result = await pool.query(
+    "SELECT * FROM cart_item_adds_on_item WHERE category_id = $1",
+    [categoryId]
+  );
+  return result.rows;
+}
+
+export const createCartAddsOnItemService = async (paramPool=pool, {
+  categoryId,
+  addsOnName,
+  addsOnPrice,
+}) => {
+  const result = await paramPool.query(
+    "INSERT INTO cart_item_adds_on_item (category_id, adds_on_name, adds_on_price) VALUES ($1, $2, $3) RETURNING *",
+    [categoryId, addsOnName, addsOnPrice]
+  );
+  return result.rows[0];
+}
+
 export const createOrderAddsOnCategoryService = async (paramPool=pool, {
   orderItemId,
   categoryName,
@@ -271,8 +312,8 @@ export const createCartService = async (userId, restaurantId) => {
   return result.rows[0];
 };
 
-export const createCartItemService = async (cartId, menuId, quantity) => {
-  const result = await pool.query(
+export const createCartItemService = async (client=pool, cartId, menuId, quantity) => {
+  const result = await client.query(
     `INSERT INTO cart_items (cart_id, menu_id, quantity, created_at, updated_at)
        VALUES ($1, $2, $3, NOW(), NOW())
        RETURNING *`,
@@ -306,7 +347,7 @@ export const getCartItemServiceByMenuId = async (cartId, menuId) => {
   return result.rows[0];
 }
 
-export const updateCartItemQuantityServiceByMenuId = async (menuId, quantity) => {
+export const updateCartItemQuantityServiceByMenuId = async (client=pool, menuId, quantity) => {
   const result = await pool.query(
     `UPDATE cart_items
      SET quantity = $1, updated_at = NOW()

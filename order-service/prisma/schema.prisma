@@ -33,6 +33,25 @@ model cart_items {
   created_at   DateTime @default(now())
   updated_at   DateTime @default(now())
   carts        carts    @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade)
+  adds_on_categories    cart_item_adds_on_category[]
+}
+
+model cart_item_adds_on_category {
+  category_id     Int              @id @default(autoincrement())
+  category_name   String           @db.VarChar(100)
+  is_required     Boolean          @default(false)
+  max_selectable  Int              @default(1)
+  cart_item_id    Int
+  cart_item       cart_items       @relation(fields: [cart_item_id], references: [cart_item_id], onDelete: Cascade)
+  adds_on_items   cart_item_adds_on_item[]
+}
+
+model cart_item_adds_on_item {
+  item_id         Int              @id @default(autoincrement())
+  adds_on_name    String           @db.VarChar(100)
+  adds_on_price   Decimal          @db.Decimal(10,2)
+  category_id     Int
+  category        cart_item_adds_on_category @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
 }
 
 model orders {

@@ -162,7 +162,7 @@ const ProfileForm = ({
     try {
       const token = localStorage.getItem("token");
       await saveProfileService(profile, preview, token);
-
+      console.log("Profile updated successfully:", profile);
       Swal.fire({
         title: "Success!",
         text: "Successfully updated profile",
@@ -194,12 +194,12 @@ const ProfileForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <InputField
-        label="Name"
+        label="Full Name"
         icon={<FaUser className="ml-3 text-gray-500" />}
         type="text"
-        name="name"
-        placeholder="Name"
-        value={profile.name}
+        name="fullname"
+        placeholder="Full Name"
+        value={profile.fullname}
         onChange={handleChange}
       />
 

@@ -33,6 +33,7 @@ model user_details {
   user_id      Int      @id
   profile_photo String?
   province     String   @default("Unknown")
+  fullname     String?
   city         String   @default("Unknown")
   district     String   @default("Unknown")
   village      String   @default("Unknown")

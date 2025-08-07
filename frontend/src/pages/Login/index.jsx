@@ -66,9 +66,8 @@ const Login = () => {
           error.status === 401 || 
           (error && error.message && error.message.includes("not verified"))
         ) {
-          if (error && error.token) {
+          if (error && error.data.token) {
             const errorMsg = error.data?.errors || error.data?.message || "Email not verified";
-            console.log("Token found, redirecting to verification page");
             MySwal.fire({
               title: "Email Not Verified",
               text: errorMsg,
@@ -78,7 +77,7 @@ const Login = () => {
               confirmButtonText: "Proceed to Verification"
             }).then((result) => {
               if (result.isConfirmed) {
-                navigate(`/otp-verification?token=${error.token}&email=${email}`);
+                navigate(`/otp-verification?token=${error.data.token}&email=${email}`);
               }
             });
           } else if (error.status === 400) {
@@ -86,7 +85,6 @@ const Login = () => {
             
             if (error.data?.errors) {
               if (typeof error.data.errors === 'object' && !Array.isArray(error.data.errors)) {
-                // Get first error from object
                 errorMessage = Object.values(error.data.errors).flat()[0] || errorMessage;
               } else if (typeof error.data.errors === 'string') {
                 errorMessage = error.data.errors;
