@@ -40,6 +40,8 @@ import {
   getOrderAddsOnItemService,
   createCartAddsOnCategoryService,
   createCartAddsOnItemService,
+  getCartAddsOnCategoryService,
+  getCartAddsOnItemService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -2039,9 +2041,24 @@ export const getCartItemsController = async (req, res) => {
             }
           );
 
+          const addsOnCategory = await getCartAddsOnCategoryService(item.cart_item_id);
+          let addsOnItems = [];
+          if (addsOnCategory && addsOnCategory.length > 0) {
+            addsOnItems = await Promise.all(
+              addsOnCategory.map(async (category) => {
+                const addOnItems = await getCartAddsOnItemService(category.category_id);
+                return {
+                  ...category,
+                  items: addOnItems,
+                };
+              })
+            );
+          }
+
           return {
             ...item,
             menu: response.data.menu,
+            addsOn: addsOnItems,
           };
         } catch (err) {
           logger.error(
