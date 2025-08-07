@@ -64,6 +64,14 @@ export const getCartAddsOnCategoryService = async (cartItemId) => {
   return result.rows;
 }
 
+export const getCartAddsOnItemService = async (categoryId) => {
+  const result = await pool.query(
+    "SELECT * FROM cart_item_adds_on_item WHERE category_id = $1",
+    [categoryId]
+  );
+  return result.rows;
+}
+
 export const createCartAddsOnItemService = async (paramPool=pool, {
   categoryId,
   addsOnName,
