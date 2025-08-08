@@ -808,7 +808,8 @@ export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { menu_id } = req.params;
-
+    const {cart_item_id} = req.body;
+    
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       return responseError(res, 403, "You are not authorized to create a cart");
@@ -821,9 +822,7 @@ export const deleteCartItemController = async (req, res) => {
     logger.info(
       `Deleting cart item for user ${userId} and menu id ${menu_id}...`
     );
-    const cartItem = await deleteCartItemServiceByMenuId(menu_id);
-    console.log("Cart Item:", cartItem);
-
+    const cartItem = await deleteCartItemServiceByMenuId(menu_id, cart_item_id);
     if (!cartItem) {
       logger.warn(`Cart item ${menu_id} not found`);
       return responseError(res, 404, "Cart item not found");
