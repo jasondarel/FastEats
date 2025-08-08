@@ -616,8 +616,14 @@ export const createCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { cartId, menuId, quantity, note, addsOn } = req.body;
-    const addsOnData = addsOn ? JSON.parse(addsOn) : null;
-
+    const addsOnParsed = addsOn ? JSON.parse(addsOn) : null;
+    let addsOnData = {};
+    if (addsOnParsed) {
+      addsOnData = Object.fromEntries(
+        Object.entries(addsOnParsed).filter(([_, value]) => value != null)
+      );
+    }
+    console.log("Adds On Data:", addsOnData);
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       client.release();
@@ -649,9 +655,38 @@ export const createCartItemController = async (req, res) => {
         "cartId, menuId, and quantity are required"
       );
     }
+    const formattedItemAddOn = null || {}
 
     const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId);
-    if (existedCartItem) {
+
+    const incomingCartItem = {
+      ...existedCartItem,
+      ...addsOnData
+    }
+
+    const existedCartAddsOnCategory = await getCartAddsOnCategoryService(existedCartItem?.cart_item_id);
+    if (existedCartAddsOnCategory && existedCartAddsOnCategory.length > 0) {
+      for (const category of existedCartAddsOnCategory) {
+        formattedItemAddOn[category.category_name] = [];
+        const addOnItems = await getCartAddsOnItemService(category.category_id);
+        if (addOnItems && addOnItems.length > 0) {
+          for (const item of addOnItems) {
+            formattedItemAddOn[category.category_name].push({
+              item_name: item.adds_on_name,
+              item_price: item.adds_on_price,
+              max_selectable: category.max_selectable,
+            });
+          }
+        }
+      }
+    }
+
+    const currentCartItem = {
+      ...existedCartItem,
+      ...formattedItemAddOn
+    }
+
+    if (JSON.stringify(currentCartItem) === JSON.stringify(incomingCartItem && currentCartItem !== null)) {
       logger.warn("Cart item already exists", {
         userId,
         cartId,
