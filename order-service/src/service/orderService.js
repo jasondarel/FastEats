@@ -312,12 +312,12 @@ export const createCartService = async (userId, restaurantId) => {
   return result.rows[0];
 };
 
-export const createCartItemService = async (client=pool, cartId, menuId, quantity) => {
+export const createCartItemService = async (client=pool, cartId, menuId, quantity, withAddOns, addOnsDataString) => {
   const result = await client.query(
-    `INSERT INTO cart_items (cart_id, menu_id, quantity, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
+    `INSERT INTO cart_items (cart_id, menu_id, quantity, created_at, updated_at, with_add_ons, add_ons_data)
+       VALUES ($1, $2, $3, NOW(), NOW(), $4, $5)
        RETURNING *`,
-    [cartId, menuId, quantity]
+    [cartId, menuId, quantity, withAddOns, addOnsDataString]
   );
   return result.rows[0];
 };
@@ -330,29 +330,30 @@ export const deleteCartItemServiceByCartItemId = async (cartItemId) => {
   return result.rows[0];
 };
 
-export const deleteCartItemServiceByMenuId = async (menu_id) => {
+export const deleteCartItemServiceByMenuId = async (menu_id, cart_item_id) => {
   const result = await pool.query(
-    `DELETE FROM cart_items WHERE menu_id = $1 RETURNING *`,
-    [menu_id]
+    `DELETE FROM cart_items WHERE menu_id = $1 AND cart_item_id = $2 RETURNING *`,
+    [menu_id, cart_item_id]
   );
   return result.rows[0];
 };
 
-export const getCartItemServiceByMenuId = async (cartId, menuId) => {
+export const getCartItemServiceByMenuId = async (cartId, menuId, withAddOns, addOnsDataString) => {
   const result = await pool.query(
     `SELECT * FROM cart_items ci
-    WHERE ci.cart_id = $1 AND ci.menu_id = $2`,
-    [cartId, menuId]
+    WHERE ci.cart_id = $1 AND ci.menu_id = $2 AND ci.with_add_ons = $3 AND ci.add_ons_data = $4`,
+    [cartId, menuId, withAddOns, addOnsDataString]
   );
   return result.rows[0];
 }
 
-export const updateCartItemQuantityServiceByMenuId = async (client=pool, menuId, quantity) => {
-  const result = await pool.query(
+export const updateCartItemQuantityServiceByMenuId = async (client=pool, menuId, quantity, withAddOns, addsOnDataString) => {
+  const result = await client.query(
     `UPDATE cart_items
      SET quantity = $1, updated_at = NOW()
-     WHERE menu_id = $2 RETURNING *`,
-    [quantity, menuId]
+     WHERE menu_id = $2 AND with_add_ons = $3 AND add_ons_data = $4 
+     RETURNING *`,
+    [quantity, menuId, withAddOns, addsOnDataString]
   );
   return result.rows[0];
 }

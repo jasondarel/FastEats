@@ -130,10 +130,10 @@ const Cart = () => {
     }
   };
 
-  const removeItem = async (menuId) => {
+  const removeItem = async (menuId, itemId) => {
     try {
       const token = getToken();
-      await deleteCartItemService(menuId, token);
+      await deleteCartItemService(menuId, itemId, token);
 
       setCartItems((prevItems) =>
         prevItems.filter((item) => item.menu_id !== menuId)
@@ -178,7 +178,7 @@ const Cart = () => {
       const deletePromises = cartItems.map(
         (item) =>
           console.log("Deleting item:", item) ||
-          deleteCartItemService(item.menu_id, token)
+          deleteCartItemService(item.menu_id, item.cart_item_id, token)
       );
 
       await Promise.all(deletePromises);
@@ -355,7 +355,7 @@ const Cart = () => {
                     );
                   }
                   }
-                  onRemoveItem={() => removeItem(item.menu_id)}
+                  onRemoveItem={() => removeItem(item.menu_id, item.cart_item_id)}
                   calculateAddOnsPrice={calculateAddOnsPrice}
                   getItemTotalPrice={getItemTotalPrice}
                 />

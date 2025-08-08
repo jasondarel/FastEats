@@ -138,11 +138,14 @@ const getCartItemsService = async (cartId, token) => {
   return response;
 };
 
-const deleteCartItemService = async (menuId, token) => {
+const deleteCartItemService = async (menuId, itemId, token) => {
   const response = await axios.delete(`${API_URL}/order/cart-item/${menuId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+    },
+    data: {
+      cart_item_id: itemId,
     },
   });
   return response;

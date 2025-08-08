@@ -616,8 +616,17 @@ export const createCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { cartId, menuId, quantity, note, addsOn } = req.body;
-    const addsOnData = addsOn ? JSON.parse(addsOn) : null;
-
+    const addsOnParsed = addsOn ? JSON.parse(addsOn) : null;
+    let addsOnData = {};
+    if (addsOnParsed) {
+      addsOnData = Object.fromEntries(
+          Object.entries(addsOnParsed).filter(
+            ([_, value]) => value != null && !(Array.isArray(value) && value.length === 0)
+          )
+        );
+      }
+    const addsOnDataString = JSON.stringify(addsOnData) || null;
+    const withAddOns = Object.keys(addsOnData).length > 0 ? true : false;
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       client.release();
@@ -649,8 +658,8 @@ export const createCartItemController = async (req, res) => {
         "cartId, menuId, and quantity are required"
       );
     }
+    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId, withAddOns, addsOnDataString);
 
-    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId);
     if (existedCartItem) {
       logger.warn("Cart item already exists", {
         userId,
@@ -658,7 +667,7 @@ export const createCartItemController = async (req, res) => {
         menuId,
       });
       const updatedQuantity = Number(existedCartItem.quantity) + Number(quantity);
-      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity);
+      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity, withAddOns, addsOnDataString);
       logger.info("Cart item quantity updated successfully");
       client.release();
       return responseSuccess(
@@ -679,7 +688,8 @@ export const createCartItemController = async (req, res) => {
         cartId,
         menuId,
         quantity,
-        note
+        withAddOns,
+        addsOnDataString,
       );
       logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
@@ -779,6 +789,7 @@ export const createCartItemController = async (req, res) => {
       );
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error("Database error while creating cart item:", error);
       client.release();
       logger.error("Database error while creating cart item", {
         error: error.message,
@@ -797,8 +808,8 @@ export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { menu_id } = req.params;
-    console.log("Menu ID:", menu_id);
-
+    const {cart_item_id} = req.body;
+    
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       return responseError(res, 403, "You are not authorized to create a cart");
@@ -811,9 +822,7 @@ export const deleteCartItemController = async (req, res) => {
     logger.info(
       `Deleting cart item for user ${userId} and menu id ${menu_id}...`
     );
-    const cartItem = await deleteCartItemServiceByMenuId(menu_id);
-    console.log("Cart Item:", cartItem);
-
+    const cartItem = await deleteCartItemServiceByMenuId(menu_id, cart_item_id);
     if (!cartItem) {
       logger.warn(`Cart item ${menu_id} not found`);
       return responseError(res, 404, "Cart item not found");
@@ -2006,7 +2015,7 @@ export const getCartItemsController = async (req, res) => {
     }
     const groupedCartItems = cartItems.reduce((acc, item) => {
       const { cart_id, menu_id, quantity } = item;
-      const key = `${cart_id}-${menu_id}`;
+      const key = `${cart_id}-${menu_id}-${item.cart_item_id}`;
       if (!acc[key]) {
         acc[key] = {
           cart_id,
@@ -2025,6 +2034,7 @@ export const getCartItemsController = async (req, res) => {
     }, {});
 
     const finalCartItems = Object.values(groupedCartItems);
+    console.log("Final cart items after grouping:", finalCartItems);
 
     logger.info("Cart items fetched successfully");
 
