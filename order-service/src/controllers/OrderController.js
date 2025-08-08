@@ -620,10 +620,13 @@ export const createCartItemController = async (req, res) => {
     let addsOnData = {};
     if (addsOnParsed) {
       addsOnData = Object.fromEntries(
-        Object.entries(addsOnParsed).filter(([_, value]) => value != null)
-      );
-    }
-    console.log("Adds On Data:", addsOnData);
+          Object.entries(addsOnParsed).filter(
+            ([_, value]) => value != null && !(Array.isArray(value) && value.length === 0)
+          )
+        );
+      }
+    const addsOnDataString = JSON.stringify(addsOnData) || null;
+    const withAddOns = Object.keys(addsOnData).length > 0 ? true : false;
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       client.release();
@@ -655,45 +658,16 @@ export const createCartItemController = async (req, res) => {
         "cartId, menuId, and quantity are required"
       );
     }
-    const formattedItemAddOn = null || {}
+    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId, withAddOns, addsOnDataString);
 
-    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId);
-
-    const incomingCartItem = {
-      ...existedCartItem,
-      ...addsOnData
-    }
-
-    const existedCartAddsOnCategory = await getCartAddsOnCategoryService(existedCartItem?.cart_item_id);
-    if (existedCartAddsOnCategory && existedCartAddsOnCategory.length > 0) {
-      for (const category of existedCartAddsOnCategory) {
-        formattedItemAddOn[category.category_name] = [];
-        const addOnItems = await getCartAddsOnItemService(category.category_id);
-        if (addOnItems && addOnItems.length > 0) {
-          for (const item of addOnItems) {
-            formattedItemAddOn[category.category_name].push({
-              item_name: item.adds_on_name,
-              item_price: item.adds_on_price,
-              max_selectable: category.max_selectable,
-            });
-          }
-        }
-      }
-    }
-
-    const currentCartItem = {
-      ...existedCartItem,
-      ...formattedItemAddOn
-    }
-
-    if (JSON.stringify(currentCartItem) === JSON.stringify(incomingCartItem && currentCartItem !== null)) {
+    if (existedCartItem) {
       logger.warn("Cart item already exists", {
         userId,
         cartId,
         menuId,
       });
       const updatedQuantity = Number(existedCartItem.quantity) + Number(quantity);
-      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity);
+      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity, withAddOns, addsOnDataString);
       logger.info("Cart item quantity updated successfully");
       client.release();
       return responseSuccess(
@@ -714,7 +688,8 @@ export const createCartItemController = async (req, res) => {
         cartId,
         menuId,
         quantity,
-        note
+        withAddOns,
+        addsOnDataString,
       );
       logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
@@ -814,6 +789,7 @@ export const createCartItemController = async (req, res) => {
       );
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error("Database error while creating cart item:", error);
       client.release();
       logger.error("Database error while creating cart item", {
         error: error.message,
@@ -832,7 +808,6 @@ export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { menu_id } = req.params;
-    console.log("Menu ID:", menu_id);
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
@@ -2041,7 +2016,7 @@ export const getCartItemsController = async (req, res) => {
     }
     const groupedCartItems = cartItems.reduce((acc, item) => {
       const { cart_id, menu_id, quantity } = item;
-      const key = `${cart_id}-${menu_id}`;
+      const key = `${cart_id}-${menu_id}-${item.cart_item_id}`;
       if (!acc[key]) {
         acc[key] = {
           cart_id,
@@ -2060,6 +2035,7 @@ export const getCartItemsController = async (req, res) => {
     }, {});
 
     const finalCartItems = Object.values(groupedCartItems);
+    console.log("Final cart items after grouping:", finalCartItems);
 
     logger.info("Cart items fetched successfully");
 
