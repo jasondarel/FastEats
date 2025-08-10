@@ -1,17 +1,22 @@
+/* eslint-disable react/prop-types */
 import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { logout } from "../app/auth/authSlice";
+import { API_URL } from "../config/api";
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
-  // Changed to include medium screens (width < 1024px)
   const [isMobileOrMedium, setIsMobileOrMedium] = useState(
     window.innerWidth < 1024
   );
+  const [role, setRole] = useState("");
   const [isProfileDropupOpen, setIsProfileDropupOpen] = useState(false);
 
   const MySwal = withReactContent(Swal);
@@ -29,6 +34,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
     email: "",
     profile_photo: "",
   });
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -40,7 +46,6 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
   useEffect(() => {
     const updateSidebarState = () => {
-      // Changed to check for medium screens (width < 1024px)
       const newIsMobileOrMedium = window.innerWidth < 1024;
       setIsMobileOrMedium(newIsMobileOrMedium);
 
@@ -67,11 +72,10 @@ const Sidebar = ({ isTaskbarOpen }) => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-
-        const response = await axios.get("http://localhost:5002/profile", {
+        setLoadingProfile(true);
+        const response = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         setProfile({
           name: response.data.user.name,
           email: response.data.user.email,
@@ -79,13 +83,39 @@ const Sidebar = ({ isTaskbarOpen }) => {
         });
       } catch (error) {
         console.error("Error fetching profile data:", error);
+      } finally {
+        setLoadingProfile(false);
       }
     };
+
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch(`${API_URL}/user/user`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user profile. Status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        setRole(data.user.role);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
     fetchUserProfile();
   }, []);
 
   useEffect(() => {
-    // Handle clicks outside the dropup menu to close it
     const handleClickOutside = (event) => {
       if (dropupRef.current && !dropupRef.current.contains(event.target)) {
         setIsProfileDropupOpen(false);
@@ -108,7 +138,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
       cancelButtonColor: "#555",
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.removeItem("token");
+        dispatch(logout());
+
         setIsProfileDropupOpen(false);
         MySwal.fire({
           title: "Logged out!",
@@ -123,12 +154,11 @@ const Sidebar = ({ isTaskbarOpen }) => {
   };
 
   const toggleSidebar = () => {
-    // Only toggle if it wasn't dragged
     if (!wasDraggedRef.current && isMobileOrMedium) {
       setIsSidebarOpen(!isSidebarOpen);
       setShowHamburger(!isSidebarOpen);
     }
-    // Reset the dragged state
+
     wasDraggedRef.current = false;
   };
 
@@ -142,26 +172,24 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
     e.preventDefault();
     isDraggingRef.current = true;
-    wasDraggedRef.current = false; // Reset drag state on mouse down
+    wasDraggedRef.current = false;
 
     let startX = e.clientX - button.offsetLeft;
     let startY = e.clientY - button.offsetTop;
-    let hasMoved = false; // Track if any movement occurred
+    let hasMoved = false;
 
     function onMouseMove(e) {
       if (!isDraggingRef.current) return;
 
-      hasMoved = true; // Movement detected
-      wasDraggedRef.current = true; // Set drag state
+      hasMoved = true;
+      wasDraggedRef.current = true;
 
       let left = e.clientX - startX;
       let top = e.clientY - startY;
 
-      // Constrain to viewport
       left = Math.max(20, Math.min(window.innerWidth - 70, left));
       top = Math.max(20, Math.min(window.innerHeight - 70, top));
 
-      // Disable transition during drag for smooth movement
       button.style.transition = "none";
       button.style.left = `${left}px`;
       button.style.top = `${top}px`;
@@ -172,13 +200,11 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
       isDraggingRef.current = false;
 
-      // Only snap if actually dragged
       if (hasMoved) {
         const currentX = button.offsetLeft;
         const snappedX =
           currentX < window.innerWidth / 2 ? 20 : window.innerWidth - 70;
 
-        // Re-enable transition for smooth snapping
         button.style.transition = "left 0.3s ease";
         button.style.left = `${snappedX}px`;
         setInitialPosition({
@@ -207,7 +233,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
             left: `${initialPosition.x}px`,
             top: `${initialPosition.y}px`,
             touchAction: "none",
-            transition: "left 0.3s ease", // Add transition for smooth snapping
+            transition: "left 0.3s ease",
           }}
         >
           <svg
@@ -257,63 +283,136 @@ const Sidebar = ({ isTaskbarOpen }) => {
 
           <nav className="flex-grow">
             <ul className="space-y-2">
-              <li>
-                <Link
-                  to="/home"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/become-seller"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
-                >
-                  My Restaurant
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/orders"
-                  className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
-                >
-                  My Orders
-                </Link>
-              </li>
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/home"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Home
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/orders"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    My Orders
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/cart"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Cart
+                  </Link>
+                </li>
+              )}
+
+              {role == "user" && (
+                <li>
+                  <Link
+                    to="/chat"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Chats
+                  </Link>
+                </li>
+              )}
+
+              {role === "seller" && (
+                <li>
+                  <Link
+                    to="/restaurant-dashboard"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+              )}
+
+              {role == "seller" && (
+                <li>
+                  <Link
+                    to="/manage-restaurant"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-white font-bold text-xl transition"
+                  >
+                    Manage Restaurant
+                  </Link>
+                </li>
+              )}
+
+              {role === "seller" && (
+                <li>
+                  <Link
+                    to="/order-list"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Order List
+                  </Link>
+                </li>
+              )}
+
+              {role == "seller" && (
+                <li>
+                  <Link
+                    to="/chat"
+                    className="block p-2 rounded hover:bg-yellow-500 hover:text-yellow-100 font-bold text-xl transition"
+                  >
+                    Chats
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
 
-          {/* Profile section with dropdown */}
           <div ref={dropupRef} className="relative">
-            {/* Profile button that toggles the dropdown */}
             <div
               onClick={toggleProfileDropup}
               className="flex items-center p-2 rounded-lg hover:bg-black hover:bg-opacity-30 transition cursor-pointer"
             >
-              {/* Profile Picture - Added min-width to prevent squeezing */}
               <div className="bg-white w-12 h-12 min-w-[3rem] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 <img
                   src={
                     profile.profile_photo ||
-                    "https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png"
+                    "https://cdn-icons-png.flaticon.com/512/9187/9187532.png"
                   }
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
+              
+              {loadingProfile ? (
+                <div className="flex flex-col ml-2 flex-grow min-w-0 text-yellow-200 italic">
+                  loading...
+                </div>
+              ) : profile && profile.name ? (
+                <div className="flex flex-col ml-2 flex-grow min-w-0">
+                  <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    {profile.name}
+                  </h2>
+                  <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
+                    {profile.email}
+                  </h2>
+                </div>
+              ) : (
+                <div className="flex flex-col ml-2 flex-grow min-w-0">
+                  <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
+                    guest
+                  </h2>
+                  <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
+                    guest@email.com
+                  </h2>
+                </div>
+              )}
 
-              {/* Profile Info - Improved width management */}
-              <div className="flex flex-col ml-2 flex-grow min-w-0">
-                <h2 className="font-bold text-xl truncate text-ellipsis overflow-hidden whitespace-nowrap">
-                  {profile.name || "guest"}
-                </h2>
-                <h2 className="font-semibold truncate text-ellipsis overflow-hidden whitespace-nowrap text-sm">
-                  {profile.email}
-                </h2>
-              </div>
-
-              {/* Dropdown indicator arrow - Made it flex-shrink-0 */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ml-1 transform transition-transform flex-shrink-0 ${
@@ -332,9 +431,8 @@ const Sidebar = ({ isTaskbarOpen }) => {
               </svg>
             </div>
 
-            {/* Profile dropdown menu */}
             {isProfileDropupOpen && (
-              <div className="absolute bottom-full left-0 w-full mb-2 bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
+              <div className="absolute bottom-full left-0 w-full bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden z-20">
                 <Link
                   to="/profile"
                   onClick={() => setIsProfileDropupOpen(false)}

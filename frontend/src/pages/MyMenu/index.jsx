@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import createNewMenuService from "../../../service/restaurantServices/myMenuService";
+import createNewMenuService from "../../service/restaurantService/myMenuService";
 import Swal from "sweetalert2";
 import SearchBar from "../../components/SearchBar";
 import BackButton from "../../components/BackButton";
 import MenuItemCard from "./components/MenuItemCard";
 import CreateMenuForm from "./components/CreateMenuForm";
 import CategoryFilter from "../../components/CategoryFilter";
-import AlphabetSort from "../../components/AlphabetSort"; // Import the new component
+import AlphabetSort from "../../components/AlphabetSort";
+import LoadingState from "../../components/LoadingState";
 import { handleApiError } from "./components/HandleAlert";
+import { API_URL } from "../../config/api";
 
 const MyMenuPage = () => {
   const { restaurantId } = useParams();
@@ -18,17 +20,14 @@ const MyMenuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateMenuForm, setShowCreateMenuForm] = useState(false);
 
-  // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [showUnavailable, setShowUnavailable] = useState(false);
-  const [sortOption, setSortOption] = useState("nameAsc"); // Default sort: A to Z
+  const [sortOption, setSortOption] = useState("nameAsc");
 
   const navigate = useNavigate();
 
-  // Handle navigation to menu details page
   const handleMenuItemClick = (menuId) => {
     navigate(`/my-menu/${menuId}/details`);
   };
@@ -42,7 +41,7 @@ const MyMenuPage = () => {
           throw new Error("No token found. Please log in.");
         }
 
-        const response = await fetch(`http://localhost:5000/restaurant/menus`, {
+        const response = await fetch(`${API_URL}/restaurant/menus`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -72,7 +71,6 @@ const MyMenuPage = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
-      // Add restaurantId to the form data
       formData.append("restaurantId", restaurantId);
 
       const response = await createNewMenuService(formData, token);
@@ -96,7 +94,6 @@ const MyMenuPage = () => {
     }
   };
 
-  // Filter and sort logic
   const filteredAndSortedMenu = menuItems
     .filter((item) => {
       const matchesSearch = item.menu_name
@@ -104,29 +101,22 @@ const MyMenuPage = () => {
         .includes(searchQuery.toLowerCase());
       const matchesCategory =
         filterCategory === "All" ? true : item.menu_category === filterCategory;
-
       const price = parseInt(item.menu_price);
       let matchesPrice = true;
       if (minPrice && price < parseInt(minPrice)) matchesPrice = false;
       if (maxPrice && price > parseInt(maxPrice)) matchesPrice = false;
 
-      const matchesAvailability = showUnavailable
-        ? true
-        : item.is_available === true;
-
-      return (
-        matchesSearch && matchesCategory && matchesPrice && matchesAvailability
-      );
+      return matchesSearch && matchesCategory && matchesPrice;
     })
     .sort((a, b) => {
-      // Only sort by name ascending or descending
       return sortOption === "nameAsc"
         ? a.menu_name.localeCompare(b.menu_name)
         : b.menu_name.localeCompare(a.menu_name);
     });
 
+  // Replace the previous loading state with LoadingState component
   if (isLoading) {
-    return <div className="text-center p-5">Loading menu...</div>;
+    return <LoadingState />;
   }
 
   return (
@@ -142,7 +132,7 @@ const MyMenuPage = () => {
         )}
 
         <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
-          <div className="flex-grow max-w-2xl flex justify-center right-0">
+          <div className="flex-grow max-w-2xl flex justify-center right-0 mr-5">
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -150,8 +140,6 @@ const MyMenuPage = () => {
               setMinPrice={setMinPrice}
               maxPrice={maxPrice}
               setMaxPrice={setMaxPrice}
-              showUnavailable={showUnavailable}
-              setShowUnavailable={setShowUnavailable}
               placeholder="Search menu items..."
             />
           </div>
@@ -184,7 +172,7 @@ const MyMenuPage = () => {
 
         <button
           onClick={() => setShowCreateMenuForm(true)}
-          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105"
+          className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-600 transition-transform transform hover:scale-105 hover:cursor-pointer"
         >
           + Add Menu
         </button>

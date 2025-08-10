@@ -1,42 +1,76 @@
-import "dotenv/config";
+import logger from "./src/config/loggerInit.js";
 import express from "express";
 import cors from "cors";
-import createTable from "./config/tableinit.js";
+import OrderRoutes from "./src/routes/OrderRoutes.js";
+import envInit from "./src/config/envInit.js";
+import { createDatabase, testDatabase } from "./src/config/dbInit.js";
+import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
+import { Server as SocketIOServer } from "socket.io";
+import http from "http";
+import cron from "node-cron";
+import { publishCompletedOrderMessage, publishPreparingOrderMessage } from "./src/util/orderUtil.js";
 
-// Routes
-import OrderRoutes from "./routes/OrderRoutes.js";
-
-//middleware
-import apiKeyAuth from "./middleware/authMiddleware.js";
+envInit();
+logger.info(`Using ${process.env.NODE_ENV} mode`);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
 
-app.use(cors({
-  origin: "http://localhost:5173",
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.DOMAIN_URL,
+].filter(Boolean);
+
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true
+  }
+});
+
+app.set("io", io);
+io.on("connection", (socket) => {
+  logger.info(`🟢 New client connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    logger.info(`🔴 Client disconnected: ${socket.id}`);
+  });
+});
+
+app.use(cors({ 
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
 app.use(express.json());
-
 app.use(OrderRoutes);
 
-createTable();
+(async () => {
+  try {
+    await createDatabase();
+    await testDatabase();
+    await rabbitMQInit();
 
-app.listen(PORT, () => {
-  console.log(
-    `${process.env.SERVICE_NAME || "Service"} running on port ${PORT}`
-  );
-});
+    logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
+    server.listen(PORT, () => {
+      logger.info(`🚀 Server with WebSocket running on http://localhost:${PORT}`);
+    });
 
-// Middleware to verify token
-// app.use((req, res, next) => {
-//   if (req.path === "/") return next(); // Allow health check
+    cron.schedule("*/5 * * * * *", async () => {
+      logger.info("⏰ Running scheduled publisher: publishPreparingOrderMessage");
+      await publishPreparingOrderMessage();
+    });
 
-//   const token = req.headers.authorization?.split(" ")[1];
-//   const user = token ? verifyToken(token) : null;
+    cron.schedule("*/5 * * * * *", async () => {
+      logger.info("⏰ Running scheduled publisher: publishCompletedOrderMessage");
+      await publishCompletedOrderMessage();
+    });
 
-//   if (!user) return res.status(401).json({ error: "Unauthorized" });
-
-//   req.user = user;
-//   next();
-// });
+  } catch (error) {
+    logger.error("❌ Error initializing services:", error);
+  }
+})();

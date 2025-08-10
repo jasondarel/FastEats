@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
-import { getProfileService } from "../../../service/userServices/profileService";
+import { useSelector } from "react-redux";
+import { getProfileService } from "../../service/userServices/profileService";
 import ProfileForm from "./components/ProfileForm";
 import PasswordForm from "./components/PasswordForm";
 import BackButton from "../../components/BackButton";
 import ProfilePhoto from "./components/ProfilePhoto";
+import PaymentForm from "./components/paymentForm";
 
 const Profile = () => {
+  const { user } = useSelector((state) => state.auth);
   const [profile, setProfile] = useState({
-    name: "",
+    fullname: "",
     profile_photo: "",
     address: "",
     phone_number: "",
@@ -69,8 +72,8 @@ const Profile = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
+      <BackButton to="/home" />
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg mx-auto scale-95 lg:min-w-2xl lg:scale-90 relative">
-        <BackButton to="/home" />
         <h2 className="mt-10 text-2xl lg:text-4xl font-semibold text-center mb-6">
           Edit Profile
         </h2>
@@ -87,6 +90,13 @@ const Profile = () => {
 
         <h2 className="text-lg font-semibold mt-6">Change Password</h2>
         <PasswordForm />
+        
+        {user.role === "seller" && (
+          <>
+            <h2 className="text-lg font-semibold mt-6">Set Payment Data</h2>
+            <PaymentForm />
+          </>
+        )}
       </div>
     </div>
   );

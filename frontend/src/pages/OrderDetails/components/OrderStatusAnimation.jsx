@@ -1,8 +1,10 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const OrderStatusAnimation = ({ status }) => {
-  // Function to get Lottie animation URL based on status
+
   const getLottieAnimation = (status) => {
     switch (status) {
       case "Preparing":

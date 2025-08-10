@@ -1,5 +1,6 @@
 // hooks/useMenuData.js
 import { useState, useEffect } from "react";
+import { API_URL } from "../../../config/api";
 
 const useMenuData = (restaurantId) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -16,7 +17,7 @@ const useMenuData = (restaurantId) => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu/${restaurantId}`,
+          `${API_URL}/restaurant/menu/${restaurantId}`,
           {
             method: "GET",
             headers: {

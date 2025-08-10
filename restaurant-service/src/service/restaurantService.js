@@ -1,7 +1,7 @@
 import axios from "axios";
 import pool from "../config/dbInit.js";
 
-const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
+export const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_name = $1 AND restaurant_id != $2`,
         [restaurantName, restaurantId]
@@ -9,13 +9,12 @@ const isRestaurantAvailableByNameId = async (restaurantName, restaurantId) => {
     return result.rowCount > 0;
 };
 
-const isRestaurantAvailableByName = async (restaurantName) => {
+export const isRestaurantAvailableByName = async (restaurantName) => {
     const result = await pool.query("SELECT 1 FROM restaurants WHERE restaurant_name = $1", [restaurantName]);
     return result.rowCount > 0;
 }
 
-
-const isRestaurantAvailableById = async (restaurantId) => {
+export const isRestaurantAvailableById = async (restaurantId) => {
     const result = await pool.query(
         `SELECT 1 FROM restaurants WHERE restaurant_id = $1`,
         [restaurantId]
@@ -23,56 +22,64 @@ const isRestaurantAvailableById = async (restaurantId) => {
     return result.rowCount > 0;
 };
 
-const createRestaurantService = async (restaurantReq) => {
+export const createRestaurantService = async (restaurantReq) => {
     const result = await pool.query(
-        `INSERT INTO restaurants (restaurant_name, restaurant_address, owner_id, restaurant_image) 
-        VALUES ($1, $2, $3, $4) RETURNING *`,
+        `INSERT INTO restaurants (restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, owner_id, restaurant_image) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
         [
             restaurantReq.restaurantName,
+            restaurantReq.restaurantProvince,
+            restaurantReq.restaurantCity,
+            restaurantReq.restaurantDistrict,
+            restaurantReq.restaurantVillage,
             restaurantReq.restaurantAddress,
             restaurantReq.ownerId,
             restaurantReq.restaurantImage,
         ]
     );
-    
     return result.rows[0];
 };
 
 
-const updateRestaurantService = async (restaurantReq, id) => {
+export const updateRestaurantService = async (restaurantReq, id) => {
     const result = await pool.query(
         `UPDATE restaurants 
-        SET restaurant_name = $1, restaurant_address = $2, restaurant_image = $3, updated_at = NOW()
-        WHERE restaurant_id = $4 
+        SET 
+        restaurant_name = $1, 
+        restaurant_address = $2, 
+        restaurant_image = $3,
+        restaurant_province = $4,
+        restaurant_city = $5,
+        restaurant_district = $6,
+        restaurant_village = $7, 
+        updated_at = NOW()
+        WHERE restaurant_id = $8 
         RETURNING *`,
-        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.restaurantImage, id]
+        [restaurantReq.restaurantName, restaurantReq.restaurantAddress, restaurantReq.restaurantImage, restaurantReq.restaurantProvince, restaurantReq.restaurantCity, restaurantReq.restaurantDistrict, restaurantReq.restaurantVillage, id]
     );
 
     if (result.rows.length === 0) {
         return null;
     }
-
     return result.rows[0];
 };
 
-const deleteRestaurantService = async (id) => {
+export const deleteRestaurantService = async (id) => {
     const result = await pool.query(
         `DELETE FROM restaurants WHERE restaurant_id = $1 RETURNING *`,
         [id]
     );
-
     if (result.rows.length === 0) {
         return null;
     }
-
     return result.rows[0];
 };
 
 
 
-const isOwnerAvailable = async(ownerId) => {
+export const isOwnerAvailable = async(ownerId) => {
     try {
-        const response = await axios.get(`http://localhost:5000/user/is-user-exist/${ownerId}`);
+        const response = await axios.get(`${API_URL}/user/is-user-exist/${ownerId}`);
         if(response.data.success) {
             return true;
         }
@@ -82,12 +89,35 @@ const isOwnerAvailable = async(ownerId) => {
     }
 }
 
-const getRestaurantsService = async (ownerId) => {
+export const getRestaurantsService = async (ownerId, filters = null) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM restaurants WHERE owner_id != $1",
-            [ownerId]
-        );
+        let query = "SELECT * FROM restaurants WHERE owner_id != $1";
+        let params = [ownerId];
+        let paramIndex = 2;
+
+        if (filters) {
+            if (filters.province) {
+                query += ` AND restaurant_province = $${paramIndex}`;
+                params.push(filters.province);
+                paramIndex++;
+            }
+            if (filters.city) {
+                query += ` AND restaurant_city = $${paramIndex}`;
+                params.push(filters.city);
+                paramIndex++;
+            }
+            if (filters.district) {
+                query += ` AND restaurant_district = $${paramIndex}`;
+                params.push(filters.district);
+                paramIndex++;
+            }
+            if (filters.village) {
+                query += ` AND restaurant_village = $${paramIndex}`;
+                params.push(filters.village);
+                paramIndex++;
+            }
+        }
+        const result = await pool.query(query, params);
         return result.rows;
     } catch (error) {
         console.error("❌ Error fetching restaurants:", error);
@@ -96,7 +126,7 @@ const getRestaurantsService = async (ownerId) => {
 };
 
 
-const getRestaurantByOwnerIdService = async (ownerId) => {
+export const getRestaurantByOwnerIdService = async (ownerId) => {
     try {
         const result = await pool.query(
             "SELECT * FROM restaurants WHERE owner_id = $1",
@@ -109,9 +139,8 @@ const getRestaurantByOwnerIdService = async (ownerId) => {
     }
 };
 
-const getRestaurantByRestaurantIdService = async (restaurantId) => {
+export const getRestaurantByRestaurantIdService = async (restaurantId) => {
     try {
-        // Validasi sebelum query
         if (!restaurantId || isNaN(restaurantId)) {
             throw new Error(`Invalid restaurantId: ${restaurantId}`);
         }
@@ -120,7 +149,6 @@ const getRestaurantByRestaurantIdService = async (restaurantId) => {
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
             [parseInt(restaurantId, 10)]
         );
-
         return result.rows[0] || null;
     } catch (error) {
         console.error("❌ Error fetching restaurant by restaurant_id:", error);
@@ -129,26 +157,24 @@ const getRestaurantByRestaurantIdService = async (restaurantId) => {
 };
 
 
-const getRestaurantService = async (Id) => {
+export const getRestaurantService = async (Id) => {
     try {
         const result = await pool.query(
             "SELECT * FROM restaurants WHERE restaurant_id = $1",
             [Id]
         );
-
         return result.rows[0] || null;
     } catch (error) {
         throw error;
     }
 };
 
-const updateOpenRestaurantService = async (restaurantId, isIopen) => {
+export const updateOpenRestaurantService = async (restaurantId, isIopen) => {
     try {
         const result = await pool.query(
             `UPDATE restaurants SET is_open = $1 WHERE restaurant_id = $2 RETURNING *`,
             [isIopen, restaurantId]
         );
-
         return result.rows[0];
     } catch (error) {
         console.error("❌ Error updating restaurant:", error);
@@ -156,17 +182,54 @@ const updateOpenRestaurantService = async (restaurantId, isIopen) => {
     }
 }
 
-export {
-    isRestaurantAvailableByName,
-    isRestaurantAvailableByNameId,
-    isRestaurantAvailableById,
-    getRestaurantsService,
-    getRestaurantService,
-    getRestaurantByOwnerIdService,
-    getRestaurantByRestaurantIdService,
-    isOwnerAvailable,
-    createRestaurantService,
-    updateRestaurantService,
-    deleteRestaurantService,
-    updateOpenRestaurantService
-};
+export const createRestaurantRateService = async ({
+    orderId,
+    rating,
+    review,
+    restaurantId,
+    userId
+}) => {
+    try {
+        const result = await pool.query(
+            `INSERT INTO restaurant_rating (order_id, rating, comment, restaurant_id, user_id, created_at, updated_at) 
+            VALUES ($1, $2, $3, $4, $5, now(), now()) RETURNING *`,
+            [orderId, rating, review, restaurantId, userId]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error("❌ Error creating restaurant rating:", error);
+        throw error;
+    }
+}
+
+export const getRestaurantRateService = async ({
+    restaurantId,
+    userId,
+    orderId
+}) => {
+    try {
+        const result = await pool.query(
+            `SELECT * FROM restaurant_rating 
+            WHERE restaurant_id = $1 AND user_id = $2 AND order_id = $3`,
+            [restaurantId, userId, orderId]
+        );
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error("❌ Error fetching restaurant rating:", error);
+        throw error;
+    }
+}
+
+export const getAllRestaurantRateService = async (restaurantId) => {
+    try {
+        const result = await pool.query(
+            `SELECT * FROM restaurant_rating 
+            WHERE restaurant_id = $1`,
+            [restaurantId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("❌ Error fetching all restaurant ratings:", error);
+        throw error;
+    }
+}

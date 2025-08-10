@@ -1,18 +1,36 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
+import logger from '../config/loggerInit.js';
+import envInit from '../config/envInit.js';
+import { responseError } from '../util/responseUtil.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
+envInit();
 
-function authenticateToken(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+const internalAPIKey = process.env.INTERNAL_API_KEY;
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Forbidden" });
-    req.user = user;
-    next();
-  });
-}
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.header('Authorization');
+    if (!authHeader) {
+        logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip} (missing token)`);
+        return responseError(res, 401, "Access Unauthorized");
+    }
 
-export {
-    authenticateToken
-}
+    const token = authHeader.replace('Bearer ', '');
+    if (token === internalAPIKey) {
+        req.user = {
+            role: "internal_service",
+            source: "internal",
+        };
+        return next();
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        return next();
+    } catch (error) {
+        logger.error(`[AUTH] Invalid token: ${error.message}`);
+        return responseError(res, 403, "Invalid Token");
+    }
+};
+
+export default authMiddleware;

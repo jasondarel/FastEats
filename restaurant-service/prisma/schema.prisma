@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model restaurants {
+  restaurant_id        Int         @id @default(autoincrement())
+  restaurant_name      String      @db.VarChar(255)
+  restaurant_province  String      @default("Unknown")
+  restaurant_city      String      @default("Unknown")
+  restaurant_district  String      @default("Unknown")
+  restaurant_village   String      @default("Unknown")
+  restaurant_address   String
+  restaurant_image     String?     @db.VarChar(500)
+  owner_id             Int         @unique
+  is_open              Boolean     @default(false)
+  created_at           DateTime    @default(now())
+  updated_at           DateTime    @default(now())
+  menu_items           menu_item[]
+  ratings              restaurant_rating[]
+}
+
+model menu_item {
+  menu_id         Int         @id @default(autoincrement())
+  menu_name       String      @db.VarChar(255)
+  menu_description String?
+  menu_image      String?     @db.VarChar(500)
+  restaurant_id   Int
+  menu_category   String      @db.VarChar(255)
+  is_available    Boolean     @default(false)
+  menu_price      Decimal     @db.Decimal(10,2)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @default(now())
+  restaurants     restaurants @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade)
+  adds_on_categories menu_adds_on_category[]
+}
+
+model menu_adds_on_category {
+  category_id     Int              @id @default(autoincrement())
+  category_name   String           @db.VarChar(100)
+  is_required     Boolean          @default(false)
+  max_selectable  Int              @default(1)
+  menu_id         Int
+  menu_item       menu_item        @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade)
+  adds_on_items   menu_adds_on_item[]
+}
+
+model menu_adds_on_item {
+  item_id         Int                    @id @default(autoincrement())
+  adds_on_name    String                 @db.VarChar(100)
+  adds_on_price   Decimal                @db.Decimal(10,2)
+  category_id     Int
+  category        menu_adds_on_category  @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+}
+
+model restaurant_rating {
+  id             Int          @id @default(autoincrement())
+  restaurant_id  Int
+  user_id        Int
+  order_id       Int
+  rating         Int          
+  comment        String?      
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @default(now())
+  @@unique([user_id, restaurant_id, order_id])
+  restaurant   restaurants   @relation(fields: [restaurant_id], references: [restaurant_id])
+}

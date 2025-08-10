@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -8,6 +10,7 @@ import {
   FaArrowLeft,
   FaCreditCard,
 } from "react-icons/fa";
+import { API_URL } from "../../config/api";
 
 const Thanks = () => {
   const [searchParams] = useSearchParams();
@@ -90,7 +93,7 @@ const Thanks = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/order/snap/${orderId}`
+        `${API_URL}/order/snap/${orderId}`
       );
       const data = await response.json();
 

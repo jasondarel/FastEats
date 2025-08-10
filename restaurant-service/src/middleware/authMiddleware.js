@@ -1,23 +1,35 @@
 import jwt from 'jsonwebtoken';
+import logger from '../config/loggerInit.js';
+import envInit from '../config/envInit.js';
+import { responseError } from '../util/responseUtil.js';
+
+envInit();
+
+const internalAPIKey = process.env.INTERNAL_API_KEY;
 
 const authMiddleware = (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) {
-        return res.status(401).json({
-            success: false,     
-            message: "Access Unauthorized" 
-        });
+    const authHeader = req.header('Authorization');
+    if (!authHeader) {
+        logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip} (missing token)`);
+        return responseError(res, 401, "Access Unauthorized");
     }
 
+    const token = authHeader.replace('Bearer ', '');
+    if (token === internalAPIKey) {
+        req.user = {
+            role: "internal_service",
+            source: "internal",
+        };
+        return next();
+    }
+    
     try {
-        const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
-        next();
+        return next();
     } catch (error) {
-        return res.status(403).json({ 
-            success: false,
-            message: "Invalid Token" 
-        });
+        logger.error(`[AUTH] Invalid token: ${error.message}`);
+        return responseError(res, 403, "Invalid Token");
     }
 };
 

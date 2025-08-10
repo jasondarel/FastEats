@@ -20,13 +20,11 @@ const SortButton = ({
   const [showSortOptions, setShowSortOptions] = useState(false);
   const sortRef = useRef(null);
 
-  // Calculate active sort (if not using default)
   const isDefaultSort =
     sortBy === options[0]?.options[0]?.field &&
     sortOrder === options[0]?.options[0]?.direction;
   const activeSortCount = isDefaultSort ? 0 : 1;
 
-  // Handle click outside to close sort dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sortRef.current && !sortRef.current.contains(event.target)) {
@@ -40,20 +38,16 @@ const SortButton = ({
     };
   }, []);
 
-  // Toggle sort dropdown
   const toggleSortOptions = () => {
     setShowSortOptions(!showSortOptions);
   };
 
-  // Apply sort options
   const applySortOption = (field, direction) => {
     onSortChange(field, direction);
     setShowSortOptions(false);
   };
 
-  // Generate the button text based on current sort options
   const getSortButtonText = () => {
-    // Find the current option from the provided options
     for (const category of options) {
       for (const option of category.options) {
         if (option.field === sortBy && option.direction === sortOrder) {
@@ -79,7 +73,6 @@ const SortButton = ({
         )}
       </button>
 
-      {/* Sort Dropdown */}
       {showSortOptions && (
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 border border-yellow-200 overflow-hidden">
           <div className="p-4">

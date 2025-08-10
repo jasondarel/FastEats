@@ -1,68 +1,61 @@
+import envInit from "../config/envInit.js";
+envInit();
 import { 
-    createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService, getRestaurantService, 
+    createRestaurantService, deleteRestaurantService, getRestaurantByOwnerIdService,
     getRestaurantByRestaurantIdService,
     getRestaurantsService,
     updateRestaurantService,
-    updateOpenRestaurantService
+    updateOpenRestaurantService,
+    createRestaurantRateService,
+    getRestaurantRateService,
+    getAllRestaurantRateService
 } from "../service/restaurantService.js";
 import { validateCreateRestaurantRequest, validateUpdateRestaurantRequest } from "../validator/restaurantValidators.js";
 import jwt from 'jsonwebtoken';
+import logger from "../config/loggerInit.js";
+import { responseError, responseSuccess } from "../util/responseUtil.js";
+import { getOrderInformation, getUserInformation } from "../../../packages/shared/apiService.js";
 
-const createRestaurantController = async(req, res) => {
+const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL || "http://localhost:3000";
+
+export const createRestaurantController = async(req, res) => {
+    logger.info("CREATE RESTAURANT CONTROLLER");
     const restaurantReq = req.body;
-    restaurantReq.ownerId = req.user.userId;
+    restaurantReq.ownerId = restaurantReq.ownerId
     try {
         const errors = await validateCreateRestaurantRequest(restaurantReq);
         const errorLen = Object.keys(errors).length;
         if(errorLen > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Validation failed',
-                errors
-            })
+            logger.warn("Validation failed", errors);
+            return responseError(res, 400, "Validation failed", "error", errors);
         }
 
         const newRestaurant = await createRestaurantService(restaurantReq);
-        return res.status(201).json({
-            success: true,
-            message: "Create restaurant success",
-            dataRestaurant: newRestaurant
-        })
+
+        logger.info(`Create restaurant success: name: ${newRestaurant.restaurant_name}`);
+        return responseSuccess(res, 201, "Create restaurant success", "dataRestaurant", newRestaurant);
     } catch(err) {
-        console.error("❌ Error creating restaurant:", err);
-
         if (err.code === "23505") { 
-            return res.status(400).json({
-                success: false,
-                message: "Restaurant name or owner already exists"
-            });
+            logger.warn("Restaurant name or owner already exists", err);
+            return responseError(res, 400, "Restaurant name or owner already exists");
         }
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal Server Error");
     }
-    
 }
 
-const updateRestaurantController = async (req, res) => {
+export const updateRestaurantController = async (req, res) => {
+    logger.info("UPDATE RESTAURANT CONTROLLER");
+    const { role, userId } = req.user;
     try {
-        const { role, userId } = req.user;
-
         if (role !== "seller") {
-            return res.status(403).json({
-                success: false,
-                message: "Only sellers can update a restaurant",
-            });
+            logger.warn("Only sellers can update a restaurant");
+            return responseError(res, 403, "Only sellers can update a restaurant");
         }
-
         const restaurant = await getRestaurantByOwnerIdService(userId);
         if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner",
-            });
+            logger.warn("Restaurant not found for this owner");
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
         const restaurantId = restaurant.restaurant_id;
@@ -74,251 +67,371 @@ const updateRestaurantController = async (req, res) => {
 
         const errors = await validateUpdateRestaurantRequest(restaurantReq);
         if (Object.keys(errors).length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Validation failed",
-                errors,
-            });
+            logger.warn("Validation failed", errors);
+            return responseError(res, 400, "Validation failed", errors);
         }
 
-        // Update restoran
         const updatedRestaurant = await updateRestaurantService(
             restaurantReq,
             restaurantId
         );
         if (!updatedRestaurant) {
-            return res.status(500).json({
-                success: false,
-                message: "Restaurant update failed",
-            });
+            logger.error("Restaurant update failed");
+            return responseError(res, 500, "Restaurant update failed");
         }
 
-        return res.status(200).json({
-            success: true,
-            message: "Restaurant updated successfully",
-            dataRestaurant: updatedRestaurant,
-        });
+        logger.info(`Restaurant updated successfully: name: ${updatedRestaurant.restaurant_name}`);
+        return responseSuccess(res, 200, "Restaurant updated successfully", "dataRestaurant", updatedRestaurant);
     } catch (err) {
-        console.error("❌ Error updating restaurant:", err);
-
         if (err instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid or expired token",
-            });
+            logger.error("Invalid or expired token", err);
+            return responseError(res, 401, "Invalid or expired token");
         }
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal Server Error");
     }
 };
 
-
-
-const deleteRestaurantController = async (req, res) => {
+export const deleteRestaurantController = async (req, res) => {
+    logger.info("DELETE RESTAURANT CONTROLLER");
     const { restaurantId } = req.params;
-
     try {
         const deletedRestaurant = await deleteRestaurantService(restaurantId);
 
         if (!deletedRestaurant) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            logger.warn("Restaurant not found");
+            return responseError(res, 404, "Restaurant not found");
         }
 
-        return res.status(200).json({
-            success: true,
-            message: "Delete restaurant success",
-            deletedData: deletedRestaurant
-        });
+        logger.info(`Delete restaurant success: name: ${deletedRestaurant.restaurant_name}`);
+        return responseSuccess(res, 200, "Delete restaurant success", "deletedData", deletedRestaurant);
     } catch (err) {
-        console.error("❌ Error deleting restaurant:", err);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal Server Error");
     }
 };
 
-const getRestaurantsController = async(req, res) => {
+export const getRestaurantsController = async(req, res) => {
+    logger.info("GET RESTAURANTS CONTROLLER");
     const userId = req.user.userId;
-    try {
-        const result = await getRestaurantsService(userId);
+    const { province, city, district, village } = req.query;
+    const filters = {};
+    if (province) filters.province = province;
+    if (city) filters.city = city;
+    if (district) filters.district = district;
+    if (village) filters.village = village;
 
-        return res.status(200).json({
-            success: true,
-            restaurants: result
-        })
+    try {
+        const result = await getRestaurantsService(userId, filters);
+
+        logger.info("Get restaurants success");
+        return responseSuccess(res, 200, "Get restaurants success", "restaurants", result);
     } catch(err) {
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        })
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
     }
 }
 
-
-const getRestaurantByOwnerIdController = async (req, res) => {
+export const getRestaurantByOwnerIdController = async (req, res) => {
+    logger.info("GET RESTAURANT BY OWNER ID CONTROLLER");
+    const { ownerId } = req.params;
     try {
-        const { ownerId } = req.params;
         const result = await getRestaurantByOwnerIdService(ownerId);
 
         if (!result) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            logger.warn("Restaurant not found");
+            return responseError(res, 404, "Restaurant not found");
         }
 
-        return res.status(200).json({
-            success: true,
-            restaurant: result
-        });
+        logger.info("Get restaurant by owner id success");
+        return responseSuccess(res, 200, "Get restaurant by owner id success", "restaurant", result);
     } catch (err) {
-        console.error("❌ Error in getRestaurantController:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
     }
 };
 
-const getRestaurantByRestaurantIdController = async (req, res) => {
+export const getRestaurantByRestaurantIdController = async (req, res) => {
+    logger.info("GET RESTAURANT BY RESTAURANT ID CONTROLLER");
+    const { restaurantId } = req.params;
     try {
-        const { restaurantId } = req.params;
-
-        // Cek apakah restaurantId valid (harus angka)
         if (!restaurantId || isNaN(restaurantId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid restaurantId"
-            });
+            logger.warn("Invalid restaurantId");
+            return responseError(res, 400, "Invalid restaurantId");
         }
 
         const result = await getRestaurantByRestaurantIdService(restaurantId);
-        console.log(result)
+
         if (!result) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found"
-            });
+            logger.warn("Restaurant not found");
+            return responseError(res, 404, "Restaurant not found");
         }
 
-        return res.status(200).json({
-            success: true,
-            restaurant: result
-        });
+        logger.info("Get restaurant by restaurant id success");
+        return responseSuccess(res, 200, "Get restaurant by restaurant id success", "restaurant", result);
     } catch (err) {
-        console.error("❌ Error in getRestaurantByRestaurantIdController:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
     }
 };
 
-
-const getRestaurantController = async (req, res) => {
+export const getRestaurantController = async (req, res) => {
+    logger.info("GET RESTAURANT CONTROLLER");
+    const userId = req.user.userId;
     try {
-        const userId = req.user.userId;
-
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner"
-            });
+            logger.warn("Restaurant not found for this owner");
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
-        return res.status(200).json({
-            success: true,
-            restaurant: restaurant
-        });
+        logger.info("Get restaurant success");
+        return responseSuccess(res, 200, "Get restaurant success", "restaurant", restaurant);
 
     } catch (err) {
-        console.error("❌ Error in getRestaurantController:", err);
-
         if (err instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid or expired token"
-            });
+            logger.error("Invalid or expired token", err);
+            return responseError(res, 401, "Invalid or expired token");
         }
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
     }
 };
 
-const updateOpenRestaurantController = async (req, res) => {
+export const updateOpenRestaurantController = async (req, res) => {
+    logger.info("UPDATE OPEN RESTAURANT CONTROLLER");
+    const {userId, role} = req.user;
+    const isOpen = req.body.isOpen;
     try {
-        const {userId, role} = req.user;
-        const isOpen = req.body.isOpen;
 
         if (role !== "seller") {
-            return res.status(403).json({
-                success: false,
-                message: "Only sellers can open a restaurant"
-            });
+            logger.warn("Only sellers can open a restaurant");
+            return responseError(res, 403, "Only sellers can open a restaurant");
         }
 
         if(isOpen === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: "isOpen field is required"
-            });
+            logger.warn("isOpen field is required");
+            return responseError(res, 400, "isOpen field is required");
         }
 
         const restaurant = await getRestaurantByOwnerIdService(userId);
 
         if (!restaurant) {
-            return res.status(404).json({
-                success: false,
-                message: "Restaurant not found for this owner"
-            });
+            logger.warn("Restaurant not found for this owner");
+            return responseError(res, 404, "Restaurant not found for this owner");
         }
 
         const restaurantId = restaurant.restaurant_id;
 
         if(restaurant.owner_id !== userId) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to open this restaurant"
-            });
+            logger.warn("You are not authorized to open this restaurant");
+            return responseError(res, 403, "You are not authorized to open this restaurant");
         }
 
         const updatedRestaurant = await updateOpenRestaurantService(restaurantId, isOpen);
 
-        return res.status(200).json({
-            success: true,
-            message: "Restaurant is now open",
-            dataRestaurant: updatedRestaurant
-        });
+        logger.info("Restaurant is now open");
+        return responseSuccess(res, 200, "Restaurant is now open", "dataRestaurant", updatedRestaurant);
     } catch (err) {
-        console.error("❌ Error in updateOpenRestaurantController:", err);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal server error");
     }
 }
 
-export {
-    createRestaurantController,
-    getRestaurantsController,
-    getRestaurantByOwnerIdController,
-    getRestaurantByRestaurantIdController,
-    getRestaurantController,
-    updateRestaurantController,
-    deleteRestaurantController,
-    updateOpenRestaurantController
-};
+export const createRestaurantRatingController = async(req, res) => {
+    logger.info("CREATE RESTAURANT RATING CONTROLLER");
+    const { orderId, restaurantId } = req.query;
+    const { rating, review } = req.body;
+    const { userId, role } = req.user;
+    const token = req.headers.authorization;
+    
+    try {
+        if (role !== "user") {
+            logger.warn("Only customers can rate a restaurant");
+            return responseError(res, 403, "Only customers can rate a restaurant");
+        }
+        
+        if (!orderId || !restaurantId) {
+            logger.warn("orderId and restaurantId are required");
+            return responseError(res, 400, "orderId and restaurantId are required");
+        }
+
+        if (!rating || rating < 1 || rating > 5) {
+            logger.warn("Rating must be between 1 and 5");
+            return responseError(res, 400, "Rating must be between 1 and 5");
+        }
+
+        const order = await getOrderInformation(GLOBAL_SERVICE_URL, orderId, token)
+        if (!order) {
+            logger.warn("Order not found");
+            return responseError(res, 404, "Order not found");
+        }
+        
+        if (order.order.restaurant_id != restaurantId) {
+            logger.warn("Order does not belong to this restaurant");
+            return responseError(res, 400, "Order does not belong to this restaurant");
+        }
+
+        if (order.order.user_id !== userId) {
+            logger.warn("You are not authorized to rate this order");
+            return responseError(res, 403, "You are not authorized to rate this order");
+        }
+
+        if (order.order.status !== "Completed") {
+            logger.warn("Order must be delivered to rate a restaurant");
+            return responseError(res, 400, "Order must be delivered to rate a restaurant");
+        }
+
+        const existingRating = await getRestaurantRateService({
+            restaurantId,
+            userId,
+            orderId
+        })
+        if (existingRating) {
+            logger.warn("You have already rated this restaurant");
+            return responseError(res, 400, "You have already rated this restaurant");
+        }
+
+        const restaurantRating = await createRestaurantRateService({
+            orderId,
+            rating,
+            review,
+            restaurantId,
+            userId
+        })
+        if (!restaurantRating) {
+            logger.error("Failed to create restaurant rating");
+            return responseError(res, 500, "Failed to create restaurant rating");
+        }
+        logger.info("Restaurant rating created successfully");
+        return responseSuccess(res, 201, "Restaurant rating created successfully", "restaurantRating", restaurantRating);
+    } catch (err) {
+        logger.error("Error fetching order information", err);
+        return responseError(res, 500, "Internal server error");
+    }
+}
+
+export const getRestaurantRatingController = async(req, res) => {
+    logger.info("GET RESTAURANT RATING CONTROLLER");
+    const { orderId, restaurantId } = req.query;
+    const { userId, role } = req.user;
+    const token = req.headers.authorization;
+    
+    try {
+        if (!orderId || !restaurantId) {
+            logger.warn("orderId and restaurantId are required");
+            return responseError(res, 400, "orderId and restaurantId are required");
+        }
+
+        const order = await getOrderInformation(GLOBAL_SERVICE_URL, orderId, token)
+        if (!order) {
+            logger.warn("Order not found");
+            return responseError(res, 404, "Order not found");
+        }
+        
+        if (order.order.restaurant_id != restaurantId) {
+            logger.warn("Order does not belong to this restaurant");
+            return responseError(res, 400, "Order does not belong to this restaurant");
+        }
+
+        if (role === "user") {
+            if (order.order.user_id !== userId) {
+                logger.warn("You are not authorized to view this rating");
+                return responseError(res, 403, "You are not authorized to view this rating");
+            }
+        } else {
+            if (order.order.seller_id !== userId) {
+                logger.warn("You are not authorized to view this rating");
+                return responseError(res, 403, "You are not authorized to view this rating");
+            }
+        }
+
+        const existingRating = await getRestaurantRateService({
+            restaurantId,
+            userId,
+            orderId
+        })
+        if (!existingRating) {
+            logger.warn("Rating not found for this order");
+            return responseError(res, 404, "Rating not found for this order");
+        }
+        logger.info("Get Restaurant rating success");
+        return responseSuccess(res, 200, "Get restaurant rating success", "restaurantRating", existingRating);
+    } catch (err) {
+        logger.error("Error fetching restaurant rating", err);
+        return responseError(res, 500, "Internal server error");
+    }
+}
+
+export const getRestaurantDetailRatingController = async (req, res) => {
+    logger.info("GET RESTAURANT DETAIL RATING CONTROLLER");
+    const { restaurantId } = req.query;
+    const { userId, role } = req.user;
+    try {
+        if (!restaurantId || isNaN(restaurantId)) {
+            logger.warn("Invalid restaurantId");
+            return responseError(res, 400, "Invalid restaurantId");
+        }
+
+        if (role === "seller") {
+            const restaurant = await getRestaurantByOwnerIdService(userId);
+            if (!restaurant) {
+                logger.warn("Restaurant not found for this owner");
+                return responseError(res, 404, "Restaurant not found for this owner");
+            }
+        }
+
+        let details = {};
+        const ratings = await getAllRestaurantRateService(restaurantId);
+        details.averageRating = ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length || 0;
+
+        if (role === "user") {
+            details.ratings = await Promise.all(
+                ratings.map(async (rating) => {
+                    const user = await getUserInformation(
+                        GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
+                    const order = await getOrderInformation(
+                        GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
+                        console.log('Rating details:',  order);
+                    return {
+                        ...rating,
+                        name: user.user ? user.user.name : "Unknown User",
+                        profilePhoto: user.user ? user.user.profile_photo : null,
+                        order_quantity: order.order.item_quantity || 1,
+                        order_items: order.order.items || [],
+                        menu_id: order.menu_id ?? order.order?.menu_id ?? null,
+                    };
+                })
+            );
+        } else if (role === "seller") {
+            details.ratings = await Promise.all(
+                ratings.map(async (rating) => {
+                    console.log(rating);
+                    const user = await getUserInformation(
+                        GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
+                    const order = await getOrderInformation(
+                        GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
+                    return {
+                        ...rating,
+                        user: user.user || { userId: rating.user_id, name: "Unknown User" },
+                        order: order.order || { orderId: rating.order_id, items: [], item_quantity: 1 }
+                    };
+                })
+            );
+        }
+
+        if (!ratings || ratings.length === 0) {
+            logger.warn("No ratings found for this restaurant");
+            return responseError(res, 404, "No ratings found for this restaurant");
+        }
+
+        logger.info("Get restaurant detail rating success");
+        return responseSuccess(res, 200, "Get restaurant detail rating success", "data", details);
+    } catch (err) {
+        logger.error("Internal Server Error", err);
+        return responseError(res, 500, "Internal Server Error");
+    }
+}

@@ -6,9 +6,12 @@ import MenuHeader from "./components/MenuHeader";
 import MenuImage from "./components/MenuImage";
 import MenuInfo from "./components/MenuInfo";
 import MenuStats from "./components/MenuStats";
+import MenuAddOns from "./components/MenuAddOns";
 import EditMenuForm from "./components/EditMenuForm";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import LoadingState from "../../components/LoadingState";
+import { API_URL } from "../../config/api";
 
 const MyMenuDetails = () => {
   const { menuId } = useParams();
@@ -22,6 +25,7 @@ const MyMenuDetails = () => {
     menuPrice: "",
     menuCategory: "",
     menuImage: null,
+    addsOn: [],
   });
   const [menuImage, setMenuImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -38,7 +42,7 @@ const MyMenuDetails = () => {
         }
 
         const response = await fetch(
-          `http://localhost:5000/restaurant/menu-by-id/${menuId}`,
+          `${API_URL}/restaurant/menu-by-id/${menuId}`,
           {
             method: "GET",
             headers: {
@@ -54,6 +58,7 @@ const MyMenuDetails = () => {
         }
 
         const data = await response.json();
+        console.log("Fetched Menu details Data:", data);
 
         if (data.menu) {
           setMenu(data.menu);
@@ -63,6 +68,7 @@ const MyMenuDetails = () => {
             menuPrice: data.menu.menu_price || "",
             menuImage: data.menu.menu_image || "",
             menuCategory: data.menu.menu_category || "",
+            addsOnCategories: data.menu.addsOnCategories || [],
           });
         } else {
           throw new Error(`Menu with ID ${menuId} not found`);
@@ -79,6 +85,65 @@ const MyMenuDetails = () => {
 
     fetchMenuDetails();
   }, [menuId]);
+
+  const handleUpdateAddsOnCategory = (addsOn) => {
+    setFormData((prev) => ({
+      ...prev,
+      addsOnCategories: [...(prev.addsOnCategories || []), addsOn],
+    }));
+  }
+
+  const handleUpdateAddsOnItem = (categoryId, item) => {
+    setFormData((prev) => {  
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        if (cat.category_id === categoryId || cat.id === categoryId) {
+          return {
+            ...cat,
+            addsOnItems: [...(cat.addsOnItems || []), item],
+          };
+        } else {
+          return cat;
+        }
+      });
+      return { ...prev, addsOnCategories: updatedCategories };
+    });
+  }
+
+  const handleRemoveAddsOnCategory = (categoryId) => {
+    setFormData((prev) => {
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        if (cat.category_id === categoryId) {
+          return { ...cat, deleted: true };
+        }
+        return cat;
+      })
+      return { ...prev, addsOnCategories: updatedCategories };
+    })
+  }
+
+  const handleRemoveAddsOnItem = (categoryId, itemId) => {
+    setFormData((prev) => {
+      const updatedCategories = prev.addsOnCategories.map((cat) => {
+        console.log('Current category:', cat);
+        if (cat.category_id === categoryId || cat.id === categoryId) {
+          return {
+            ...cat,
+            addsOnItems: cat.addsOnItems.map((item) => {
+              console.log('Current item:', item);
+              if (item.item_id === itemId || item.id === itemId) {
+                return { ...item, deleted: true }
+              } else {
+                return item;
+              }
+            }),
+          };
+        } else {
+          return cat;
+        }
+      });
+      return { ...prev, addsOnCategories: updatedCategories };
+    });
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +181,7 @@ const MyMenuDetails = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/update-available/${menuId}`,
+        `${API_URL}/restaurant/update-available/${menuId}`,
         {
           method: "PUT",
           headers: {
@@ -158,12 +223,13 @@ const MyMenuDetails = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
-
+      console.log("Form Data Before Update:", formData);
       const formDataObj = new FormData();
       formDataObj.append("menuName", formData.menuName);
       formDataObj.append("menuDescription", formData.menuDesc);
       formDataObj.append("menuCategory", formData.menuCategory);
       formDataObj.append("menuPrice", formData.menuPrice);
+      formDataObj.append("addsOnCategories", JSON.stringify(formData.addsOnCategories));
 
       if (menuImage) {
         formDataObj.append("menuImage", menuImage);
@@ -175,7 +241,7 @@ const MyMenuDetails = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/menu/${menuId}`,
+        `${API_URL}/restaurant/menu/${menuId}`,
         {
           method: "PUT",
           headers: {
@@ -304,7 +370,7 @@ const MyMenuDetails = () => {
       if (!token) throw new Error("No token found. Please log in.");
 
       const response = await fetch(
-        `http://localhost:5000/restaurant/menu/${menuId}`,
+        `${API_URL}/restaurant/menu/${menuId}`,
         {
           method: "DELETE",
           headers: {
@@ -326,12 +392,7 @@ const MyMenuDetails = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="text-center p-5 text-lg font-semibold text-gray-700">
-        Loading...
-      </div>
-    );
+  if (loading) return <LoadingState />;
   if (error)
     return (
       <div className="text-red-500 text-center p-5 text-lg font-semibold">
@@ -345,40 +406,47 @@ const MyMenuDetails = () => {
       </div>
     );
 
-  return (
-    <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-5 relative">
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl mt-16">
-          <BackButton to="/my-menu" />
+ return (
+  <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
+    <Sidebar />
+    <BackButton to="/my-menu" />
+    <main className="flex-1 p-5 relative mt-20 ml-10">
+      <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg border border-slate-300 rounded-xl">
+       
+        <MenuHeader
+          menu={menu}
+          onToggleAvailability={handleToggleAvailability}
+          onShowEditForm={() => setShowEditForm(true)}
+          onDeleteMenu={handleDeleteMenu}
+        />
 
-          <MenuHeader
-            menu={menu}
-            onToggleAvailability={handleToggleAvailability}
-            onShowEditForm={() => setShowEditForm(true)}
-            onDeleteMenu={handleDeleteMenu}
-          />
+        <MenuImage menu={menu} />
 
-          <MenuImage menu={menu} />
+        <MenuInfo menu={menu} />
 
-          <MenuInfo menu={menu} />
+        <MenuStats menu={menu} />
 
-          <MenuStats menu={menu} />
-        </div>
-      </main>
+        <MenuAddOns menu={menu} />
+      </div>
+    </main>
 
-      <EditMenuForm
-        showEditForm={showEditForm}
-        setShowEditForm={setShowEditForm}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleImageChange={handleImageChange}
-        handleUpdateMenu={handleUpdateMenu}
-        previewImage={previewImage}
-        menu={menu}
-      />
-    </div>
-  );
+    <EditMenuForm
+      showEditForm={showEditForm}
+      setShowEditForm={setShowEditForm}
+      formData={formData}
+      handleUpdateAddsOnCategory={handleUpdateAddsOnCategory}
+      handleUpdateAddsOnItem={handleUpdateAddsOnItem}
+      handleRemoveAddsOnCategory={handleRemoveAddsOnCategory}
+      handleRemoveAddsOnItem={handleRemoveAddsOnItem}
+      handleInputChange={handleInputChange}
+      handleImageChange={handleImageChange}
+      handleUpdateMenu={handleUpdateMenu}
+      previewImage={previewImage}
+      menu={menu}
+    />
+  </div>
+);
+
 };
 
 export default MyMenuDetails;

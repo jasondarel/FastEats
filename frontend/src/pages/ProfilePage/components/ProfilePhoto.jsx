@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable no-unused-vars */
 import React from "react";
 
 const ProfilePhoto = ({ preview, handlePhotoChange }) => {
@@ -7,7 +9,7 @@ const ProfilePhoto = ({ preview, handlePhotoChange }) => {
         <img
           src={
             preview ||
-            "https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png"
+            "https://cdn-icons-png.flaticon.com/512/9187/9187532.png"
           }
           alt="Profile"
           className="w-24 h-24 object-cover rounded-full mb-4"
