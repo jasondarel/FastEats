@@ -214,14 +214,15 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                     </h2>
                     <div className="flex justify-between">
                       <div>
-                        <p className="text-slate-600">
-                          {item.item_quantity} Item
-                        </p>
                         {addonNames && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 mt-0.5 mb-1">
                             {addonNames}
                           </p>
                         )}
+                        <p className="text-slate-600">
+                          {item.item_quantity} Item{item.item_quantity !== 1 && "s"}
+                        </p>
+                        
                       </div>
                       <div className="text-right">
                         {menu?.menu_price && (
