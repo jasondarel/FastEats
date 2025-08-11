@@ -2123,12 +2123,13 @@ export const checkoutCartController = async (req, res) => {
     const cartItems = await getCartItemsService(cart_id);
 
     const groupedCartItems = cartItems.reduce((acc, item) => {
-      const { cart_id, quantity, menu_id } = item;
-      const key = `${cart_id}-${menu_id}`;
+      const { cart_id, quantity, menu_id, cart_item_id } = item;
+      const key = `${cart_id}-${menu_id}-${cart_item_id}`;
 
       if (!acc[key]) {
         acc[key] = {
           cart_id,
+          cart_item_id,
           menu_id,
           total_quantity: 0,
         };
@@ -2139,6 +2140,28 @@ export const checkoutCartController = async (req, res) => {
     }, {});
 
     const finalCartItems = Object.values(groupedCartItems);
+
+    for (const item of finalCartItems) {
+      try {
+        const addsOnCategory = await getCartAddsOnCategoryService(item.cart_item_id);
+        if (addsOnCategory && addsOnCategory.length > 0) {
+          item.addsOn = await Promise.all(
+            addsOnCategory.map(async (category) => ({
+              category_id: category.category_id,
+              category_name: category.category_name,
+              max_selectable: category.max_selectable,
+              is_required: category.is_required || false,
+              items: await getCartAddsOnItemService(category.category_id),
+            }))
+          );
+        } else {
+          item.addsOn = [];
+        }
+      } catch (error) {
+        logger.error(`Error fetching add-ons for cart item ${item.cart_item_id}:`, error);
+        item.addsOn = [];
+      }
+    }
 
     const menuData = new Map();
     let restaurantResponse;
@@ -2227,29 +2250,56 @@ export const checkoutCartController = async (req, res) => {
         throw new Error("Failed to create order from cart - no order ID returned");
       }
       logger.info("Order created successfully:", { orderId: order.order_id });
-
-      await Promise.all(
-        finalCartItems.map(async (item) => {
-          const menuInfo = menuData.get(item.menu_id);
-          if (!menuInfo) {
-            throw new Error(`Menu data not found for menu_id: ${item.menu_id}`);
+      for (const item of finalCartItems) {
+        const menuInfo = menuData.get(item.menu_id);
+        if (!menuInfo) {
+          throw new Error(`Menu data not found for menu_id: ${item.menu_id}`);
+        }
+        const orderItem = await createOrderItemService(
+          client,
+          order.order_id,
+          {
+            menuId: item.menu_id,
+            quantity: item.total_quantity,
+            menuName: menuInfo.menu_name,
+            menuDescription: menuInfo.menu_description,
+            menuPrice: menuInfo.menu_price,
+            menuImage: menuInfo.menu_image,
+            menuCategory: menuInfo.menu_category,
           }
-
-          return createOrderItemService(
-            client,
-            order.order_id,
-            {
-              menuId: item.menu_id,
-              quantity: item.total_quantity,
-              menuName: menuInfo.menu_name,
-              menuDescription: menuInfo.menu_description,
-              menuPrice: menuInfo.menu_price,
-              menuImage: menuInfo.menu_image,
-              menuCategory: menuInfo.menu_category,
+        )
+        if (!orderItem) {
+          throw new Error(`Failed to create order item for menu_id: ${item.menu_id}`);
+        }
+        if (item.addsOn && item.addsOn.length > 0) {
+          for (const addOnCategoryItem of item.addsOn) {
+            logger.info("Creating order add-on category:", addOnCategoryItem.category_name);
+            const addOnCategory = await createOrderAddsOnCategoryService(client, {
+              orderItemId: orderItem.order_item_id,
+              categoryName: addOnCategoryItem.category_name,
+              isRequired: addOnCategoryItem.is_required || false,
+              maxSelectable: addOnCategoryItem.max_selectable || 0,
+            });
+            
+            if (!addOnCategory) {
+              throw new Error(`Failed to create order add-on category: ${addOnCategoryItem.category_name}`);
             }
-          );
-        })
-      );
+            
+            for (const addOnItemItem of addOnCategoryItem.items) {
+              logger.info("Creating order add-on item:", addOnItemItem.adds_on_name);
+              const addOnItem = await createOrderAddsOnItemService(client, {
+                categoryId: addOnCategory.category_id,
+                addsOnName: addOnItemItem.adds_on_name,
+                addsOnPrice: addOnItemItem.adds_on_price,
+              });
+              
+              if (!addOnItem) {
+                throw new Error(`Failed to create order add-on item: ${addOnItemItem.adds_on_name}`);
+              }
+            }
+          }
+        }
+      }
 
       logger.info("Order items created successfully");
       logger.info("Resetting cart");
