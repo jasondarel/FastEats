@@ -48,6 +48,31 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     return addonNames.length > 0 ? addonNames.join(", ") : "";
   };
 
+  const getItemAddonPrice = (item) => {
+    if (!item.addons || item.addons.length === 0) return 0;
+    
+    let itemAddonTotal = 0;
+    item.addons.forEach(category => {
+      if (category.addons && category.addons.length > 0) {
+        category.addons.forEach(addon => {
+          const price = parseFloat(addon.addon_price) || 0;
+          const quantity = addon.quantity || 1;
+          itemAddonTotal += price * quantity;
+        });
+      }
+    });
+    
+    return itemAddonTotal;
+  };
+
+  const getItemTotalPrice = (item, menu) => {
+    const menuPrice = menu?.menu_price || 0;
+    const quantity = item.item_quantity || 1;
+    const addonPrice = getItemAddonPrice(item);
+    
+    return (menuPrice * quantity) + addonPrice;
+  };
+
   useEffect(() => {
     const fetchMenuDetails = async () => {
       const details = {};
@@ -198,11 +223,16 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                           </p>
                         )}
                       </div>
-                      {menu?.menu_price && (
-                        <p className="text-yellow-600 font-medium">
-                          {formatPrice(menu.menu_price)}
-                        </p>
-                      )}
+                      <div className="text-right">
+                        {menu?.menu_price && (
+                          <>
+                            <p className="text-yellow-600 font-medium">
+                              {formatPrice(getItemTotalPrice(item, menu))}
+                            </p>
+
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
