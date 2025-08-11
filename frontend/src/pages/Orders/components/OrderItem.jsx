@@ -14,6 +14,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const navigate = useNavigate();
   const [menuDetails, setMenuDetails] = useState({});
   const [loading, setLoading] = useState(true);
+  const [orderWithAddons, setOrderWithAddons] = useState(null);
   const token = localStorage.getItem("token");
   const [addonPrice, setAddonPrice] = useState(0);
 
@@ -28,8 +29,23 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
       return total;
     }, 0);
 
-    
     return menuTotal + addonPrice;
+  };
+
+  const getItemAddonNames = (item) => {
+    if (!item.addons || item.addons.length === 0) return "";
+    
+    const addonNames = [];
+    item.addons.forEach(category => {
+      if (category.addons && category.addons.length > 0) {
+        category.addons.forEach(addon => {
+          const quantity = addon.quantity > 1 ? ` (${addon.quantity}x)` : "";
+          addonNames.push(`${addon.addon_name}${quantity}`);
+        });
+      }
+    });
+    
+    return addonNames.length > 0 ? addonNames.join(", ") : "";
   };
 
   useEffect(() => {
@@ -45,6 +61,9 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         }
       );
       const orderItems = res.data.order || {};
+      console.log("Fetched order items:", orderItems);
+
+      setOrderWithAddons(orderItems);
 
       if (orderItems.addon_price !== undefined) {
         order.addon_price = orderItems.addon_price;
@@ -59,12 +78,9 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
       }
 
       setAddonPrice(orderItems.addon_price || 0);
-
-
       setMenuDetails(details);
       setLoading(false);
     };
-
 
     fetchMenuDetails();
   }, [order.items, token, order.order_id]);
@@ -106,15 +122,6 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     if (!loading && order.items && order.items.length > 0) {
       const firstItem = order.items[0];
       const menu = menuDetails[firstItem?.menu_id];
-      if (menu && menu.menu_image) {
-        console.log("Menu image path example:", menu.menu_image);
-        console.log(
-          "Menu image constructed URL:",
-          menu.menu_image.startsWith("http")
-            ? menu.menu_image
-            : `${API_URL}/restaurant/uploads/menu/${menu.menu_image}`
-        );
-      }
     }
   }, [loading, menuDetails, order.items]);
 
@@ -152,9 +159,12 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
           </div>
         ) : (
           <>
-            {order.items?.slice(0, 2).map((item, idx) => {
+            {orderWithAddons?.items?.slice(0, 2).map((item, idx) => {
               const menu = menuDetails[item.menu_id];
+              const addonNames = getItemAddonNames(item);
               console.log("Menu details for item:", menu);
+              console.log("Addon names for item:", addonNames);
+              
               return (
                 <div className="flex" key={item.order_item_id || idx}>
                   <img
@@ -178,9 +188,16 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                       {menu?.menu_name || `Menu #${item.menu_id}`}
                     </h2>
                     <div className="flex justify-between">
-                      <p className="text-slate-600">
-                        {item.item_quantity} Item
-                      </p>
+                      <div>
+                        <p className="text-slate-600">
+                          {item.item_quantity} Item
+                        </p>
+                        {addonNames && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {addonNames}
+                          </p>
+                        )}
+                      </div>
                       {menu?.menu_price && (
                         <p className="text-yellow-600 font-medium">
                           {formatPrice(menu.menu_price)}
@@ -191,9 +208,9 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                 </div>
               );
             })}
-            {order.items?.length > 2 && (
+            {orderWithAddons?.items?.length > 2 && (
               <p className="text-sm text-gray-500">
-                +{order.items.length - 2} more item(s)
+                +{orderWithAddons.items.length - 2} more item(s)
               </p>
             )}
           </>
