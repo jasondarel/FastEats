@@ -16,12 +16,16 @@ const OrderSummary = ({ order }) => {
     return total;
   };
 
-  const calculateCartAddOnPrice = (items) => {
-    if (!items || !Array.isArray(items)) return 0;
+  const calculateCartAddOnPrice = (items, orderAddOns) => {
+    if (!items || !Array.isArray(items) || !orderAddOns || !Array.isArray(orderAddOns)) return 0;
     
     let total = 0;
     items.forEach(item => {
-      total += calculateAddOnPrice(item.addsOn);
+      const itemAddOns = orderAddOns.filter(addon => 
+        addon.order_item_id === (item.id || item.order_item_id)
+      );
+      
+      total += calculateAddOnPrice(itemAddOns);
     });
     return total;
   };
@@ -40,7 +44,7 @@ const OrderSummary = ({ order }) => {
         (sum, item) => sum + parseFloat(item.menu_price) * item.item_quantity,
         0
       );
-      const addOnTotal = calculateCartAddOnPrice(order.items);
+      const addOnTotal = calculateCartAddOnPrice(order.items, order.addsOn);
       return {
         menuTotal,
         addOnTotal,

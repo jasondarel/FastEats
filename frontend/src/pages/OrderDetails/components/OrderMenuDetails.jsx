@@ -5,6 +5,10 @@ import { API_URL } from "../../../config/api";
 import OrderAddOns from "./OrderAddOns";
 
 const OrderMenuDetails = ({ order }) => {
+  console.log("OrderMenuDetails order:", order);
+  console.log("OrderMenuDetails order.addsOn:", order.addsOn);
+  console.log("OrderMenuDetails order.items:", order.items);
+  
   if (order.order_type === "CHECKOUT") {
     return (
       <>
@@ -63,71 +67,77 @@ const OrderMenuDetails = ({ order }) => {
   } else if (order.order_type === "CART") {
     return (
       <div className="space-y-6">
-        {order.items.map((item, index) => (
-          <div
-            key={index}
-            className="bg-gradient-to-r from-amber-50 to-white p-6 rounded-lg"
-          >
-            {item.menu_image && (
-              <div className="mb-6 p-4 bg-amber-50 rounded-lg">
-                <img
-                  src={`${API_URL}/restaurant/uploads/menu/${item.menu_image}`}
-                  alt={item.menu_name}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                <span className="text-amber-700 font-medium">Menu Name</span>
-                <span className="text-amber-900">{item.menu_name}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                <span className="text-amber-700 font-medium">
-                  Menu Category
-                </span>
-                <span className="text-amber-900">
-                  {item.menu_category}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                <span className="text-amber-700 font-medium">
-                  Price per Item
-                </span>
-                <span className="text-amber-900">
-                  Rp {parseFloat(item.menu_price).toLocaleString("id-ID")}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                <span className="text-amber-700 font-medium">Quantity</span>
-                <span className="text-amber-900">{item.item_quantity}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-amber-100">
-                <span className="text-amber-700 font-medium">Total Price</span>
-                <span className="text-amber-900">
-                  Rp{" "}
-                  {(
-                    parseFloat(item.menu_price) * item.item_quantity
-                  ).toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            {item.addsOn && (
-              <OrderAddOns addOns={item.addsOn} />
-            )}
-
-            {item.menu_description && (
-              <div className="mt-8 p-4 bg-amber-50 rounded-lg">
-                <div className="text-sm text-amber-700 font-medium mb-2">
-                  Menu Description
+        {order.items.map((item, index) => {
+          const itemAddOns = order.addsOn?.filter(addon => 
+            addon.order_item_id === (item.id || item.order_item_id)
+          ) || [];
+          
+          return (
+            <div
+              key={index}
+              className="bg-gradient-to-r from-amber-50 to-white p-6 rounded-lg"
+            >
+              {item.menu_image && (
+                <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+                  <img
+                    src={`${API_URL}/restaurant/uploads/menu/${item.menu_image}`}
+                    alt={item.menu_name}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
                 </div>
-                <p className="text-amber-900">{item.menu_description}</p>
+              )}
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">Menu Name</span>
+                  <span className="text-amber-900">{item.menu_name}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">
+                    Menu Category
+                  </span>
+                  <span className="text-amber-900">
+                    {item.menu_category}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">
+                    Price per Item
+                  </span>
+                  <span className="text-amber-900">
+                    Rp {parseFloat(item.menu_price).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">Quantity</span>
+                  <span className="text-amber-900">{item.item_quantity}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-amber-100">
+                  <span className="text-amber-700 font-medium">Total Price</span>
+                  <span className="text-amber-900">
+                    Rp{" "}
+                    {(
+                      parseFloat(item.menu_price) * item.item_quantity
+                    ).toLocaleString("id-ID")}
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {itemAddOns.length > 0 && (
+                <OrderAddOns addOns={itemAddOns} />
+              )}
+
+              {item.menu_description && (
+                <div className="mt-8 p-4 bg-amber-50 rounded-lg">
+                  <div className="text-sm text-amber-700 font-medium mb-2">
+                    Menu Description
+                  </div>
+                  <p className="text-amber-900">{item.menu_description}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }
