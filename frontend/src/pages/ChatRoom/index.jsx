@@ -102,7 +102,7 @@ const ChatRoom = () => {
         id: clientTempId,
         clientTempId: clientTempId,
         sender: "currentUser",
-        message: "", // Empty message for order details
+        message: "", 
         timestamp: new Date().toISOString(),
         type: "order_details",
         orderDetails: orderDetailsToAttach,
@@ -148,7 +148,7 @@ const ChatRoom = () => {
             id:
               result.message._id || result.message.id || `server-${Date.now()}`,
             sender: "currentUser",
-            message: result.message.text || "", // Empty message
+            message: result.message.text || "",
             timestamp: result.message.createdAt || new Date().toISOString(),
             type: "order_details",
             orderDetails: result.message.orderDetails || orderDetailsToAttach,
@@ -626,13 +626,11 @@ const ChatRoom = () => {
           timestamp: new Date().toISOString(),
         };
 
-        // Ensure image URL is included in socket message for real-time display
         if (imageUrl) {
           socketMessage.imageUrl = imageUrl;
           socketMessage.attachments = { url: imageUrl };
         }
 
-        // Ensure GIF data is properly structured for socket
         if (gifData) {
           socketMessage.gifData = gifData;
           socketMessage.gifUrl = gifData.url;
@@ -699,68 +697,88 @@ const ChatRoom = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+useEffect(() => {
+  const handleNewMessage = (messageData) => {
+    console.log("Received new message from socket:", messageData);
 
-  useEffect(() => {
-    const handleNewMessage = (messageData) => {
-      console.log("Received new message from socket:", messageData);
-
-      let messageType = messageData.messageType || messageData.type || "text";
-      let imageUrl = null;
-      let gifUrl = null;
-      let gifTitle = null;
-
-      if (messageType === "image" || messageData.imageUrl) {
-        imageUrl = messageData.attachments?.url || messageData.imageUrl || null;
-        messageType = "image";
-      }
-
-      if (messageType === "gif" || messageData.gifData || messageData.gifUrl) {
-        gifUrl = messageData.gifData?.url || messageData.gifUrl || null;
-        gifTitle = messageData.gifData?.title || messageData.gifTitle || null;
-        messageType = "gif";
-      }
-
-      const transformedMessage = {
-        id: messageData._id || messageData.id || `socket-${Date.now()}`,
-        sender: determineMessageSender(messageData.sender),
-        message: messageData.text || messageData.message || "",
-        timestamp:
-          messageData.createdAt ||
-          messageData.timestamp ||
-          new Date().toISOString(),
-        orderDetails: messageData.orderDetails || null,
-        type: messageType,
-        imageUrl: imageUrl,
-        gifUrl: gifUrl,
-        gifTitle: gifTitle,
-        gifData: messageData.gifData || (gifUrl ? { url: gifUrl, title: gifTitle } : null),
-        clientTempId: messageData.clientTempId,
-      };
-      console.log("Transformed message:", transformedMessage);
-
-      setMessages((prevMessages) => {
-        let filtered = prevMessages;
-        console.log("Filtering previous messages:", filtered);
-        if (transformedMessage.clientTempId) {
-          filtered = prevMessages.filter(
-            (msg) => msg.clientTempId !== transformedMessage.clientTempId
-          );
+    const senderInfo = messageData.sender;
+    let isFromCurrentUser = false;
+    
+    if (senderInfo && currentUserId && currentUserRole) {
+      if (typeof senderInfo === 'object') {
+        const senderRole = senderInfo.type || senderInfo.role;
+        const senderId = senderInfo.id || senderInfo.userId;
+        
+        if (senderId === currentUserId) {
+          isFromCurrentUser = true;
         }
+        else if (currentUserRole === "seller" && ["seller", "restaurant"].includes(senderRole?.toLowerCase())) {
+          isFromCurrentUser = true;
+        } else if ((currentUserRole === "user" || currentUserRole === "customer") && ["user", "customer"].includes(senderRole?.toLowerCase())) {
+          isFromCurrentUser = true;
+        }
+      }
+    }
 
-        const exists = filtered.some((msg) => {
-          return (
-            msg.id === transformedMessage.id ||
-            (msg.message === transformedMessage.message &&
-              msg.imageUrl === transformedMessage.imageUrl &&
-              msg.gifUrl === transformedMessage.gifUrl &&
-              Math.abs(
-                new Date(msg.timestamp) - new Date(transformedMessage.timestamp)
-              ) < 5000)
-          );
-        });
-        console.log("Checking if message exists:", exists);
-        if (exists) return filtered;
-        return [...filtered, transformedMessage];
+    if (isFromCurrentUser) {
+      console.log("Skipping own message from socket to prevent duplicate");
+      return;
+    }
+
+    let messageType = messageData.messageType || messageData.type || "text";
+    let imageUrl = null;
+    let gifUrl = null;
+    let gifTitle = null;
+
+    if (messageType === "image" || messageData.imageUrl) {
+      imageUrl = messageData.attachments?.url || messageData.imageUrl || null;
+      messageType = "image";
+    }
+
+    if (messageType === "gif" || messageData.gifData || messageData.gifUrl) {
+      gifUrl = messageData.gifData?.url || messageData.gifUrl || null;
+      gifTitle = messageData.gifData?.title || messageData.gifTitle || null;
+      messageType = "gif";
+    }
+
+    const transformedMessage = {
+      id: messageData._id || messageData.id || `socket-${Date.now()}`,
+      sender: determineMessageSender(messageData.sender),
+      message: messageData.text || messageData.message || "",
+      timestamp:
+        messageData.createdAt ||
+        messageData.timestamp ||
+        new Date().toISOString(),
+      orderDetails: messageData.orderDetails || null,
+      type: messageType,
+      imageUrl: imageUrl,
+      gifUrl: gifUrl,
+      gifTitle: gifTitle,
+      gifData: messageData.gifData || (gifUrl ? { url: gifUrl, title: gifTitle } : null),
+      clientTempId: messageData.clientTempId,
+    };
+    
+    console.log("Transformed message from other user:", transformedMessage);
+
+    setMessages((prevMessages) => {
+      const exists = prevMessages.some((msg) => {
+        return (
+          msg.id === transformedMessage.id ||
+          (msg.message === transformedMessage.message &&
+            msg.imageUrl === transformedMessage.imageUrl &&
+            msg.gifUrl === transformedMessage.gifUrl &&
+            Math.abs(
+              new Date(msg.timestamp) - new Date(transformedMessage.timestamp)
+            ) < 5000)
+        );
+      });
+      
+      if (exists) {
+        console.log("Message already exists, skipping");
+        return prevMessages;
+      }
+        
+        return [...prevMessages, transformedMessage];
       });
     };
 
@@ -798,7 +816,6 @@ const ChatRoom = () => {
 
   const groupedMessages = messages
     .filter((message) => {
-      // Always include order_details messages regardless of text content
       if (message.type === "order_details") {
         return !!message.orderDetails;
       }
