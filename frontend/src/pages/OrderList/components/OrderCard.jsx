@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { ChevronRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FaShoppingBag } from "react-icons/fa";
+import { FaShoppingBag, FaPlus } from "react-icons/fa";
 import StatusBadge from "../../../components/StatusBadge";
 
 const OrderCard = ({ order }) => {
@@ -28,19 +28,22 @@ const OrderCard = ({ order }) => {
     }).format(price);
   };
 
-  let itemCount = 0;
-  let totalPrice = 0;
+  const itemCount = order.items?.reduce(
+    (total, item) => total + (item.item_quantity || 0),
+    0
+  ) || 0;
 
-  itemCount = order.items.reduce(
-      (total, item) => total + (item.item_quantity || 0),
-      0
-    );
-
-  totalPrice = order.items.reduce((total, item) => {
+  const itemsTotal = order.items?.reduce((total, item) => {
     const menuPrice = parseFloat(item.menu_price || 0);
     const quantity = item.item_quantity || 0;
     return total + menuPrice * quantity;
-  }, 0);
+  }, 0) || 0;
+
+  const addonPrice = parseFloat(order.addon_price || 0);
+  
+  const totalPrice = itemsTotal + addonPrice;
+
+  const hasAddons = addonPrice > 0 || (order.total_addons && order.total_addons > 0);
 
   const status = order.status || "Pending";
   const isCompleted = status === "Completed" || status === "Cancelled";
@@ -80,12 +83,11 @@ const OrderCard = ({ order }) => {
       <div className="p-4 flex">
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
               <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
                 {itemCount} item{itemCount !== 1 ? "s" : ""}
               </span>
             </div>
-            <ChevronRightIcon className="h-5 w-5 text-gray-400" />
           </div>
 
           <div className="flex justify-between items-center">

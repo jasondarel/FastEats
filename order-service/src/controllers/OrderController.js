@@ -1758,16 +1758,79 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
 
     const ordersWithDetails = await Promise.all(
       sellerOrders.map(async (order) => {
-        let items;
-        items = await getOrderItemsByOrderIdService(order.order_id);
-        if (!items || items.length === 0) {
-          logger.warn(`No items found for order ${order.order_id}`);
-          return {
-            ...order,
-            error: "No items found for this order",
-          };
-        }
         try {
+          // Get order items
+          let items = await getOrderItemsByOrderIdService(order.order_id);
+          if (!items || items.length === 0) {
+            logger.warn(`No items found for order ${order.order_id}`);
+            return {
+              ...order,
+              error: "No items found for this order",
+            };
+          }
+
+          // Process addons for each order item
+          let totalAddonPrice = 0;
+          let allAddons = []; // Array to store all addon details
+          
+          if (items && items.length > 0) {
+            for (const item of items) {
+              logger.info(`Processing addons for item: ${item.order_item_id}`);
+              
+              const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
+              logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
+              
+              // Initialize addons array for this item
+              item.addons = [];
+              
+              if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
+                for (const category of orderItemAddsOnCategory) {
+                  const addOnItems = await getOrderAddsOnItemService(category.category_id);
+                  logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
+                  
+                  if (addOnItems && addOnItems.length > 0) {
+                    const categoryAddons = addOnItems.map(addon => {
+                      const price = parseFloat(addon.adds_on_price) || 0;
+                      const quantity = addon.quantity || 1;
+                      const itemTotal = price * quantity;
+                      
+                      logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
+                      
+                      const addonDetail = {
+                        addon_id: addon.adds_on_id,
+                        addon_name: addon.adds_on_name,
+                        addon_price: price,
+                        quantity: quantity,
+                        total_price: itemTotal,
+                        category_id: category.category_id,
+                        category_name: category.category_name,
+                        order_item_id: item.order_item_id
+                      };
+                      
+                      totalAddonPrice += itemTotal;
+                      return addonDetail;
+                    });
+                    
+                    // Add category addons to item
+                    item.addons.push({
+                      category_id: category.category_id,
+                      category_name: category.category_name,
+                      addons: categoryAddons
+                    });
+                    
+                    // Add to global addons array
+                    allAddons.push(...categoryAddons);
+                    
+                    const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
+                    logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
+                  }
+                }
+              }
+            }
+          }
+          
+          logger.info(`Final total addon price for order ${order.order_id}: ${totalAddonPrice}`);
+
           const user = await axios.get(
             `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
             {
@@ -1777,22 +1840,26 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
               },
             }
           );
+
           return {
             ...order,
             user: user.data.user,
             items: items,
+            addon_price: totalAddonPrice,
+            total_addons: allAddons.length,
+            addon_summary: allAddons
           };
         } catch (err) {
           logger.error(`Error processing order ${order.order_id}:`, err.message);
           return {
             ...order,
-            error: "Failed to fetch user info for this order",
+            error: "Failed to fetch complete order details",
           };
         }
       })
     );
     
-    logger.info("Orders fetched successfully");
+    logger.info("Orders with addons fetched successfully");
     return responseSuccess(
       res,
       200,

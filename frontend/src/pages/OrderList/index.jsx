@@ -35,20 +35,42 @@ const OrderList = () => {
       ],
     },
   ];
-
-  // --- SOCKET.IO SETUP ---
+  
   const socketRef = useRef(null);
+  const calculateOrderTotal = (order) => {
+    let itemsTotal = 0;
+
+    if (order.order_type === "CART" && order.items) {
+      itemsTotal = order.items.reduce((total, item) => {
+        const menu = order.menu?.find((m) => m.menu_id === item.menu_id);
+        return (
+          total +
+          parseFloat(menu?.menu_price || 0) * (item.item_quantity || 0)
+        );
+      }, 0);
+    } else if (order.order_type === "CHECKOUT") {
+      const menuItem = order.menu?.[0];
+      itemsTotal =
+        parseFloat(menuItem?.menu_price || 0) * (order.item_quantity || 1);
+    } else if (order.items) {
+      itemsTotal = order.items.reduce((total, item) => {
+        const menuPrice = parseFloat(item.menu_price || 0);
+        const quantity = item.item_quantity || 0;
+        return total + menuPrice * quantity;
+      }, 0);
+    }
+
+    const addonPrice = parseFloat(order.addon_price || 0);
+    return itemsTotal + addonPrice;
+  };
 
   useEffect(() => {
     if (!token) return;
-
-    // Initialize socket connection
+    
     socketRef.current = io(ORDER_URL, {
       transports: ["websocket"],
-      // If you need authentication, add: auth: { token }
     });
 
-    // Listen for order updates
     socketRef.current.on("orderUpdated", (updatedOrder) => {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -59,7 +81,6 @@ const OrderList = () => {
       );
     });
 
-    // Listen for order completions (if your backend emits this event)
     socketRef.current.on("orderCompleted", (completedOrder) => {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -70,17 +91,14 @@ const OrderList = () => {
       );
     });
 
-    // Listen for creation of new orders
     socketRef.current.on("orderCreated", (newOrder) => {
       setOrders((prevOrders) => [newOrder, ...prevOrders]);
     });
 
-    // Optionally handle socket errors
     socketRef.current.on("connect_error", (err) => {
       console.error("Socket connection error:", err);
     });
 
-    // Cleanup on unmount
     return () => {
       socketRef.current.disconnect();
     };
@@ -115,7 +133,6 @@ const OrderList = () => {
 
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -141,36 +158,8 @@ const OrderList = () => {
       });
     } else if (sortBy === "price") {
       result.sort((a, b) => {
-        let priceA = 0;
-        if (a.order_type === "CART" && a.items) {
-          priceA = a.items.reduce((total, item) => {
-            const menu = a.menu?.find((m) => m.menu_id === item.menu_id);
-            return (
-              total +
-              parseFloat(menu?.menu_price || 0) * (item.item_quantity || 0)
-            );
-          }, 0);
-        } else if (a.order_type === "CHECKOUT") {
-          const menuItem = a.menu?.[0];
-          priceA =
-            parseFloat(menuItem?.menu_price || 0) * (a.item_quantity || 1);
-        }
-
-        let priceB = 0;
-        if (b.order_type === "CART" && b.items) {
-          priceB = b.items.reduce((total, item) => {
-            const menu = b.menu?.find((m) => m.menu_id === item.menu_id);
-            return (
-              total +
-              parseFloat(menu?.menu_price || 0) * (item.item_quantity || 0)
-            );
-          }, 0);
-        } else if (b.order_type === "CHECKOUT") {
-          const menuItem = b.menu?.[0];
-          priceB =
-            parseFloat(menuItem?.menu_price || 0) * (b.item_quantity || 1);
-        }
-
+        const priceA = calculateOrderTotal(a);
+        const priceB = calculateOrderTotal(b);
         return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
       });
     }
