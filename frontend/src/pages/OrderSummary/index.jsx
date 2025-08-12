@@ -124,6 +124,18 @@ const OrderSummary = () => {
     })}`;
   };
 
+  const calculateTotalWithAddons = (items, addonPrice = 0) => {
+    if (!Array.isArray(items)) return 0;
+    
+    const itemsTotal = items.reduce((total, item) => {
+      const menuPrice = parseFloat(item.menu_price || 0);
+      const quantity = item.item_quantity || 1;
+      return total + (menuPrice * quantity);
+    }, 0);
+    
+    return itemsTotal + parseFloat(addonPrice);
+  };
+
   const handleChatWithCustomer = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -150,21 +162,18 @@ const OrderSummary = () => {
                 total + (item.item_quantity ||  1),
               0
             );
-            totalPrice = orderData.items.reduce((total, item) => {
-              const menuPrice = parseFloat(item.menu_price || 0);
-              const quantity = item.item_quantity || item.quantity || 1;
-              return total + menuPrice * quantity;
-            }, 0);
+            totalPrice = calculateTotalWithAddons(orderData.items, orderData.addon_price);
+            
             navigate(`/chat/${existingChat._id}`, {
               state: {
                 customerName:
-                  order.user?.name || existingChat.user?.name || "Customer",
+                  orderData.user?.name || existingChat.user?.name || "Customer",
                 customerImage:
-                  order.user?.profile_photo ||
+                  orderData.user?.profile_photo ||
                   existingChat.user?.profile_photo ||
                   null,
-                orderId: order.order_id || order_id,
-                orderType: order.order_type || "CHECKOUT",
+                orderId: orderData.order_id || order_id,
+                orderType: orderData.order_type || "CHECKOUT",
                 totalPrice,
                 itemCount,
               },
@@ -182,29 +191,22 @@ const OrderSummary = () => {
         console.log("Chat created successfully, navigating to:", chatId);
 
         const itemCount =
-          order.items?.reduce(
+          orderData.items?.reduce(
             (total, item) => total + (item.item_quantity || 0),
             0
           ) ||
-          order.item_quantity ||
+          orderData.item_quantity ||
           1;
 
-        const totalPrice =
-          order.items?.reduce((total, item) => {
-            const menuPrice = parseFloat(
-              item.menu_price || item.menu?.menu_price || 0
-            );
-            const quantity = item.item_quantity || 0;
-            return total + menuPrice * quantity;
-          }, 0) ||
-          parseFloat(order.menu_price || 0) * (order.item_quantity || 1);
+        const totalPrice = calculateTotalWithAddons(orderData.items, orderData.addon_price) ||
+          parseFloat(orderData.menu_price || 0) * (orderData.item_quantity || 1);
 
         navigate(`/chat/${chatId}`, {
           state: {
-            customerName: order.user?.name || "Customer",
-            customerImage: order.user?.profile_photo || null,
-            orderId: order.order_id || order_id,
-            orderType: order.order_type || "CHECKOUT",
+            customerName: orderData.user?.name || "Customer",
+            customerImage: orderData.user?.profile_photo || null,
+            orderId: orderData.order_id || order_id,
+            orderType: orderData.order_type || "CHECKOUT",
             totalPrice,
             itemCount,
           },

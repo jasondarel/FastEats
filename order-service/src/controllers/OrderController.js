@@ -401,7 +401,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
     }
 
     let totalAddonPrice = 0;
-    let allAddons = []; // Array to store all addon details
+    let allAddons = []; 
     
     if (order.items && order.items.length > 0) {
       for (const item of order.items) {
@@ -410,7 +410,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
         const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
         logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
         
-        // Initialize addons array for this item
+        
         item.addons = [];
         
         if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
@@ -441,14 +441,12 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
                 return addonDetail;
               });
               
-              // Add category addons to item
               item.addons.push({
                 category_id: category.category_id,
                 category_name: category.category_name,
                 addons: categoryAddons
               });
               
-              // Add to global addons array
               allAddons.push(...categoryAddons);
               
               const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
@@ -1978,6 +1976,64 @@ export const getRestaurantOrderController = async (req, res) => {
       logger.warn("No items found for this order");
       return responseError(res, 404, "No items found for this order");
     }
+    
+    let totalAddonPrice = 0;
+    let allAddons = []; 
+    
+    if (orderItems && orderItems.length > 0) {
+      for (const item of orderItems) {
+        logger.info(`Processing addons for item: ${item.order_item_id}`);
+        
+        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
+        logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
+        
+        item.addons = [];
+        
+        if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
+          for (const category of orderItemAddsOnCategory) {
+            const addOnItems = await getOrderAddsOnItemService(category.category_id);
+            logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
+            
+            if (addOnItems && addOnItems.length > 0) {
+              const categoryAddons = addOnItems.map(addon => {
+                const price = parseFloat(addon.adds_on_price) || 0;
+                const quantity = addon.quantity || 1;
+                const itemTotal = price * quantity;
+                
+                logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
+                
+                const addonDetail = {
+                  addon_id: addon.adds_on_id,
+                  addon_name: addon.adds_on_name,
+                  addon_price: price,
+                  quantity: quantity,
+                  total_price: itemTotal,
+                  category_id: category.category_id,
+                  category_name: category.category_name,
+                  order_item_id: item.order_item_id
+                };
+                
+                totalAddonPrice += itemTotal;
+                return addonDetail;
+              });
+              
+              item.addons.push({
+                category_id: category.category_id,
+                category_name: category.category_name,
+                addons: categoryAddons
+              });
+              
+              allAddons.push(...categoryAddons);
+              
+              const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
+              logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
+            }
+          }
+        }
+      }
+    }
+    
+    logger.info(`Final total addon price: ${totalAddonPrice}`);
 
     const userResponse = await axios.get(
       `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
@@ -2005,6 +2061,9 @@ export const getRestaurantOrderController = async (req, res) => {
       items: orderItems,
       user: userResponse.data.user,
       transaction,
+      addon_price: totalAddonPrice,
+      total_addons: allAddons.length,
+      addon_summary: allAddons
     };
 
     logger.info("Order fetched successfully");
