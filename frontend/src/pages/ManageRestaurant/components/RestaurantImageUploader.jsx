@@ -33,11 +33,11 @@ const RestaurantImageUploader = ({ imagePreview, onImageChange }) => {
               <img
                 src={imagePreview}
                 alt="Restaurant"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <label className="cursor-pointer bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition flex items-center">
-                  <FaCamera className="mr-2" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm flex items-center justify-center">
+                <label className="cursor-pointer bg-white/90 backdrop-blur-md text-gray-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center border border-white/20">
+                  <FaCamera className="mr-2 text-amber-600" />
                   Change Image
                   <input
                     type="file"
@@ -49,8 +49,8 @@ const RestaurantImageUploader = ({ imagePreview, onImageChange }) => {
               </div>
             </>
           ) : (
-            <label className="cursor-pointer text-gray-500 flex flex-col items-center">
-              <FaImage className="w-12 h-12 mb-2" />
+            <label className="cursor-pointer text-gray-500 flex flex-col items-center hover:text-gray-700 transition-colors duration-300">
+              <FaImage className="w-12 h-12 mb-2 transition-transform duration-300 hover:scale-110" />
               <span>Click to upload image</span>
               <input
                 type="file"
@@ -61,11 +61,12 @@ const RestaurantImageUploader = ({ imagePreview, onImageChange }) => {
             </label>
           )}
         </div>
-        <p className="text-sm text-gray-500 mt-2 text-center">
+      </div>
+       <p className="text-sm text-gray-500 mt-2 text-center">
           Recommended: 1200x800px, Max size: 5MB
         </p>
-      </div>
     </div>
+    
   );
 };
 
