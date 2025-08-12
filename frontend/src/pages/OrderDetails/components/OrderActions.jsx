@@ -9,6 +9,7 @@ const OrderActions = ({
   onPayment,
   onOrderAgain,
 }) => {
+  console.log("OrderActions Rendered", order);
   if (!order) return null;
 
   const calculateAddOnPrice = (addOns) => {
@@ -24,16 +25,7 @@ const OrderActions = ({
         });
       }
     });
-    return total;
-  };
-
-  const calculateCartAddOnPrice = (items) => {
-    if (!items || !Array.isArray(items)) return 0;
-    
-    let total = 0;
-    items.forEach(item => {
-      total += calculateAddOnPrice(item.addsOn);
-    });
+    console.log("Add-On Price:", total);
     return total;
   };
 
@@ -60,6 +52,7 @@ const OrderActions = ({
       const addOnPrice = calculateAddOnPrice(order.addsOn);
       total = menuPrice + addOnPrice;
     } else {
+      const addOnPrice = calculateAddOnPrice(order.addsOn);
       if (order && order.items && Array.isArray(order.items)) {
         order.items.forEach((item) => {
           if (item && item.menu_price && item.item_quantity) {
@@ -67,8 +60,8 @@ const OrderActions = ({
             total += price;
           }
         });
-        total += calculateCartAddOnPrice(order.items);
       }
+      total += addOnPrice || 0;
     }
     return total;
   };
