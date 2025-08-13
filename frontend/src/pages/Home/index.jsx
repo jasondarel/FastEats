@@ -28,9 +28,9 @@ const Home = () => {
   const navigate = useNavigate();
 
   const bannerImages = [
-    "/bannerMain.png",
-    "/banner1.png",
-    "/banner2.png",
+    "/bannerMain.jpeg",
+    "/banner1.jpeg",
+    "/banner2.jpeg",
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTatLiJAG6jse2XTu96VcidI8X5OYIvWzcenw&s",
   ];
 
