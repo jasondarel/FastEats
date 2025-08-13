@@ -388,7 +388,7 @@ export const getOrdersBySellerIdService = async (sellerId, status) => {
   if (status === "") {
     result = await pool.query(
       `SELECT * FROM orders o
-      WHERE o.seller_id = $1 AND o.status NOT IN ('Pending', 'Cancelled')`,
+      WHERE o.seller_id = $1 AND o.status NOT IN ('Waiting', 'Pending', 'Cancelled')`,
       [sellerId]
     );
   } else {
@@ -460,3 +460,109 @@ export const getAllOrderWithItemsByOrderIdService = async (orderId) => {
   const rawOrder = result.rows[0];
   return rawOrder;
 };
+
+export const getSellerSummaryService = async(sellerId) => {
+  const result = await pool.query(
+            `WITH base_orders_items AS (
+            SELECT 
+                o.order_id,
+                o.user_id,
+                o.item_quantity,
+                o.created_at,
+                oi.menu_category,
+                oi.menu_name
+            FROM public.orders o
+            JOIN public.order_items oi ON oi.order_id = o.order_id
+            WHERE o.seller_id = $1
+              AND o.status NOT IN ('Waiting', 'Pending', 'Cancelled')
+        ),
+        base_orders_tx AS (
+            SELECT 
+                o.order_id,
+                o.user_id,
+                o.item_quantity,
+                o.created_at,
+                t.transaction_net
+            FROM public.orders o
+            JOIN public.transactions t ON t.order_id = o.order_id
+            WHERE o.seller_id = $1
+              AND o.status NOT IN ('Waiting', 'Pending', 'Cancelled')
+        ),
+        user_orders AS (
+            SELECT 
+                user_id,
+                COUNT(order_id) AS total_orders,
+                MAX(item_quantity) AS max_quantity
+            FROM base_orders_items
+            GROUP BY user_id
+            ORDER BY total_orders DESC
+            LIMIT 1
+        ),
+        top_category AS (
+            SELECT 
+                menu_category,
+                COUNT(*) AS total_category_orders
+            FROM base_orders_items
+            GROUP BY menu_category
+            ORDER BY total_category_orders DESC
+            LIMIT 1
+        ),
+        avg_orders_per_day AS (
+            SELECT 
+                ROUND(AVG(daily_count), 2) AS avg_orders
+            FROM (
+                SELECT 
+                    DATE(created_at) AS order_date,
+                    COUNT(*) AS daily_count
+                FROM base_orders_items
+                GROUP BY DATE(created_at)
+            ) sub
+        ),
+        top_order_hour AS (
+            SELECT 
+              EXTRACT(HOUR FROM created_at) AS order_hour,
+                COUNT(*) AS total_orders_at_hour
+            FROM base_orders_items
+            GROUP BY order_hour
+            ORDER BY total_orders_at_hour DESC
+            LIMIT 1
+        ),
+        top_menu AS (
+            SELECT 
+                menu_name,
+                COUNT(*) AS total_menu_orders
+            FROM base_orders_items
+            GROUP BY menu_name
+            ORDER BY total_menu_orders DESC
+            LIMIT 1
+        ),
+        avg_obtain_revenue AS (
+            SELECT ROUND(AVG(transaction_net), 2) AS avg_revenue
+            FROM base_orders_tx
+        ),
+        highest_obtain_revenue AS (
+            SELECT MAX(transaction_net) AS highest_revenue
+            FROM base_orders_tx
+        )
+        SELECT 
+            uo.user_id AS highest_frequently_order_user,
+            uo.total_orders AS highest_frequently_order_user_total_orders,
+            uo.max_quantity AS highest_order_quantity,
+            tm.menu_name AS highest_frequently_order_menu_name,
+            tc.menu_category AS highest_frequently_order_menu_category,
+            aopd.avg_orders AS average_orders_per_day,
+            toh.order_hour AS most_popular_order_hour,
+            toh.total_orders_at_hour AS total_most_popular_order_hour,
+            aor.avg_revenue AS average_obtain_revenue,
+            hor.highest_revenue AS highest_obtain_revenue
+        FROM user_orders uo
+        CROSS JOIN top_category tc
+        CROSS JOIN avg_orders_per_day aopd
+        CROSS JOIN top_order_hour toh
+        CROSS JOIN top_menu tm
+        CROSS JOIN avg_obtain_revenue aor
+        CROSS JOIN highest_obtain_revenue hor;
+        `
+  , [sellerId]);
+  return result.rows[0];
+} 

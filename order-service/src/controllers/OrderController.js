@@ -1,6 +1,7 @@
 import envInit from "../config/envInit.js";
 envInit();
 import axios from "axios";
+import camelize from "camelize";
 import pool from "../config/dbInit.js";
 import {
   cancelOrderService,
@@ -42,6 +43,7 @@ import {
   createCartAddsOnItemService,
   getCartAddsOnCategoryService,
   getCartAddsOnItemService,
+  getSellerSummaryService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -2515,6 +2517,34 @@ export const getTTLOrderController = async (req, res) => {
     );
   } catch(err) {
     logger.error("Error fetching TTL for order:", err);
+    return responseError(res, 500, "Internal server error");
+  }
+}
+
+export const getSellerSummaryController = async (req, res) => {
+  logger.info("GET SELLER SUMMARY CONTROLLER");
+  const { userId, role } = req.user;
+  if (role !== "seller") {
+    logger.warn("Unauthorized access attempt by user", { userId });
+    return responseError(res, 403, "You are not authorized to view this summary");
+  }
+
+  try {
+    const orders = camelize(await getSellerSummaryService(userId));
+    if (!orders || orders.length === 0) {
+      logger.warn("No orders found for seller", { userId });
+      return responseError(res, 404, "No orders found for this seller");
+    }
+    const userData = await getUserInformation(
+        GLOBAL_SERVICE_URL,
+        parseInt(orders.highestFrequentlyOrderUser),
+        internalAPIKey,
+        `Owner with ID ${orders.highestFrequentlyOrderUser} not found`
+      )
+    orders.highestFrequentlyOrderUser = userData.user;
+    return responseSuccess(res, 200, "Seller summary fetched successfully", "summary", orders );
+  } catch (error) {
+    logger.error("Error fetching seller summary:", err);
     return responseError(res, 500, "Internal server error");
   }
 }

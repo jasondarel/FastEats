@@ -26,7 +26,8 @@ import {
   getOrderWithItemsByOrderIdController,
   deliverOrderController,
   updateCartItemQuantityController,
-  getTTLOrderController
+  getTTLOrderController,
+  getSellerSummaryController
 } from "../controllers/OrderController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -87,5 +88,6 @@ router.get(
   getOrderWithItemsByOrderIdController
 );
 router.get("/ttl-order/:order_id", authMiddleware, getTTLOrderController);
+router.get("/seller/summary", authMiddleware, getSellerSummaryController);
 
 export default router;
