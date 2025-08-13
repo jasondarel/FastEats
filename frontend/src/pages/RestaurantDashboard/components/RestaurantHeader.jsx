@@ -29,7 +29,7 @@ const RestaurantHeader = ({ restaurantInfo }) => {
         <h1 className="text-3xl font-bold text-amber-900 mb-2">
           {restaurantInfo.name}
         </h1>
-
+{/* 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
             <p className="text-sm text-amber-600 font-medium">Total Orders</p>
@@ -51,7 +51,7 @@ const RestaurantHeader = ({ restaurantInfo }) => {
               {restaurantInfo.totalRevenue}
             </p>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex space-x-4 mt-6">
           <button

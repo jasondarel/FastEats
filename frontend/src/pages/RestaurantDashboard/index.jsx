@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import RestaurantHeader from "./components/RestaurantHeader";
 import DashboardCharts from "./components/DashboardCharts";
+import SellerSummaryCards from "./components/SellerSummaryCards";
 import Sidebar from "../../components/Sidebar";
 import LoadingState from "../../components/LoadingState";
-import { fetchRestaurantInfo, fetchOrderLists } from "./services/apiService";
+import { fetchRestaurantInfo, fetchOrderLists, fetchSellerSummary } from "./services/apiService";
 import {
   Clock,
   CheckCircle,
@@ -13,6 +14,7 @@ import {
   ShoppingBag,
   Star,
   Calendar,
+  TrendingUp,
 } from "lucide-react";
 import io from "socket.io-client";
 import { ORDER_URL } from "../../config/api";
@@ -20,6 +22,7 @@ import DashboardBanner from "./components/DashboardBanner";
 
 const RestaurantDashboard = () => {
   const [orders, setOrders] = useState([]);
+  const [sellerSummary, setSellerSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantImage, setRestaurantImage] = useState(null);
@@ -31,10 +34,8 @@ const RestaurantDashboard = () => {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // Initialize socket connection only once
     const socket = io(ORDER_URL, {
       transports: ["websocket"],
-      // If you need to send the token for auth, use: auth: { token }
     });
     socketRef.current = socket;
 
@@ -49,6 +50,13 @@ const RestaurantDashboard = () => {
 
         const orderData = await fetchOrderLists(token);
         setOrders(orderData?.orders || []);
+
+        try {
+          const summaryData = await fetchSellerSummary(token);
+          setSellerSummary(summaryData?.summary || null);
+        } catch (summaryError) {
+          console.warn("Could not load seller summary:", summaryError);
+        }
       } catch (error) {
         setError(error.message || "Failed to load restaurant information");
         setOrders([]);
@@ -59,7 +67,6 @@ const RestaurantDashboard = () => {
 
     loadData();
 
-    // Listen to socket events
     socket.on("orderCompleted", (updatedOrder) => {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -70,14 +77,8 @@ const RestaurantDashboard = () => {
       );
     });
 
-    // Optional: Listen to other events like new orders, etc.
-    // socket.on("newOrder", (newOrder) => {
-    //   setOrders((prevOrders) => [newOrder, ...prevOrders]);
-    // });
-
     return () => {
       socket.off("orderCompleted");
-      // socket.off("newOrder");
       socket.disconnect();
     };
   }, [token]);
@@ -97,12 +98,10 @@ const RestaurantDashboard = () => {
     let successfulOrderCount = 0;
 
     orders.forEach((order) => {
-      // Define what statuses count as "successful" for revenue
       const successfulStatuses = ["completed"];
       const orderStatus = order.status?.toLowerCase() || "";
       const isSuccessfulOrder = successfulStatuses.includes(orderStatus);
 
-      // Count successful orders
       if (isSuccessfulOrder) {
         successfulOrderCount++;
       }
@@ -112,7 +111,6 @@ const RestaurantDashboard = () => {
           const quantity = item.item_quantity || 0;
           totalOrderQuantity += quantity;
 
-          // Only add to revenue if order is successful
           if (isSuccessfulOrder) {
             const menuItem =
               order.menu && Array.isArray(order.menu) && order.menu[index];
@@ -163,14 +161,12 @@ const RestaurantDashboard = () => {
         ? (totalRevenue / summaryInfo.successfulOrderCount).toFixed(2)
         : "0.00";
 
-    // Sort orders by created_at date in descending order (most recent first)
     const sortedOrders = [...orders].sort((a, b) => {
       const dateA = new Date(a.created_at);
       const dateB = new Date(b.created_at);
-      return dateB.getTime() - dateA.getTime(); // Most recent first
+      return dateB.getTime() - dateA.getTime(); 
     });
 
-    // Take the 5 most recent orders
     const recentOrders = sortedOrders.slice(0, 5);
 
     const ordersByStatus = orders.reduce(
@@ -315,148 +311,22 @@ const RestaurantDashboard = () => {
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
             <RestaurantHeader restaurantInfo={restaurantInfo} />
 
-            {/* Enhanced Metrics Grid */}
-            <div className="p-8 bg-gradient-to-b from-white to-amber-50/30">
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Quick Stats
-                </h2>
-                <p className="text-gray-600">
-                  Real-time insights into your restaurant performance
-                </p>
+            {/* Seller Summary Section */}
+            {sellerSummary && (
+              <div className="p-8 bg-gradient-to-b from-white to-purple-50/20 border-b border-purple-100">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    Business Analytics
+                  </h2>
+                  <p className="text-gray-600">
+                    Advanced insights into your customer behavior and performance trends
+                  </p>
+                </div>
+                <SellerSummaryCards summary={sellerSummary} />
               </div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg p-6 border border-green-100 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-700 mb-1">
-                        Avg Order Value
-                      </p>
-                      <p className="text-3xl font-bold text-green-800">
-                        {additionalMetrics.avgOrderValue}
-                      </p>
-                      <p className="text-xs text-green-600 mt-1">
-                        Per completed order
-                      </p>
-                    </div>
-                    <div className="bg-green-100 p-4 rounded-full">
-                      <DollarSign className="w-7 h-7 text-green-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-orange-700 mb-1">
-                        Top Menu Item
-                      </p>
-                      <p className="text-lg font-bold text-orange-800 truncate">
-                        {additionalMetrics.topMenuItem}
-                      </p>
-                      <p className="text-xs text-orange-600 mt-1">
-                        Most popular dish
-                      </p>
-                    </div>
-                    <div className="bg-orange-100 p-4 rounded-full">
-                      <Star className="w-7 h-7 text-orange-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl shadow-lg p-6 border border-yellow-100 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-yellow-700 mb-1">
-                        Preparing Orders
-                      </p>
-                      <p className="text-3xl font-bold text-yellow-800">
-                        {additionalMetrics.ordersByStatus.preparing}
-                      </p>
-                      <p className="text-xs text-yellow-600 mt-1">
-                        Currently in kitchen
-                      </p>
-                    </div>
-                    <div className="bg-yellow-100 p-4 rounded-full">
-                      <Clock className="w-7 h-7 text-yellow-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-700 mb-1">
-                        Completed Orders
-                      </p>
-                      <p className="text-3xl font-bold text-blue-800">
-                        {additionalMetrics.ordersByStatus.completed}
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Successfully delivered
-                      </p>
-                    </div>
-                    <div className="bg-blue-100 p-4 rounded-full">
-                      <CheckCircle className="w-7 h-7 text-blue-600" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Activity Section */}
-              {orders.length > 0 && (
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Recent Activity
-                    </h3>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-gray-600">
-                        Live updates
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {additionalMetrics.recentOrders
-                      .slice(0, 3)
-                      .map((order, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                            <ShoppingBag className="w-5 h-5 text-amber-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800">
-                              Order #{order.order_id || "N/A"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(order.created_at).toLocaleDateString()}{" "}
-                              • Status: {order.status}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                order.status?.toLowerCase() === "completed"
-                                  ? "bg-green-100 text-green-800"
-                                  : order.status?.toLowerCase() === "preparing"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {order.status || "Pending"}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
+           
 
             {/* Charts Section */}
             <DashboardCharts
