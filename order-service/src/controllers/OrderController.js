@@ -44,6 +44,7 @@ import {
   getCartAddsOnCategoryService,
   getCartAddsOnItemService,
   getSellerSummaryService,
+  getSellerOrderSummaryService,
 } from "../service/orderService.js";
 import crypto from "crypto";
 import {
@@ -2530,19 +2531,28 @@ export const getSellerSummaryController = async (req, res) => {
   }
 
   try {
-    const orders = camelize(await getSellerSummaryService(userId));
-    if (!orders || orders.length === 0) {
+    const ordersSummaryStats = camelize(await getSellerSummaryService(userId));
+    if (!ordersSummaryStats || ordersSummaryStats.length === 0) {
       logger.warn("No orders found for seller", { userId });
       return responseError(res, 404, "No orders found for this seller");
     }
     const userData = await getUserInformation(
         GLOBAL_SERVICE_URL,
-        parseInt(orders.highestFrequentlyOrderUser),
+        parseInt(ordersSummaryStats.highestFrequentlyOrderUser),
         internalAPIKey,
-        `Owner with ID ${orders.highestFrequentlyOrderUser} not found`
+        `Owner with ID ${ordersSummaryStats.highestFrequentlyOrderUser} not found`
       )
-    orders.highestFrequentlyOrderUser = userData.user;
-    return responseSuccess(res, 200, "Seller summary fetched successfully", "summary", orders );
+    const orders = camelize(await getSellerOrderSummaryService(userId));
+    if (!orders || orders.length === 0) {
+      logger.warn("No order summary found for seller", { userId });
+      return responseError(res, 404, "No order summary found for this seller");
+    }
+    ordersSummaryStats.highestFrequentlyOrderUser = userData.user;
+    const ordersSummary = {
+      ...ordersSummaryStats,
+      orders: orders,
+    }
+    return responseSuccess(res, 200, "Seller summary fetched successfully", "summary", ordersSummary );
   } catch (error) {
     logger.error("Error fetching seller summary:", err);
     return responseError(res, 500, "Internal server error");
