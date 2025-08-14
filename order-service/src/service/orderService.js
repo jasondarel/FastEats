@@ -565,4 +565,25 @@ export const getSellerSummaryService = async(sellerId) => {
         `
   , [sellerId]);
   return result.rows[0];
-} 
+}
+
+export const getSellerOrderSummaryService = async (sellerId) => {
+  const result = await pool.query(
+    `
+    SELECT 
+      o.order_id,
+      o.user_id,
+      o.seller_id,
+      o.status,
+      o.item_quantity,
+      o.created_at,
+      t.transaction_net
+    FROM public.orders o
+    LEFT JOIN public.transactions t ON t.order_id = o.order_id
+    WHERE o.seller_id = $1
+      AND o.status NOT IN ('Waiting', 'Pending', 'Cancelled')
+    `,
+    [sellerId]
+  );
+  return result.rows;
+}
