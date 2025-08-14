@@ -11,21 +11,11 @@ import {
   Legend,
 } from "recharts";
 
-const MonthlyCharts = ({ orders }) => {
+const MonthlyCharts = ({ sellerSummary }) => {
   const monthlyData = useMemo(() => {
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
 
     const initialData = months.map((month) => ({
@@ -34,6 +24,8 @@ const MonthlyCharts = ({ orders }) => {
       revenue: 0,
     }));
 
+    const orders = sellerSummary?.orders || [];
+    
     if (!Array.isArray(orders) || orders.length === 0) {
       return initialData;
     }
@@ -44,38 +36,17 @@ const MonthlyCharts = ({ orders }) => {
     });
 
     completedOrders.forEach((order) => {
-      const orderDate = new Date(order.created_at);
+      const orderDate = new Date(order.createdAt);
       const monthIndex = orderDate.getMonth();
       const monthName = months[monthIndex];
 
       const monthData = initialData.find((item) => item.name === monthName);
       if (!monthData) return;
 
-      // Count each completed order as 1 order (regardless of quantity)
       monthData.orders += 1;
-
-      if (order.order_type === "CART" && Array.isArray(order.items)) {
-        order.items.forEach((item, index) => {
-          const quantity = item.item_quantity || 0;
-
-          const menuItem =
-            order.menu && Array.isArray(order.menu) && order.menu[index];
-          const price = menuItem ? parseFloat(menuItem.menu_price) || 0 : 0;
-          monthData.revenue += price * quantity;
-        });
-      } else {
-        const quantity = order.item_quantity || 1;
-
-        let price = 0;
-        if (order.menu) {
-          if (Array.isArray(order.menu) && order.menu.length > 0) {
-            price = parseFloat(order.menu[0].menu_price) || 0;
-          } else if (order.menu.menu_price) {
-            price = parseFloat(order.menu.menu_price) || 0;
-          }
-        }
-        monthData.revenue += price * quantity;
-      }
+      
+      const revenue = parseFloat(order.transactionNet) || 0;
+      monthData.revenue += revenue;
     });
 
     initialData.forEach((item) => {
@@ -83,7 +54,7 @@ const MonthlyCharts = ({ orders }) => {
     });
 
     return initialData;
-  }, [orders]);
+  }, [sellerSummary]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -98,7 +69,7 @@ const MonthlyCharts = ({ orders }) => {
           </p>
           <p className="text-sm">
             <span className="font-medium text-green-600">Revenue:</span> Rp
-            {payload[1].value}
+            {payload[1].value.toLocaleString('id-ID')}
           </p>
         </div>
       );

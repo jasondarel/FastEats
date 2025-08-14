@@ -6,16 +6,7 @@ import SellerSummaryCards from "./components/SellerSummaryCards";
 import Sidebar from "../../components/Sidebar";
 import LoadingState from "../../components/LoadingState";
 import { fetchRestaurantInfo, fetchOrderLists, fetchSellerSummary } from "./services/apiService";
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  DollarSign,
-  ShoppingBag,
-  Star,
-  Calendar,
-  TrendingUp,
-} from "lucide-react";
+import { XCircle } from "lucide-react";
 import io from "socket.io-client";
 import { ORDER_URL } from "../../config/api";
 import DashboardBanner from "./components/DashboardBanner";
@@ -27,7 +18,7 @@ const RestaurantDashboard = () => {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantImage, setRestaurantImage] = useState(null);
   const [viewMode, setViewMode] = useState("monthly");
-  const [selectedMonth, setSelectedMonth] = useState("Mar");
+  const [selectedMonth, setSelectedMonth] = useState("Jul");
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
@@ -48,14 +39,22 @@ const RestaurantDashboard = () => {
         setRestaurantName(restInfo.restaurant.restaurant_name);
         setRestaurantImage(restInfo.restaurant.restaurant_image);
 
-        const orderData = await fetchOrderLists(token);
-        setOrders(orderData?.orders || []);
-
+        
         try {
           const summaryData = await fetchSellerSummary(token);
           setSellerSummary(summaryData?.summary || null);
+          if (summaryData?.summary?.orders) {
+            setOrders(summaryData.summary.orders);
+          }
         } catch (summaryError) {
           console.warn("Could not load seller summary:", summaryError);
+          try {
+            const orderData = await fetchOrderLists(token);
+            setOrders(orderData?.orders || []);
+          } catch (orderError) {
+            console.warn("Could not load orders from fallback endpoint:", orderError);
+            setOrders([]);
+          }
         }
       } catch (error) {
         setError(error.message || "Failed to load restaurant information");
@@ -70,11 +69,24 @@ const RestaurantDashboard = () => {
     socket.on("orderCompleted", (updatedOrder) => {
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === updatedOrder.id
+          order.orderId === updatedOrder.orderId || order.id === updatedOrder.id
             ? { ...order, ...updatedOrder }
             : order
         )
       );
+      
+      setSellerSummary(prevSummary => {
+        if (!prevSummary?.orders) return prevSummary;
+        
+        return {
+          ...prevSummary,
+          orders: prevSummary.orders.map(order =>
+            order.orderId === updatedOrder.orderId || order.id === updatedOrder.id
+              ? { ...order, ...updatedOrder }
+              : order
+          )
+        };
+      });
     });
 
     return () => {
@@ -84,45 +96,40 @@ const RestaurantDashboard = () => {
   }, [token]);
 
   const calculateSummaryInfo = () => {
-    if (!orders || !Array.isArray(orders) || orders.length === 0) {
+    const ordersToProcess = sellerSummary?.orders || orders || [];
+    
+    if (!Array.isArray(ordersToProcess) || ordersToProcess.length === 0) {
       return {
         totalOrders: 0,
         totalRevenue: "Rp0.00",
         successfulOrderCount: 0,
+        totalItems: 0,
       };
     }
 
-    let totalOrderQuantity = 0;
+    let totalOrderCount = ordersToProcess.length;
     let totalRevenue = 0;
-    let totalOrderCount = orders.length;
     let successfulOrderCount = 0;
+    let totalItems = 0;
 
-    orders.forEach((order) => {
-      const successfulStatuses = ["completed"];
+    ordersToProcess.forEach((order) => {
       const orderStatus = order.status?.toLowerCase() || "";
-      const isSuccessfulOrder = successfulStatuses.includes(orderStatus);
-
-      if (isSuccessfulOrder) {
+      const isCompleted = orderStatus === "completed";
+      
+      if (isCompleted) {
         successfulOrderCount++;
-      }
-
-      if (order.order_type === "CART" && Array.isArray(order.items)) {
-        order.items.forEach((item, index) => {
-          const quantity = item.item_quantity || 0;
-          totalOrderQuantity += quantity;
-
-          if (isSuccessfulOrder) {
-            const menuItem =
-              order.menu && Array.isArray(order.menu) && order.menu[index];
+        
+        if (order.transactionNet) {
+          totalRevenue += parseFloat(order.transactionNet) || 0;
+        } else if (order.order_type === "CART" && Array.isArray(order.items)) {
+          order.items.forEach((item, index) => {
+            const quantity = item.item_quantity || 0;
+            const menuItem = order.menu && Array.isArray(order.menu) && order.menu[index];
             const price = menuItem ? parseFloat(menuItem.menu_price) || 0 : 0;
             totalRevenue += price * quantity;
-          }
-        });
-      } else {
-        const quantity = order.item_quantity || 1;
-        totalOrderQuantity += quantity;
-
-        if (isSuccessfulOrder) {
+          });
+        } else {
+          const quantity = order.itemQuantity || order.item_quantity || 1;
           let price = 0;
           if (order.menu) {
             if (Array.isArray(order.menu) && order.menu.length > 0) {
@@ -134,20 +141,34 @@ const RestaurantDashboard = () => {
           totalRevenue += price * quantity;
         }
       }
+      
+      if (order.itemQuantity) {
+        totalItems += parseInt(order.itemQuantity) || 0;
+      } else if (order.item_quantity) {
+        totalItems += parseInt(order.item_quantity) || 0;
+      } else if (order.items && Array.isArray(order.items)) {
+        order.items.forEach(item => {
+          totalItems += parseInt(item.item_quantity) || 0;
+        });
+      } else {
+        totalItems += 1; 
+      }
     });
 
     return {
-      totalItems: totalOrderQuantity,
+      totalItems,
       totalOrders: totalOrderCount,
-      totalRevenue: `Rp${totalRevenue.toFixed(2)}`,
+      totalRevenue: `Rp${totalRevenue.toLocaleString('id-ID', { minimumFractionDigits: 2 })}`,
       successfulOrderCount: successfulOrderCount,
     };
   };
 
   const calculateAdditionalMetrics = () => {
-    if (!orders || !Array.isArray(orders) || orders.length === 0) {
+    const ordersToProcess = sellerSummary?.orders || orders || [];
+    
+    if (!Array.isArray(ordersToProcess) || ordersToProcess.length === 0) {
       return {
-        avgOrderValue: "$0.00",
+        avgOrderValue: "Rp0.00",
         topMenuItem: "N/A",
         recentOrders: [],
         ordersByStatus: { preparing: 0, completed: 0, cancelled: 0 },
@@ -155,21 +176,20 @@ const RestaurantDashboard = () => {
     }
 
     const summaryInfo = calculateSummaryInfo();
-    const totalRevenue = parseFloat(summaryInfo.totalRevenue.replace("Rp", ""));
-    const avgOrderValue =
-      summaryInfo.successfulOrderCount > 0
-        ? (totalRevenue / summaryInfo.successfulOrderCount).toFixed(2)
-        : "0.00";
+    const totalRevenue = parseFloat(summaryInfo.totalRevenue.replace(/[Rp.,]/g, ''));
+    const avgOrderValue = summaryInfo.successfulOrderCount > 0
+      ? (totalRevenue / summaryInfo.successfulOrderCount).toFixed(2)
+      : "0.00";
 
-    const sortedOrders = [...orders].sort((a, b) => {
-      const dateA = new Date(a.created_at);
-      const dateB = new Date(b.created_at);
+    const sortedOrders = [...ordersToProcess].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.created_at);
+      const dateB = new Date(b.createdAt || b.created_at);
       return dateB.getTime() - dateA.getTime(); 
     });
 
     const recentOrders = sortedOrders.slice(0, 5);
 
-    const ordersByStatus = orders.reduce(
+    const ordersByStatus = ordersToProcess.reduce(
       (acc, order) => {
         const status = order.status?.toLowerCase() || "pending";
         acc[status] = (acc[status] || 0) + 1;
@@ -178,42 +198,9 @@ const RestaurantDashboard = () => {
       { preparing: 0, completed: 0, cancelled: 0 }
     );
 
-    const menuItemCounts = {};
-    orders.forEach((order) => {
-      if (order.order_type === "CART" && Array.isArray(order.items)) {
-        order.items.forEach((item, index) => {
-          const menuItem =
-            order.menu && Array.isArray(order.menu) && order.menu[index];
-          if (menuItem && menuItem.menu_name) {
-            menuItemCounts[menuItem.menu_name] =
-              (menuItemCounts[menuItem.menu_name] || 0) +
-              (item.item_quantity || 1);
-          }
-        });
-      } else if (order.menu) {
-        let menuName = "";
-        if (Array.isArray(order.menu) && order.menu.length > 0) {
-          menuName = order.menu[0].menu_name;
-        } else if (order.menu.menu_name) {
-          menuName = order.menu.menu_name;
-        }
-        if (menuName) {
-          menuItemCounts[menuName] =
-            (menuItemCounts[menuName] || 0) + (order.item_quantity || 1);
-        }
-      }
-    });
-
-    const topMenuItem =
-      Object.keys(menuItemCounts).length > 0
-        ? Object.keys(menuItemCounts).reduce((a, b) =>
-            menuItemCounts[a] > menuItemCounts[b] ? a : b
-          )
-        : "N/A";
-
     return {
-      avgOrderValue: `Rp${avgOrderValue}`,
-      topMenuItem,
+      avgOrderValue: `Rp${parseFloat(avgOrderValue).toLocaleString('id-ID')}`,
+      topMenuItem: sellerSummary?.highestFrequentlyOrderMenuName || "N/A",
       recentOrders,
       ordersByStatus,
     };
@@ -248,7 +235,7 @@ const RestaurantDashboard = () => {
               <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100">
                 <RestaurantHeader restaurantInfo={restaurantInfo} />
                 <DashboardCharts
-                  orders={[]}
+                  sellerSummary={null}
                   viewMode={viewMode}
                   selectedMonth={selectedMonth}
                   toggleViewMode={toggleViewMode}
@@ -258,8 +245,7 @@ const RestaurantDashboard = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
                     <p className="text-amber-700 text-sm font-medium">
-                      Note: Order data couldn&apos;t be loaded. Showing empty
-                      charts.
+                      Note: Order data couldn&apos;t be loaded. Showing empty charts.
                     </p>
                   </div>
                 </div>
@@ -326,11 +312,9 @@ const RestaurantDashboard = () => {
               </div>
             )}
 
-           
-
             {/* Charts Section */}
             <DashboardCharts
-              orders={orders}
+              sellerSummary={sellerSummary}
               viewMode={viewMode}
               selectedMonth={selectedMonth}
               toggleViewMode={toggleViewMode}

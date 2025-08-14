@@ -11,25 +11,14 @@ import {
   Legend,
 } from "recharts";
 
-const DailyCharts = ({ orders, selectedMonth }) => {
+const DailyCharts = ({ sellerSummary, selectedMonth }) => {
   const dailyData = useMemo(() => {
     const monthMap = {
-      Jan: 0,
-      Feb: 1,
-      Mar: 2,
-      Apr: 3,
-      May: 4,
-      Jun: 5,
-      Jul: 6,
-      Aug: 7,
-      Sep: 8,
-      Oct: 9,
-      Nov: 10,
-      Dec: 11,
+      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
     };
 
     const monthIndex = monthMap[selectedMonth];
-
     const currentYear = new Date().getFullYear();
     const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
 
@@ -40,49 +29,30 @@ const DailyCharts = ({ orders, selectedMonth }) => {
       revenue: 0,
     }));
 
+    const orders = sellerSummary?.orders || [];
+    
     if (!Array.isArray(orders) || orders.length === 0) {
       return initialData;
     }
 
     const filteredOrders = orders.filter((order) => {
-      if (!order.created_at) return false;
-      const orderDate = new Date(order.created_at);
+      if (!order.createdAt) return false;
+      const orderDate = new Date(order.createdAt);
       const orderStatus = order.status?.toLowerCase() || "";
       return orderDate.getMonth() === monthIndex && orderStatus === "completed";
     });
 
     filteredOrders.forEach((order) => {
-      const orderDate = new Date(order.created_at);
+      const orderDate = new Date(order.createdAt);
       const dayOfMonth = orderDate.getDate();
-
       const dayIndex = dayOfMonth - 1;
+      
       if (dayIndex < 0 || dayIndex >= initialData.length) return;
 
-      // Count each completed order as 1 order (regardless of quantity)
       initialData[dayIndex].orders += 1;
-
-      if (order.order_type === "CART" && Array.isArray(order.items)) {
-        order.items.forEach((item, index) => {
-          const quantity = item.item_quantity || 0;
-
-          const menuItem =
-            order.menu && Array.isArray(order.menu) && order.menu[index];
-          const price = menuItem ? parseFloat(menuItem.menu_price) || 0 : 0;
-          initialData[dayIndex].revenue += price * quantity;
-        });
-      } else {
-        const quantity = order.item_quantity || 1;
-
-        let price = 0;
-        if (order.menu) {
-          if (Array.isArray(order.menu) && order.menu.length > 0) {
-            price = parseFloat(order.menu[0].menu_price) || 0;
-          } else if (order.menu.menu_price) {
-            price = parseFloat(order.menu.menu_price) || 0;
-          }
-        }
-        initialData[dayIndex].revenue += price * quantity;
-      }
+      
+      const revenue = parseFloat(order.transactionNet) || 0;
+      initialData[dayIndex].revenue += revenue;
     });
 
     initialData.forEach((item) => {
@@ -90,7 +60,7 @@ const DailyCharts = ({ orders, selectedMonth }) => {
     });
 
     return initialData;
-  }, [orders, selectedMonth]);
+  }, [sellerSummary, selectedMonth]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -105,7 +75,7 @@ const DailyCharts = ({ orders, selectedMonth }) => {
           </p>
           <p className="text-sm">
             <span className="font-medium text-green-600">Revenue:</span> Rp
-            {payload[1].value}
+            {payload[1].value.toLocaleString('id-ID')}
           </p>
         </div>
       );
