@@ -65,10 +65,6 @@ const ChatCard = ({ chat, role = "seller" }) => {
 
   const handleChatClick = () => {
     console.log("Chat clicked:", chat);
-    if (isCompleted) {
-      alert("Chat is not available for completed orders");
-      return;
-    }
 
     let locationState;
     if (role === "seller") {
@@ -111,26 +107,22 @@ const ChatCard = ({ chat, role = "seller" }) => {
 
   return (
     <div
-      className={`flex bg-white shadow-md rounded-lg border-l-4 transition-all duration-300 ease-in-out transform ${
-        isCompleted
-          ? "border-l-gray-400 opacity-70"
-          : `border-l-yellow-400 cursor-pointer ${
-              isHovered 
-                ? "shadow-xl scale-[1.02] -translate-y-1" 
-                : "hover:shadow-lg"
-            }`
+      className={`flex bg-white shadow-md rounded-lg border-l-4 border-l-yellow-400 cursor-pointer transition-all duration-300 ease-in-out transform ${
+        isHovered 
+          ? "shadow-xl scale-[1.02] -translate-y-1" 
+          : "hover:shadow-lg"
       } ${chat.isAnimating ? 'animate-pulse-subtle' : ''}`}
       onClick={handleChatClick}
-      onMouseEnter={() => !isCompleted && setIsHovered(true)}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex-1 p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center w-full">
             <div
-              className={`h-12 w-12 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0 transition-all duration-300 ${
-                isCompleted ? "bg-gray-100" : "bg-yellow-100"
-              } ${isHovered && !isCompleted ? 'transform scale-110' : ''}`}
+              className={`h-12 w-12 rounded-full flex items-center justify-center mr-4 overflow-hidden flex-shrink-0 bg-yellow-100 transition-all duration-300 ${
+                isHovered ? 'transform scale-110' : ''
+              }`}
             >
               {role === "seller" ? (
                 <>
@@ -139,7 +131,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
                       src={restaurantImage}
                       alt={chat.user?.name}
                       className={`h-full w-full object-cover transition-transform duration-300 ${
-                        isHovered && !isCompleted ? 'scale-110' : ''
+                        isHovered ? 'scale-110' : ''
                       }`}
                       onError={(e) => {
                         e.target.style.display = "none";
@@ -148,10 +140,10 @@ const ChatCard = ({ chat, role = "seller" }) => {
                     />
                   ) : null}
                   <IoMdPerson
-                    className={`text-lg transition-all duration-300 ${
+                    className={`text-lg text-yellow-600 transition-all duration-300 ${
                       restaurantImage ? "hidden" : "flex"
-                    } ${isCompleted ? "text-gray-500" : "text-yellow-600"} ${
-                      isHovered && !isCompleted ? 'scale-110' : ''
+                    } ${
+                      isHovered ? 'scale-110' : ''
                     }`}
                   />
                 </>
@@ -162,7 +154,7 @@ const ChatCard = ({ chat, role = "seller" }) => {
                       src={`${API_URL}/restaurant/uploads/restaurant/${chat.restaurant.restaurantImage}`}
                       alt={chat.restaurant?.restaurantName}
                       className={`h-full w-full object-cover transition-transform duration-300 ${
-                        isHovered && !isCompleted ? 'scale-110' : ''
+                        isHovered ? 'scale-110' : ''
                       }`}
                       onError={(e) => {
                         e.target.style.display = "none";
@@ -171,10 +163,10 @@ const ChatCard = ({ chat, role = "seller" }) => {
                     />
                   ) : null}
                   <FaStore
-                    className={`text-lg transition-all duration-300 ${
+                    className={`text-lg text-yellow-600 transition-all duration-300 ${
                       restaurantImage ? "hidden" : "flex"
-                    } ${isCompleted ? "text-gray-500" : "text-yellow-600"} ${
-                      isHovered && !isCompleted ? 'scale-110' : ''
+                    } ${
+                      isHovered ? 'scale-110' : ''
                     }`}
                   />
                 </>
@@ -184,9 +176,9 @@ const ChatCard = ({ chat, role = "seller" }) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h4
-                  className={`font-semibold text-lg truncate pr-2 transition-colors duration-300 ${
-                    isCompleted ? "text-gray-600" : "text-gray-800"
-                  } ${isHovered && !isCompleted ? 'text-yellow-700' : ''}`}
+                  className={`font-semibold text-lg text-gray-800 truncate pr-2 transition-colors duration-300 ${
+                    isHovered ? 'text-yellow-700' : ''
+                  }`}
                 >
                   {role === "seller"
                     ? chat.user?.name || "Customer"
@@ -208,16 +200,14 @@ const ChatCard = ({ chat, role = "seller" }) => {
 
               <div className="flex items-center space-x-3 mb-2 flex-wrap">
                 <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full transition-all duration-300 ${
-                    isCompleted
-                      ? "bg-gray-100 text-gray-600"
-                      : "bg-yellow-100 text-yellow-800"
-                  } ${isHovered && !isCompleted ? 'bg-yellow-200 scale-105' : ''}`}
+                  className={`text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 transition-all duration-300 ${
+                    isHovered ? 'bg-yellow-200 scale-105' : ''
+                  }`}
                 >
                   Order #{chat.order_id?.toString().slice(-6)}
                 </span>
                 <div className={`transition-transform duration-300 ${
-                  isHovered && !isCompleted ? 'scale-105' : ''
+                  isHovered ? 'scale-105' : ''
                 }`}>
                   <StatusBadge
                     status={chat.orderDetails.status}
@@ -227,16 +217,16 @@ const ChatCard = ({ chat, role = "seller" }) => {
               </div>
 
               <div
-                className={`flex items-center text-sm mb-2 transition-colors duration-300 ${
-                  isCompleted ? "text-gray-500" : "text-gray-600"
-                } ${isHovered && !isCompleted ? 'text-gray-700' : ''}`}
+                className={`flex items-center text-sm text-gray-600 mb-2 transition-colors duration-300 ${
+                  isHovered ? 'text-gray-700' : ''
+                }`}
               >
                 <p className="line-clamp-2">
                   {chat.lastMessage || "No messages yet"}
                 </p>
                 {chat.lastMessageIcon && (
                   <span className={`flex-shrink-0 ml-1 transition-transform duration-300 ${
-                    isHovered && !isCompleted ? 'scale-110' : ''
+                    isHovered ? 'scale-110' : ''
                   }`}>
                     {chat.lastMessageIcon}
                   </span>
@@ -246,28 +236,19 @@ const ChatCard = ({ chat, role = "seller" }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <span className={`text-xs text-gray-500 transition-colors duration-300 ${
-                    isHovered && !isCompleted ? 'text-gray-600' : ''
+                    isHovered ? 'text-gray-600' : ''
                   }`}>
                     {itemCount} item{itemCount !== 1 ? "s" : ""} •{" "}
                     {formatPrice(totalPrice)}
                   </span>
                 </div>
                 <div className="flex items-center">
-                  {isCompleted ? (
-                    <>
-                      <FaLock className="text-gray-400 text-sm mr-2" />
-                      <span className="text-xs text-gray-400">Chat ended</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaComment className={`text-yellow-500 text-sm mr-2 transition-all duration-300 ${
-                        isHovered ? 'scale-110 text-yellow-600' : ''
-                      }`} />
-                      <ChevronRightIcon className={`h-5 w-5 text-gray-400 transition-all duration-300 ${
-                        isHovered ? 'text-yellow-500 translate-x-1' : ''
-                      }`} />
-                    </>
-                  )}
+                 <FaComment className={`text-yellow-500 text-sm mr-2 transition-all duration-300 ${
+                     isHovered ? 'scale-110 text-yellow-600' : ''
+                    }`} />
+                    <ChevronRightIcon className={`h-5 w-5 text-gray-400 transition-all duration-300 ${
+                      isHovered ? 'text-yellow-500 translate-x-1' : ''
+                    }`} />
                 </div>
               </div>
             </div>

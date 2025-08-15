@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
@@ -36,7 +35,28 @@ const ChatRoom = () => {
   const { user } = useSelector((state) => state.auth);
 
   const orderDetails = location.state || {};
-  console.log("ChatRoom - Order Details:", orderDetails);
+
+  const isOrderFinal = () => {
+    const currentOrder = fetchedOrderDetails?.orderDetails || orderDetails;
+    const status = currentOrder?.status?.toLowerCase();
+    return status === 'completed' || status === 'cancelled' || status === 'delivered';
+  };
+
+  const getOrderStatusMessage = () => {
+    const currentOrder = fetchedOrderDetails?.orderDetails || orderDetails;
+    const status = currentOrder?.status?.toLowerCase();
+    
+    switch (status) {
+      case 'completed':
+        return "This order has been completed. You can no longer send messages.";
+      case 'cancelled':
+        return "This order has been cancelled. You can no longer send messages.";
+      case 'delivered':
+        return "This order has been delivered. You can no longer send messages.";
+      default:
+        return null;
+    }
+  };
 
   const {
     isSocketConnected,
@@ -73,18 +93,11 @@ const ChatRoom = () => {
     }).format(price);
   };
 
-  console.log(
-    "Attaching orderDetails:",
-    orderDetails || fetchedOrderDetails?.orderDetails
-  );
-
   const handleAttachOrderDetails = async () => {
-    if (sendingMessage) return;
+    if (sendingMessage || isOrderFinal()) return;
 
     const orderDetailsToAttach =
       orderDetails || fetchedOrderDetails?.orderDetails || null;
-
-    console.log("Order details to attach:", orderDetailsToAttach);
 
     if (!orderDetailsToAttach) {
       setError("No order details available to attach");
@@ -117,14 +130,11 @@ const ChatRoom = () => {
         senderId: payload.userId,
         clientTempId,
         orderDetails: orderDetailsToAttach,
-
         metadata: {
           type: "order_details",
           originalOrderDetails: orderDetailsToAttach,
         },
       };
-
-      console.log("Attempting to send message with data:", messageData);
 
       if (isSocketConnected) {
         emitMessage({
@@ -525,6 +535,8 @@ const ChatRoom = () => {
   };
 
   const handleInputChange = (e) => {
+    if (isOrderFinal()) return; 
+    
     const value = e.target.value;
     setNewMessage(value);
 
@@ -536,6 +548,8 @@ const ChatRoom = () => {
   };
 
   const handleSendMessage = async (eventOrData) => {
+    if (isOrderFinal()) return; 
+
     if (eventOrData && typeof eventOrData.preventDefault === "function") {
       eventOrData.preventDefault();
     }
@@ -654,10 +668,11 @@ const ChatRoom = () => {
   };
 
   const handleQuickMessage = (message) => {
-    if (!sendingMessage) {
+    if (!sendingMessage && !isOrderFinal()) {
       setNewMessage(message);
     }
   };
+
 
   const getQuickMessages = () => {
     if (currentUserRole === "seller" || currentUserRole === "restaurant") {
@@ -852,7 +867,7 @@ useEffect(() => {
   const currentOrderDetails = fetchedOrderDetails;
   const hasMessages = messages.length > 0;
 
-  return (
+   return (
     <>
       <ErrorBoundary
         error={error}
@@ -882,6 +897,8 @@ useEffect(() => {
               <div className="h-full bg-white rounded-lg shadow-sm flex flex-col">
                 <ErrorAlert error={error} onDismiss={() => setError(null)} />
 
+                
+
                 <div className="flex-1 overflow-y-auto p-4">
                   <MessagesContainer
                     loading={loading}
@@ -893,28 +910,49 @@ useEffect(() => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <TypingIndicator typingUsers={typingUsers} />
+                {!isOrderFinal() && <TypingIndicator typingUsers={typingUsers} />}
 
-                <MessageInput
-                  newMessage={newMessage}
-                  onMessageChange={handleInputChange}
-                  onSubmit={handleSendMessage}
-                  onTypingStop={handleTypingStop}
-                  sendingMessage={sendingMessage}
-                  quickMessages={getQuickMessages()}
-                  onQuickMessage={handleQuickMessage}
-                  selectedImage={selectedImage}
-                  onImageSelect={handleImageSelect}
-                  onImageRemove={handleImageRemove}
-                  imagePreview={imagePreview}
-                  selectedGif={selectedGif}
-                  onGifSelect={handleGifSelect}
-                  onGifRemove={handleGifRemove}
-                  onAttachOrderDetails={handleAttachOrderDetails}
-                  canAttachOrderDetails={
-                    !!(orderDetails || fetchedOrderDetails?.orderDetails)
-                  }
-                />
+                {isOrderFinal() && (
+                  <div className="bg-amber-100 border-b border-amber-200 p-4">
+                    <div className="flex items-center justify-center">
+                      <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 text-center max-w-md">
+                        <div className="flex items-center justify-center mb-2">
+                          <svg className="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                          </svg>
+                          <span className="text-sm font-medium text-gray-700">Chat Locked</span>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {getOrderStatusMessage()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!isOrderFinal() && (
+                  <MessageInput
+                    newMessage={newMessage}
+                    onMessageChange={handleInputChange}
+                    onSubmit={handleSendMessage}
+                    onTypingStop={handleTypingStop}
+                    sendingMessage={sendingMessage}
+                    quickMessages={getQuickMessages()}
+                    onQuickMessage={handleQuickMessage}
+                    selectedImage={selectedImage}
+                    onImageSelect={handleImageSelect}
+                    onImageRemove={handleImageRemove}
+                    imagePreview={imagePreview}
+                    selectedGif={selectedGif}
+                    onGifSelect={handleGifSelect}
+                    onGifRemove={handleGifRemove}
+                    onAttachOrderDetails={handleAttachOrderDetails}
+                    canAttachOrderDetails={
+                      !!(orderDetails || fetchedOrderDetails?.orderDetails)
+                    }
+                    disabled={isOrderFinal()}
+                  />
+                )}
               </div>
             </div>
           </div>

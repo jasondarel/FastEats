@@ -12,18 +12,16 @@ const MessageInput = ({
   sendingMessage,
   quickMessages,
   onQuickMessage,
-
   selectedImage,
   onImageSelect,
   onImageRemove,
   imagePreview,
-
   selectedGif,
   onGifSelect,
   onGifRemove,
-
   onAttachOrderDetails,
   canAttachOrderDetails = true,
+  disabled = false, 
 }) => {
   const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
   const [role, setRole] = useState("");
@@ -31,24 +29,6 @@ const MessageInput = ({
   useEffect(() => {
     fetchUser();
   }, []);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        alert("Please select an image file");
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
-        return;
-      }
-
-      setIsGifPickerOpen(false);
-      onImageSelect(file);
-    }
-  };
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
@@ -74,11 +54,34 @@ const MessageInput = ({
     }
   };
 
+  const handleImageChange = (e) => {
+    if (disabled) return;
+    
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
+      setIsGifPickerOpen(false);
+      onImageSelect(file);
+    }
+  };
+
   const triggerImageSelect = () => {
+    if (disabled) return;
     document.getElementById("image-input").click();
   };
 
   const handleGifSelect = (gifData) => {
+    if (disabled) return;
+    
     if (selectedImage) {
       onImageRemove();
     }
@@ -87,11 +90,13 @@ const MessageInput = ({
   };
 
   const handleGifPickerToggle = () => {
+    if (disabled) return;
     setIsGifPickerOpen(!isGifPickerOpen);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (disabled) return;
 
     let messageType = "text";
     if (selectedGif) {
@@ -108,6 +113,10 @@ const MessageInput = ({
 
     onSubmit(enhancedEvent);
   };
+
+  if (disabled) {
+    return null;
+  }
 
   return (
     <div className="border-t bg-gray-50 p-4 relative">
