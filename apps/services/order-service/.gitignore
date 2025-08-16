@@ -1,0 +1,20 @@
+./node_modules
+.env
+.env.*
+./src/uploads
+./logs
+logs/
+
+# Prisma
+.prisma/
+.prisma/client/
+
+# Prisma Migrations
+migrations/
+migrations/*
+/prisma/generated
+
+
+/src/generated/prisma
+
+/src/generated/prisma
