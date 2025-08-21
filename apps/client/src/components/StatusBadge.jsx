@@ -8,7 +8,7 @@ const StatusBadge = ({ status, className = "" }) => {
       case "Preparing":
         return "bg-blue-200 text-blue-800";
       case "Delivering":
-        return "bg-amber-200 text-amber-800";
+        return "bg-orange-200 text-orange-800";
       case "Completed":
         return "bg-green-300 text-green-800";
       case "Cancelled":

@@ -243,7 +243,7 @@ const OrderSummary = () => {
       if (response.ok) {
         Swal.fire({
           title: "Success!",
-          text: "Order completed successfully!",
+          text: "Order delivered successfully!",
           icon: "success",
           confirmButtonText: "OK",
           confirmButtonColor: "#d97706",
