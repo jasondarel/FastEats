@@ -1,0 +1,19 @@
+{
+  "packageManager": "npm@8.5.0",
+  "devDependencies": {
+    "turbo": "^2.5.3"
+  },
+  "private": true,
+  "workspaces": [
+    "apps/services/user-service",
+    "apps/services/chat-service",
+    "apps/services/order-service",
+    "apps/services/notification-service",
+    "apps/services/restaurant-service",
+    "apps/api-gateway",
+    "apps/services/workers"
+  ],
+  "dependencies": {
+    "axios": "^1.9.0"
+  }
+}
