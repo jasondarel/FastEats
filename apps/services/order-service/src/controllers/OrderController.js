@@ -1240,7 +1240,7 @@ export const getOrderByIdController = async (req, res) => {
         for (const item of orderItems) {
             const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
             if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
-                addsOn = await Promise.all(
+                const itemAddOns = await Promise.all(
                     orderItemAddsOnCategory.map(async (category) => {
                         const addOnItems = await getOrderAddsOnItemService(category.category_id);
                         return {
@@ -1249,6 +1249,8 @@ export const getOrderByIdController = async (req, res) => {
                         };
                     })
                 );
+                // Accumulate add-ons instead of overwriting
+                addsOn.push(...itemAddOns);
             }
         }
       }

@@ -31,6 +31,11 @@ const OrderSummary = ({ order }) => {
   };
 
   const getOrderTotals = () => {
+    console.log("🔎 getOrderTotals Debug - Full Order Object:", order);
+    console.log("🔎 Order Type:", order.order_type);
+    console.log("🔎 Order AddOns:", order.addsOn);
+    console.log("🔎 Order Items:", order.items);
+    
     if (order.order_type === "CHECKOUT") {
       const menuTotal = parseFloat(order.menu_price) * order.item_quantity;
       const addOnTotal = calculateAddOnPrice(order.addsOn);
