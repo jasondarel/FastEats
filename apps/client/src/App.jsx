@@ -9,7 +9,7 @@ import Register from "./pages/Register";
 import RegisterGoogle from "./pages/RegisterGoogle";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import React from "react";
+import React, { useState } from "react";
 import MenuPage from "./pages/MenuPage/index";
 import BecomeSeller from "./pages/BecomeSeller";
 import ManageRestaurant from "./pages/ManageRestaurant/ManageRestaurant";
@@ -35,8 +35,12 @@ import ChatsList from "./pages/ChatsList";
 import ChatRoom from "./pages/ChatRoom";
 import ResetPassword from "./pages/ResetPassword";
 import About from "./pages/About";
+import ChatAssistant from "./components/ChatAssistant";
+// Swap ChatAssistant with ChatAssistantStream for live updates.
 
 function App() {
+  const [showAssistant, setShowAssistant] = useState(false);
+
   return (
     <div className="flex">
       <div className="flex-1">
@@ -221,6 +225,18 @@ function App() {
           <Route path="/pay-now/:orderId" element={<PayNow />} />
         </Routes>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowAssistant((prev) => !prev)}
+        className="fixed bottom-6 right-6 z-40 rounded-full bg-slate-900 text-white px-5 py-3 text-sm font-semibold shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
+      >
+        {showAssistant ? "Close AI" : "Ask AI"}
+      </button>
+
+      {showAssistant && (
+        <ChatAssistant onClose={() => setShowAssistant(false)} />
+      )}
     </div>
   );
 }
