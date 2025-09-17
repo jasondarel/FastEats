@@ -395,7 +395,6 @@ export const getRestaurantDetailRatingController = async (req, res) => {
                         GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
                     const order = await getOrderInformation(
                         GLOBAL_SERVICE_URL, rating.order_id, req.headers.authorization, `Order with ID ${rating.order_id} not found`)
-                        console.log('Rating details:',  order);
                     return {
                         ...rating,
                         name: user.user ? user.user.name : "Unknown User",
@@ -409,7 +408,6 @@ export const getRestaurantDetailRatingController = async (req, res) => {
         } else if (role === "seller") {
             details.ratings = await Promise.all(
                 ratings.map(async (rating) => {
-                    console.log(rating);
                     const user = await getUserInformation(
                         GLOBAL_SERVICE_URL, rating.user_id, req.headers.authorization, `User with ID ${rating.user_id} not found`)
                     const order = await getOrderInformation(
