@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 const OrderSummary = ({ order }) => {
-  const calculateAddOnPrice = (addOns) => {
-    if (!addOns || !Array.isArray(addOns)) return 0;
-
+  const calculateAddOnPrice = (addOns, itemQuantity) => {
+    if (!addOns || !Array.isArray(addOns.addsOn)) return 0;
+    
     let total = 0;
-    addOns.forEach((category) => {
+    addOns.addsOn.forEach(category => {
       if (category.items && Array.isArray(category.items)) {
         category.items.forEach((item) => {
           if (item.adds_on_price && parseFloat(item.adds_on_price) > 0) {
@@ -13,25 +13,19 @@ const OrderSummary = ({ order }) => {
         });
       }
     });
-    return total;
+    return total * (itemQuantity || 1);
   };
 
   const calculateCartAddOnPrice = (items, orderAddOns) => {
-    if (
-      !items ||
-      !Array.isArray(items) ||
-      !orderAddOns ||
-      !Array.isArray(orderAddOns)
-    )
-      return 0;
-
-    let total = 0;
-    items.forEach((item) => {
-      const itemAddOns = orderAddOns.filter(
-        (addon) => addon.order_item_id === (item.id || item.order_item_id)
+    if (!items || !Array.isArray(items) || !orderAddOns || !Array.isArray(orderAddOns)) return 0;
+    
+    let total = 0;  
+    items.forEach(item => {
+      const itemAddOns = orderAddOns.filter(addon => 
+        addon.order_item_id === (item.id || item.order_item_id)
       );
-
-      total += calculateAddOnPrice(itemAddOns);
+      
+      total += calculateAddOnPrice(itemAddOns[0], item.item_quantity);
     });
     return total;
   };
@@ -44,7 +38,7 @@ const OrderSummary = ({ order }) => {
 
     if (order.order_type === "CHECKOUT") {
       const menuTotal = parseFloat(order.menu_price) * order.item_quantity;
-      const addOnTotal = calculateAddOnPrice(order.addsOn);
+      const addOnTotal = calculateAddOnPrice(order.addsOn[0], order.item_quantity);
       return {
         menuTotal,
         addOnTotal,

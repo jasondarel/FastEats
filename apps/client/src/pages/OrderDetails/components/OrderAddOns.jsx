@@ -2,8 +2,8 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 
-const OrderAddOns = ({ addOns }) => {
-  if (!addOns || !Array.isArray(addOns) || addOns.length === 0) {
+const OrderAddOns = ({ addOns, itemQuantity }) => {
+  if (!addOns || !Array.isArray(addOns?.addsOn) || addOns?.addsOn.length === 0) {
     return null;
   }
 
@@ -28,11 +28,12 @@ const OrderAddOns = ({ addOns }) => {
       </h3>
 
       <div className="space-y-4">
-        {addOns.map((category, categoryIndex) => (
+        {addOns?.addsOn?.map((category, categoryIndex) => (
           <div
             key={categoryIndex}
             className="bg-white rounded-lg p-4 border border-amber-100 shadow-sm"
           >
+            {console.log("Rendering Add-On Category: ", category)}
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-amber-100">
               <div>
                 <h4 className="font-medium text-amber-800 capitalize">
@@ -95,29 +96,41 @@ const OrderAddOns = ({ addOns }) => {
         
         
         {(() => {
+          let addOnPrice = 0;
           let totalAddOnPrice = 0;
           let hasPrice = false;
           
-          addOns.forEach(category => {
+          addOns?.addsOn.forEach(category => {
             if (category.items && Array.isArray(category.items)) {
               category.items.forEach(item => {
                 if (item.adds_on_price && parseFloat(item.adds_on_price) > 0) {
-                  totalAddOnPrice += parseFloat(item.adds_on_price) * (item.quantity || 1);
+                  addOnPrice += parseFloat(item.adds_on_price) * (item.quantity || 1);
                   hasPrice = true;
                 }
               });
             }
           });
+          totalAddOnPrice = addOnPrice * (itemQuantity || 1);
 
           return hasPrice ? (
-            <div className="flex justify-between items-center text-sm mt-2">
-              <span className="text-amber-700 font-medium">
-                Total Add-on Price:
-              </span>
-              <span className="text-amber-900 font-semibold">
-                Rp {totalAddOnPrice.toLocaleString("id-ID")}
-              </span>
-            </div>
+            <>
+              <div className="flex justify-between items-center text-sm mt-2">
+                <span className="text-amber-700 font-medium">
+                  Add-on Price:
+                </span>
+                <span className="text-amber-900 font-semibold">
+                  Rp {addOnPrice.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm mt-2">
+                <span className="text-amber-700 font-medium">
+                  Total Add-on Price:
+                </span>
+                <span className="text-amber-900 font-semibold">
+                  Rp {totalAddOnPrice.toLocaleString("id-ID")}
+                </span>
+              </div>
+            </>
           ) : null;
         })()}
       </div>
