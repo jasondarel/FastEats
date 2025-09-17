@@ -670,8 +670,6 @@ export const googleAuthController = passport.authenticate('google', {
 
 export const googleCallbackController = async (req, res) => {
   console.log("=== GOOGLE CALLBACK DEBUG ===");
-  console.log("req.user:", req.user);
-  console.log("CLIENT_URL:", process.env.CLIENT_URL);
   
   try {
     const user = req.user;
@@ -693,11 +691,10 @@ export const googleCallbackController = async (req, res) => {
     
     const token = generateLoginToken({
       userId: user.id,
+      name: user.name,
       email: user.email,
       role: user.role,
     });
-
-    console.log("Generated token:", token);
 
     const redirectUrl = `${process.env.CLIENT_URL}/auth/google/success?token=${token}`;
     console.log("Redirecting to:", redirectUrl);

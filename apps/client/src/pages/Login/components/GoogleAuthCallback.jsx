@@ -36,6 +36,7 @@ const GoogleAuthCallback = () => {
           user: {
             userId: decodedPayload.userId,
             email: decodedPayload.email,
+            name: decodedPayload.name,
             role: decodedPayload.role
           }
         }));
