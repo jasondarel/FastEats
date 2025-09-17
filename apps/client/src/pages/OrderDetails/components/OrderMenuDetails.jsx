@@ -52,7 +52,7 @@ const OrderMenuDetails = ({ order }) => {
           </div>
         </div>
 
-        <OrderAddOns addOns={order.addsOn} />
+        <OrderAddOns addOns={order.addsOn[0]} itemQuantity={order.item_quantity} />
 
         {order.menu_description && (
           <div className="mt-8 p-4 bg-amber-50 rounded-lg">
@@ -124,7 +124,7 @@ const OrderMenuDetails = ({ order }) => {
               </div>
 
               {itemAddOns.length > 0 && (
-                <OrderAddOns addOns={itemAddOns} />
+                <OrderAddOns addOns={itemAddOns[0]} itemQuantity={item.item_quantity} />
               )}
 
               {item.menu_description && (

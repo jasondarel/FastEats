@@ -17,6 +17,21 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   const [orderWithAddons, setOrderWithAddons] = useState(null);
   const token = localStorage.getItem("token");
   const [addonPrice, setAddonPrice] = useState(0);
+  const [groupedAddons, setGroupedAddons] = useState({});
+
+  const groupAddonsByOrderItemId = (addons) => {
+    if (!addons || !Array.isArray(addons)) return {};
+    
+    const grouped = {};
+    addons.forEach(addon => {
+      const itemId = addon.order_item_id;
+      if (!grouped[itemId]) {
+        grouped[itemId] = [];
+      }
+      grouped[itemId].push(addon);
+    });
+    return grouped;
+  };
 
   const calculateTotalPrice = () => {
     if (!order.items || order.items.length === 0 || !menuDetails) return 0;
@@ -29,11 +44,21 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
       return total;
     }, 0);
 
-    return menuTotal + addonPrice;
+    return menuTotal + (order.addon_price || addonPrice || 0);
   };
 
   const getItemAddonNames = (item) => {
-    if (!item.addons || item.addons.length === 0) return "";
+    if (!item.addons || item.addons.length === 0) {
+      const itemAddons = groupedAddons[item.order_item_id];
+      if (!itemAddons || itemAddons.length === 0) return "";
+      
+      const addonNames = itemAddons.map(addon => {
+        const quantity = addon.quantity > 1 ? ` (${addon.quantity}x)` : "";
+        return `${addon.addon_name}${quantity}`;
+      });
+      
+      return addonNames.join(", ");
+    }
     
     const addonNames = [];
     item.addons.forEach(category => {
@@ -49,6 +74,15 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
   };
 
   const getItemAddonPrice = (item) => {
+    const itemAddons = groupedAddons[item.order_item_id];
+    if (itemAddons && itemAddons.length > 0) {
+      return itemAddons.reduce((total, addon) => {
+        const price = parseFloat(addon.addon_price) || 0;
+        const quantity = addon.quantity || 1;
+        return total + (price * quantity);
+      }, 0);
+    }
+
     if (!item.addons || item.addons.length === 0) return 0;
     
     let itemAddonTotal = 0;
@@ -73,6 +107,19 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     return (menuPrice * quantity) + addonPrice;
   };
 
+  const getTotalAddOnPrice = (items, addons) => {
+    let total = 0;
+    if (!addons || !Array.isArray(addons) || addons.length === 0) return total;
+    
+    addons.forEach(addon => {
+      const price = parseFloat(addon.addon_price) || 0;
+      const quantity = addon.quantity || 1;
+      total += price * quantity;
+    });
+    
+    return total;
+  };
+
   useEffect(() => {
     const fetchMenuDetails = async () => {
       const details = {};
@@ -90,6 +137,18 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
 
       setOrderWithAddons(orderItems);
 
+      // Handle addons - group them by order_item_id if they exist in flat array format
+      if (orderItems.addons && Array.isArray(orderItems.addons)) {
+        const grouped = groupAddonsByOrderItemId(orderItems.addons);
+        setGroupedAddons(grouped);
+        
+        // Calculate total addon price
+        const totalAddonPrice = getTotalAddOnPrice(orderItems.items, orderItems.addons);
+        setAddonPrice(totalAddonPrice);
+      } else {
+        setAddonPrice(orderItems.addon_price || 0);
+      }
+
       if (orderItems.addon_price !== undefined) {
         order.addon_price = orderItems.addon_price;
       }
@@ -102,7 +161,6 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
         });
       }
 
-      setAddonPrice(orderItems.addon_price || 0);
       setMenuDetails(details);
       setLoading(false);
     };
@@ -140,8 +198,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
     0
   );
 
-  const orderTotalPrice =
-    order.total_price || order.total || calculateTotalPrice() || 0;
+  const orderTotalPrice = calculateTotalPrice() || 0;
 
   useEffect(() => {
     if (!loading && order.items && order.items.length > 0) {
@@ -223,7 +280,7 @@ const OrderItem = ({ order, onOrderClick, onOrderAgain }) => {
                           {item.item_quantity} Item{item.item_quantity !== 1 && "s"}
                         </p>
                         
-                      </div>
+                      </div>  
                       <div className="text-right">
                         {menu?.menu_price && (
                           <>
