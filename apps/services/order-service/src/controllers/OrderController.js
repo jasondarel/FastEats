@@ -419,15 +419,12 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
         if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
           for (const category of orderItemAddsOnCategory) {
             const addOnItems = await getOrderAddsOnItemService(category.category_id);
-            logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
             
             if (addOnItems && addOnItems.length > 0) {
               const categoryAddons = addOnItems.map(addon => {
-                const price = parseFloat(addon.adds_on_price) || 0;
+                const price = (parseFloat(addon.adds_on_price) * item.item_quantity) || 0;
                 const quantity = addon.quantity || 1;
                 const itemTotal = price * quantity;
-                
-                logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
                 
                 const addonDetail = {
                   addon_id: addon.adds_on_id,
@@ -451,16 +448,11 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
               });
               
               allAddons.push(...categoryAddons);
-              
-              const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
-              logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
             }
           }
         }
       }
     }
-    
-    logger.info(`Final total addon price: ${totalAddonPrice}`);
 
     const orderWithAddons = {
       ...order,
@@ -468,7 +460,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
       total_addons: allAddons.length,
       addon_summary: allAddons 
     };
-
+    
     logger.info("Fetching menu data for order items...");
     return responseSuccess(
       res,
@@ -1178,7 +1170,6 @@ export const getOrderByIdController = async (req, res) => {
 
   try {
     const result = await getOrderByIdService(order_id);
-
     if (!result) {
       logger.warn(`Order ${order_id} not found`);
       return responseError(res, 404, "Order Not Found");
@@ -1209,7 +1200,7 @@ export const getOrderByIdController = async (req, res) => {
 
       const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(orderItems[0].order_item_id);
       if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
-        addsOn = await Promise.all(
+        const itemAddsOn = await Promise.all(
           orderItemAddsOnCategory.map(async (category) => {
             const addOnItems = await getOrderAddsOnItemService(category.category_id);
             return {
@@ -1217,7 +1208,11 @@ export const getOrderByIdController = async (req, res) => {
               items: addOnItems
             };
           })
-        );
+        ); 
+        addsOn.push({
+          order_item_id: orderItems[0].order_item_id,
+          addsOn: itemAddsOn
+        }) 
       }
 
       const order = {
@@ -1240,7 +1235,7 @@ export const getOrderByIdController = async (req, res) => {
         for (const item of orderItems) {
             const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
             if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
-                addsOn = await Promise.all(
+                const itemAddsOn = await Promise.all(
                     orderItemAddsOnCategory.map(async (category) => {
                         const addOnItems = await getOrderAddsOnItemService(category.category_id);
                         return {
@@ -1248,7 +1243,11 @@ export const getOrderByIdController = async (req, res) => {
                             items: addOnItems
                         };
                     })
-                );
+                )               
+                addsOn.push({
+                    order_item_id: item.order_item_id,
+                    addsOn: itemAddsOn
+                })
             }
         }
       }
