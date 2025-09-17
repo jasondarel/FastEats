@@ -156,14 +156,21 @@ export const createOrderController = async (req, res) => {
       );
     }
 
-    orderReq.restaurantName = restaurantResponse.data.restaurant.restaurant_name;
-    orderReq.restaurantProvince = restaurantResponse.data.restaurant.restaurant_province;
-    orderReq.restaurantCity = restaurantResponse.data.restaurant.restaurant_city;
-    orderReq.restaurantDistrict = restaurantResponse.data.restaurant.restaurant_district;
-    orderReq.restaurantVillage = restaurantResponse.data.restaurant.restaurant_village;
+    orderReq.restaurantName =
+      restaurantResponse.data.restaurant.restaurant_name;
+    orderReq.restaurantProvince =
+      restaurantResponse.data.restaurant.restaurant_province;
+    orderReq.restaurantCity =
+      restaurantResponse.data.restaurant.restaurant_city;
+    orderReq.restaurantDistrict =
+      restaurantResponse.data.restaurant.restaurant_district;
+    orderReq.restaurantVillage =
+      restaurantResponse.data.restaurant.restaurant_village;
     orderReq.sellerId = restaurantResponse.data.restaurant.owner_id;
-    orderReq.restaurantAddress = restaurantResponse.data.restaurant.restaurant_address;
-    orderReq.restaurantImage = restaurantResponse.data.restaurant.restaurant_image;
+    orderReq.restaurantAddress =
+      restaurantResponse.data.restaurant.restaurant_address;
+    orderReq.restaurantImage =
+      restaurantResponse.data.restaurant.restaurant_image;
     orderReq.menuName = menuResponse.data.menu.menu_name;
     orderReq.menuDescription = menuResponse.data.menu.menu_description;
     orderReq.menuPrice = menuResponse.data.menu.menu_price;
@@ -171,7 +178,7 @@ export const createOrderController = async (req, res) => {
     orderReq.menuCategory = menuResponse.data.menu.menu_category;
 
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       logger.info("Inserting order into database", {
         userId,
@@ -181,7 +188,7 @@ export const createOrderController = async (req, res) => {
 
       if (!order) {
         logger.error("Failed to create order", { userId });
-        await client.query('ROLLBACK');
+        await client.query("ROLLBACK");
         client.release();
         return responseError(res, 500, "Failed to create order");
       }
@@ -202,7 +209,7 @@ export const createOrderController = async (req, res) => {
           orderId: order.order_id,
           menuId: orderReq.menuId,
         });
-        await client.query('ROLLBACK');
+        await client.query("ROLLBACK");
         client.release();
         return responseError(res, 500, "Failed to create order item");
       }
@@ -211,76 +218,96 @@ export const createOrderController = async (req, res) => {
         try {
           for (const [key, value] of Object.entries(addsOnData)) {
             if (Array.isArray(value)) {
-              const addOnItemCategory = await createOrderAddsOnCategoryService(client, {
-                orderItemId: orderItem.order_item_id,
-                categoryName: key,
-                maxSelectable: value[0].max_selectable,
-                isRequired: value[0].is_required || false,
-              });
-              
-              if (!addOnItemCategory) {
-                logger.error("Failed to create add-on category for order item", {
+              const addOnItemCategory = await createOrderAddsOnCategoryService(
+                client,
+                {
                   orderItemId: orderItem.order_item_id,
                   categoryName: key,
-                });
+                  maxSelectable: value[0].max_selectable,
+                  isRequired: value[0].is_required || false,
+                }
+              );
+
+              if (!addOnItemCategory) {
+                logger.error(
+                  "Failed to create add-on category for order item",
+                  {
+                    orderItemId: orderItem.order_item_id,
+                    categoryName: key,
+                  }
+                );
                 throw new Error(`Failed to create add-on category: ${key}`);
               }
-              
+
               for (const item of value) {
                 const addOnItem = await createOrderAddsOnItemService(client, {
                   addsOnName: item.item_name,
                   addsOnPrice: item.item_price,
                   categoryId: addOnItemCategory.category_id,
                 });
-                
+
                 if (!addOnItem) {
                   logger.error("Failed to create add-on item for order item", {
                     orderItemId: orderItem.order_item_id,
                     addsOnName: item.item_name,
                   });
-                  throw new Error(`Failed to create add-on item: ${item.item_name}`);
+                  throw new Error(
+                    `Failed to create add-on item: ${item.item_name}`
+                  );
                 }
               }
             } else if (value !== null) {
-              const addOnItemCategory = await createOrderAddsOnCategoryService(client, {
-                orderItemId: orderItem.order_item_id,
-                categoryName: key,
-                maxSelectable: value.max_selectable || 1,
-                isRequired: value.is_required || false,
-              });
-              
-              if (!addOnItemCategory) {
-                logger.error("Failed to create add-on category for order item", {
+              const addOnItemCategory = await createOrderAddsOnCategoryService(
+                client,
+                {
                   orderItemId: orderItem.order_item_id,
                   categoryName: key,
-                });
+                  maxSelectable: value.max_selectable || 1,
+                  isRequired: value.is_required || false,
+                }
+              );
+
+              if (!addOnItemCategory) {
+                logger.error(
+                  "Failed to create add-on category for order item",
+                  {
+                    orderItemId: orderItem.order_item_id,
+                    categoryName: key,
+                  }
+                );
                 throw new Error(`Failed to create add-on category: ${key}`);
               }
-              
+
               const addOnItem = await createOrderAddsOnItemService(client, {
                 addsOnName: value.item_name,
                 addsOnPrice: value.item_price,
                 categoryId: addOnItemCategory.category_id,
               });
-              
+
               if (!addOnItem) {
                 logger.error("Failed to create add-on item for order item", {
                   orderItemId: orderItem.order_item_id,
                   addsOnName: value.item_name,
                 });
-                throw new Error(`Failed to create add-on item: ${value.item_name}`);
+                throw new Error(
+                  `Failed to create add-on item: ${value.item_name}`
+                );
               }
             }
           }
         } catch (addOnError) {
           logger.error("Error creating add-ons", { error: addOnError.message });
-          await client.query('ROLLBACK');
+          await client.query("ROLLBACK");
           client.release();
-          return responseError(res, 500, `Failed to create add-ons: ${addOnError.message}`);
+          return responseError(
+            res,
+            500,
+            `Failed to create add-ons: ${addOnError.message}`
+          );
         }
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       logger.info("Order and order item created successfully", {
         orderId: order.order_id,
         userId,
@@ -292,7 +319,7 @@ export const createOrderController = async (req, res) => {
         items: orderItem ? [orderItem] : [],
       });
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       client.release();
       logger.error("Database error while creating order", {
         error: error.message,
@@ -377,7 +404,7 @@ export const getAllOrdersWithItemsController = async (req, res) => {
   logger.info("GET ALL ORDERS WITH ITEMS CONTROLLER");
   const { userId, role } = req.user;
   try {
-    const orders = await getAllOrdersWithItemsService({userId});
+    const orders = await getAllOrdersWithItemsService({ userId });
     return responseSuccess(
       res,
       200,
@@ -404,18 +431,21 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
     }
 
     let totalAddonPrice = 0;
-    let allAddons = []; 
-    
+    let allAddons = [];
+
     if (order.items && order.items.length > 0) {
       for (const item of order.items) {
         logger.info(`Processing addons for item: ${item.order_item_id}`);
-        
-        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
-        logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
-        
-        
+
+        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(
+          item.order_item_id
+        );
+        logger.info(
+          `Addon categories found: ${orderItemAddsOnCategory?.length || 0}`
+        );
+
         item.addons = [];
-        
+
         if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
           for (const category of orderItemAddsOnCategory) {
             const addOnItems = await getOrderAddsOnItemService(category.category_id);
@@ -425,7 +455,6 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
                 const price = (parseFloat(addon.adds_on_price) * item.item_quantity) || 0;
                 const quantity = addon.quantity || 1;
                 const itemTotal = price * quantity;
-                
                 const addonDetail = {
                   addon_id: addon.adds_on_id,
                   addon_name: addon.adds_on_name,
@@ -434,19 +463,19 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
                   total_price: itemTotal,
                   category_id: category.category_id,
                   category_name: category.category_name,
-                  order_item_id: item.order_item_id
+                  order_item_id: item.order_item_id,
                 };
-                
+
                 totalAddonPrice += itemTotal;
                 return addonDetail;
               });
-              
+
               item.addons.push({
                 category_id: category.category_id,
                 category_name: category.category_name,
-                addons: categoryAddons
+                addons: categoryAddons,
               });
-              
+
               allAddons.push(...categoryAddons);
             }
           }
@@ -458,7 +487,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
       ...order,
       addon_price: totalAddonPrice,
       total_addons: allAddons.length,
-      addon_summary: allAddons 
+      addon_summary: allAddons,
     };
     
     logger.info("Fetching menu data for order items...");
@@ -600,7 +629,11 @@ export const updateCartItemQuantityController = async (req, res) => {
 
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
-      return responseError(res, 403, "You are not authorized to update a cart item");
+      return responseError(
+        res,
+        403,
+        "You are not authorized to update a cart item"
+      );
     }
 
     if (!menu_id || !quantity) {
@@ -610,8 +643,11 @@ export const updateCartItemQuantityController = async (req, res) => {
     logger.info(
       `Updating cart item for user ${userId} and menu id ${menu_id} with quantity ${quantity}...`
     );
-    const updatedCartItem = await updateCartItemQuantityServiceByMenuId(menu_id, quantity);
-    
+    const updatedCartItem = await updateCartItemQuantityServiceByMenuId(
+      menu_id,
+      quantity
+    );
+
     if (!updatedCartItem) {
       logger.warn(`Cart item ${menu_id} not found`);
       return responseError(res, 404, "Cart item not found");
@@ -630,7 +666,7 @@ export const updateCartItemQuantityController = async (req, res) => {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
   }
-}
+};
 
 export const createCartItemController = async (req, res) => {
   logger.info("CREATE CART ITEM CONTROLLER");
@@ -642,11 +678,12 @@ export const createCartItemController = async (req, res) => {
     let addsOnData = {};
     if (addsOnParsed) {
       addsOnData = Object.fromEntries(
-          Object.entries(addsOnParsed).filter(
-            ([_, value]) => value != null && !(Array.isArray(value) && value.length === 0)
-          )
-        );
-      }
+        Object.entries(addsOnParsed).filter(
+          ([_, value]) =>
+            value != null && !(Array.isArray(value) && value.length === 0)
+        )
+      );
+    }
     const addsOnDataString = JSON.stringify(addsOnData) || null;
     const withAddOns = Object.keys(addsOnData).length > 0 ? true : false;
     if (role !== "user") {
@@ -680,7 +717,12 @@ export const createCartItemController = async (req, res) => {
         "cartId, menuId, and quantity are required"
       );
     }
-    const existedCartItem = await getCartItemServiceByMenuId(cartId, menuId, withAddOns, addsOnDataString);
+    const existedCartItem = await getCartItemServiceByMenuId(
+      cartId,
+      menuId,
+      withAddOns,
+      addsOnDataString
+    );
 
     if (existedCartItem) {
       logger.warn("Cart item already exists", {
@@ -688,8 +730,15 @@ export const createCartItemController = async (req, res) => {
         cartId,
         menuId,
       });
-      const updatedQuantity = Number(existedCartItem.quantity) + Number(quantity);
-      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(client, menuId, updatedQuantity, withAddOns, addsOnDataString);
+      const updatedQuantity =
+        Number(existedCartItem.quantity) + Number(quantity);
+      const updatedCartItem = await updateCartItemQuantityServiceByMenuId(
+        client,
+        menuId,
+        updatedQuantity,
+        withAddOns,
+        addsOnDataString
+      );
       logger.info("Cart item quantity updated successfully");
       client.release();
       return responseSuccess(
@@ -702,22 +751,24 @@ export const createCartItemController = async (req, res) => {
     }
 
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
-      logger.info(`Creating cart item for user ${userId} and cart ${cartId}...`);
+      logger.info(
+        `Creating cart item for user ${userId} and cart ${cartId}...`
+      );
       const cartItem = await createCartItemService(
         client,
         cartId,
         menuId,
         quantity,
         withAddOns,
-        addsOnDataString,
+        addsOnDataString
       );
       logger.info(`Cart item created: ${cartItem?.cart_item_id}...`);
 
       if (!cartItem) {
         logger.error("Failed to create cart item", { userId, cartId, menuId });
-        await client.query('ROLLBACK');
+        await client.query("ROLLBACK");
         client.release();
         return responseError(res, 500, "Failed to create cart item");
       }
@@ -726,13 +777,16 @@ export const createCartItemController = async (req, res) => {
         try {
           for (const [key, value] of Object.entries(addsOnData)) {
             if (Array.isArray(value)) {
-              const addOnItemCategory = await createCartAddsOnCategoryService(client, {
-                cartItemId: cartItem.cart_item_id,
-                categoryName: key,
-                maxSelectable: value[0].max_selectable,
-                isRequired: value[0].is_required || false,
-              });
-              
+              const addOnItemCategory = await createCartAddsOnCategoryService(
+                client,
+                {
+                  cartItemId: cartItem.cart_item_id,
+                  categoryName: key,
+                  maxSelectable: value[0].max_selectable,
+                  isRequired: value[0].is_required || false,
+                }
+              );
+
               if (!addOnItemCategory) {
                 logger.error("Failed to create add-on category for cart item", {
                   cartItemId: cartItem.cart_item_id,
@@ -747,23 +801,28 @@ export const createCartItemController = async (req, res) => {
                   addsOnPrice: item.item_price,
                   categoryId: addOnItemCategory.category_id,
                 });
-                
+
                 if (!addOnItem) {
                   logger.error("Failed to create add-on item for cart item", {
                     cartItemId: cartItem.cart_item_id,
                     addsOnName: item.item_name,
                   });
-                  throw new Error(`Failed to create add-on item: ${item.item_name}`);
+                  throw new Error(
+                    `Failed to create add-on item: ${item.item_name}`
+                  );
                 }
               }
             } else if (value !== null) {
-              const addOnItemCategory = await createCartAddsOnCategoryService(client, {
-                cartItemId: cartItem.cart_item_id,
-                categoryName: key,
-                maxSelectable: value.max_selectable || 1,
-                isRequired: value.is_required || false,
-              });
-              
+              const addOnItemCategory = await createCartAddsOnCategoryService(
+                client,
+                {
+                  cartItemId: cartItem.cart_item_id,
+                  categoryName: key,
+                  maxSelectable: value.max_selectable || 1,
+                  isRequired: value.is_required || false,
+                }
+              );
+
               if (!addOnItemCategory) {
                 logger.error("Failed to create add-on category for cart item", {
                   cartItemId: cartItem.cart_item_id,
@@ -777,25 +836,34 @@ export const createCartItemController = async (req, res) => {
                 addsOnPrice: value.item_price,
                 categoryId: addOnItemCategory.category_id,
               });
-              
+
               if (!addOnItem) {
                 logger.error("Failed to create add-on item for cart item", {
                   cartItemId: cartItem.cart_item_id,
                   addsOnName: value.item_name,
                 });
-                throw new Error(`Failed to create add-on item: ${value.item_name}`);
+                throw new Error(
+                  `Failed to create add-on item: ${value.item_name}`
+                );
               }
             }
           }
-        } catch(addOnError) {
-          logger.error("Error creating add-ons for cart item:", addOnError.message);
-          await client.query('ROLLBACK');
+        } catch (addOnError) {
+          logger.error(
+            "Error creating add-ons for cart item:",
+            addOnError.message
+          );
+          await client.query("ROLLBACK");
           client.release();
-          return responseError(res, 500, `Failed to create add-ons: ${addOnError.message}`);
+          return responseError(
+            res,
+            500,
+            `Failed to create add-ons: ${addOnError.message}`
+          );
         }
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       logger.info("Cart item and add-ons created successfully", {
         cartItemId: cartItem.cart_item_id,
         userId,
@@ -810,7 +878,7 @@ export const createCartItemController = async (req, res) => {
         cartItem
       );
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       console.error("Database error while creating cart item:", error);
       client.release();
       logger.error("Database error while creating cart item", {
@@ -830,8 +898,8 @@ export const deleteCartItemController = async (req, res) => {
   try {
     const { userId, role } = req.user;
     const { menu_id } = req.params;
-    const {cart_item_id} = req.body;
-    
+    const { cart_item_id } = req.body;
+
     if (role !== "user") {
       logger.warn("Unauthorized access attempt");
       return responseError(res, 403, "You are not authorized to create a cart");
@@ -1156,7 +1224,13 @@ export const completeOrderController = async (req, res) => {
 
     await createCompletedOrderJobService(orderDetails);
 
-    return responseSuccess(res, 200, "Order completed successfully", "order", orderDetails);
+    return responseSuccess(
+      res,
+      200,
+      "Order completed successfully",
+      "order",
+      orderDetails
+    );
   } catch (error) {
     logger.error("Internal server error", error);
     return responseError(res, 500, "Internal server error");
@@ -1176,18 +1250,18 @@ export const getOrderByIdController = async (req, res) => {
     }
 
     if (role === "user") {
-        if (result.user_id !== userId) {
-          logger.warn(
-            `Unauthorized access attempt by user ${userId} on order ${order_id}`
-          );
-        }
-      } else if (role === "seller") {
-        if (result.seller_id !== userId) {
-          logger.warn(
-            `Unauthorized access attempt by seller ${userId} on order ${order_id}`
-          );
-        }
+      if (result.user_id !== userId) {
+        logger.warn(
+          `Unauthorized access attempt by user ${userId} on order ${order_id}`
+        );
       }
+    } else if (role === "seller") {
+      if (result.seller_id !== userId) {
+        logger.warn(
+          `Unauthorized access attempt by seller ${userId} on order ${order_id}`
+        );
+      }
+    }
 
     if (result.order_type === "CHECKOUT") {
       const orderItems = await getOrderItemsByOrderIdService(result.order_id);
@@ -1202,10 +1276,12 @@ export const getOrderByIdController = async (req, res) => {
       if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
         const itemAddsOn = await Promise.all(
           orderItemAddsOnCategory.map(async (category) => {
-            const addOnItems = await getOrderAddsOnItemService(category.category_id);
+            const addOnItems = await getOrderAddsOnItemService(
+              category.category_id
+            );
             return {
               ...category,
-              items: addOnItems
+              items: addOnItems,
             };
           })
         ); 
@@ -1293,7 +1369,7 @@ export const payOrderConfirmationController = async (req, res) => {
       shipping_phone,
       shipping_name,
     } = req.body;
-    
+
     const order = await getOrderByIdService(order_id);
     if (!order) {
       logger.warn(`Order ${order_id} not found`);
@@ -1339,10 +1415,7 @@ export const payOrderConfirmationController = async (req, res) => {
           shipping_phone,
           shipping_name,
         ],
-        custom_field2: [
-          tax,
-          itemPrice
-        ],
+        custom_field2: [tax, itemPrice],
         credit_card: { secure: true },
         isProduction: process.env.IS_PRODUCTION,
       },
@@ -1488,7 +1561,7 @@ export const payOrderController = async (req, res) => {
         logger.error("Redis client not initialized");
         return responseError(res, 500, "Redis client not initialized");
       }
-      
+
       await redisClient.set(
         `order:${order_id}`,
         JSON.stringify({
@@ -1548,7 +1621,9 @@ export const payOrderController = async (req, res) => {
         const redisClient = getRedisClient();
         if (redisClient) {
           await redisClient.del(`order:${order_id}`);
-          logger.info(`Redis key order:${order_id} deleted after payment success`);
+          logger.info(
+            `Redis key order:${order_id} deleted after payment success`
+          );
         }
 
         logger.info("Order paid successfully");
@@ -1774,30 +1849,46 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
           // Process addons for each order item
           let totalAddonPrice = 0;
           let allAddons = []; // Array to store all addon details
-          
+
           if (items && items.length > 0) {
             for (const item of items) {
               logger.info(`Processing addons for item: ${item.order_item_id}`);
-              
-              const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
-              logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
-              
+
+              const orderItemAddsOnCategory =
+                await getOrderAddsOnCategoryService(item.order_item_id);
+              logger.info(
+                `Addon categories found: ${
+                  orderItemAddsOnCategory?.length || 0
+                }`
+              );
+
               // Initialize addons array for this item
               item.addons = [];
-              
-              if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
+
+              if (
+                orderItemAddsOnCategory &&
+                orderItemAddsOnCategory.length > 0
+              ) {
                 for (const category of orderItemAddsOnCategory) {
-                  const addOnItems = await getOrderAddsOnItemService(category.category_id);
-                  logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
-                  
+                  const addOnItems = await getOrderAddsOnItemService(
+                    category.category_id
+                  );
+                  logger.info(
+                    `Addon items in category ${category.category_id}: ${
+                      addOnItems?.length || 0
+                    }`
+                  );
+
                   if (addOnItems && addOnItems.length > 0) {
-                    const categoryAddons = addOnItems.map(addon => {
+                    const categoryAddons = addOnItems.map((addon) => {
                       const price = parseFloat(addon.adds_on_price) || 0;
                       const quantity = addon.quantity || 1;
                       const itemTotal = price * quantity;
-                      
-                      logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
-                      
+
+                      logger.info(
+                        `Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`
+                      );
+
                       const addonDetail = {
                         addon_id: addon.adds_on_id,
                         addon_name: addon.adds_on_name,
@@ -1806,32 +1897,39 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
                         total_price: itemTotal,
                         category_id: category.category_id,
                         category_name: category.category_name,
-                        order_item_id: item.order_item_id
+                        order_item_id: item.order_item_id,
                       };
-                      
+
                       totalAddonPrice += itemTotal;
                       return addonDetail;
                     });
-                    
+
                     // Add category addons to item
                     item.addons.push({
                       category_id: category.category_id,
                       category_name: category.category_name,
-                      addons: categoryAddons
+                      addons: categoryAddons,
                     });
-                    
+
                     // Add to global addons array
                     allAddons.push(...categoryAddons);
-                    
-                    const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
-                    logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
+
+                    const categoryAddonPrice = categoryAddons.reduce(
+                      (sum, addon) => sum + addon.total_price,
+                      0
+                    );
+                    logger.info(
+                      `Category ${category.category_name} addon total: ${categoryAddonPrice}`
+                    );
                   }
                 }
               }
             }
           }
-          
-          logger.info(`Final total addon price for order ${order.order_id}: ${totalAddonPrice}`);
+
+          logger.info(
+            `Final total addon price for order ${order.order_id}: ${totalAddonPrice}`
+          );
 
           const user = await axios.get(
             `${GLOBAL_SERVICE_URL}/user/user/${order.user_id}`,
@@ -1849,10 +1947,13 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
             items: items,
             addon_price: totalAddonPrice,
             total_addons: allAddons.length,
-            addon_summary: allAddons
+            addon_summary: allAddons,
           };
         } catch (err) {
-          logger.error(`Error processing order ${order.order_id}:`, err.message);
+          logger.error(
+            `Error processing order ${order.order_id}:`,
+            err.message
+          );
           return {
             ...order,
             error: "Failed to fetch complete order details",
@@ -1860,7 +1961,7 @@ export const getOrdersByRestaurantIdController = async (req, res) => {
         }
       })
     );
-    
+
     logger.info("Orders with addons fetched successfully");
     return responseSuccess(
       res,
@@ -2045,32 +2146,44 @@ export const getRestaurantOrderController = async (req, res) => {
       logger.warn("No items found for this order");
       return responseError(res, 404, "No items found for this order");
     }
-    
+
     let totalAddonPrice = 0;
-    let allAddons = []; 
-    
+    let allAddons = [];
+
     if (orderItems && orderItems.length > 0) {
       for (const item of orderItems) {
         logger.info(`Processing addons for item: ${item.order_item_id}`);
-        
-        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
-        logger.info(`Addon categories found: ${orderItemAddsOnCategory?.length || 0}`);
-        
+
+        const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(
+          item.order_item_id
+        );
+        logger.info(
+          `Addon categories found: ${orderItemAddsOnCategory?.length || 0}`
+        );
+
         item.addons = [];
-        
+
         if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
           for (const category of orderItemAddsOnCategory) {
-            const addOnItems = await getOrderAddsOnItemService(category.category_id);
-            logger.info(`Addon items in category ${category.category_id}: ${addOnItems?.length || 0}`);
-            
+            const addOnItems = await getOrderAddsOnItemService(
+              category.category_id
+            );
+            logger.info(
+              `Addon items in category ${category.category_id}: ${
+                addOnItems?.length || 0
+              }`
+            );
+
             if (addOnItems && addOnItems.length > 0) {
-              const categoryAddons = addOnItems.map(addon => {
+              const categoryAddons = addOnItems.map((addon) => {
                 const price = parseFloat(addon.adds_on_price) || 0;
                 const quantity = addon.quantity || 1;
                 const itemTotal = price * quantity;
-                
-                logger.info(`Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`);
-                
+
+                logger.info(
+                  `Addon item: ${addon.adds_on_name}, Price: ${price}, Qty: ${quantity}, Total: ${itemTotal}`
+                );
+
                 const addonDetail = {
                   addon_id: addon.adds_on_id,
                   addon_name: addon.adds_on_name,
@@ -2079,29 +2192,34 @@ export const getRestaurantOrderController = async (req, res) => {
                   total_price: itemTotal,
                   category_id: category.category_id,
                   category_name: category.category_name,
-                  order_item_id: item.order_item_id
+                  order_item_id: item.order_item_id,
                 };
-                
+
                 totalAddonPrice += itemTotal;
                 return addonDetail;
               });
-              
+
               item.addons.push({
                 category_id: category.category_id,
                 category_name: category.category_name,
-                addons: categoryAddons
+                addons: categoryAddons,
               });
-              
+
               allAddons.push(...categoryAddons);
-              
-              const categoryAddonPrice = categoryAddons.reduce((sum, addon) => sum + addon.total_price, 0);
-              logger.info(`Category ${category.category_name} addon total: ${categoryAddonPrice}`);
+
+              const categoryAddonPrice = categoryAddons.reduce(
+                (sum, addon) => sum + addon.total_price,
+                0
+              );
+              logger.info(
+                `Category ${category.category_name} addon total: ${categoryAddonPrice}`
+              );
             }
           }
         }
       }
     }
-    
+
     logger.info(`Final total addon price: ${totalAddonPrice}`);
 
     const userResponse = await axios.get(
@@ -2132,7 +2250,7 @@ export const getRestaurantOrderController = async (req, res) => {
       transaction,
       addon_price: totalAddonPrice,
       total_addons: allAddons.length,
-      addon_summary: allAddons
+      addon_summary: allAddons,
     };
 
     logger.info("Order fetched successfully");
@@ -2208,12 +2326,16 @@ export const getCartItemsController = async (req, res) => {
             }
           );
 
-          const addsOnCategory = await getCartAddsOnCategoryService(item.cart_item_id);
+          const addsOnCategory = await getCartAddsOnCategoryService(
+            item.cart_item_id
+          );
           let addsOnItems = [];
           if (addsOnCategory && addsOnCategory.length > 0) {
             addsOnItems = await Promise.all(
               addsOnCategory.map(async (category) => {
-                const addOnItems = await getCartAddsOnItemService(category.category_id);
+                const addOnItems = await getCartAddsOnItemService(
+                  category.category_id
+                );
                 return {
                   ...category,
                   items: addOnItems,
@@ -2300,7 +2422,9 @@ export const checkoutCartController = async (req, res) => {
 
     for (const item of finalCartItems) {
       try {
-        const addsOnCategory = await getCartAddsOnCategoryService(item.cart_item_id);
+        const addsOnCategory = await getCartAddsOnCategoryService(
+          item.cart_item_id
+        );
         if (addsOnCategory && addsOnCategory.length > 0) {
           item.addsOn = await Promise.all(
             addsOnCategory.map(async (category) => ({
@@ -2315,19 +2439,22 @@ export const checkoutCartController = async (req, res) => {
           item.addsOn = [];
         }
       } catch (error) {
-        logger.error(`Error fetching add-ons for cart item ${item.cart_item_id}:`, error);
+        logger.error(
+          `Error fetching add-ons for cart item ${item.cart_item_id}:`,
+          error
+        );
         item.addsOn = [];
       }
     }
 
     const menuData = new Map();
     let restaurantResponse;
-    
+
     if (finalCartItems.length > 0) {
       try {
         for (const item of finalCartItems) {
           const menuId = item.menu_id;
-          
+
           logger.info("Fetching menu data", { menuId });
           const menuRes = await axios.get(
             `${GLOBAL_SERVICE_URL}/restaurant/menu-by-Id/${menuId}`,
@@ -2343,7 +2470,7 @@ export const checkoutCartController = async (req, res) => {
             logger.error("Menu not found", { menuId });
             return responseError(res, 404, `Menu with ID ${menuId} not found`);
           }
-          
+
           menuData.set(menuId, menuRes.data.menu);
 
           if (!restaurantResponse) {
@@ -2362,7 +2489,11 @@ export const checkoutCartController = async (req, res) => {
 
             if (!restaurantRes.data?.restaurant) {
               logger.error("Restaurant not found", { restaurantId });
-              return responseError(res, 404, `Restaurant with ID ${restaurantId} not found`);
+              return responseError(
+                res,
+                404,
+                `Restaurant with ID ${restaurantId} not found`
+              );
             }
             restaurantResponse = restaurantRes.data.restaurant;
           }
@@ -2386,7 +2517,7 @@ export const checkoutCartController = async (req, res) => {
 
     const client = await pool.connect();
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       order = await createOrderService(client, {
         userId: userId,
@@ -2404,7 +2535,9 @@ export const checkoutCartController = async (req, res) => {
       });
 
       if (!order || !order.order_id) {
-        throw new Error("Failed to create order from cart - no order ID returned");
+        throw new Error(
+          "Failed to create order from cart - no order ID returned"
+        );
       }
       logger.info("Order created successfully:", { orderId: order.order_id });
       for (const item of finalCartItems) {
@@ -2412,46 +2545,57 @@ export const checkoutCartController = async (req, res) => {
         if (!menuInfo) {
           throw new Error(`Menu data not found for menu_id: ${item.menu_id}`);
         }
-        const orderItem = await createOrderItemService(
-          client,
-          order.order_id,
-          {
-            menuId: item.menu_id,
-            quantity: item.total_quantity,
-            menuName: menuInfo.menu_name,
-            menuDescription: menuInfo.menu_description,
-            menuPrice: menuInfo.menu_price,
-            menuImage: menuInfo.menu_image,
-            menuCategory: menuInfo.menu_category,
-          }
-        )
+        const orderItem = await createOrderItemService(client, order.order_id, {
+          menuId: item.menu_id,
+          quantity: item.total_quantity,
+          menuName: menuInfo.menu_name,
+          menuDescription: menuInfo.menu_description,
+          menuPrice: menuInfo.menu_price,
+          menuImage: menuInfo.menu_image,
+          menuCategory: menuInfo.menu_category,
+        });
         if (!orderItem) {
-          throw new Error(`Failed to create order item for menu_id: ${item.menu_id}`);
+          throw new Error(
+            `Failed to create order item for menu_id: ${item.menu_id}`
+          );
         }
         if (item.addsOn && item.addsOn.length > 0) {
           for (const addOnCategoryItem of item.addsOn) {
-            logger.info("Creating order add-on category:", addOnCategoryItem.category_name);
-            const addOnCategory = await createOrderAddsOnCategoryService(client, {
-              orderItemId: orderItem.order_item_id,
-              categoryName: addOnCategoryItem.category_name,
-              isRequired: addOnCategoryItem.is_required || false,
-              maxSelectable: addOnCategoryItem.max_selectable || 0,
-            });
-            
+            logger.info(
+              "Creating order add-on category:",
+              addOnCategoryItem.category_name
+            );
+            const addOnCategory = await createOrderAddsOnCategoryService(
+              client,
+              {
+                orderItemId: orderItem.order_item_id,
+                categoryName: addOnCategoryItem.category_name,
+                isRequired: addOnCategoryItem.is_required || false,
+                maxSelectable: addOnCategoryItem.max_selectable || 0,
+              }
+            );
+
             if (!addOnCategory) {
-              throw new Error(`Failed to create order add-on category: ${addOnCategoryItem.category_name}`);
+              throw new Error(
+                `Failed to create order add-on category: ${addOnCategoryItem.category_name}`
+              );
             }
-            
+
             for (const addOnItemItem of addOnCategoryItem.items) {
-              logger.info("Creating order add-on item:", addOnItemItem.adds_on_name);
+              logger.info(
+                "Creating order add-on item:",
+                addOnItemItem.adds_on_name
+              );
               const addOnItem = await createOrderAddsOnItemService(client, {
                 categoryId: addOnCategory.category_id,
                 addsOnName: addOnItemItem.adds_on_name,
                 addsOnPrice: addOnItemItem.adds_on_price,
               });
-              
+
               if (!addOnItem) {
-                throw new Error(`Failed to create order add-on item: ${addOnItemItem.adds_on_name}`);
+                throw new Error(
+                  `Failed to create order add-on item: ${addOnItemItem.adds_on_name}`
+                );
               }
             }
           }
@@ -2461,15 +2605,15 @@ export const checkoutCartController = async (req, res) => {
       logger.info("Order items created successfully");
       logger.info("Resetting cart");
       await deleteUserCartService(userId);
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       client.release();
     } catch (err) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       client.release();
       logger.error("Transaction failed, rolled back:", {
         error: err.message,
         stack: err.stack,
-        orderId: order?.order_id
+        orderId: order?.order_id,
       });
       throw err;
     }
@@ -2485,7 +2629,7 @@ export const checkoutCartController = async (req, res) => {
   } catch (err) {
     logger.error("Error in checkout cart controller:", {
       error: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
     return responseError(res, 500, err.message || "Internal server error");
   }
@@ -2515,18 +2659,22 @@ export const getTTLOrderController = async (req, res) => {
       "ttl",
       ttl
     );
-  } catch(err) {
+  } catch (err) {
     logger.error("Error fetching TTL for order:", err);
     return responseError(res, 500, "Internal server error");
   }
-}
+};
 
 export const getSellerSummaryController = async (req, res) => {
   logger.info("GET SELLER SUMMARY CONTROLLER");
   const { userId, role } = req.user;
   if (role !== "seller") {
     logger.warn("Unauthorized access attempt by user", { userId });
-    return responseError(res, 403, "You are not authorized to view this summary");
+    return responseError(
+      res,
+      403,
+      "You are not authorized to view this summary"
+    );
   }
 
   try {
@@ -2536,11 +2684,11 @@ export const getSellerSummaryController = async (req, res) => {
       return responseError(res, 404, "No orders found for this seller");
     }
     const userData = await getUserInformation(
-        GLOBAL_SERVICE_URL,
-        parseInt(ordersSummaryStats.highestFrequentlyOrderUser),
-        internalAPIKey,
-        `Owner with ID ${ordersSummaryStats.highestFrequentlyOrderUser} not found`
-      )
+      GLOBAL_SERVICE_URL,
+      parseInt(ordersSummaryStats.highestFrequentlyOrderUser),
+      internalAPIKey,
+      `Owner with ID ${ordersSummaryStats.highestFrequentlyOrderUser} not found`
+    );
     const orders = camelize(await getSellerOrderSummaryService(userId));
     if (!orders || orders.length === 0) {
       logger.warn("No order summary found for seller", { userId });
@@ -2550,10 +2698,16 @@ export const getSellerSummaryController = async (req, res) => {
     const ordersSummary = {
       ...ordersSummaryStats,
       orders: orders,
-    }
-    return responseSuccess(res, 200, "Seller summary fetched successfully", "summary", ordersSummary );
+    };
+    return responseSuccess(
+      res,
+      200,
+      "Seller summary fetched successfully",
+      "summary",
+      ordersSummary
+    );
   } catch (error) {
     logger.error("Error fetching seller summary:", err);
     return responseError(res, 500, "Internal server error");
   }
-}
+};

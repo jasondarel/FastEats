@@ -4,13 +4,11 @@ services:
     container_name: fasteats_db_postgres
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-FastEats}
+      POSTGRES_USER: ${DB_USER:-FastEats}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-FastEats_PW}
     ports:
-      - "${DB_PORT}:5432"
-    env_file:
-      - .env
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - fasteats_pgdata:/var/lib/postgresql/data
     networks:
@@ -21,12 +19,27 @@ services:
     container_name: fasteats_mongodb
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-FastEats}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-FastEats_PW}
     ports:
       - "27017:27017"
     volumes:
       - fasteats_mongodb_data:/data/db
+    networks:
+      - fasteats_network
+
+  fasteats_rabbitmq:
+    image: rabbitmq:management
+    container_name: fasteats_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-service}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-service_PW}
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - fasteats_rabbitmq_data:/var/lib/rabbitmq
     networks:
       - fasteats_network
 
@@ -47,5 +60,6 @@ networks:
 
 volumes:
   fasteats_pgdata:
+  fasteats_rabbitmq_data:
   fasteats_redis_data:
   fasteats_mongodb_data:

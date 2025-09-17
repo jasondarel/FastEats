@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Check, AlertCircle, Square, CheckSquare } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  Minus,
+  Check,
+  AlertCircle,
+  Square,
+  CheckSquare,
+} from "lucide-react";
 
 const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
   const [selectedAddOns, setSelectedAddOns] = useState({});
@@ -8,8 +15,10 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
   useEffect(() => {
     if (menu?.addsOnCategories) {
       const initialSelections = {};
-      menu.addsOnCategories.forEach(category => {
-        initialSelections[category.category_name] = category.is_multiple ? [] : null;
+      menu.addsOnCategories.forEach((category) => {
+        initialSelections[category.category_name] = category.is_multiple
+          ? []
+          : null;
       });
       setSelectedAddOns(initialSelections);
     }
@@ -18,11 +27,11 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
   useEffect(() => {
     let total = 0;
     if (menu?.addsOnCategories) {
-      menu.addsOnCategories.forEach(category => {
+      menu.addsOnCategories.forEach((category) => {
         const selections = selectedAddOns[category.category_name];
         if (selections) {
           if (Array.isArray(selections)) {
-            selections.forEach(item => {
+            selections.forEach((item) => {
               total += parseFloat(item.item_price || 0);
             });
           } else {
@@ -32,43 +41,68 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
       });
     }
     setTotalAddOnPrice(total);
-    
+
     if (onAddOnsChange) {
       onAddOnsChange(selectedAddOns, total);
     }
   }, [selectedAddOns, menu, onAddOnsChange]);
 
-  const handleSingleSelection = (categoryId, itemId, itemPrice, maxSelectable) => {
-    setSelectedAddOns(prev => {
+  const handleSingleSelection = (
+    categoryId,
+    itemId,
+    itemPrice,
+    maxSelectable
+  ) => {
+    setSelectedAddOns((prev) => {
       const currentSelection = prev[categoryId];
       if (currentSelection?.item_name === itemId) {
         return {
           ...prev,
-          [categoryId]: null
+          [categoryId]: null,
         };
       } else {
         return {
           ...prev,
-          [categoryId]: {item_name: itemId, item_price: itemPrice, max_selectable: maxSelectable}
+          [categoryId]: {
+            item_name: itemId,
+            item_price: itemPrice,
+            max_selectable: maxSelectable,
+          },
         };
       }
     });
   };
 
-  const handleMultipleSelection = (categoryId, itemId, itemPrice, maxSelectable) => {
-    setSelectedAddOns(prev => {
+  const handleMultipleSelection = (
+    categoryId,
+    itemId,
+    itemPrice,
+    maxSelectable
+  ) => {
+    setSelectedAddOns((prev) => {
       const currentSelections = prev[categoryId] || [];
-      const isSelected = currentSelections.some(item => item.item_name === itemId);
-      
+      const isSelected = currentSelections.some(
+        (item) => item.item_name === itemId
+      );
+
       if (isSelected) {
         return {
           ...prev,
-          [categoryId]: currentSelections.filter(item => item.item_name !== itemId)
+          [categoryId]: currentSelections.filter(
+            (item) => item.item_name !== itemId
+          ),
         };
       } else {
         return {
           ...prev,
-          [categoryId]: [...currentSelections, {item_name: itemId, item_price: itemPrice, max_selectable: maxSelectable}]
+          [categoryId]: [
+            ...currentSelections,
+            {
+              item_name: itemId,
+              item_price: itemPrice,
+              max_selectable: maxSelectable,
+            },
+          ],
         };
       }
     });
@@ -76,46 +110,61 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
 
   const isSelectionValid = (category) => {
     const selections = selectedAddOns[category.category_id];
-    const selectionCount = Array.isArray(selections) ? selections.length : (selections ? 1 : 0);
-    
+    const selectionCount = Array.isArray(selections)
+      ? selections.length
+      : selections
+      ? 1
+      : 0;
+
     if (category.is_required && selectionCount === 0) {
       return false;
     }
-    
+
     if (category.min_selectable && selectionCount < category.min_selectable) {
       return false;
     }
-    
+
     if (category.max_selectable && selectionCount > category.max_selectable) {
       return false;
     }
-    
+
     return true;
   };
 
   const getSelectionStatus = (category) => {
     const selections = selectedAddOns[category.category_id];
-    const selectionCount = Array.isArray(selections) ? selections.length : (selections ? 1 : 0);
-    
+    const selectionCount = Array.isArray(selections)
+      ? selections.length
+      : selections
+      ? 1
+      : 0;
+
     if (category.is_required && selectionCount === 0) {
-      return { valid: false, message: 'Required - Please select at least one option' };
+      return {
+        valid: false,
+        message: "Required - Please select at least one option",
+      };
     }
-    
+
     if (category.min_selectable && selectionCount < category.min_selectable) {
-      return { 
-        valid: false, 
-        message: `Please select at least ${category.min_selectable} option${category.min_selectable > 1 ? 's' : ''}` 
+      return {
+        valid: false,
+        message: `Please select at least ${category.min_selectable} option${
+          category.min_selectable > 1 ? "s" : ""
+        }`,
       };
     }
-    
+
     if (category.max_selectable && selectionCount > category.max_selectable) {
-      return { 
-        valid: false, 
-        message: `Please select no more than ${category.max_selectable} option${category.max_selectable > 1 ? 's' : ''}` 
+      return {
+        valid: false,
+        message: `Please select no more than ${category.max_selectable} option${
+          category.max_selectable > 1 ? "s" : ""
+        }`,
       };
     }
-    
-    return { valid: true, message: '' };
+
+    return { valid: true, message: "" };
   };
 
   if (!menu?.addsOnCategories || menu.addsOnCategories.length === 0) {
@@ -124,36 +173,21 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
 
   return (
     <div className="mt-8">
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">Customize Your Order</h3>
-              <p className="text-sm text-gray-600">Make it exactly how you like it</p>
-            </div>
-          </div>
-          {totalAddOnPrice > 0 && (
-            <div className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-xl shadow-sm">
-              <Plus className="w-4 h-4" />
-              <span className="font-semibold">
-                Rp {totalAddOnPrice.toLocaleString('id-ID')}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-      
       <div className="space-y-6 mt-6">
         {menu.addsOnCategories.map((category) => {
           const status = getSelectionStatus(category);
           const selections = selectedAddOns[category.category_id];
-          const selectionCount = Array.isArray(selections) ? selections.length : (selections ? 1 : 0);
-          
+          const selectionCount = Array.isArray(selections)
+            ? selections.length
+            : selections
+            ? 1
+            : 0;
+
           return (
-            <div key={category.category_id} className="bg-white rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div
+              key={category.category_id}
+              className="bg-white rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
               <div className="bg-amber-500 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -177,17 +211,20 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                     )}
                   </div>
                 </div>
-                
+
                 {category.category_description && (
                   <p className="text-amber-100 text-sm mt-2">
                     {category.category_description}
                   </p>
                 )}
-                
+
                 <div className="mt-3">
                   {category.min_selectable && category.max_selectable ? (
                     <p className="text-amber-100 text-sm flex items-center gap-2">
-                      <span>Select {category.min_selectable} to {category.max_selectable} items</span>
+                      <span>
+                        Select {category.min_selectable} to{" "}
+                        {category.max_selectable} items
+                      </span>
                       {selectionCount > 0 && (
                         <span className="bg-white/20 px-2 py-1 rounded-full text-xs font-medium">
                           {selectionCount} selected
@@ -203,7 +240,7 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                         </span>
                       )}
                     </p>
-                  ) : (category.is_multiple || category.max_selectable > 1) ? (
+                  ) : category.is_multiple || category.max_selectable > 1 ? (
                     <p className="text-amber-100 text-sm flex items-center gap-2">
                       <span>Select multiple items</span>
                       {selectionCount > 0 && (
@@ -229,25 +266,31 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                 {category.addsOnItems && category.addsOnItems.length > 0 ? (
                   <div className="space-y-3">
                     {category.addsOnItems.map((item) => {
-                      const isMultipleCategory = category.is_multiple || category.max_selectable > 1;
+                      const isMultipleCategory =
+                        category.is_multiple || category.max_selectable > 1;
                       const isSelected = isMultipleCategory
-                        ? (selectedAddOns[category.category_name] || [])?.some(item2 => item2.item_name === item.adds_on_name)
-                        : selectedAddOns[category.category_name]?.item_name === item.adds_on_name;
-                      
-                      const isDisabled = category.max_selectable && 
+                        ? (selectedAddOns[category.category_name] || [])?.some(
+                            (item2) => item2.item_name === item.adds_on_name
+                          )
+                        : selectedAddOns[category.category_name]?.item_name ===
+                          item.adds_on_name;
+
+                      const isDisabled =
+                        category.max_selectable &&
                         Array.isArray(selectedAddOns[category.category_name]) &&
-                        selectedAddOns[category.category_name].length >= category.max_selectable && 
+                        selectedAddOns[category.category_name].length >=
+                          category.max_selectable &&
                         !isSelected;
 
                       return (
-                        <label 
-                          key={item.item_id} 
+                        <label
+                          key={item.item_id}
                           className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                            isSelected 
-                              ? 'bg-amber-50 border-amber-300 shadow-md ring-2 ring-amber-200' 
+                            isSelected
+                              ? "bg-amber-50 border-amber-300 shadow-md ring-2 ring-amber-200"
                               : isDisabled
-                              ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
-                              : 'bg-white border-gray-200 hover:bg-amber-50 hover:border-amber-200 hover:shadow-md'
+                              ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-60"
+                              : "bg-white border-gray-200 hover:bg-amber-50 hover:border-amber-200 hover:shadow-md"
                           }`}
                         >
                           <div className="flex items-center gap-4 flex-1">
@@ -260,51 +303,86 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                                 onChange={() => {
                                   if (!isDisabled) {
                                     if (isMultipleCategory) {
-                                      handleMultipleSelection(category.category_name, item.adds_on_name, item.adds_on_price, category.max_selectable);
+                                      handleMultipleSelection(
+                                        category.category_name,
+                                        item.adds_on_name,
+                                        item.adds_on_price,
+                                        category.max_selectable
+                                      );
                                     } else {
-                                      handleSingleSelection(category.category_name, item.adds_on_name, item.adds_on_price, category.max_selectable);
+                                      handleSingleSelection(
+                                        category.category_name,
+                                        item.adds_on_name,
+                                        item.adds_on_price,
+                                        category.max_selectable
+                                      );
                                     }
                                   }
                                 }}
                                 className="sr-only"
                               />
-                              
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                                isSelected 
-                                  ? 'bg-amber-500 border-amber-500' 
-                                  : isDisabled
-                                  ? 'bg-gray-200 border-gray-300'
-                                  : 'bg-white border-gray-300 hover:border-amber-400'
-                              }`}>
-                                {isSelected && <Check className="w-3 h-3 text-white" />}
+
+                              <div
+                                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                  isSelected
+                                    ? "bg-amber-500 border-amber-500"
+                                    : isDisabled
+                                    ? "bg-gray-200 border-gray-300"
+                                    : "bg-white border-gray-300 hover:border-amber-400"
+                                }`}
+                              >
+                                {isSelected && (
+                                  <Check className="w-3 h-3 text-white" />
+                                )}
                               </div>
                             </div>
-                            
+
                             <div className="flex-1">
-                              <span className={`font-semibold text-base ${
-                                isDisabled ? 'text-gray-400' : isSelected ? 'text-amber-800' : 'text-gray-800'
-                              }`}>
+                              <span
+                                className={`font-semibold text-base ${
+                                  isDisabled
+                                    ? "text-gray-400"
+                                    : isSelected
+                                    ? "text-amber-800"
+                                    : "text-gray-800"
+                                }`}
+                              >
                                 {item.adds_on_name}
                               </span>
                               {item.adds_on_description && (
-                                <p className={`text-sm mt-1 ${
-                                  isDisabled ? 'text-gray-400' : isSelected ? 'text-amber-600' : 'text-gray-600'
-                                }`}>
+                                <p
+                                  className={`text-sm mt-1 ${
+                                    isDisabled
+                                      ? "text-gray-400"
+                                      : isSelected
+                                      ? "text-amber-600"
+                                      : "text-gray-600"
+                                  }`}
+                                >
                                   {item.adds_on_description}
                                 </p>
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="ml-4">
-                            <div className={`text-right ${
-                              isDisabled ? 'text-gray-400' : isSelected ? 'text-amber-600' : 'text-gray-700'
-                            }`}>
+                            <div
+                              className={`text-right ${
+                                isDisabled
+                                  ? "text-gray-400"
+                                  : isSelected
+                                  ? "text-amber-600"
+                                  : "text-gray-700"
+                              }`}
+                            >
                               {parseFloat(item.adds_on_price) > 0 ? (
                                 <div className="flex items-center gap-1">
                                   <Plus className="w-3 h-3" />
                                   <span className="font-bold text-lg">
-                                    Rp {parseFloat(item.adds_on_price).toLocaleString('id-ID')}
+                                    Rp{" "}
+                                    {parseFloat(
+                                      item.adds_on_price
+                                    ).toLocaleString("id-ID")}
                                   </span>
                                 </div>
                               ) : (
@@ -314,7 +392,6 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
                               )}
                             </div>
                           </div>
-
                         </label>
                       );
                     })}
@@ -344,12 +421,14 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
               </div>
               <div>
                 <span className="text-lg font-bold">Add-ons Total</span>
-                <p className="text-amber-100 text-sm">Extra charges for customizations</p>
+                <p className="text-amber-100 text-sm">
+                  Extra charges for customizations
+                </p>
               </div>
             </div>
             <div className="text-right">
               <span className="text-2xl font-bold">
-                +Rp {totalAddOnPrice.toLocaleString('id-ID')}
+                +Rp {totalAddOnPrice.toLocaleString("id-ID")}
               </span>
             </div>
           </div>
