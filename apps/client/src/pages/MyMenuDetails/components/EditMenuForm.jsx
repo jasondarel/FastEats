@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { API_URL } from "../../../config/api";
 import CategorySelector from "./CategorySelector";
+import MenuImageUploader from "./MenuImageUploader";
 
 const EditMenuForm = ({
   showEditForm,
@@ -25,6 +26,10 @@ const EditMenuForm = ({
   const [selectedToppingCategory, setSelectedToppingCategory] = useState(null);
   const [newToppingName, setNewToppingName] = useState("");
   const [newToppingPrice, setNewToppingPrice] = useState("");
+  const existingMenuImageUrl = menu?.menu_image
+    ? `${API_URL}/restaurant/uploads/menu/${menu.menu_image}`
+    : null;
+  const menuImageAlt = menu?.menu_name || "Menu image";
 
   useEffect(() => {
     if (showEditForm) {
@@ -207,41 +212,12 @@ const EditMenuForm = ({
 
         <div className="p-6 overflow-y-auto max-h-[70vh]">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all hover:shadow-md duration-300">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Menu Image
-              </label>
-              <div className="border-2 border-dashed border-yellow-300 rounded-md p-4 text-center">
-                {previewImage ? (
-                  <img
-                    src={previewImage}
-                    alt="Preview"
-                    className="max-h-64 mx-auto mb-2 object-contain"
-                  />
-                ) : menu.menu_image ? (
-                  <img
-                    src={`${API_URL}/restaurant/uploads/menu/${menu.menu_image}`}
-                    alt={menu.menu_name}
-                    className="max-h-64 mx-auto mb-2 object-contain"
-                  />
-                ) : (
-                  <div className="text-gray-400 mb-2">No image</div>
-                )}
-                <input
-                  type="file"
-                  id="menuImage"
-                  onChange={handleImageChange}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <label
-                  htmlFor="menuImage"
-                  className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded cursor-pointer hover:bg-yellow-200 transition-colors duration-200"
-                >
-                  Choose New Image
-                </label>
-              </div>
-            </div>
+            <MenuImageUploader
+              imagePreview={previewImage}
+              existingImageUrl={existingMenuImageUrl}
+              existingImageAlt={menuImageAlt}
+              onImageChange={handleImageChange}
+            />
 
             <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
