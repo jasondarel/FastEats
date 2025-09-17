@@ -6,7 +6,7 @@ const OrderSummary = ({ order }) => {
     let total = 0;
     addOns.addsOn.forEach(category => {
       if (category.items && Array.isArray(category.items)) {
-        category.items.forEach(item => {
+        category.items.forEach((item) => {
           if (item.adds_on_price && parseFloat(item.adds_on_price) > 0) {
             total += parseFloat(item.adds_on_price) * (item.quantity || 1);
           }
@@ -31,13 +31,18 @@ const OrderSummary = ({ order }) => {
   };
 
   const getOrderTotals = () => {
+    console.log("🔎 getOrderTotals Debug - Full Order Object:", order);
+    console.log("🔎 Order Type:", order.order_type);
+    console.log("🔎 Order AddOns:", order.addsOn);
+    console.log("🔎 Order Items:", order.items);
+
     if (order.order_type === "CHECKOUT") {
       const menuTotal = parseFloat(order.menu_price) * order.item_quantity;
       const addOnTotal = calculateAddOnPrice(order.addsOn[0], order.item_quantity);
       return {
         menuTotal,
         addOnTotal,
-        subtotal: menuTotal + addOnTotal
+        subtotal: menuTotal + addOnTotal,
       };
     } else {
       const menuTotal = order.items.reduce(
@@ -48,7 +53,7 @@ const OrderSummary = ({ order }) => {
       return {
         menuTotal,
         addOnTotal,
-        subtotal: menuTotal + addOnTotal
+        subtotal: menuTotal + addOnTotal,
       };
     }
   };
@@ -66,13 +71,12 @@ const OrderSummary = ({ order }) => {
         <div className="flex justify-between items-center border-b border-amber-100 pb-2">
           <span className="text-amber-700 font-medium">Total Items</span>
           <span className="text-amber-900 font-semibold">
-            {order.order_type === "CHECKOUT" 
-              ? order.item_quantity 
-              : order.items.reduce((sum, item) => sum + item.item_quantity, 0)
-            }
+            {order.order_type === "CHECKOUT"
+              ? order.item_quantity
+              : order.items.reduce((sum, item) => sum + item.item_quantity, 0)}
           </span>
         </div>
-        
+
         <div className="flex justify-between items-center border-b border-amber-100 pb-2">
           <span className="text-amber-700 font-medium">Menu Subtotal</span>
           <span className="text-amber-900 font-semibold">
