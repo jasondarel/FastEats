@@ -1,18 +1,18 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
-import ImageUploader from "./ImageUploader";
+import MenuImageUploader from "./MenuImageUploader";
 import CategorySelector from "./CategorySelector";
 
 const CreateMenuForm = ({ onClose, onSubmit }) => {
-  
   const [menuName, setMenuName] = useState("");
   const [menuDesc, setMenuDesc] = useState("");
   const [menuPrice, setMenuPrice] = useState("");
   const [menuImage, setMenuImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
-  
+
   const [toppingCategories, setToppingCategories] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryMaxSelectable, setNewCategoryMaxSelectable] = useState("1");
@@ -30,7 +30,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
         id: Date.now(),
         name: newCategoryName.trim(),
         maxSelectable: parseInt(newCategoryMaxSelectable),
-        adds: []
+        adds: [],
       };
       setToppingCategories([...toppingCategories, newCategory]);
       setNewCategoryName("");
@@ -39,8 +39,8 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   };
 
   const handleUpdateCategoryMaxSelectable = (categoryId, newMaxSelectable) => {
-    setToppingCategories(categories =>
-      categories.map(cat =>
+    setToppingCategories((categories) =>
+      categories.map((cat) =>
         cat.id === categoryId
           ? { ...cat, maxSelectable: parseInt(newMaxSelectable) }
           : cat
@@ -49,7 +49,9 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
   };
 
   const handleRemoveCategory = (categoryId) => {
-    setToppingCategories(toppingCategories.filter(cat => cat.id !== categoryId));
+    setToppingCategories(
+      toppingCategories.filter((cat) => cat.id !== categoryId)
+    );
     if (selectedToppingCategory === categoryId) {
       setSelectedToppingCategory(null);
     }
@@ -62,28 +64,63 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
         adds_on_name: newToppingName.trim(),
         adds_on_price: parseFloat(newToppingPrice),
       };
-      
-      setToppingCategories(categories => 
-        categories.map(cat => 
-          cat.id === selectedToppingCategory 
+
+      setToppingCategories((categories) =>
+        categories.map((cat) =>
+          cat.id === selectedToppingCategory
             ? { ...cat, adds: [...cat.adds, newTopping] }
             : cat
         )
       );
-      
+
       setNewToppingName("");
       setNewToppingPrice("");
     }
   };
 
   const handleRemoveTopping = (categoryId, toppingId) => {
-    setToppingCategories(categories =>
-      categories.map(cat =>
+    setToppingCategories((categories) =>
+      categories.map((cat) =>
         cat.id === categoryId
-          ? { ...cat, adds: cat.adds.filter(topping => topping.id !== toppingId) }
+          ? {
+              ...cat,
+              adds: cat.adds.filter((topping) => topping.id !== toppingId),
+            }
           : cat
       )
     );
+  };
+
+  const handleMenuImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setMenuImage(null);
+      setPreviewImage(null);
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size must be less than 5MB");
+      event.target.value = "";
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file");
+      event.target.value = "";
+      return;
+    }
+
+    setMenuImage(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    event.target.value = "";
   };
 
   const handleSubmit = (e) => {
@@ -97,7 +134,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
     if (menuImage) {
       formData.append("menuImage", menuImage);
     }
-    
+
     formData.append("toppingCategories", JSON.stringify(toppingCategories));
 
     onSubmit(formData);
@@ -155,9 +192,11 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
         <div className="p-6 overflow-y-auto max-h-[70vh]">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all hover:shadow-md duration-300">
-              <ImageUploader onImageChange={(file) => setMenuImage(file)} />
-            </div>
+            <MenuImageUploader
+              label="Menu Image"
+              imagePreview={previewImage}
+              onImageChange={handleMenuImageChange}
+            />
 
             <div className="transition-all duration-200 transform">
               <label className="block font-semibold text-gray-700 mb-2 text-sm">
@@ -218,11 +257,15 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all duration-200 hover:shadow-md">
               <h3 className="block font-semibold text-gray-700 mb-4 text-sm">
                 Add-ons
-                <span className="text-gray-500 text-xs font-normal ml-2">(Optional)</span>
+                <span className="text-gray-500 text-xs font-normal ml-2">
+                  (Optional)
+                </span>
               </h3>
-              
+
               <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">1. Create adds-on Category</h4>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  1. Create adds-on Category
+                </h4>
                 <div className="flex gap-3">
                   <input
                     type="text"
@@ -232,14 +275,18 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                     onChange={(e) => setNewCategoryName(e.target.value)}
                   />
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600 whitespace-nowrap">Max select:</label>
+                    <label className="text-sm text-gray-600 whitespace-nowrap">
+                      Max select:
+                    </label>
                     <input
                       type="number"
                       min="1"
                       max="20"
                       className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                       value={newCategoryMaxSelectable}
-                      onChange={(e) => setNewCategoryMaxSelectable(e.target.value)}
+                      onChange={(e) =>
+                        setNewCategoryMaxSelectable(e.target.value)
+                      }
                     />
                   </div>
                   <button
@@ -250,7 +297,9 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                         ? "bg-yellow-500 hover:bg-yellow-600 transform hover:scale-105"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
-                    disabled={!newCategoryName.trim() || !newCategoryMaxSelectable}
+                    disabled={
+                      !newCategoryName.trim() || !newCategoryMaxSelectable
+                    }
                   >
                     Add Category
                   </button>
@@ -259,17 +308,24 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
               {toppingCategories.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">2. Add adds-on to Category</h4>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">
+                    2. Add adds-on to Category
+                  </h4>
                   <div className="flex gap-3">
                     <select
                       className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                       value={selectedToppingCategory || ""}
-                      onChange={(e) => setSelectedToppingCategory(e.target.value ? parseInt(e.target.value) : null)}
+                      onChange={(e) =>
+                        setSelectedToppingCategory(
+                          e.target.value ? parseInt(e.target.value) : null
+                        )
+                      }
                     >
                       <option value="">Select category...</option>
                       {toppingCategories.map((category) => (
                         <option key={category.id} value={category.id}>
-                          {category.name} ({category.adds.length}) - Max: {category.max_selectable}
+                          {category.name} ({category.adds.length}) - Max:{" "}
+                          {category.max_selectable}
                         </option>
                       ))}
                     </select>
@@ -298,11 +354,17 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                       type="button"
                       onClick={handleAddTopping}
                       className={`px-4 py-2 rounded-lg text-white font-medium text-sm transition-all duration-200 ${
-                        newToppingName.trim() && newToppingPrice && selectedToppingCategory
+                        newToppingName.trim() &&
+                        newToppingPrice &&
+                        selectedToppingCategory
                           ? "bg-yellow-500 hover:bg-yellow-600 transform hover:scale-105"
                           : "bg-gray-300 cursor-not-allowed"
                       }`}
-                      disabled={!newToppingName.trim() || !newToppingPrice || !selectedToppingCategory}
+                      disabled={
+                        !newToppingName.trim() ||
+                        !newToppingPrice ||
+                        !selectedToppingCategory
+                      }
                     >
                       Add
                     </button>
@@ -312,21 +374,35 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
               {toppingCategories.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-600">Category Settings & Added adds:</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Category Settings & Added adds:
+                  </h4>
                   {toppingCategories.map((category) => (
-                    <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div
+                      key={category.id}
+                      className="bg-white rounded-lg border border-gray-200 p-4"
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-4">
-                          <h5 className="font-medium text-gray-800 text-sm">{category.name}</h5>
+                          <h5 className="font-medium text-gray-800 text-sm">
+                            {category.name}
+                          </h5>
                           <div className="flex items-center gap-2">
-                            <label className="text-xs text-gray-600">Max select:</label>
+                            <label className="text-xs text-gray-600">
+                              Max select:
+                            </label>
                             <input
                               type="number"
                               min="1"
                               max="20"
                               className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500"
                               value={category.maxSelectable}
-                              onChange={(e) => handleUpdateCategoryMaxSelectable(category.id, e.target.value)}
+                              onChange={(e) =>
+                                handleUpdateCategoryMaxSelectable(
+                                  category.id,
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -355,7 +431,7 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                           </svg>
                         </button>
                       </div>
-                      
+
                       {category.adds.length > 0 ? (
                         <div className="space-y-2">
                           {category.adds.map((topping) => (
@@ -364,14 +440,18 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
                               className="flex items-center justify-between bg-gray-50 p-2 rounded border"
                             >
                               <div className="flex-1">
-                                <span className="font-medium text-gray-800 text-sm">{topping.adds_on_name}</span>
+                                <span className="font-medium text-gray-800 text-sm">
+                                  {topping.adds_on_name}
+                                </span>
                                 <span className="text-yellow-600 font-semibold ml-2 text-sm">
                                   +Rp {topping.adds_on_price.toLocaleString()}
                                 </span>
                               </div>
                               <button
                                 type="button"
-                                onClick={() => handleRemoveTopping(category.id, topping.id)}
+                                onClick={() =>
+                                  handleRemoveTopping(category.id, topping.id)
+                                }
                                 className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
                                 title="Remove item"
                               >
@@ -405,7 +485,8 @@ const CreateMenuForm = ({ onClose, onSubmit }) => {
 
               {toppingCategories.length === 0 && (
                 <div className="text-center text-gray-500 text-sm py-4 border-2 border-dashed border-gray-200 rounded-lg">
-                  No topping categories created yet. Start by creating a topping category!
+                  No topping categories created yet. Start by creating a topping
+                  category!
                 </div>
               )}
             </div>

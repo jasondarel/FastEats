@@ -10,6 +10,7 @@
     "apps/services/order-service",
     "apps/services/notification-service",
     "apps/services/restaurant-service",
+    "apps/services/ai-service",
     "apps/api-gateway",
     "apps/services/workers"
   ],
