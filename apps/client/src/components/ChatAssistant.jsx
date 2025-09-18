@@ -76,7 +76,8 @@ const ChatAssistant = ({ onClose }) => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hey there! I'm Fae, your FastEats guide. What would you like to do next?",
+      content:
+        "Hey there! I'm Fae, your FastEats guide. What would you like to do next?",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -134,7 +135,10 @@ const ChatAssistant = ({ onClose }) => {
       const finalContent =
         cleanedText || "I'm not sure what to say. Could you rephrase that?";
 
-      setMessages([...displayMessages, { role: "assistant", content: finalContent }]);
+      setMessages([
+        ...displayMessages,
+        { role: "assistant", content: finalContent },
+      ]);
 
       if (target) {
         setTimeout(() => navigate(target), 120);
@@ -154,7 +158,9 @@ const ChatAssistant = ({ onClose }) => {
         <header className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-5 py-4 flex items-center justify-between">
           <div>
             <p className="text-lg font-semibold">Fae - FastEats AI</p>
-            <p className="text-xs text-white/90">Smart pointers and speedy navigation</p>
+            <p className="text-xs text-white/90">
+              Smart pointers and speedy navigation
+            </p>
           </div>
           <button
             type="button"
@@ -174,22 +180,43 @@ const ChatAssistant = ({ onClose }) => {
             return (
               <div
                 key={`${message.role}-${index}`}
-                className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                className={`flex items-end gap-2 ${
+                  isUser ? "justify-end" : "justify-start"
+                }`}
               >
+                {!isUser && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-sm overflow-hidden">
+                    <img
+                      src="/Fae-zoomed.png"
+                      alt="Fae AI"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "block";
+                      }}
+                    />
+                    <span className="text-white text-xs font-bold hidden">
+                      F
+                    </span>
+                  </div>
+                )}
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed shadow-sm ${
+                  className={`max-w-[75%] rounded-2xl px-4 py-3 leading-relaxed shadow-sm ${
                     isUser
                       ? "bg-yellow-500 text-white shadow-md"
                       : "bg-white border border-yellow-200 text-slate-800"
                   }`}
                 >
-                  {message.content || (message.role === "assistant" ? "..." : null)}
+                  {message.content ||
+                    (message.role === "assistant" ? "..." : null)}
                 </div>
               </div>
             );
           })}
           {isLoading && (
-            <div className="text-xs text-yellow-600 animate-pulse">Fae is thinking...</div>
+            <div className="text-xs text-yellow-600 animate-pulse ml-10">
+              Fae is thinking...
+            </div>
           )}
         </div>
 
