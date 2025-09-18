@@ -7,6 +7,9 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { logout } from "../app/auth/authSlice";
 import { API_URL } from "../config/api";
+import { IoIosMenu, IoIosLogOut } from "react-icons/io";
+import { IoChevronUpOutline } from "react-icons/io5";
+import { FaRegUser } from "react-icons/fa";
 
 const Sidebar = ({ isTaskbarOpen }) => {
   const navigate = useNavigate();
@@ -236,20 +239,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
             transition: "left 0.3s ease",
           }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="size-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-            />
-          </svg>
+          <IoIosMenu />
         </button>
       )}
 
@@ -388,7 +378,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {loadingProfile ? (
                 <div className="flex flex-col ml-2 flex-grow min-w-0 text-yellow-200 italic">
                   loading...
@@ -413,22 +403,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                 </div>
               )}
 
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`h-5 w-5 ml-1 transform transition-transform flex-shrink-0 ${
-                  isProfileDropupOpen ? "" : "rotate-180"
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <IoChevronUpOutline />
             </div>
 
             {isProfileDropupOpen && (
@@ -439,20 +414,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   className="block w-full px-4 py-2 text-yellow-700 hover:bg-yellow-500 hover:text-white transition"
                 >
                   <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
+                    <FaRegUser className="mr-2" />
                     View Profile
                   </div>
                 </Link>
@@ -461,20 +423,7 @@ const Sidebar = ({ isTaskbarOpen }) => {
                   className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-500 hover:text-white transition cursor-pointer"
                 >
                   <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
+                    <IoIosLogOut className="mr-2" />
                     Logout
                   </div>
                 </button>

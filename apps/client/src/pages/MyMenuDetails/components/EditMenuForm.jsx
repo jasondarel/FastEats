@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { API_URL } from "../../../config/api";
 import CategorySelector from "./CategorySelector";
 import MenuImageUploader from "./MenuImageUploader";
+import { IoCloseOutline } from "react-icons/io5";
+import { FaRegTrashAlt } from "react-icons/fa";
 
 const EditMenuForm = ({
   showEditForm,
@@ -35,15 +37,17 @@ const EditMenuForm = ({
     if (showEditForm) {
       setIsVisible(true);
       if (menu && menu.addsOnCategories) {
-        const transformedCategories = menu.addsOnCategories.map(category => ({
+        const transformedCategories = menu.addsOnCategories.map((category) => ({
           id: category.category_id,
           category_name: category.category_name,
           max_selectable: category.max_selectable || 1,
-          addsOnItems: category.addsOnItems ? category.addsOnItems.map(item => ({
-            id: item.item_id,
-            adds_on_name: item.adds_on_name,
-            adds_on_price: parseFloat(item.adds_on_price)
-          })) : []
+          addsOnItems: category.addsOnItems
+            ? category.addsOnItems.map((item) => ({
+                id: item.item_id,
+                adds_on_name: item.adds_on_name,
+                adds_on_price: parseFloat(item.adds_on_price),
+              }))
+            : [],
         }));
         setToppingCategories(transformedCategories);
       }
@@ -56,7 +60,7 @@ const EditMenuForm = ({
         id: Date.now(),
         category_name: newCategoryName.trim(),
         max_selectable: parseInt(newCategoryMaxSelectable),
-        addsOnItems: []
+        addsOnItems: [],
       };
       handleUpdateAddsOnCategory(newCategory);
       setToppingCategories([...toppingCategories, newCategory]);
@@ -66,8 +70,8 @@ const EditMenuForm = ({
   };
 
   const handleUpdateCategoryMaxSelectable = (categoryId, newMaxSelectable) => {
-    setToppingCategories(categories =>
-      categories.map(cat =>
+    setToppingCategories((categories) =>
+      categories.map((cat) =>
         cat.id === categoryId
           ? { ...cat, maxSelectable: parseInt(newMaxSelectable) }
           : cat
@@ -76,8 +80,8 @@ const EditMenuForm = ({
   };
 
   const handleRemoveCategory = (categoryId) => {
-    setToppingCategories(categories =>
-      categories.map(cat =>
+    setToppingCategories((categories) =>
+      categories.map((cat) =>
         cat.id === categoryId ? { ...cat, deleted: true } : cat
       )
     );
@@ -92,30 +96,33 @@ const EditMenuForm = ({
         adds_on_price: parseFloat(newToppingPrice),
       };
       handleUpdateAddsOnItem(selectedToppingCategory, newTopping);
-      setToppingCategories(categories => 
-        categories.map(cat => 
-          cat.id === selectedToppingCategory 
+      setToppingCategories((categories) =>
+        categories.map((cat) =>
+          cat.id === selectedToppingCategory
             ? { ...cat, addsOnItems: [...cat.addsOnItems, newTopping] }
             : cat
         )
       );
-      
+
       setNewToppingName("");
       setNewToppingPrice("");
     }
   };
 
   const handleRemoveTopping = (categoryId, toppingId) => {
-    setToppingCategories(categories =>
-      categories.map(cat =>
+    setToppingCategories((categories) =>
+      categories.map((cat) =>
         cat.id === categoryId
-          ? { ...cat, addsOnItems: cat.addsOnItems.map(item => {
-            if (item.id === toppingId) {
-              return { ...item, deleted: true }
-            } else {
-              return item;
+          ? {
+              ...cat,
+              addsOnItems: cat.addsOnItems.map((item) => {
+                if (item.id === toppingId) {
+                  return { ...item, deleted: true };
+                } else {
+                  return item;
+                }
+              }),
             }
-          }) }
           : cat
       )
     );
@@ -132,35 +139,42 @@ const EditMenuForm = ({
   const handleCategorySelect = (categoryValue) => {
     const syntheticEvent = {
       target: {
-        name: 'menuCategory',
-        value: categoryValue
-      }
+        name: "menuCategory",
+        value: categoryValue,
+      },
     };
     handleInputChange(syntheticEvent);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const formDataWithToppings = new FormData();
-    
-    Object.keys(formData).forEach(key => {
+
+    Object.keys(formData).forEach((key) => {
       formDataWithToppings.append(key, formData[key]);
     });
-    
-    const transformedCategories = toppingCategories.map(category => ({
-      ...(typeof category.id === 'number' && category.id < 1000000000 ? { category_id: category.id } : {}),
+
+    const transformedCategories = toppingCategories.map((category) => ({
+      ...(typeof category.id === "number" && category.id < 1000000000
+        ? { category_id: category.id }
+        : {}),
       name: category.category_name,
       maxSelectable: category.max_selectable,
       isRequired: false,
-      addsOnItems: category.addsOnItems.map(item => ({
-        ...(typeof item.id === 'number' && item.id < 1000000000 ? { item_id: item.id } : {}),
+      addsOnItems: category.addsOnItems.map((item) => ({
+        ...(typeof item.id === "number" && item.id < 1000000000
+          ? { item_id: item.id }
+          : {}),
         adds_on_name: item.adds_on_name,
-        adds_on_price: item.adds_on_price
-      }))
+        adds_on_price: item.adds_on_price,
+      })),
     }));
-    
-    formDataWithToppings.append("toppingCategories", JSON.stringify(transformedCategories));
+
+    formDataWithToppings.append(
+      "toppingCategories",
+      JSON.stringify(transformedCategories)
+    );
 
     handleUpdateMenu(e, formDataWithToppings);
   };
@@ -193,20 +207,8 @@ const EditMenuForm = ({
             onClick={handleClose}
             className="text-white hover:text-yellow-100 bg-yellow-600 rounded-full p-1 hover:bg-yellow-700 transition-colors transform hover:scale-110 hover:rotate-90 duration-300"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            {" "}
+            <IoCloseOutline />
           </button>
         </div>
 
@@ -283,11 +285,15 @@ const EditMenuForm = ({
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100 transition-all duration-200 hover:shadow-md">
               <h3 className="block font-semibold text-gray-700 mb-4 text-sm">
                 Add-ons
-                <span className="text-gray-500 text-xs font-normal ml-2">(Optional)</span>
+                <span className="text-gray-500 text-xs font-normal ml-2">
+                  (Optional)
+                </span>
               </h3>
-              
+
               <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">1. Create adds-on Category</h4>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  1. Create adds-on Category
+                </h4>
                 <div className="flex gap-3">
                   <input
                     type="text"
@@ -297,14 +303,18 @@ const EditMenuForm = ({
                     onChange={(e) => setNewCategoryName(e.target.value)}
                   />
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600 whitespace-nowrap">Max select:</label>
+                    <label className="text-sm text-gray-600 whitespace-nowrap">
+                      Max select:
+                    </label>
                     <input
                       type="number"
                       min="1"
                       max="20"
                       className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                       value={newCategoryMaxSelectable}
-                      onChange={(e) => setNewCategoryMaxSelectable(e.target.value)}
+                      onChange={(e) =>
+                        setNewCategoryMaxSelectable(e.target.value)
+                      }
                     />
                   </div>
                   <button
@@ -315,7 +325,9 @@ const EditMenuForm = ({
                         ? "bg-yellow-500 hover:bg-yellow-600 transform hover:scale-105"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
-                    disabled={!newCategoryName.trim() || !newCategoryMaxSelectable}
+                    disabled={
+                      !newCategoryName.trim() || !newCategoryMaxSelectable
+                    }
                   >
                     Add Category
                   </button>
@@ -324,20 +336,31 @@ const EditMenuForm = ({
 
               {toppingCategories.length > 0 && (
                 <div className="mb-4">
-                  {console.log('Topping Categories:', toppingCategories)}
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">2. Add adds-on to Category</h4>
+                  {console.log("Topping Categories:", toppingCategories)}
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">
+                    2. Add adds-on to Category
+                  </h4>
                   <div className="flex gap-3">
                     <select
                       className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
                       value={selectedToppingCategory || ""}
-                      onChange={(e) => setSelectedToppingCategory(e.target.value ? parseInt(e.target.value) : null)}
+                      onChange={(e) =>
+                        setSelectedToppingCategory(
+                          e.target.value ? parseInt(e.target.value) : null
+                        )
+                      }
                     >
                       <option value="">Select category...</option>
-                      {toppingCategories.map((category) => !category.deleted && (
-                        <option key={category.id} value={category.id}>
-                          {category.category_name} ({category.addsOnItems.length}) - Max: {category.max_selectable}
-                        </option>
-                      ))}
+                      {toppingCategories.map(
+                        (category) =>
+                          !category.deleted && (
+                            <option key={category.id} value={category.id}>
+                              {category.category_name} (
+                              {category.addsOnItems.length}) - Max:{" "}
+                              {category.max_selectable}
+                            </option>
+                          )
+                      )}
                     </select>
                     <input
                       type="text"
@@ -364,11 +387,17 @@ const EditMenuForm = ({
                       type="button"
                       onClick={handleAddTopping}
                       className={`px-4 py-2 rounded-lg text-white font-medium text-sm transition-all duration-200 ${
-                        newToppingName.trim() && newToppingPrice && selectedToppingCategory
+                        newToppingName.trim() &&
+                        newToppingPrice &&
+                        selectedToppingCategory
                           ? "bg-yellow-500 hover:bg-yellow-600 transform hover:scale-105"
                           : "bg-gray-300 cursor-not-allowed"
                       }`}
-                      disabled={!newToppingName.trim() || !newToppingPrice || !selectedToppingCategory}
+                      disabled={
+                        !newToppingName.trim() ||
+                        !newToppingPrice ||
+                        !selectedToppingCategory
+                      }
                     >
                       Add
                     </button>
@@ -378,100 +407,103 @@ const EditMenuForm = ({
 
               {toppingCategories.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-600">Category Settings & Added adds:</h4>
-                  {toppingCategories.map((category) => !category.deleted && (
-                    <div key={category.id} className="bg-white rounded-lg border border-gray-200 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-4">
-                          <h5 className="font-medium text-gray-800 text-sm">{category.category_name}</h5>
-                          <div className="flex items-center gap-2">
-                            <label className="text-xs text-gray-600">Max select:</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max="20"
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                              value={category.max_selectable}
-                              onChange={(e) => handleUpdateCategoryMaxSelectable(category.id, e.target.value)}
-                            />
-                          </div>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {category.addsOnItems.length} items
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCategory(category.id)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                          title="Remove category"
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Category Settings & Added adds:
+                  </h4>
+                  {toppingCategories.map(
+                    (category) =>
+                      !category.deleted && (
+                        <div
+                          key={category.id}
+                          className="bg-white rounded-lg border border-gray-200 p-4"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                      
-                      {category.addsOnItems.length > 0 ? (
-                        <div className="space-y-2">
-                          {category.addsOnItems.map((topping) => !topping.deleted && (
-                            <div
-                            key={topping.id}
-                            className="flex items-center justify-between bg-gray-50 p-2 rounded border"
-                            >
-                              <div className="flex-1">
-                                <span className="font-medium text-gray-800 text-sm">{topping.adds_on_name}</span>
-                                <span className="text-yellow-600 font-semibold ml-2 text-sm">
-                                  +Rp {topping.adds_on_price.toLocaleString()}
-                                </span>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-4">
+                              <h5 className="font-medium text-gray-800 text-sm">
+                                {category.category_name}
+                              </h5>
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-600">
+                                  Max select:
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="20"
+                                  className="w-16 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                                  value={category.max_selectable}
+                                  onChange={(e) =>
+                                    handleUpdateCategoryMaxSelectable(
+                                      category.id,
+                                      e.target.value
+                                    )
+                                  }
+                                />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTopping(category.id, topping.id)}
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                                title="Remove item"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                {category.addsOnItems.length} items
+                              </span>
                             </div>
-                          ))}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCategory(category.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                              title="Remove category"
+                            >
+                              <FaRegTrashAlt />
+                            </button>
+                          </div>
+
+                          {category.addsOnItems.length > 0 ? (
+                            <div className="space-y-2">
+                              {category.addsOnItems.map(
+                                (topping) =>
+                                  !topping.deleted && (
+                                    <div
+                                      key={topping.id}
+                                      className="flex items-center justify-between bg-gray-50 p-2 rounded border"
+                                    >
+                                      <div className="flex-1">
+                                        <span className="font-medium text-gray-800 text-sm">
+                                          {topping.adds_on_name}
+                                        </span>
+                                        <span className="text-yellow-600 font-semibold ml-2 text-sm">
+                                          +Rp{" "}
+                                          {topping.adds_on_price.toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleRemoveTopping(
+                                            category.id,
+                                            topping.id
+                                          )
+                                        }
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                                        title="Remove item"
+                                      >
+                                        <IoCloseOutline />
+                                      </button>
+                                    </div>
+                                  )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center text-gray-400 text-xs py-2 border border-dashed border-gray-200 rounded">
+                              No items added to this category yet
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="text-center text-gray-400 text-xs py-2 border border-dashed border-gray-200 rounded">
-                          No items added to this category yet
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      )
+                  )}
                 </div>
               )}
 
               {toppingCategories.length === 0 && (
                 <div className="text-center text-gray-500 text-sm py-4 border-2 border-dashed border-gray-200 rounded-lg">
-                  No topping categories created yet. Start by creating a topping category!
+                  No topping categories created yet. Start by creating a topping
+                  category!
                 </div>
               )}
             </div>

@@ -29,6 +29,7 @@ import io from "socket.io-client";
 import OrderSummary from "./components/OrderSummary";
 import axios from "axios";
 import RestaurantRating from "./components/RestaurantRating";
+import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -42,10 +43,10 @@ const OrderDetails = () => {
   const [forceUpdate, setForceUpdate] = useState(0);
   const [paymentDeadline, setPaymentDeadline] = useState(null);
   const [countdown, setCountdown] = useState(null);
-  const [ttlFetched, setTtlFetched] = useState(false); 
+  const [ttlFetched, setTtlFetched] = useState(false);
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
-  const countdownRef = useRef(null); 
+  const countdownRef = useRef(null);
 
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
@@ -158,14 +159,11 @@ const OrderDetails = () => {
 
           const totalPrice =
             order.items?.reduce((total, item) => {
-              const menuPrice = parseFloat(
-                item.menu_price || 0
-              );
+              const menuPrice = parseFloat(item.menu_price || 0);
               const quantity = item.item_quantity || 0;
               return total + menuPrice * quantity;
             }, 0) ||
-            parseFloat(order.menu_price || 0) *
-              (order.item_quantity || 1);
+            parseFloat(order.menu_price || 0) * (order.item_quantity || 1);
           navigate(`/chat/${existingChat._id}`, {
             state: {
               restaurantName:
@@ -187,7 +185,7 @@ const OrderDetails = () => {
       }
 
       const chatResult = await createChatService(orderId, token);
-  
+
       if (chatResult.success && chatResult.dataChat?.chat) {
         const chatId = chatResult.dataChat.chat._id;
 
@@ -448,40 +446,41 @@ const OrderDetails = () => {
   const handleRatingSubmission = async (ratingData) => {
     try {
       const response = await axios.post(
-        `${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`, 
-        ratingData, 
+        `${API_URL}/restaurant/rate?orderId=${order.order_id}&restaurantId=${order.restaurant_id}`,
+        ratingData,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      
+
       if (!response.data || !response.data.success) {
-        throw new Error('Failed to submit rating');
+        throw new Error("Failed to submit rating");
       }
-      
+
       Swal.fire({
-        title: 'Thank you!',
-        text: 'Your rating has been submitted successfully.',
-        icon: 'success',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#d97706',
+        title: "Thank you!",
+        text: "Your rating has been submitted successfully.",
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d97706",
       });
-      
+
       return response.data;
     } catch (error) {
-      console.error('Error submitting rating:', error);
-      const message = error.response?.data?.message || 'Failed to submit rating';
+      console.error("Error submitting rating:", error);
+      const message =
+        error.response?.data?.message || "Failed to submit rating";
       Swal.fire({
-        title: 'Error!',
+        title: "Error!",
         text: message,
-        icon: 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#d97706',
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d97706",
       });
-      throw error; 
+      throw error;
     }
   };
 
@@ -495,7 +494,7 @@ const OrderDetails = () => {
     console.log("ORDER_URL:", ORDER_URL);
     console.log("Token:", token ? "Present" : "Missing");
     console.log("OrderId:", orderId);
-    
+
     socketRef.current = io(API_URL, {
       path: "/order/socket.io",
       transports: ["websocket", "polling"],
@@ -506,7 +505,6 @@ const OrderDetails = () => {
       reconnectionDelay: 1000,
       timeout: 10000,
     });
-    
 
     socketRef.current.on("connect", () => {
       console.log("✅ Socket connected successfully");
@@ -584,15 +582,18 @@ const OrderDetails = () => {
       ) {
         console.log("Fetching TTL deadline for order:", order.order_id);
         setTtlFetched(true);
-        
+
         try {
-          const res = await fetch(`${API_URL}/order/ttl-order/${order.order_id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const res = await fetch(
+            `${API_URL}/order/ttl-order/${order.order_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
           const data = await res.json();
-          
+
           if (typeof data.ttl === "number" && data.ttl > 0) {
             const deadline = new Date(Date.now() + data.ttl * 1000);
             console.log("Payment deadline set to:", deadline);
@@ -633,7 +634,7 @@ const OrderDetails = () => {
     const updateCountdown = () => {
       const now = new Date();
       const diff = paymentDeadline - now;
-      
+
       if (diff <= 0) {
         setCountdown("00:00:00");
         if (countdownRef.current) {
@@ -643,8 +644,14 @@ const OrderDetails = () => {
         return false;
       } else {
         const hours = String(Math.floor(diff / 3600000)).padStart(2, "0");
-        const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
-        const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+        const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(
+          2,
+          "0"
+        );
+        const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(
+          2,
+          "0"
+        );
         setCountdown(`${hours}:${minutes}:${seconds}`);
         return true;
       }
@@ -745,19 +752,7 @@ const OrderDetails = () => {
                   onClick={handleChatWithRestaurant}
                   className="flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-500 hover:cursor-pointer text-white rounded-lg transition-colors duration-200 font-medium text-sm"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
+                  <IoChatbubbleEllipsesOutline className="w-4 h-4" />
                   Chat with Restaurant
                 </button>
               </div>
@@ -783,9 +778,7 @@ const OrderDetails = () => {
               )}
             </div>
 
-            {isShippingValid && (
-              <OrderSummary order={order}/>
-            )}
+            {isShippingValid && <OrderSummary order={order} />}
 
             <OrderTimestamp createdAt={order.created_at} />
 
@@ -802,8 +795,8 @@ const OrderDetails = () => {
 
             {order.status.toLowerCase() === "completed" && (
               <div className="mt-8 border-t border-amber-200 pt-8">
-                <RestaurantRating 
-                  order={order} 
+                <RestaurantRating
+                  order={order}
                   onSubmitRating={handleRatingSubmission}
                 />
               </div>

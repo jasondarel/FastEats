@@ -9,13 +9,14 @@ import {
   getProvinceService,
   getCityService,
   getDistrictService,
-  getVillageService
+  getVillageService,
 } from "../../../service/utilServices/utilService";
 import { getProfileService } from "../../../service/userServices/profileService";
 import { LuTriangleAlert } from "react-icons/lu";
+import { IoWarning } from "react-icons/io5";
 
-const OrderShipping = ({ 
-  onShippingValidationChange, 
+const OrderShipping = ({
+  onShippingValidationChange,
   onShippingDataChange,
 }) => {
   const token = localStorage.getItem("token");
@@ -45,7 +46,7 @@ const OrderShipping = ({
 
   const [errors, setErrors] = useState({});
 
-  const getProvinceName = async(provinceId) => {
+  const getProvinceName = async (provinceId) => {
     try {
       const response = await getProvinceService(provinceId);
       return response.data?.name || "Unknown Province";
@@ -53,9 +54,9 @@ const OrderShipping = ({
       console.error("Error fetching province name:", error);
       return "Unknown Province";
     }
-  }
+  };
 
-  const getCityName = async(cityId) => {
+  const getCityName = async (cityId) => {
     try {
       const response = await getCityService(cityId);
       return response.data?.name || "Unknown City";
@@ -63,9 +64,9 @@ const OrderShipping = ({
       console.error("Error fetching city name:", error);
       return "Unknown City";
     }
-  }
+  };
 
-  const getDistrictName = async(districtId) => {
+  const getDistrictName = async (districtId) => {
     try {
       const response = await getDistrictService(districtId);
       return response.data?.name || "Unknown District";
@@ -73,9 +74,9 @@ const OrderShipping = ({
       console.error("Error fetching district name:", error);
       return "Unknown District";
     }
-  }
+  };
 
-  const getVillageName = async(villageId) => {
+  const getVillageName = async (villageId) => {
     try {
       const response = await getVillageService(villageId);
       return response.data?.name || "Unknown Village";
@@ -83,12 +84,12 @@ const OrderShipping = ({
       console.error("Error fetching village name:", error);
       return "Unknown Village";
     }
-  }
+  };
 
   // Load current user information
   const loadCurrentUserInfo = async () => {
     if (!token) return;
-    
+
     setLoading((prev) => ({ ...prev, userInfo: true }));
     try {
       const response = await getProfileService(token);
@@ -96,12 +97,15 @@ const OrderShipping = ({
       if (userResponse) {
         const userInfo = {
           province: userResponse.province || "Not specified",
-          city:  userResponse.city || "Not specified",
+          city: userResponse.city || "Not specified",
           district: userResponse.district || "Not specified",
           village: userResponse.village || "Not specified",
           address: userResponse.address || "Not specified",
           fullName: userResponse.name || userResponse.data.name || "User",
-          phone: userResponse?.phone_number || userResponse?.data?.phone_number || "Unknown Phone Number",
+          phone:
+            userResponse?.phone_number ||
+            userResponse?.data?.phone_number ||
+            "Unknown Phone Number",
         };
         console.log("User Info: ", userInfo);
         setCurrentUserInfoDetail({
@@ -111,13 +115,19 @@ const OrderShipping = ({
           village: await getVillageName(userResponse.village),
           address: userResponse.address || "Not specified",
           fullName: userResponse.name || userResponse.data.name || "User",
-          phone: userResponse?.phone_number || userResponse?.data?.phone_number || "Unknown Phone Number",
-        })
+          phone:
+            userResponse?.phone_number ||
+            userResponse?.data?.phone_number ||
+            "Unknown Phone Number",
+        });
         setCurrentUserInfo(userInfo);
       }
     } catch (err) {
       console.error("Error loading current user info:", err);
-      setErrors((prev) => ({ ...prev, userInfo: "Failed to load user information" }));
+      setErrors((prev) => ({
+        ...prev,
+        userInfo: "Failed to load user information",
+      }));
     } finally {
       setLoading((prev) => ({ ...prev, userInfo: false }));
     }
@@ -130,14 +140,19 @@ const OrderShipping = ({
 
   useEffect(() => {
     const isShippingValid = () => {
-      console.log("Checking shipping validity with useCurrentInfo:", useCurrentInfo);
+      console.log(
+        "Checking shipping validity with useCurrentInfo:",
+        useCurrentInfo
+      );
       if (useCurrentInfo) {
-        return currentUserInfo && 
-          (currentUserInfo.province !== "Unknown") && 
-          (currentUserInfo.city !== "Unknown") && 
-          (currentUserInfo.district !== "Unknown") && 
-          (currentUserInfo.village !== "Unknown") && 
-          (currentUserInfo.address !== "Unknown")
+        return (
+          currentUserInfo &&
+          currentUserInfo.province !== "Unknown" &&
+          currentUserInfo.city !== "Unknown" &&
+          currentUserInfo.district !== "Unknown" &&
+          currentUserInfo.village !== "Unknown" &&
+          currentUserInfo.address !== "Unknown"
+        );
       }
 
       return (
@@ -150,7 +165,7 @@ const OrderShipping = ({
     };
 
     const valid = isShippingValid();
-    
+
     // Notify parent of validation status
     if (onShippingValidationChange) {
       onShippingValidationChange(valid);
@@ -162,15 +177,21 @@ const OrderShipping = ({
       onShippingDataChange({
         useCurrentInfo,
         shippingData: dataToSend,
-        isValid: valid
+        isValid: valid,
       });
     }
-  }, [useCurrentInfo, shippingData, currentUserInfo, onShippingValidationChange, onShippingDataChange]);
+  }, [
+    useCurrentInfo,
+    shippingData,
+    currentUserInfo,
+    onShippingValidationChange,
+    onShippingDataChange,
+  ]);
 
   const loadProvinces = async () => {
     setLoading((prev) => ({ ...prev, provinces: true }));
     setErrors((prev) => ({ ...prev, provinces: null }));
-    
+
     try {
       const response = await getProvincesService();
       setProvinces(response.data || []);
@@ -190,7 +211,7 @@ const OrderShipping = ({
 
     setLoading((prev) => ({ ...prev, cities: true }));
     setErrors((prev) => ({ ...prev, cities: null }));
-    
+
     try {
       const response = await getCitiesService(provinceId);
       setCities(response.data || []);
@@ -211,7 +232,7 @@ const OrderShipping = ({
 
     setLoading((prev) => ({ ...prev, districts: true }));
     setErrors((prev) => ({ ...prev, districts: null }));
-    
+
     try {
       const response = await getDistrictsService(cityId);
       setDistricts(response.data || []);
@@ -232,7 +253,7 @@ const OrderShipping = ({
 
     setLoading((prev) => ({ ...prev, villages: true }));
     setErrors((prev) => ({ ...prev, villages: null }));
-    
+
     try {
       const response = await getVillagesService(districtId);
       setVillages(response.data || []);
@@ -311,13 +332,13 @@ const OrderShipping = ({
 
   const getFieldError = (field) => {
     if (useCurrentInfo) return null;
-    
+
     const fieldMap = {
       province: !shippingData.province,
       city: !shippingData.city && shippingData.province,
       district: !shippingData.district && shippingData.city,
       village: !shippingData.village && shippingData.district,
-      address: !shippingData.address.trim()
+      address: !shippingData.address.trim(),
     };
 
     return fieldMap[field];
@@ -360,12 +381,14 @@ const OrderShipping = ({
             {loading.userInfo ? (
               <div className="flex items-center gap-2 text-amber-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
-                <span className="text-sm">Loading your address information...</span>
+                <span className="text-sm">
+                  Loading your address information...
+                </span>
               </div>
             ) : errors.userInfo ? (
               <div className="text-red-600 text-sm">
                 {errors.userInfo}
-                <button 
+                <button
                   onClick={loadCurrentUserInfo}
                   className="ml-2 text-amber-600 hover:underline"
                 >
@@ -378,16 +401,30 @@ const OrderShipping = ({
                   Current Saved Address:
                 </div>
                 <div className="space-y-2 text-sm text-amber-900">
-                  <div><strong>Name:</strong> {currentUserInfoDetail.fullName}</div>
-                  <div><strong>Phone:</strong> {currentUserInfoDetail.phone}</div>
-                  <div><strong>Province:</strong> {currentUserInfoDetail.province}</div>
-                  <div><strong>City:</strong> {currentUserInfoDetail.city}</div>
-                  <div><strong>District:</strong> {currentUserInfoDetail.district}</div>
-                  <div><strong>Village:</strong> {currentUserInfoDetail.village}</div>
-                  <div><strong>Address:</strong> {currentUserInfoDetail.address}</div>
+                  <div>
+                    <strong>Name:</strong> {currentUserInfoDetail.fullName}
+                  </div>
+                  <div>
+                    <strong>Phone:</strong> {currentUserInfoDetail.phone}
+                  </div>
+                  <div>
+                    <strong>Province:</strong> {currentUserInfoDetail.province}
+                  </div>
+                  <div>
+                    <strong>City:</strong> {currentUserInfoDetail.city}
+                  </div>
+                  <div>
+                    <strong>District:</strong> {currentUserInfoDetail.district}
+                  </div>
+                  <div>
+                    <strong>Village:</strong> {currentUserInfoDetail.village}
+                  </div>
+                  <div>
+                    <strong>Address:</strong> {currentUserInfoDetail.address}
+                  </div>
                 </div>
-                
-                {(currentUserInfo.province === "Unknown" || 
+
+                {(currentUserInfo.province === "Unknown" ||
                   currentUserInfo.city === "Unknown" ||
                   currentUserInfo.district === "Unknown" ||
                   currentUserInfo.village === "Unknown" ||
@@ -398,9 +435,17 @@ const OrderShipping = ({
                     </div>
                     <div className="flex flex-col gap-2 flex-1">
                       <p className="text-sm text-yellow-800 font-medium">
-                        Your profile is missing some address information. Please use the <span className="font-semibold">"Different Address"</span> option or update your profile.
+                        Your profile is missing some address information. Please
+                        use the{" "}
+                        <span className="font-semibold">
+                          "Different Address"
+                        </span>{" "}
+                        option or update your profile.
                       </p>
-                      <a href="/profile" className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-md shadow transition-colors duration-150 w-fit">
+                      <a
+                        href="/profile"
+                        className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-md shadow transition-colors duration-150 w-fit"
+                      >
                         Update Profile
                       </a>
                     </div>
@@ -409,7 +454,8 @@ const OrderShipping = ({
               </div>
             ) : (
               <div className="text-amber-700 text-sm">
-                No saved address information found. Please use "Different Address" option.
+                No saved address information found. Please use "Different
+                Address" option.
               </div>
             )}
           </div>
@@ -425,15 +471,21 @@ const OrderShipping = ({
               </label>
               <select
                 value={shippingData.province}
-                onChange={(e) => handleShippingChange("province", e.target.value)}
+                onChange={(e) =>
+                  handleShippingChange("province", e.target.value)
+                }
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
-                  getFieldError("province") ? "border-red-300" : "border-amber-200"
+                  getFieldError("province")
+                    ? "border-red-300"
+                    : "border-amber-200"
                 }`}
                 disabled={loading.provinces}
                 required={!useCurrentInfo}
               >
                 <option value="">
-                  {loading.provinces ? "Loading provinces..." : "Select Province"}
+                  {loading.provinces
+                    ? "Loading provinces..."
+                    : "Select Province"}
                 </option>
                 {provinces.map((province) => (
                   <option key={province.id} value={province.id}>
@@ -445,7 +497,9 @@ const OrderShipping = ({
                 <p className="text-red-500 text-xs mt-1">{errors.provinces}</p>
               )}
               {getFieldError("province") && (
-                <p className="text-red-500 text-xs mt-1">Province is required</p>
+                <p className="text-red-500 text-xs mt-1">
+                  Province is required
+                </p>
               )}
             </div>
 
@@ -476,7 +530,9 @@ const OrderShipping = ({
                 <p className="text-red-500 text-xs mt-1">{errors.cities}</p>
               )}
               {getFieldError("city") && (
-                <p className="text-red-500 text-xs mt-1">City/Regency is required</p>
+                <p className="text-red-500 text-xs mt-1">
+                  City/Regency is required
+                </p>
               )}
             </div>
 
@@ -487,15 +543,21 @@ const OrderShipping = ({
               </label>
               <select
                 value={shippingData.district}
-                onChange={(e) => handleShippingChange("district", e.target.value)}
+                onChange={(e) =>
+                  handleShippingChange("district", e.target.value)
+                }
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
-                  getFieldError("district") ? "border-red-300" : "border-amber-200"
+                  getFieldError("district")
+                    ? "border-red-300"
+                    : "border-amber-200"
                 }`}
                 disabled={!shippingData.city || loading.districts}
                 required={!useCurrentInfo}
               >
                 <option value="">
-                  {loading.districts ? "Loading districts..." : "Select District"}
+                  {loading.districts
+                    ? "Loading districts..."
+                    : "Select District"}
                 </option>
                 {districts.map((district) => (
                   <option key={district.id} value={district.id}>
@@ -507,7 +569,9 @@ const OrderShipping = ({
                 <p className="text-red-500 text-xs mt-1">{errors.districts}</p>
               )}
               {getFieldError("district") && (
-                <p className="text-red-500 text-xs mt-1">District is required</p>
+                <p className="text-red-500 text-xs mt-1">
+                  District is required
+                </p>
               )}
             </div>
 
@@ -518,9 +582,13 @@ const OrderShipping = ({
               </label>
               <select
                 value={shippingData.village}
-                onChange={(e) => handleShippingChange("village", e.target.value)}
+                onChange={(e) =>
+                  handleShippingChange("village", e.target.value)
+                }
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
-                  getFieldError("village") ? "border-red-300" : "border-amber-200"
+                  getFieldError("village")
+                    ? "border-red-300"
+                    : "border-amber-200"
                 }`}
                 disabled={!shippingData.district || loading.villages}
                 required={!useCurrentInfo}
@@ -549,16 +617,22 @@ const OrderShipping = ({
               </label>
               <textarea
                 value={shippingData.address}
-                onChange={(e) => handleShippingChange("address", e.target.value)}
+                onChange={(e) =>
+                  handleShippingChange("address", e.target.value)
+                }
                 placeholder="Enter your complete address (street name, house number, landmarks, etc.)"
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-vertical ${
-                  getFieldError("address") ? "border-red-300" : "border-amber-200"
+                  getFieldError("address")
+                    ? "border-red-300"
+                    : "border-amber-200"
                 }`}
                 required={!useCurrentInfo}
               />
               {getFieldError("address") && (
-                <p className="text-red-500 text-xs mt-1">Detailed address is required</p>
+                <p className="text-red-500 text-xs mt-1">
+                  Detailed address is required
+                </p>
               )}
             </div>
 
@@ -566,13 +640,12 @@ const OrderShipping = ({
             <div className="bg-amber-100 border-l-4 border-amber-500 p-4 rounded">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                  <IoWarning className="text-amber-600" />
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-amber-700">
-                    Please fill in all shipping address fields to proceed with payment.
+                    Please fill in all shipping address fields to proceed with
+                    payment.
                   </p>
                 </div>
               </div>
