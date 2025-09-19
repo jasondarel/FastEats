@@ -17,7 +17,7 @@ const BackButton = ({
   return (
     <button
       onClick={handleGoBack}
-      className={`hover:cursor-pointer flex items-center justify-center top-8 right-8 w-12 h-12 bg-white text-yellow-500 text-2xl rounded-full focus:outline-none hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition ${position} ${className}`}
+      className={`hover:cursor-pointer flex items-center justify-center z-100 top-8 right-8 w-12 h-12  bg-white text-yellow-500 text-2xl rounded-full border  shadow-[0_6px_16px_rgba(156,163,175,0.35)] hover:bg-yellow-500 hover:text-white hover:cursor-pointer transition ${position} ${className}`}
       aria-label="Go back"
     >
       <GoChevronLeft />
@@ -26,3 +26,4 @@ const BackButton = ({
 };
 
 export default BackButton;
+
