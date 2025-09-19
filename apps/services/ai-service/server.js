@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import aiRouter from "./routes/ai.js";
 import aiStreamRouter from "./routes/aiStream.js";
+import logger from "./src/config/loggerInit.js";
 
 dotenv.config();
 
@@ -35,13 +36,13 @@ app.get("/api/ai/health", (req, res) => {
 
 const PORT = process.env.AI_SERVER_PORT || process.env.PORT || 5055;
 const server = app.listen(PORT, () => {
-  console.log(`AI assistant server running on port ${PORT}`);
+  logger.info(`AI assistant server running on port ${PORT}`);
 });
 
 const gracefulShutdown = (signal) => {
-  console.log(`Received ${signal}. Closing AI assistant server...`);
+  logger.info(`Received ${signal}. Closing AI assistant server...`);
   server.close(() => {
-    console.log("AI assistant server closed");
+    logger.info("AI assistant server closed");
     process.exit(0);
   });
 };
