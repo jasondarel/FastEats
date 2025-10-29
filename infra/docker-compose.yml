@@ -30,6 +30,21 @@ services:
     networks:
       - fasteats_network
 
+  fasteats_rabbitmq:
+    image: rabbitmq:management
+    container_name: fasteats_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - fasteats_rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - fasteats_network
+
   fasteats_redis:
     image: redis:latest
     container_name: fasteats_redis
@@ -49,3 +64,4 @@ volumes:
   fasteats_pgdata:
   fasteats_redis_data:
   fasteats_mongodb_data:
+  fasteats_rabbitmq_data:
