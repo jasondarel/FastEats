@@ -7,6 +7,7 @@ import {
   EMAIL_VERIFICATION_ROUTING_KEY
 } from "../config/rabbitMQInit.js";
 import logger from "../config/loggerInit.js";
+import { getRedisClient } from "../config/redisInit.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -16,6 +17,48 @@ export const hashPassword = (password) => {
 
 export const generateLoginToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "12h" });
+}
+
+export const getTokenRemainingTime = async (token) => {
+  try {
+    const decoded = jwt.decode(token);
+    
+    if (!decoded || !decoded.exp) {
+      return null;
+    }
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    const expirationTime = decoded.exp;
+    const remainingSeconds = expirationTime - currentTime;
+    
+    if (remainingSeconds <= 0) {
+      return {
+        expired: true,
+        remainingSeconds: 0,
+        remainingMinutes: 0,
+        remainingHours: 0,
+        expiresAt: new Date(expirationTime * 1000).toISOString()
+      };
+    }
+    
+    return {
+      expired: false,
+      remainingSeconds,
+      remainingMinutes: Math.floor(remainingSeconds / 60),
+      remainingHours: Math.floor(remainingSeconds / 3600),
+      expiresAt: new Date(expirationTime * 1000).toISOString(),
+      issuedAt: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : null
+    };
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+}
+
+export const isTokenBlacklisted = async(token) => {
+  const redisClient = getRedisClient();
+  const isBlacklisted = await redisClient.get(`blacklist_${token}`);
+  return isBlacklisted === 'true';
 }
 
 export const generateRandomToken = (len) => {
