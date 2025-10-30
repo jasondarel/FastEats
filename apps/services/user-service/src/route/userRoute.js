@@ -20,6 +20,8 @@ import {
     completeGoogleRegistrationController,
     googleAuthController, 
     googleCallbackController,
+    logoutController,
+    getTokenExpirationController
 } from "../controller/userController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import multerUpload from "../config/multerInit.js";
@@ -35,6 +37,7 @@ const userRoutes = express.Router()
 userRoutes.post("/register", registerController);
 userRoutes.post("/register/seller", registerSellerController);
 userRoutes.post("/login", loginController);
+userRoutes.post("/logout", authMiddleware, logoutController);
 userRoutes.get("/profile", authMiddleware, getProfileController);
 userRoutes.put("/profile", authMiddleware, updateProfileController);
 userRoutes.get("/user", authMiddleware, getCurrentUserController);
