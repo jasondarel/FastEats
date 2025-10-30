@@ -7,6 +7,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { logout } from "../app/auth/authSlice";
 import { API_URL } from "../config/api";
+import logoutService from "../service/userServices/logoutService";
 import { IoIosMenu, IoIosLogOut } from "react-icons/io";
 import { IoChevronUpOutline } from "react-icons/io5";
 import { FaRegUser } from "react-icons/fa";
@@ -139,19 +140,52 @@ const Sidebar = ({ isTaskbarOpen }) => {
       showCancelButton: true,
       cancelButtonText: "Cancel",
       cancelButtonColor: "#555",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        dispatch(logout());
+        try {
+          MySwal.fire({
+            title: "Logging out...",
+            text: "Please wait",
+            icon: "info",
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            willOpen: () => {
+              MySwal.showLoading();
+            }
+          });
 
-        setIsProfileDropupOpen(false);
-        MySwal.fire({
-          title: "Logged out!",
-          text: "You have been successfully logged out.",
-          icon: "success",
-          confirmButtonColor: "#efb100",
-        }).then(() => {
-          navigate("/login");
-        });
+          const token = localStorage.getItem("token");
+          console.log("Logging out with token:", token);
+          if (token) {
+            await logoutService(token);
+          }
+
+          dispatch(logout());
+          setIsProfileDropupOpen(false);
+
+          MySwal.fire({
+            title: "Logged out!",
+            text: "You have been successfully logged out.",
+            icon: "success",
+            confirmButtonColor: "#efb100",
+          }).then(() => {
+            navigate("/login");
+          });
+        } catch (error) {
+          console.error("Logout error:", error);
+          
+          dispatch(logout());
+          setIsProfileDropupOpen(false);
+          
+          MySwal.fire({
+            title: "Logged out!",
+            text: "You have been logged out locally.",
+            icon: "success",
+            confirmButtonColor: "#efb100",
+          }).then(() => {
+            navigate("/login");
+          });
+        }
       }
     });
   };
