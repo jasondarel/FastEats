@@ -1,4 +1,5 @@
 import pool from "../config/dbInit.js";
+import { getRedisClient } from "../config/redisInit.js";
 
 export const registerService = async(userReq) => {
     const { name, email, password } = userReq;
@@ -31,6 +32,12 @@ export const createUserPaymentService = async(userId) => {
         [userId]
     );
     return result.rows[0];
+}
+
+export const logoutService = async(token, tokenInfo) => {
+    const redisClient = await getRedisClient();
+    const { remainingSeconds } = tokenInfo;
+    await redisClient.set(`blacklist_${token}`, 'true', 'EX', remainingSeconds);
 }
 
 export const getUserPaymentByIdService = async(userId) => {
