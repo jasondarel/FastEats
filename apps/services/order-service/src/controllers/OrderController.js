@@ -1370,6 +1370,31 @@ export const payOrderConfirmationController = async (req, res) => {
       shipping_name,
     } = req.body;
 
+    // Validate required fields
+    if (!order_id || !itemPrice || !itemQuantity) {
+      logger.warn("Missing required fields for payment confirmation", {
+        order_id,
+        itemPrice,
+        itemQuantity,
+      });
+      return responseError(res, 400, "Missing required fields: order_id, itemPrice, and itemQuantity are required");
+    }
+
+    // Validate shipping information
+    if (!shipping_province || !shipping_city || !shipping_district || 
+        !shipping_village || !shipping_address || !shipping_phone || !shipping_name) {
+      logger.warn("Missing shipping information", req.body);
+      return responseError(res, 400, "Missing required shipping information");
+    }
+
+    logger.info("Payment confirmation request:", {
+      order_id,
+      itemPrice,
+      itemQuantity,
+      userId,
+      shipping_name,
+    });
+
     const order = await getOrderByIdService(order_id);
     if (!order) {
       logger.warn(`Order ${order_id} not found`);
@@ -1395,16 +1420,39 @@ export const payOrderConfirmationController = async (req, res) => {
     }
 
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
+    const MIDTRANS_SNAP_URL = process.env.MIDTRANS_SNAP_URL;
+    
+    if (!MIDTRANS_SERVER_KEY || !MIDTRANS_SNAP_URL) {
+      logger.error("Midtrans configuration missing", {
+        hasServerKey: !!MIDTRANS_SERVER_KEY,
+        hasSnapUrl: !!MIDTRANS_SNAP_URL,
+      });
+      return responseError(res, 500, "Payment gateway configuration error");
+    }
+    
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
     const totalPrice = itemPrice + tax;
+    // Ensure gross_amount is an integer (Midtrans requirement)
+    const grossAmount = Math.round(totalPrice);
+    
+    // Ensure order_id is a string and valid
+    const orderIdString = String(order_id);
+    
+    logger.info("Preparing Midtrans request:", {
+      order_id: orderIdString,
+      gross_amount: grossAmount,
+      itemPrice,
+      tax,
+    });
+    
     const response = await axios.post(
-      process.env.MIDTRANS_SNAP_URL,
+      MIDTRANS_SNAP_URL,
       {
         transaction_details: {
-          order_id,
-          gross_amount: totalPrice,
+          order_id: orderIdString,
+          gross_amount: grossAmount,
         },
         custom_field1: [
           shipping_province,
@@ -1436,12 +1484,35 @@ export const payOrderConfirmationController = async (req, res) => {
       response.data
     );
   } catch (err) {
-    logger.error("Error generating payment token:", err);
-    return responseError(res, 500, "Error generating payment token");
+    // Log detailed error information
+    if (err.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      logger.error("Midtrans API Error:", {
+        status: err.response.status,
+        statusText: err.response.statusText,
+        data: err.response.data,
+        headers: err.response.headers
+      });
+      console.log("ERROR Response Data: ", err.response.data);
+      console.log("ERROR Response Status: ", err.response.status);
+      
+      return responseError(
+        res, 
+        err.response.status || 500, 
+        err.response.data?.error_messages?.[0] || "Error generating payment token"
+      );
+    } else if (err.request) {
+      // The request was made but no response was received
+      logger.error("No response from Midtrans:", err.request);
+      return responseError(res, 500, "No response from payment gateway");
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      logger.error("Error setting up Midtrans request:", err.message);
+      return responseError(res, 500, "Error generating payment token");
+    }
   }
-};
-
-export const payOrderController = async (req, res) => {
+};export const payOrderController = async (req, res) => {
   logger.info("PAY ORDER CONTROLLER");
   try {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
