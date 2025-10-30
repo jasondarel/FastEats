@@ -9,7 +9,7 @@ import {
 } from "../../service/restaurantService/manageRestaurantService";
 import Sidebar from "../../components/Sidebar";
 import RestaurantStatusToggle from "./components/RestaurantStatusToggle";
-import RestaurantImageUploader from "./components//RestaurantImageUploader";
+import RestaurantImageUploader from "./components/RestaurantImageUploader";
 import RestaurantDetailsForm from "./components/RestaurantDetailsForm";
 import FloatingMenuButton from "./components/FloatingMenuButton";
 import { FaUtensils } from "react-icons/fa";
@@ -25,9 +25,11 @@ const ManageRestaurant = () => {
   const [restaurantVillage, setRestaurantVillage] = useState("");
   const [initialRestaurantName, setInitialRestaurantName] = useState("");
   const [initialRestaurantAddress, setInitialRestaurantAddress] = useState("");
-  const [initialRestaurantProvince, setInitialRestaurantProvince] = useState("");
+  const [initialRestaurantProvince, setInitialRestaurantProvince] =
+    useState("");
   const [initialRestaurantCity, setInitialRestaurantCity] = useState("");
-  const [initialRestaurantDistrict, setInitialRestaurantDistrict] = useState("");
+  const [initialRestaurantDistrict, setInitialRestaurantDistrict] =
+    useState("");
   const [initialRestaurantVillage, setInitialRestaurantVillage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [initialIsOpen, setInitialIsOpen] = useState(false);
@@ -59,9 +61,8 @@ const ManageRestaurant = () => {
           setRestaurantAddress(restaurant.restaurant_address);
           setRestaurantProvince(restaurant.restaurant_province || "");
           setInitialRestaurantName(restaurant.restaurant_name);
-          setInitialRestaurantProvince(
-            restaurant.restaurant_province || "");
-          
+          setInitialRestaurantProvince(restaurant.restaurant_province || "");
+
           setInitialRestaurantCity(restaurant.restaurant_city || "");
           setRestaurantCity(restaurant.restaurant_city || "");
           setInitialRestaurantDistrict(restaurant.restaurant_district || "");
@@ -152,7 +153,7 @@ const ManageRestaurant = () => {
       restaurantVillage,
       isOpen,
       imageFile,
-  });
+    });
     try {
       const formData = new FormData();
       formData.append("restaurantName", restaurantName);
@@ -270,55 +271,88 @@ const ManageRestaurant = () => {
   };
 
   return (
-    <div
-      className="flex w-screen min-h-screen bg-yellow-100"
-      style={{
-        backgroundImage: `linear-gradient(rgba(255, 230, 100, 0.6), rgba(255, 230, 100, 0.8)), url('/manageresto.jpg')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
+    <div className="flex bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 min-h-screen">
       <Sidebar />
-      <main className="md:ml-20 flex-1 flex justify-center items-center p-5 min-w-[300px]">
-        <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-xl">
-          <h2 className="text-3xl font-bold text-center text-yellow-600 mb-6 flex items-center justify-center">
-            <FaUtensils className="mr-2" /> Manage Your Restaurant
-          </h2>
+      <div className="mx-12 lg:pl-[250px] xl:pl-[250px] flex-1 p-6">
+        <div className="max-w-7xl mx-auto md:mt-10 space-y-8">
+          {/* Welcome Banner */}
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold mb-2 flex items-center">
+                  <FaUtensils className="mr-3" /> Manage Your Restaurant
+                </h1>
+                <p className="text-amber-100">
+                  Update your restaurant information and settings
+                </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <FaUtensils className="text-4xl" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <RestaurantStatusToggle
-            isOpen={isOpen}
-            onToggle={handleToggleRestaurantStatus}
-          />
+          {/* Restaurant Status Section */}
+          <div className="flex space-x-4">
+            <div className="flex bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
+              <div className="p-8 bg-gradient-to-b from-white to-amber-50/20 border-b border-amber-100">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                  Restaurant Status
+                </h2>
+                <RestaurantStatusToggle
+                  isOpen={isOpen}
+                  onToggle={handleToggleRestaurantStatus}
+                />
+              </div>
+            </div>
+            <div className="flex bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
+              {/* Restaurant Image Section */}
+              <div className="p-8 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                  Restaurant Image
+                </h2>
+                <RestaurantImageUploader
+                  imagePreview={imagePreview}
+                  onImageChange={handleImageChange}
+                />
+              </div>
+            </div>
+          </div>
 
-          <RestaurantImageUploader
-            imagePreview={imagePreview}
-            onImageChange={handleImageChange}
-          />
-
-          <RestaurantDetailsForm
-            restaurantName={restaurantName}
-            setRestaurantName={setRestaurantName}
-            restaurantProvince={restaurantProvince}
-            setRestaurantProvince={setRestaurantProvince}
-            restaurantCity={restaurantCity}
-            setRestaurantCity={setRestaurantCity}
-            restaurantDistrict={restaurantDistrict}
-            setRestaurantDistrict={setRestaurantDistrict}
-            restaurantVillage={restaurantVillage}
-            setRestaurantVillage={setRestaurantVillage}
-            restaurantAddress={restaurantAddress}
-            setRestaurantAddress={setRestaurantAddress}
-            isChanged={isChanged}
-            onSubmit={handleUpdateRestaurant}
-            initialRestaurantProvince={initialRestaurantProvince}
-            initialRestaurantCity={initialRestaurantCity}
-            initialRestaurantDistrict={initialRestaurantDistrict}
-          />
+          {/* Main Content Card */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
+            {/* Restaurant Details Section */}
+            <div className="p-8 bg-gradient-to-b from-white to-orange-50/20">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Restaurant Information
+              </h2>
+              <RestaurantDetailsForm
+                restaurantName={restaurantName}
+                setRestaurantName={setRestaurantName}
+                restaurantProvince={restaurantProvince}
+                setRestaurantProvince={setRestaurantProvince}
+                restaurantCity={restaurantCity}
+                setRestaurantCity={setRestaurantCity}
+                restaurantDistrict={restaurantDistrict}
+                setRestaurantDistrict={setRestaurantDistrict}
+                restaurantVillage={restaurantVillage}
+                setRestaurantVillage={setRestaurantVillage}
+                restaurantAddress={restaurantAddress}
+                setRestaurantAddress={setRestaurantAddress}
+                isChanged={isChanged}
+                onSubmit={handleUpdateRestaurant}
+                initialRestaurantProvince={initialRestaurantProvince}
+                initialRestaurantCity={initialRestaurantCity}
+                initialRestaurantDistrict={initialRestaurantDistrict}
+              />
+            </div>
+          </div>
         </div>
 
         <FloatingMenuButton />
-      </main>
+      </div>
     </div>
   );
 };

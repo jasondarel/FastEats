@@ -22,51 +22,50 @@ const RestaurantImageUploader = ({ imagePreview, onImageChange }) => {
   };
 
   return (
-    <div className="mb-8">
-      <label className="block text-gray-700 font-medium mb-3">
-        Restaurant Image
-      </label>
-      <div className="relative group">
-        <div className="w-full h-64 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
-          {imagePreview ? (
-            <>
-              <img
-                src={imagePreview}
-                alt="Restaurant"
-                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm flex items-center justify-center">
-                <label className="cursor-pointer bg-white/90 backdrop-blur-md text-gray-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center border border-white/20">
-                  <FaCamera className="mr-2 text-amber-600" />
-                  Change Image
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-            </>
-          ) : (
-            <label className="cursor-pointer text-gray-500 flex flex-col items-center hover:text-gray-700 transition-colors duration-300">
-              <FaImage className="w-12 h-12 mb-2 transition-transform duration-300 hover:scale-110" />
-              <span>Click to upload image</span>
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </label>
-          )}
+    <div className="flex justify-center">
+      <div className="w-full max-w-2xl">
+        <div className="relative group">
+          <div className="w-full h-72 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 shadow-sm">
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="Restaurant"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                  <label className="cursor-pointer bg-white/95 backdrop-blur-md text-gray-800 px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center border border-amber-200">
+                    <FaCamera className="mr-2 text-amber-600" />
+                    Change Image
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                </div>
+              </>
+            ) : (
+              <label className="cursor-pointer text-gray-500 flex flex-col items-center hover:text-amber-600 transition-colors duration-300">
+                <FaImage className="w-16 h-16 mb-3 transition-transform duration-300 hover:scale-110" />
+                <span className="text-lg font-medium">Click to upload image</span>
+                <span className="text-sm text-gray-400 mt-1">Drag & drop also supported</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
+            )}
+          </div>
         </div>
-      </div>
-       <p className="text-sm text-gray-500 mt-2 text-center">
-          Recommended: 1200x800px, Max size: 5MB
+        <p className="text-sm text-gray-500 mt-3 text-center">
+          Recommended: 1200x800px • Max size: 5MB • JPG, PNG, or WEBP
         </p>
+      </div>
     </div>
-    
   );
 };
 
