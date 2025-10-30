@@ -1,13 +1,14 @@
 import jwt from 'jsonwebtoken';
 import logger from '../config/loggerInit.js';
 import envInit from '../config/envInit.js';
+import { isTokenBlacklisted } from '../util/userUtil.js';
 import { responseError } from '../util/responseUtil.js';
 
 envInit();
 
 const internalAPIKey = process.env.INTERNAL_API_KEY;
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async(req, res, next) => {
     const authHeader = req.header('Authorization');
     if (!authHeader) {
         logger.warn(`[AUTH] Unauthorized access attempt from ${req.ip} (missing token)`);
@@ -21,6 +22,12 @@ const authMiddleware = (req, res, next) => {
             source: "internal",
         };
         return next();
+    }
+    
+    const isBlacklistedToken = await isTokenBlacklisted(token);
+    if (token && isBlacklistedToken) {
+        logger.warn(`[AUTH] Blacklisted token access attempt from ${req.ip}`);
+        return responseError(res, 403, "Token has been revoked");
     }
     
     try {

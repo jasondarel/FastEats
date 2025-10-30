@@ -5,6 +5,7 @@ import {
   generateOtpCode,
   generateRandomToken,
   publishResetPasswordEmailMessage,
+  getTokenRemainingTime,
 } from "../util/userUtil.js";
 import pool from "../config/dbInit.js";
 import axios from "axios";
@@ -31,7 +32,8 @@ import {
   registerService, 
   updateUserDetailsService, 
   updateUserPaymentService, 
-  validateUserService 
+  validateUserService,
+  logoutService
 } from "../service/userService.js";
 import { getRedisClient } from "../config/redisInit.js";
 import logger from "../config/loggerInit.js";
@@ -242,6 +244,59 @@ export const loginController = async (req, res) => {
 
   } catch (err) {
     logger.error("Internal server error", err);
+    return responseError(res, 500, "Server error");
+  }
+};
+
+export const logoutController = async(req, res) => {
+  logger.info("LOGOUT CONTROLLER");
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+    
+    if (!token) {
+      logger.warn("No token provided for logout");
+      return responseError(res, 400, "No token provided");
+    }
+    const tokenInfo = await getTokenRemainingTime(token);
+    await logoutService(token, tokenInfo);
+
+    return responseSuccess(res, 200, "Logged out successfully");
+    
+  } catch (error) {
+    logger.error("Logout error:", error);
+    return responseError(res, 500, "Server error during logout");
+  }
+};
+
+export const getTokenExpirationController = async (req, res) => {
+  logger.info("GET TOKEN EXPIRATION CONTROLLER");
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+    
+    if (!token) {
+      logger.warn("No token provided");
+      return responseError(res, 400, "No token provided");
+    }
+    
+    const tokenInfo = getTokenRemainingTime(token);
+    
+    if (!tokenInfo) {
+      logger.warn("Invalid token format");
+      return responseError(res, 400, "Invalid token");
+    }
+    
+    if (tokenInfo.expired) {
+      logger.info("Token has expired");
+      return responseError(res, 401, "Token has expired");
+    }
+    
+    logger.info(`Token remaining time: ${tokenInfo.remainingMinutes} minutes`);
+    return responseSuccess(res, 200, "Token info retrieved", "tokenInfo", tokenInfo);
+    
+  } catch (error) {
+    logger.error("Get token expiration error:", error);
     return responseError(res, 500, "Server error");
   }
 };
