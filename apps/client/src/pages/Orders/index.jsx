@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHistory, FaShoppingBag, FaList } from "react-icons/fa";
 import SortButton from "../../components/SortButton";
+import FilterButton from "../../components/FilterButton";
 import OrderItem from "./components/OrderItem";
 import OrderStateMessage from "./components/OrderStateMessage";
 import LoadingState from "../../components/LoadingState";
@@ -17,6 +18,9 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [activeTab, setActiveTab] = useState("All");
 
   const sortOptions = [
     {
@@ -33,6 +37,16 @@ const Orders = () => {
         { field: "price", direction: "desc", label: "Price (Highest)" },
       ],
     },
+  ];
+
+  const statusTabs = [
+    { value: "All", label: "All" },
+    { value: "Waiting", label: "Waiting" },
+    { value: "Preparing", label: "Preparing" },
+    { value: "Delivering", label: "Delivering" },
+    { value: "Completed", label: "Completed" },
+    { value: "Cancelled", label: "Cancelled" },
+    { value: "Pending", label: "Pending" },
   ];
 
   useEffect(() => {
@@ -82,48 +96,79 @@ const Orders = () => {
   const getSortedOrders = () => {
     if (!orders || orders.length === 0) return [];
 
-    const sortedOrders = [...orders];
+    let filteredOrders = [...orders];
 
+    // Apply status tab filter
+    if (activeTab !== "All") {
+      filteredOrders = filteredOrders.filter(
+        (order) => order.status === activeTab
+      );
+    }
+
+    // Apply price filter
+    if (minPrice || maxPrice) {
+      filteredOrders = filteredOrders.filter((order) => {
+        const price = parseFloat(order.total_price || 0);
+        const min = minPrice ? parseFloat(minPrice) : 0;
+        const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+        return price >= min && price <= max;
+      });
+    }
+
+    // Apply sorting
     if (sortBy === "date") {
-      sortedOrders.sort((a, b) => {
+      filteredOrders.sort((a, b) => {
         const dateA = new Date(a.created_at || 0);
         const dateB = new Date(b.created_at || 0);
         return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
       });
     } else if (sortBy === "price") {
-      sortedOrders.sort((a, b) => {
+      filteredOrders.sort((a, b) => {
         const priceA = parseFloat(a.total_price || 0);
         const priceB = parseFloat(b.total_price || 0);
         return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
       });
     }
 
-    return sortedOrders;
+    return filteredOrders;
   };
 
   const sortedOrders = getSortedOrders();
 
   return (
     <YellowBackgroundLayout>
-      <div className="w-full max-w-xl p-6 bg-white shadow-xl rounded-xl flex flex-col max-h-[90vh]">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-yellow-600 mb-4 flex items-center justify-center">
+      <div className="w-full max-w-xl p-6 bg-white shadow-xl rounded-xl flex flex-col h-[80vh]">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-yellow-600 mb-3 flex items-center justify-center">
           <FaHistory className="mr-3" /> My Orders
         </h2>
 
-        <div className="mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-          <div className="flex items-center">
-            <FaList className="text-yellow-500 text-xl mr-3" />
-            <div>
-              <h3 className="font-medium">Your Past Orders</h3>
-              <p className="text-sm text-gray-600">
-                View and reorder your previous or ongoing purchases
-              </p>
-            </div>
+        {/* Status Tabs */}
+        <div className="mb-3 border-b border-gray-200">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+            {statusTabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`hover:cursor-pointer pb-2 px-1 font-medium text-sm transition-all whitespace-nowrap border-b-2 ${
+                  activeTab === tab.value
+                    ? "text-yellow-600 border-yellow-600"
+                    : "text-gray-500 border-transparent hover:text-gray-700"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
         {!loading && !error && orders.length > 0 && (
-          <div className="mb-3 flex justify-end items-center">
+          <div className="flex justify-end items-center gap-2">
+            <FilterButton
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+            />
             <SortButton
               sortBy={sortBy}
               sortOrder={sortOrder}
@@ -138,7 +183,7 @@ const Orders = () => {
 
           {error && <OrderStateMessage type="error" subMessage={error} />}
 
-          {!loading && !error && orders.length === 0 && (
+          {!loading && !error && sortedOrders.length === 0 && (
             <OrderStateMessage type="empty" />
           )}
 
@@ -154,13 +199,6 @@ const Orders = () => {
             ))}
         </div>
       </div>
-
-      <a
-        href="../home"
-        className="fixed bottom-10 right-10 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg text-lg font-semibold hover:bg-yellow-600 transition flex items-center"
-      >
-        <FaShoppingBag className="mr-2" /> Order Now
-      </a>
     </YellowBackgroundLayout>
   );
 };
