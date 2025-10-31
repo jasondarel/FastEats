@@ -290,19 +290,16 @@ const RestaurantDashboard = () => {
       <Sidebar />
       <div className="mx-12 lg:pl-[250px] xl:pl-[250px] flex-1 p-6">
         <div className=" max-w-7xl mx-auto md:mt-10 space-y-8">
-          {/* Welcome Banner */}
           <DashboardBanner />
 
-          {/* Main Restaurant Card */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
             <RestaurantHeader restaurantInfo={restaurantInfo} />
 
-            {/* Seller Summary Section */}
             {sellerSummary && (
               <div className="p-8 bg-gradient-to-b from-white to-purple-50/20 border-b border-purple-100">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Business Analytics
+                    Order Summary
                   </h2>
                   <p className="text-gray-600">
                     Advanced insights into your customer behavior and performance trends
@@ -312,7 +309,6 @@ const RestaurantDashboard = () => {
               </div>
             )}
 
-            {/* Charts Section */}
             <DashboardCharts
               sellerSummary={sellerSummary}
               viewMode={viewMode}
