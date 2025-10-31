@@ -11,7 +11,7 @@ import Sidebar from "../../components/Sidebar";
 import RestaurantStatusToggle from "./components/RestaurantStatusToggle";
 import RestaurantImageUploader from "./components/RestaurantImageUploader";
 import RestaurantDetailsForm from "./components/RestaurantDetailsForm";
-import FloatingMenuButton from "./components/FloatingMenuButton";
+import MyMenuSection from "./components/MyMenuSection";
 import { FaUtensils } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { API_URL } from "../../config/api";
@@ -294,22 +294,11 @@ const ManageRestaurant = () => {
             </div>
           </div>
 
-          {/* Restaurant Status Section */}
-          <div className="flex space-x-4">
-            <div className="flex bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
-              <div className="p-8 bg-gradient-to-b from-white to-amber-50/20 border-b border-amber-100">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  Restaurant Status
-                </h2>
-                <RestaurantStatusToggle
-                  isOpen={isOpen}
-                  onToggle={handleToggleRestaurantStatus}
-                />
-              </div>
-            </div>
-            <div className="flex bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
-              {/* Restaurant Image Section */}
-              <div className="p-8 border-b border-gray-100">
+          {/* Restaurant Status and Image Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
+              <div className="p-8 bg-gradient-to-b from-white to-orange-50/20">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">
                   Restaurant Image
                 </h2>
@@ -317,6 +306,21 @@ const ManageRestaurant = () => {
                   imagePreview={imagePreview}
                   onImageChange={handleImageChange}
                 />
+              </div>
+            </div>
+
+            {/* Right Column */}
+
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-100">
+              <div className="p-8 bg-gradient-to-b from-white to-amber-50/20">
+                <RestaurantStatusToggle
+                  isOpen={isOpen}
+                  onToggle={handleToggleRestaurantStatus}
+                />
+                {/* My Menu Section */}
+                <div className="mt-6">
+                  <MyMenuSection />
+                </div>
               </div>
             </div>
           </div>
@@ -350,8 +354,6 @@ const ManageRestaurant = () => {
             </div>
           </div>
         </div>
-
-        <FloatingMenuButton />
       </div>
     </div>
   );
