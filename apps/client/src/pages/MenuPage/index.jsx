@@ -26,8 +26,17 @@ const MenuPage = () => {
   const [cartError, setCartError] = useState(null);
   const [isCreatingCart, setIsCreatingCart] = useState(false);
 
-  const { menuItems, error: menuError, isLoading: menuLoading } = useMenuData(restaurantId);
-  const { restaurant, averageRating, error: restaurantError, isLoading: restaurantLoading } = useRestaurantData(restaurantId);
+  const {
+    menuItems,
+    error: menuError,
+    isLoading: menuLoading,
+  } = useMenuData(restaurantId);
+  const {
+    restaurant,
+    averageRating,
+    error: restaurantError,
+    isLoading: restaurantLoading,
+  } = useRestaurantData(restaurantId);
 
   const getUserIdFromToken = (token) => {
     try {
@@ -73,9 +82,8 @@ const MenuPage = () => {
 
       console.log("Cart created successfully:", response.data);
 
-      
       const userId = getUserIdFromToken(token);
-      
+
       localStorage.setItem(
         "activeCart",
         JSON.stringify({
@@ -84,7 +92,7 @@ const MenuPage = () => {
             response.data._id ||
             response.data.id,
           restaurantId: restaurantId,
-          userId: userId, 
+          userId: userId,
           createdAt: new Date().toISOString(),
         })
       );
@@ -110,10 +118,8 @@ const MenuPage = () => {
     }
   };
 
-  
   useEffect(() => {
     const handleUserChange = () => {
-      
       const token = localStorage.getItem("token");
       const currentUserId = token ? getUserIdFromToken(token) : null;
       const activeCart = localStorage.getItem("activeCart");
@@ -122,7 +128,6 @@ const MenuPage = () => {
         try {
           const parsedCart = JSON.parse(activeCart);
           if (parsedCart.userId !== currentUserId) {
-            
             setCartCreated(false);
           }
         } catch (e) {
@@ -185,52 +190,72 @@ const MenuPage = () => {
   }
 
   return (
-    <div className="flex ml-0 lg:ml-64 bg-white min-h-screen">
+    <div className="flex ml-0 lg:ml-64 bg-gradient-to-br from-amber-50 via-white to-yellow-50 min-h-screen">
       <Sidebar />
       <BackButton to="/home" />
-      <main className="flex-1 p-5 relative mt-20 px-10">
+      <main className="flex-1 relative">
         {/* Restaurant Header */}
-        <RestaurantHeader 
-          restaurant={restaurant} 
+        <RestaurantHeader
+          restaurant={restaurant}
           averageRating={averageRating}
           menuData={menuItems}
           restaurantId={restaurantId}
         />
-        
-        <h1 className="text-3xl font-bold mb-6 text-yellow-600">Menu</h1>
-        {error && <ErrorMessage message={error} />}
-        {cartError && <ErrorMessage message={cartError} />}
 
-        <div className="flex flex-wrap gap-4 lg:gap-0 items-center justify-center mb-6">
-          <div className="flex-grow max-w-2xl flex justify-center right-0 mr-5">
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              minPrice={minPrice}
-              setMinPrice={setMinPrice}
-              maxPrice={maxPrice}
-              setMaxPrice={setMaxPrice}
-              showUnavailable={showUnavailable}
-              setShowUnavailable={setShowUnavailable}
-              placeholder="Search menu items..."
-            />
+        <div className="px-6 md:px-10 lg:px-16 py-8">
+          {/* Section Title */}
+          <div className="mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent mb-2">
+              Our Menu
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Discover delicious dishes crafted just for you
+            </p>
           </div>
 
-          <AlphabetSort sortOption={sortOption} setSortOption={setSortOption} />
+          {error && <ErrorMessage message={error} />}
+          {cartError && <ErrorMessage message={cartError} />}
+
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div className="flex flex-wrap gap-4 items-center justify-between">
+              <div className="flex-grow max-w-2xl">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  minPrice={minPrice}
+                  setMinPrice={setMinPrice}
+                  maxPrice={maxPrice}
+                  setMaxPrice={setMaxPrice}
+                  showUnavailable={showUnavailable}
+                  setShowUnavailable={setShowUnavailable}
+                  placeholder="Search for your favorite dishes..."
+                />
+              </div>
+
+              <AlphabetSort
+                sortOption={sortOption}
+                setSortOption={setSortOption}
+              />
+            </div>
+
+            <div className="mt-4">
+              <CategoryFilter
+                filterCategory={filterCategory}
+                setFilterCategory={setFilterCategory}
+              />
+            </div>
+          </div>
+
+          {/* Menu Grid */}
+          <MenuItemGrid
+            filteredMenu={filteredAndSortedMenu}
+            searchQuery={searchQuery}
+            filterCategory={filterCategory}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+          />
         </div>
-
-        <CategoryFilter
-          filterCategory={filterCategory}
-          setFilterCategory={setFilterCategory}
-        />
-
-        <MenuItemGrid
-          filteredMenu={filteredAndSortedMenu}
-          searchQuery={searchQuery}
-          filterCategory={filterCategory}
-          minPrice={minPrice}
-          maxPrice={maxPrice}
-        />
       </main>
     </div>
   );

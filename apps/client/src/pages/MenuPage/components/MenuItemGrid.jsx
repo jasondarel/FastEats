@@ -22,9 +22,13 @@ const MenuItemGrid = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 pb-12">
       {filteredMenu.map((item) => (
-        <Link key={item.menu_id} to={`/menu-details/${item.menu_id}`}>
+        <Link
+          key={item.menu_id}
+          to={`/menu-details/${item.menu_id}`}
+          className="transform transition-all duration-300"
+        >
           <MenuItem item={item} />
         </Link>
       ))}

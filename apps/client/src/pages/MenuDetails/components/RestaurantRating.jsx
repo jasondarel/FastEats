@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
-import { Star, User, MessageSquare, ChefHat, Filter } from 'lucide-react';
-import { getRestaurantRatingService } from '../services/ratingService';
+import React, { useState, useEffect } from "react";
+import { Star, User, MessageSquare, ChefHat, Filter } from "lucide-react";
+import { getRestaurantRatingService } from "../services/ratingService";
 
 const RestaurantRating = ({ restaurantId, menuId }) => {
   const [ratings, setRatings] = useState([]);
@@ -11,34 +11,34 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [selectedStarFilter, setSelectedStarFilter] = useState('all');
+  const [selectedStarFilter, setSelectedStarFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
     const fetchRatings = async () => {
       if (!restaurantId) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        
+        const token = localStorage.getItem("token");
+
         if (!token) {
-          setError('Authentication required');
+          setError("Authentication required");
           return;
         }
-        
+
         const data = await getRestaurantRatingService(restaurantId, token);
-        console.log('Fetched ratings:', data);
-        
+        console.log("Fetched ratings:", data);
+
         if (data.success && data.data) {
           setRatings(data.data.ratings || []);
           setAverageRating(data.data.averageRating || 0);
         } else {
-          setError(data.message || 'Failed to fetch ratings');
+          setError(data.message || "Failed to fetch ratings");
         }
       } catch (err) {
-        console.error('Error fetching ratings:', err);
+        console.error("Error fetching ratings:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -48,39 +48,36 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
     fetchRatings();
   }, [restaurantId]);
 
-  
   useEffect(() => {
     if (!menuId || !ratings.length) {
       setFilteredRatings(ratings);
       return;
     }
 
-    const filtered = ratings.filter(rating => {
-      
+    const filtered = ratings.filter((rating) => {
       const targetMenuId = parseInt(menuId);
-      
-      
+
       if (rating.menu_id && parseInt(rating.menu_id) === targetMenuId) {
-        console.log('Direct menu_id match:', rating);
+        console.log("Direct menu_id match:", rating);
         return true;
       }
-      
-      
+
       if (rating.order_items && rating.order_items.length > 0) {
-        const hasMatchingItem = rating.order_items.some(item => 
-          (item.menu_id && parseInt(item.menu_id) === targetMenuId) ||
-          (item.id && parseInt(item.id) === targetMenuId)
+        const hasMatchingItem = rating.order_items.some(
+          (item) =>
+            (item.menu_id && parseInt(item.menu_id) === targetMenuId) ||
+            (item.id && parseInt(item.id) === targetMenuId)
         );
         if (hasMatchingItem) {
-          console.log('Order items match:', rating);
+          console.log("Order items match:", rating);
         }
         return hasMatchingItem;
       }
-      
+
       return false;
     });
 
-    console.log('Filtered ratings:', filtered);
+    console.log("Filtered ratings:", filtered);
     setFilteredRatings(filtered);
 
     if (filtered.length > 0) {
@@ -92,11 +89,14 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
   }, [ratings, menuId]);
 
   // Apply star rating filter
-  const starFilteredRatings = selectedStarFilter === 'all' 
-    ? filteredRatings 
-    : filteredRatings.filter(rating => rating.rating === parseInt(selectedStarFilter));
+  const starFilteredRatings =
+    selectedStarFilter === "all"
+      ? filteredRatings
+      : filteredRatings.filter(
+          (rating) => rating.rating === parseInt(selectedStarFilter)
+        );
 
-  const renderStars = (rating, size = 'w-4 h-4') => {
+  const renderStars = (rating, size = "w-4 h-4") => {
     return (
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -104,8 +104,8 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
             key={star}
             className={`${size} ${
               star <= rating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
             }`}
           />
         ))}
@@ -115,23 +115,27 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getStarFilterCounts = () => {
     const counts = { all: filteredRatings.length };
     for (let i = 1; i <= 5; i++) {
-      counts[i] = filteredRatings.filter(rating => rating.rating === i).length;
+      counts[i] = filteredRatings.filter(
+        (rating) => rating.rating === i
+      ).length;
     }
     return counts;
   };
 
   const starCounts = getStarFilterCounts();
-  const displayedReviews = showAllReviews ? starFilteredRatings : starFilteredRatings.slice(0, 3);
+  const displayedReviews = showAllReviews
+    ? starFilteredRatings
+    : starFilteredRatings.slice(0, 3);
 
   if (loading) {
     return (
@@ -155,37 +159,22 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Star className="w-5 h-5 text-yellow-400" />
-          {menuId ? 'Menu Item Reviews' : 'Customer Reviews'}
-        </h3>
-        <div className="text-center text-gray-500 py-4">
-          <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-          <p>Unable to load reviews at this time.</p>
-          <p className="text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!filteredRatings || filteredRatings.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="h-64 md:h-96 lg:h-[500px] bg-white rounded-lg shadow-md p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Star className="w-5 h-5 text-yellow-400" />
-          {menuId ? 'Menu Item Reviews' : 'Customer Reviews'}
+          {menuId ? "Menu Item Reviews" : "Customer Reviews"}
         </h3>
         <div className="text-center text-gray-500 py-8">
           <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-          <p>{menuId ? 'No reviews for this menu item yet.' : 'No reviews yet.'}</p>
+          <p>
+            {menuId ? "No reviews for this menu item yet." : "No reviews yet."}
+          </p>
           <p className="text-sm">
-            {menuId 
-              ? 'Be the first to review this dish!' 
-              : 'Be the first to review this restaurant!'
-            }
+            {menuId
+              ? "Be the first to review this dish!"
+              : "Be the first to review this restaurant!"}
           </p>
         </div>
       </div>
@@ -193,19 +182,20 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+    <div className="h-64 md:h-96 lg:h-[500px] bg-white rounded-lg shadow-md p-6 mt-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <Star className="w-5 h-5 text-yellow-400" />
-          {menuId ? 'Menu Item Reviews' : 'Customer Reviews'}
+          {menuId ? "Menu Item Reviews" : "Customer Reviews"}
         </h3>
         <div className="flex items-center gap-2">
-          {renderStars(Math.round(averageRating), 'w-5 h-5')}
+          {renderStars(Math.round(averageRating), "w-5 h-5")}
           <span className="text-lg font-semibold text-gray-900">
             {averageRating.toFixed(1)}
           </span>
           <span className="text-gray-500">
-            ({filteredRatings.length} review{filteredRatings.length !== 1 ? 's' : ''})
+            ({filteredRatings.length} review
+            {filteredRatings.length !== 1 ? "s" : ""})
           </span>
         </div>
       </div>
@@ -219,10 +209,11 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
           >
             <Filter className="w-4 h-4 text-amber-600" />
             <span className="text-sm font-medium text-amber-700">
-              {selectedStarFilter === 'all' 
-                ? 'All Ratings' 
-                : `${selectedStarFilter} Star${selectedStarFilter !== '1' ? 's' : ''}`
-              }
+              {selectedStarFilter === "all"
+                ? "All Ratings"
+                : `${selectedStarFilter} Star${
+                    selectedStarFilter !== "1" ? "s" : ""
+                  }`}
             </span>
             <span className="text-xs text-amber-700 bg-amber-200 px-2 py-1 rounded-full">
               {starFilteredRatings.length}
@@ -234,14 +225,14 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
               <div className="p-2">
                 <button
                   onClick={() => {
-                    setSelectedStarFilter('all');
+                    setSelectedStarFilter("all");
                     setShowFilterDropdown(false);
                     setShowAllReviews(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
-                    selectedStarFilter === 'all' 
-                      ? 'bg-yellow-50 text-yellow-700' 
-                      : 'hover:bg-gray-50 text-gray-700'
+                    selectedStarFilter === "all"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "hover:bg-gray-50 text-gray-700"
                   }`}
                 >
                   <span>All Ratings</span>
@@ -249,7 +240,7 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
                     {starCounts.all}
                   </span>
                 </button>
-                
+
                 {[5, 4, 3, 2, 1].map((stars) => (
                   <button
                     key={stars}
@@ -260,13 +251,15 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors hover:cursor-pointer ${
                       selectedStarFilter === stars.toString()
-                        ? 'bg-yellow-50 text-yellow-700'
-                        : 'hover:bg-gray-50 text-gray-700'
+                        ? "bg-yellow-50 text-yellow-700"
+                        : "hover:bg-gray-50 text-gray-700"
                     }`}
                   >
                     <div className="flex items-center gap-2 ">
-                      {renderStars(stars, 'w-3 h-3')}
-                      <span>{stars} Star{stars !== 1 ? 's' : ''}</span>
+                      {renderStars(stars, "w-3 h-3")}
+                      <span>
+                        {stars} Star{stars !== 1 ? "s" : ""}
+                      </span>
                     </div>
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                       {starCounts[stars]}
@@ -281,13 +274,16 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
 
       <div className="space-y-4">
         {displayedReviews.map((rating, index) => (
-          <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+          <div
+            key={index}
+            className="border-b border-gray-100 pb-4 last:border-b-0"
+          >
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 {rating.profilePhoto || rating.user?.profile_photo ? (
                   <img
                     src={rating.profilePhoto || rating.user.profile_photo}
-                    alt={rating.name || rating.user?.name || 'User'}
+                    alt={rating.name || rating.user?.name || "User"}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
@@ -296,12 +292,12 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium text-gray-900 truncate">
-                      {rating.name || rating.user?.name || 'Anonymous User'}
+                      {rating.name || rating.user?.name || "Anonymous User"}
                     </h4>
                     {rating.order_quantity > 1 && (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center gap-1">
@@ -314,34 +310,32 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
                     {formatDate(rating.created_at)}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 mb-2">
                   {renderStars(rating.rating)}
                   <span className="text-sm font-medium text-gray-700">
                     {rating.rating}/5
                   </span>
                 </div>
-                
+
                 {rating.comment && (
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {rating.comment}
                   </p>
                 )}
-                
-               
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {starFilteredRatings.length === 0 && selectedStarFilter !== 'all' && (
+      {starFilteredRatings.length === 0 && selectedStarFilter !== "all" && (
         <div className="text-center text-gray-500 py-8">
           <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
           <p>No {selectedStarFilter} star reviews found.</p>
           <button
             onClick={() => {
-              setSelectedStarFilter('all');
+              setSelectedStarFilter("all");
               setShowAllReviews(false);
             }}
             className="text-yellow-600 hover:text-yellow-700 text-sm mt-2"
@@ -357,18 +351,17 @@ const RestaurantRating = ({ restaurantId, menuId }) => {
             onClick={() => setShowAllReviews(!showAllReviews)}
             className="text-yellow-600 hover:text-yellow-700 font-medium text-sm transition-colors"
           >
-            {showAllReviews 
-              ? 'Show Less Reviews' 
-              : `Show All ${starFilteredRatings.length} Reviews`
-            }
+            {showAllReviews
+              ? "Show Less Reviews"
+              : `Show All ${starFilteredRatings.length} Reviews`}
           </button>
         </div>
       )}
 
       {/* Click outside to close dropdown */}
       {showFilterDropdown && (
-        <div 
-          className="fixed inset-0 z-0" 
+        <div
+          className="fixed inset-0 z-0"
           onClick={() => setShowFilterDropdown(false)}
         />
       )}

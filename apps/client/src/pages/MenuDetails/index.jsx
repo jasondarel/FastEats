@@ -11,7 +11,7 @@ import OrderButtons from "./components/OrderButtons";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
-import RestaurantRating from "./components/RestaurantRating"; 
+import RestaurantRating from "./components/RestaurantRating";
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
 import {
   createCartService,
@@ -77,7 +77,7 @@ const MenuDetails = () => {
     console.log("Add-ons changed:", addOns, "Total price:", totalPrice);
     setSelectedAddOns(addOns);
     setAddOnTotalPrice(totalPrice);
-  }
+  };
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
@@ -99,12 +99,18 @@ const MenuDetails = () => {
 
     if (menu?.addsOnCategories) {
       const validationErrors = [];
-      menu.addsOnCategories.forEach(category => {
+      menu.addsOnCategories.forEach((category) => {
         if (category.is_required) {
           const selections = selectedAddOns[category.category_id];
-          const selectionCount = Array.isArray(selections) ? selections.length : (selections ? 1 : 0);
+          const selectionCount = Array.isArray(selections)
+            ? selections.length
+            : selections
+            ? 1
+            : 0;
           if (selectionCount === 0) {
-            validationErrors.push(`Please select an option for ${category.category_name}`);
+            validationErrors.push(
+              `Please select an option for ${category.category_name}`
+            );
           }
         }
       });
@@ -112,14 +118,14 @@ const MenuDetails = () => {
       if (validationErrors.length > 0) {
         Swal.fire({
           title: "Please complete your selection",
-          text: validationErrors.join('\n'),
+          text: validationErrors.join("\n"),
           icon: "warning",
           confirmButtonText: "OK",
           confirmButtonColor: "#efb100",
         });
         return;
       }
-    } 
+    }
 
     try {
       Swal.fire({
@@ -146,7 +152,7 @@ const MenuDetails = () => {
             parsedCart.userId === currentUserId &&
             parsedCart.restaurantId.toString() === menu.restaurant_id.toString()
           ) {
-            activeCartId = parsedCart.cartId; 
+            activeCartId = parsedCart.cartId;
           }
         } catch (e) {
           console.error("Error parsing activeCart from localStorage:", e);
@@ -205,14 +211,32 @@ const MenuDetails = () => {
       }
 
       const addOnsData = JSON.stringify(selectedAddOns);
-      await createCartItemService(activeCartId, menuId, quantity, addOnsData, token);
-      console.log("Item being added to cart:", activeCartId, menuId, quantity, "Add-ons:", selectedAddOns);
-      
+      await createCartItemService(
+        activeCartId,
+        menuId,
+        quantity,
+        addOnsData,
+        token
+      );
+      console.log(
+        "Item being added to cart:",
+        activeCartId,
+        menuId,
+        quantity,
+        "Add-ons:",
+        selectedAddOns
+      );
+
       Swal.close();
-      const totalItemPrice = (parseFloat(menu.menu_price) + addOnTotalPrice) * quantity;
+      const totalItemPrice =
+        (parseFloat(menu.menu_price) + addOnTotalPrice) * quantity;
       Swal.fire({
         title: "Added to cart!",
-        text: `${quantity} ${menu.menu_name} ${addOnTotalPrice > 0 ? `(+add-ons)` : ''} added to your cart - Total: Rp ${totalItemPrice.toLocaleString('id-ID')}`,
+        text: `${quantity} ${menu.menu_name} ${
+          addOnTotalPrice > 0 ? `(+add-ons)` : ""
+        } added to your cart - Total: Rp ${totalItemPrice.toLocaleString(
+          "id-ID"
+        )}`,
         icon: "success",
         confirmButtonText: "View Cart",
         confirmButtonColor: "#efb100",
@@ -281,12 +305,18 @@ const MenuDetails = () => {
     console.log(menuId, quantity);
     if (menu?.addsOnCategories) {
       const validationErrors = [];
-      menu.addsOnCategories.forEach(category => {
+      menu.addsOnCategories.forEach((category) => {
         if (category.is_required) {
           const selections = selectedAddOns[category.category_id];
-          const selectionCount = Array.isArray(selections) ? selections.length : (selections ? 1 : 0);
+          const selectionCount = Array.isArray(selections)
+            ? selections.length
+            : selections
+            ? 1
+            : 0;
           if (selectionCount === 0) {
-            validationErrors.push(`Please select an option for ${category.category_name}`);
+            validationErrors.push(
+              `Please select an option for ${category.category_name}`
+            );
           }
         }
       });
@@ -294,7 +324,7 @@ const MenuDetails = () => {
       if (validationErrors.length > 0) {
         Swal.fire({
           title: "Please complete your selection",
-          text: validationErrors.join('\n'),
+          text: validationErrors.join("\n"),
           icon: "warning",
           confirmButtonText: "OK",
           confirmButtonColor: "#efb100",
@@ -315,13 +345,21 @@ const MenuDetails = () => {
       });
 
       const addOnsData = JSON.stringify(selectedAddOns);
-      const response = await insertOrderService(menuId, quantity, token, addOnsData);
+      const response = await insertOrderService(
+        menuId,
+        quantity,
+        token,
+        addOnsData
+      );
 
-      const totalOrderPrice = (parseFloat(menu.menu_price) + addOnTotalPrice) * quantity;
-      
+      const totalOrderPrice =
+        (parseFloat(menu.menu_price) + addOnTotalPrice) * quantity;
+
       Swal.fire({
         title: "Success!",
-        text: `Order placed successfully! Total: Rp ${totalOrderPrice.toLocaleString('id-ID')}`,
+        text: `Order placed successfully! Total: Rp ${totalOrderPrice.toLocaleString(
+          "id-ID"
+        )}`,
         icon: "success",
         confirmButtonText: "View Orders",
         confirmButtonColor: "#efb100",
@@ -335,7 +373,7 @@ const MenuDetails = () => {
     } catch (error) {
       Swal.close();
       let errorMessage = "Failed to place order";
-      
+
       if (error.response) {
         const { status, data } = error.response;
         console.error("Error response:", data);
@@ -355,10 +393,12 @@ const MenuDetails = () => {
           localStorage.removeItem("token");
           setTimeout(() => navigate("/login"), 2000);
         } else {
-          errorMessage = data.message || "An unexpected error occurred. Please try again later.";
+          errorMessage =
+            data.message ||
+            "An unexpected error occurred. Please try again later.";
         }
       }
-      
+
       Swal.fire({
         title: "Error!",
         text: errorMessage,
@@ -378,36 +418,51 @@ const MenuDetails = () => {
   if (!menu) return <NotFoundState message="Menu not found." />;
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-3xl mx-auto space-y-6">
-        <div className="p-6 bg-white shadow-lg shadow-slate-300 inset-shadow-xs inset-shadow-slate-300 rounded-xl">
-          <BackButton to={`/restaurant/${menu.restaurant_id}/menu`} />
-          <MenuHeader menu={menu} />
-          <MenuImage menu={menu} />
-          <MenuInfo menu={menu} />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">
+      <BackButton to={`/restaurant/${menu.restaurant_id}/menu`} />
 
-          <CustomerMenuAddOns
-            menu={menu}
-            onAddOnsChange={handleAddOnsChange}
-          />
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          {/* Left Column - Image */}
+          <div className="space-y-6">
+            <MenuImage menu={menu} />
+          </div>
 
-          <div className="space-y-4">
-            <QuantitySelector
-              quantity={quantity}
-              onQuantityChange={handleQuantityChange}
-              onReset={resetQuantity}
-            />
-            <OrderButtons
-              menu={menu}
-              quantity={quantity}
-              addOnTotalPrice={addOnTotalPrice}
-              onAddToCart={handleAddToCart}
-              onOrderNow={handleOrderNow}
+          {/* Rating Section*/}
+          <div className="">
+            <RestaurantRating
+              restaurantId={menu.restaurant_id}
+              menuId={menu.menu_id || menuId}
             />
           </div>
         </div>
+        {/* Details */}
+        <div className="space-y-6 mt-6 w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            <MenuHeader menu={menu} />
+            <MenuInfo menu={menu} />
 
-        <RestaurantRating restaurantId={menu.restaurant_id} menuId={menu.menu_id || menuId} />
+            <CustomerMenuAddOns
+              menu={menu}
+              onAddOnsChange={handleAddOnsChange}
+            />
+
+            <div className="space-y-6 mt-8">
+              <QuantitySelector
+                quantity={quantity}
+                onQuantityChange={handleQuantityChange}
+                onReset={resetQuantity}
+              />
+              <OrderButtons
+                menu={menu}
+                quantity={quantity}
+                addOnTotalPrice={addOnTotalPrice}
+                onAddToCart={handleAddToCart}
+                onOrderNow={handleOrderNow}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

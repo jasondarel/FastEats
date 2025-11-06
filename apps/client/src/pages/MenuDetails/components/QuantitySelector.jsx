@@ -26,17 +26,20 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-2 mt-10">
-      <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-lg">
+    <div className="flex flex-col items-center space-y-3">
+      <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        Quantity
+      </label>
+      <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-amber-50 px-6 py-3 rounded-xl border-2 border-amber-200 shadow-sm">
         <button
           onClick={() => {
             const newQuantity = Math.max(1, quantity - 1);
             onQuantityChange(newQuantity - quantity);
             setInputValue(newQuantity.toString());
           }}
-          className="text-yellow-600 hover:text-yellow-700 transition-colors cursor-pointer"
+          className="text-amber-600 hover:text-amber-700 transition-all hover:scale-110 cursor-pointer"
         >
-          <MinusCircle className="w-6 h-6" />
+          <MinusCircle className="w-8 h-8" />
         </button>
 
         <input
@@ -45,7 +48,7 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
           value={inputValue}
           onChange={handleInputChange}
           onBlur={handleBlur}
-          className="text-xl font-semibold min-w-[3ch] w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-yellow-500 rounded"
+          className="text-2xl font-bold min-w-[3ch] w-20 text-center bg-white border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent rounded-lg py-2"
         />
 
         <button
@@ -54,9 +57,9 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
             onQuantityChange(1);
             setInputValue(newQuantity.toString());
           }}
-          className="text-yellow-600 hover:text-yellow-700 transition-colors cursor-pointer"
+          className="text-amber-600 hover:text-amber-700 transition-all hover:scale-110 cursor-pointer"
         >
-          <PlusCircle className="w-6 h-6" />
+          <PlusCircle className="w-8 h-8" />
         </button>
       </div>
 
@@ -65,11 +68,11 @@ const QuantitySelector = ({ quantity, onQuantityChange, onReset }) => {
           onReset();
           setInputValue("1");
         }}
-        className="text-gray-500 hover:text-yellow-600 transition-colors flex items-center gap-2 text-sm cursor-pointer"
+        className="text-gray-500 hover:text-amber-600 transition-colors flex items-center gap-2 text-sm cursor-pointer font-medium"
         title="Reset quantity to 1"
       >
         <RotateCcw className="w-4 h-4" />
-        Reset quantity
+        Reset to 1
       </button>
     </div>
   );
