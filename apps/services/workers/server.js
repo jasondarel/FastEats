@@ -1,7 +1,5 @@
-import { redisInit } from "./config/redisInit.js";
-import setupOrderExpiryListener from "./redis/order-service/order-expiry-listener.js";
+import setupOrderExpiryCron from "./redis/order-service/order-expiry-cron.js";
 
 (async () => {
-    await redisInit();
-    setupOrderExpiryListener();
+  setupOrderExpiryCron();
 })();

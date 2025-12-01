@@ -448,11 +448,14 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
 
         if (orderItemAddsOnCategory && orderItemAddsOnCategory.length > 0) {
           for (const category of orderItemAddsOnCategory) {
-            const addOnItems = await getOrderAddsOnItemService(category.category_id);
-            
+            const addOnItems = await getOrderAddsOnItemService(
+              category.category_id
+            );
+
             if (addOnItems && addOnItems.length > 0) {
-              const categoryAddons = addOnItems.map(addon => {
-                const price = (parseFloat(addon.adds_on_price) * item.item_quantity) || 0;
+              const categoryAddons = addOnItems.map((addon) => {
+                const price =
+                  parseFloat(addon.adds_on_price) * item.item_quantity || 0;
                 const quantity = addon.quantity || 1;
                 const itemTotal = price * quantity;
                 const addonDetail = {
@@ -489,7 +492,7 @@ export const getOrderWithItemsByOrderIdController = async (req, res) => {
       total_addons: allAddons.length,
       addon_summary: allAddons,
     };
-    
+
     logger.info("Fetching menu data for order items...");
     return responseSuccess(
       res,
@@ -1272,8 +1275,13 @@ export const getOrderByIdController = async (req, res) => {
 
       let addsOn = [];
 
-      const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(orderItems[0].order_item_id);
-      if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
+      const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(
+        orderItems[0].order_item_id
+      );
+      if (
+        orderItemAddsOnCategory !== null &&
+        orderItemAddsOnCategory.length !== 0
+      ) {
         const itemAddsOn = await Promise.all(
           orderItemAddsOnCategory.map(async (category) => {
             const addOnItems = await getOrderAddsOnItemService(
@@ -1284,11 +1292,11 @@ export const getOrderByIdController = async (req, res) => {
               items: addOnItems,
             };
           })
-        ); 
+        );
         addsOn.push({
           order_item_id: orderItems[0].order_item_id,
-          addsOn: itemAddsOn
-        }) 
+          addsOn: itemAddsOn,
+        });
       }
 
       const order = {
@@ -1309,22 +1317,29 @@ export const getOrderByIdController = async (req, res) => {
       let addsOn = [];
       if (orderItems.length > 0) {
         for (const item of orderItems) {
-            const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(item.order_item_id);
-            if (orderItemAddsOnCategory !== null && orderItemAddsOnCategory.length !== 0) {
-                const itemAddsOn = await Promise.all(
-                    orderItemAddsOnCategory.map(async (category) => {
-                        const addOnItems = await getOrderAddsOnItemService(category.category_id);
-                        return {
-                            ...category,
-                            items: addOnItems
-                        };
-                    })
-                )               
-                addsOn.push({
-                    order_item_id: item.order_item_id,
-                    addsOn: itemAddsOn
-                })
-            }
+          const orderItemAddsOnCategory = await getOrderAddsOnCategoryService(
+            item.order_item_id
+          );
+          if (
+            orderItemAddsOnCategory !== null &&
+            orderItemAddsOnCategory.length !== 0
+          ) {
+            const itemAddsOn = await Promise.all(
+              orderItemAddsOnCategory.map(async (category) => {
+                const addOnItems = await getOrderAddsOnItemService(
+                  category.category_id
+                );
+                return {
+                  ...category,
+                  items: addOnItems,
+                };
+              })
+            );
+            addsOn.push({
+              order_item_id: item.order_item_id,
+              addsOn: itemAddsOn,
+            });
+          }
         }
       }
 
@@ -1377,12 +1392,23 @@ export const payOrderConfirmationController = async (req, res) => {
         itemPrice,
         itemQuantity,
       });
-      return responseError(res, 400, "Missing required fields: order_id, itemPrice, and itemQuantity are required");
+      return responseError(
+        res,
+        400,
+        "Missing required fields: order_id, itemPrice, and itemQuantity are required"
+      );
     }
 
     // Validate shipping information
-    if (!shipping_province || !shipping_city || !shipping_district || 
-        !shipping_village || !shipping_address || !shipping_phone || !shipping_name) {
+    if (
+      !shipping_province ||
+      !shipping_city ||
+      !shipping_district ||
+      !shipping_village ||
+      !shipping_address ||
+      !shipping_phone ||
+      !shipping_name
+    ) {
       logger.warn("Missing shipping information", req.body);
       return responseError(res, 400, "Missing required shipping information");
     }
@@ -1421,7 +1447,7 @@ export const payOrderConfirmationController = async (req, res) => {
 
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     const MIDTRANS_SNAP_URL = process.env.MIDTRANS_SNAP_URL;
-    
+
     if (!MIDTRANS_SERVER_KEY || !MIDTRANS_SNAP_URL) {
       logger.error("Midtrans configuration missing", {
         hasServerKey: !!MIDTRANS_SERVER_KEY,
@@ -1429,24 +1455,24 @@ export const payOrderConfirmationController = async (req, res) => {
       });
       return responseError(res, 500, "Payment gateway configuration error");
     }
-    
+
     const base64Auth = `Basic ${Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString(
       "base64"
     )}`;
     const totalPrice = itemPrice + tax;
     // Ensure gross_amount is an integer (Midtrans requirement)
     const grossAmount = Math.round(totalPrice);
-    
+
     // Ensure order_id is a string and valid
     const orderIdString = String(order_id);
-    
+
     logger.info("Preparing Midtrans request:", {
       order_id: orderIdString,
       gross_amount: grossAmount,
       itemPrice,
       tax,
     });
-    
+
     const response = await axios.post(
       MIDTRANS_SNAP_URL,
       {
@@ -1492,15 +1518,16 @@ export const payOrderConfirmationController = async (req, res) => {
         status: err.response.status,
         statusText: err.response.statusText,
         data: err.response.data,
-        headers: err.response.headers
+        headers: err.response.headers,
       });
       console.log("ERROR Response Data: ", err.response.data);
       console.log("ERROR Response Status: ", err.response.status);
-      
+
       return responseError(
-        res, 
-        err.response.status || 500, 
-        err.response.data?.error_messages?.[0] || "Error generating payment token"
+        res,
+        err.response.status || 500,
+        err.response.data?.error_messages?.[0] ||
+          "Error generating payment token"
       );
     } else if (err.request) {
       // The request was made but no response was received
@@ -1512,7 +1539,8 @@ export const payOrderConfirmationController = async (req, res) => {
       return responseError(res, 500, "Error generating payment token");
     }
   }
-};export const payOrderController = async (req, res) => {
+};
+export const payOrderController = async (req, res) => {
   logger.info("PAY ORDER CONTROLLER");
   try {
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
@@ -1627,36 +1655,10 @@ export const payOrderConfirmationController = async (req, res) => {
 
       await pendingOrderService(order_id);
 
-      const redisClient = getRedisClient();
-      if (!redisClient) {
-        logger.error("Redis client not initialized");
-        return responseError(res, 500, "Redis client not initialized");
-      }
-
-      await redisClient.set(
-        `order:${order_id}`,
-        JSON.stringify({
-          order_id: order_id,
-          status: "pending",
-          transaction_status: transaction_status,
-          transaction_time: transaction_time,
-          payment_type: payment_type,
-          gross_amount: gross_amount,
-          shipping_province: shippingProvince,
-          shipping_city: shippingCity,
-          shipping_district: shippingDistrict,
-          shipping_village: shippingVillage,
-          shipping_address: shippingAddress,
-          shipping_phone: shippingPhone,
-          shipping_name: shippingName,
-          tax: tax,
-          transaction_net: transactionNet,
-        }),
-        "NX",
-        "EX",
-        30 * 60
+      // Order will be automatically cancelled by cron job if not paid within 30 minutes
+      logger.info(
+        `Transaction ${order_id} set to pending - will auto-cancel in 30 minutes if unpaid`
       );
-      logger.info(`Order ${order_id} set to pending in Redis`);
 
       logger.info(`Transaction ${order_id} set to pending`);
       return responseSuccess(
@@ -1689,14 +1691,7 @@ export const payOrderConfirmationController = async (req, res) => {
           );
         }
 
-        const redisClient = getRedisClient();
-        if (redisClient) {
-          await redisClient.del(`order:${order_id}`);
-          logger.info(
-            `Redis key order:${order_id} deleted after payment success`
-          );
-        }
-
+        // Payment successful - order status updated, cron job will skip this order
         logger.info("Order paid successfully");
         return responseSuccess(
           res,
