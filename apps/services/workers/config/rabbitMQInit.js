@@ -69,7 +69,7 @@ const connect = async () => {
     setTimeout(rabbitMQInit, RETRY_DELAY_MS);
   });
 
-  channel = await connection.createChannel();
+  channel = await connection.createConfirmChannel();
   await setupTopology(channel);
 
   logger.info(`✅ RabbitMQ Connected & Order Topology "${ORDER_EXCHANGE}" Initialized`);

@@ -251,7 +251,11 @@ export const pendingOrderService = async (orderId) => {
 
 export const saveSnapTokenService = async (orderId, snapToken) => {
   const result = await pool.query(
-    "INSERT INTO snaps (order_id, snap_token) VALUES ($1, $2) RETURNING *",
+    `INSERT INTO snaps (order_id, snap_token)
+     VALUES ($1, $2)
+     ON CONFLICT (order_id) DO UPDATE
+     SET snap_token = EXCLUDED.snap_token, updated_at = NOW()
+     RETURNING *`,
     [orderId, snapToken]
   );
   return result.rows[0];

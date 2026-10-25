@@ -152,10 +152,11 @@ model transactions {
 }
 
 model snaps {
-  snap_id    Int      @id @default(autoincrement())
-  order_id   Int
-  snap_token String?
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-  orders     orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  snap_id      Int      @id @default(autoincrement())
+  order_id     Int      @unique
+  snap_token   String?
+  redirect_url String?  @db.Text
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+  orders       orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
 }
