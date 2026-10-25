@@ -71,6 +71,7 @@ model orders {
   item_quantity           Int           @default(1)
   status                  String        @default("Waiting")
   order_type              String        @default("CHECKOUT")
+  idempotency_key         String?       @unique @db.VarChar(100)
   created_at              DateTime      @default(now())
   updated_at              DateTime      @default(now())
   order_items             order_items[]
@@ -80,11 +81,18 @@ model orders {
 
 model order_jobs {
   id          Int      @id @default(autoincrement())
+  event_id    String   @unique @default(dbgenerated("gen_random_uuid()")) @db.VarChar(100)
+  order_id    Int?
   payload     Json
-  routing_key String
-  status      String   @default("pending")
+  routing_key String   @db.VarChar(100)
+  status      String   @default("pending") @db.VarChar(30)
+  attempts    Int      @default(0)
+  last_error  String?  @db.Text
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now())
+
+  @@index([status, created_at])
+  @@index([order_id, routing_key])
 }
 
 model order_items {
