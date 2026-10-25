@@ -10,6 +10,25 @@
 | 1 | Schema migration: `orders.idempotency_key` + `order_jobs` outbox fields | ✅ Done | `4435a65` |
 | 1 | RabbitMQ order topology in workers (`order_exchange`, queues, DLX/DLQ) | ✅ Done | `4435a65` |
 | 1 | Redis → Socket.IO bridge (`fasteats:order:events` → `order:<id>` rooms) | ✅ Done | `166ad21` |
+| 1 | Outbox publisher (`order_jobs` → `order_exchange`, confirm channel, retry) | ✅ Done | `44970b5` |
+| 1 | `paymentCreateWorker` (Midtrans Snap → `snaps` → Redis `payment.ready`) | ✅ Done | `44970b5` |
+| 1 | `snaps` migration: `redirect_url` + unique `order_id` (upsert) | ✅ Done | `44970b5` |
+
+### Environment & Migration Notes
+
+**Database** (applied locally via `prisma db push`; this repo has no Prisma migration history):
+- `orders.idempotency_key` — nullable + unique, no backfill required.
+- `order_jobs` — `event_id` (DB default `gen_random_uuid()`), `order_id`, `attempts`, `last_error`, plus `(status, created_at)` and `(order_id, routing_key)` indexes.
+- `snaps` — `redirect_url` added, `order_id` now unique; `saveSnapTokenService` upserts on conflict.
+- Existing rows are compatible. Legacy notification jobs (`preparing_order`, `completed_order`) are intentionally ignored by the outbox publisher.
+
+**Worker environment** (add to each deployed `workers` environment):
+- `RABBITMQ_URL`
+- `SOCKET_EVENTS_CHANNEL` (default `fasteats:order:events`)
+- `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL`, `IS_PRODUCTION`
+- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`.
+
+**Client**: no migration required yet. The client already emits `joinOrder`, and the synchronous `pay-order-confirmation` flow still works. Consuming `payment.ready` happens alongside the order-creation/client migration.
 
 ---
 
@@ -339,12 +358,14 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
 - [x] **Redis-to-Socket.IO Bridge:** *(commit `166ad21`)*
   - Add Redis subscriber in `order-service` to listen on `fasteats:order:events` and emit to Socket.IO rooms (`order:${order_id}`).
   - Room joins handled via `joinOrder` and `joinUser`; no ownership auth yet (documented as a follow-up).
-- [ ] **Payment Create Worker:**
+- [x] **Payment Create Worker:** *(commit `44970b5`)*
   - Implement `paymentCreateWorker.js`.
   - Connect Midtrans Snap API call and persist token in `snaps` table.
   - Publish `payment.ready` event via Redis bridge.
-- [ ] **Outbox Publisher:**
+  - Atomic `published → processing` guard, reuse existing Snap token on retry, 3 attempts → DLQ.
+- [x] **Outbox Publisher:** *(commit `44970b5`)*
   - Wire an outbox publisher (poller or recurring task) that reads `pending` jobs from `order_jobs`, publishes to RabbitMQ, and marks them `published`.
+  - Filters to order routing keys so legacy notification jobs stay with the `order-service` cron.
 - [ ] **Update Order Creation:**
   - Attach shipping data to order creation.
   - Insert `payment.create` pending job within order creation transaction.
