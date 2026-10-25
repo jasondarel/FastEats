@@ -9,6 +9,7 @@
 |---|---|---|---|
 | 1 | Schema migration: `orders.idempotency_key` + `order_jobs` outbox fields | ✅ Done | `4435a65` |
 | 1 | RabbitMQ order topology in workers (`order_exchange`, queues, DLX/DLQ) | ✅ Done | `4435a65` |
+| 1 | Redis → Socket.IO bridge (`fasteats:order:events` → `order:<id>` rooms) | ✅ Done | `166ad21` |
 
 ---
 
@@ -335,8 +336,9 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
   - `event_id` uses a DB-level default (`gen_random_uuid()`) instead of client-side `uuid()` because job rows are also inserted via raw SQL in workers.
 - [x] **RabbitMQ Infrastructure in Workers:** *(commit `4435a65`)*
   - Create `apps/services/workers/config/rabbitMQInit.js` with `order_exchange`, queues, and `order_dead_letter_exchange`.
-- [ ] **Redis-to-Socket.IO Bridge:**
+- [x] **Redis-to-Socket.IO Bridge:** *(commit `166ad21`)*
   - Add Redis subscriber in `order-service` to listen on `fasteats:order:events` and emit to Socket.IO rooms (`order:${order_id}`).
+  - Room joins handled via `joinOrder` and `joinUser`; no ownership auth yet (documented as a follow-up).
 - [ ] **Payment Create Worker:**
   - Implement `paymentCreateWorker.js`.
   - Connect Midtrans Snap API call and persist token in `snaps` table.
