@@ -50,5 +50,8 @@
     "globals": "^15.14.0",
     "postcss": "^8.5.3",
     "vite": "^6.1.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.0": true
   }
 }

@@ -1,6 +1,6 @@
 services:
   fasteats_db_postgres:
-    image: postgres:latest
+    image: postgres:17
     container_name: fasteats_db_postgres
     restart: always
     environment:

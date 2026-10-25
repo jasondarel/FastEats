@@ -1,4 +1,3 @@
-import logger from "./loggerInit.js";
 import dotenv from "dotenv";
 
 const envInit = () => {
