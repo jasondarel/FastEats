@@ -10,7 +10,8 @@ import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
 import { responseError, responseSuccess } from "../util/responseUtil.js";
 import {
-  getRestaurantByOwnerIdInformation
+  getRestaurantByOwnerIdInformation,
+  getRestaurantInformation
 } from "../../../packages/shared/apiService.js";
 import { getSellerChatsUtil, getUserChatsUtil } from "../util/chatUtil.js";
 
@@ -289,18 +290,30 @@ export const createMessageController = async (req, res) => {
 
       io.to(`chat_${chatId}`).emit("new_message", objectMessage);
       logger.info(`WebSocket: Emitted new_message event to all clients`);
+      const recipientUserIds = new Set();
 
-      io.emit("refresh_chat_list", {
-        updatedChat: updatedChat.chat,
-      })
+      if (updatedChat.chat?.userId) {
+        recipientUserIds.add(String(updatedChat.chat.userId));
+      }
 
-      io.to(`user_${sender.id}`).emit("update_chat", {
-        chatId,
-        lastMessage: {
-          text,
-          sender,
-          timestamp: new Date().toISOString(),
-        },
+      if (role === "seller" && userId) {
+        recipientUserIds.add(String(userId));
+      } else if (updatedChat.chat?.restaurantId) {
+        const restaurantInfo = await getRestaurantInformation(
+          GLOBAL_SERVICE_URL,
+          updatedChat.chat.restaurantId,
+          token
+        );
+
+        if (restaurantInfo?.restaurant?.owner_id) {
+          recipientUserIds.add(String(restaurantInfo.restaurant.owner_id));
+        }
+      }
+
+      recipientUserIds.forEach((recipientUserId) => {
+        io.to(`user_${recipientUserId}`).emit("chat_list_updated", {
+          updatedChat: updatedChat.chat,
+        });
       });
 
       logger.info(`WebSocket: Emitted new_message event to chat_${chatId}`);

@@ -158,6 +158,21 @@ const ChatsList = () => {
   };
 
   useEffect(() => {
+    let currentUserId = null;
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        currentUserId = payload?.userId || null;
+      }
+    } catch (error) {
+      console.error("Failed to parse token for socket room join:", error);
+    }
+
+    if (!currentUserId) {
+      currentUserId = user?.user_id || user?.userId || user?.id || null;
+    }
+
     socketRef.current = io(API_URL, {
       path: "/chat/socket.io",
       transports: ["websocket", "polling"],
@@ -166,7 +181,13 @@ const ChatsList = () => {
       timeout: 10000,
     });
 
-    socketRef.current.on("refresh_chat_list", ({updatedChat}) => {
+    socketRef.current.on("connect", () => {
+      if (currentUserId) {
+        socketRef.current.emit("join_room", `user_${currentUserId}`);
+      }
+    });
+
+    socketRef.current.on("chat_list_updated", ({ updatedChat }) => {
       handleChatUpdate(updatedChat);
     });
 
@@ -177,7 +198,7 @@ const ChatsList = () => {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [user]);
 
   const getMessageDisplay = (lastMessage) => {
     if (!lastMessage) {
