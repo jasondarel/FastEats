@@ -1,6 +1,6 @@
 # Hybrid Event-Driven Order Pipeline with RabbitMQ Workers and PostgreSQL Outbox
 **Date:** 2026-10-25  
-**Status:** In Progress — Phase 1 (partial)  
+**Status:** In Progress — Phase 1 (server-side order creation done; runtime verification pending)  
 **Revision:** v3 — PostgreSQL Transactional Outbox + RabbitMQ Consumer Pipeline
 
 ### Progress Log
@@ -13,6 +13,8 @@
 | 1 | Outbox publisher (`order_jobs` → `order_exchange`, confirm channel, retry) | ✅ Done | `44970b5` |
 | 1 | `paymentCreateWorker` (Midtrans Snap → `snaps` → Redis `payment.ready`) | ✅ Done | `44970b5` |
 | 1 | `snaps` migration: `redirect_url` + unique `order_id` (upsert) | ✅ Done | `44970b5` |
+| 1 | Order creation accepts shipping + queues `payment.create` outbox job (both checkout endpoints) | ✅ Done | — |
+| 1 | `Idempotency-Key` lookup + unique conflict handling on order creation | ✅ Done | — |
 
 ### Environment & Migration Notes
 
@@ -366,11 +368,13 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
 - [x] **Outbox Publisher:** *(commit `44970b5`)*
   - Wire an outbox publisher (poller or recurring task) that reads `pending` jobs from `order_jobs`, publishes to RabbitMQ, and marks them `published`.
   - Filters to order routing keys so legacy notification jobs stay with the `order-service` cron.
-- [ ] **Update Order Creation:**
-  - Attach shipping data to order creation.
-  - Insert `payment.create` pending job within order creation transaction.
-  - Return 202 with order information.
+- [x] **Update Order Creation:**
+   - Attach shipping data to order creation (optional; legacy requests without shipping still use `payOrderConfirmationController`).
+   - Insert `payment.create` pending job within order creation transaction.
+   - Return 202 with order information.
+   - Read `Idempotency-Key`, return the existing order on replay, and resolve unique conflicts.
 - [ ] **Verification:** Test duplicate order creation with `Idempotency-Key` and verify fallback `GET /snap/:order_id`.
+   - Client still gathers shipping in `OrderDetails`; migrating the shipping form upstream and consuming `payment.ready` remains part of the client migration.
 
 ### Phase 2: State Transitions & Notification Decoupling
 - [ ] **Settlement Webhook & Worker:**

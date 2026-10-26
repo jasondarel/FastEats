@@ -32,6 +32,8 @@ import {
   getAllOrderWithItemsByOrderIdService,
   createPreparingOrderJobService,
   createCompletedOrderJobService,
+  createPaymentCreateOrderJobService,
+  getOrderByIdempotencyKeyService,
   updateCartItemQuantityServiceByMenuId,
   getCartItemServiceByMenuId,
   getOrdersBySellerIdService,
@@ -65,6 +67,63 @@ const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
 const internalAPIKey = process.env.INTERNAL_API_KEY;
 
+const DEFAULT_TAX = 2000;
+
+const getIdempotencyKey = (req) => {
+  const headerKey = req.headers["idempotency-key"];
+  if (typeof headerKey !== "string") return null;
+
+  const trimmed = headerKey.trim();
+  return trimmed ? trimmed.slice(0, 100) : null;
+};
+
+const getShippingFromBody = (body = {}) => {
+  const shipping = {
+    province: body.shipping_province ?? body.shippingProvince ?? null,
+    city: body.shipping_city ?? body.shippingCity ?? null,
+    district: body.shipping_district ?? body.shippingDistrict ?? null,
+    village: body.shipping_village ?? body.shippingVillage ?? null,
+    address: body.shipping_address ?? body.shippingAddress ?? null,
+    phone: body.shipping_phone ?? body.shippingPhone ?? null,
+    name:
+      body.shipping_name ??
+      body.shippingName ??
+      body.shipping_full_name ??
+      body.fullName ??
+      null,
+  };
+
+  const isComplete = Object.values(shipping).every(
+    (value) => typeof value === "string" && value.trim().length > 0
+  );
+
+  return { shipping, isComplete };
+};
+
+const buildPaymentPayload = ({ userId, shipping, itemPrice, tax }) => {
+  const resolvedItemPrice = Math.max(Number(itemPrice) || 0, 0);
+  const resolvedTax = Number.isFinite(Number(tax))
+    ? Number(tax)
+    : DEFAULT_TAX;
+
+  return {
+    user_id: userId,
+    shipping,
+    item_price: resolvedItemPrice,
+    tax: resolvedTax,
+    gross_amount: Math.round(resolvedItemPrice + resolvedTax),
+  };
+};
+
+const respondWithExistingOrder = (res, existingOrder) =>
+  responseSuccess(
+    res,
+    200,
+    "Order already exists for this Idempotency-Key",
+    "order",
+    { ...existingOrder, idempotent: true }
+  );
+
 export const createOrderController = async (req, res) => {
   logger.info("CREATE ORDER CONTROLLER");
   const client = await pool.connect();
@@ -79,6 +138,21 @@ export const createOrderController = async (req, res) => {
     }
 
     const token = authHeader.split(" ")[1];
+    const idempotencyKey = getIdempotencyKey(req);
+
+    if (idempotencyKey) {
+      const existingOrder = await getOrderByIdempotencyKeyService(
+        idempotencyKey
+      );
+      if (existingOrder) {
+        logger.info(
+          `♻️ Returning existing order ${existingOrder.order_id} for Idempotency-Key`
+        );
+        client.release();
+        return respondWithExistingOrder(res, existingOrder);
+      }
+    }
+
     const orderReq = req.body;
     const addsOnData = JSON.parse(orderReq.addsOnData || "[]");
     orderReq.orderType = "CHECKOUT";
@@ -99,6 +173,8 @@ export const createOrderController = async (req, res) => {
     }
 
     orderReq.userId = userId;
+    orderReq.idempotencyKey = idempotencyKey;
+    const { shipping, isComplete: hasShipping } = getShippingFromBody(orderReq);
 
     let menuResponse;
     try {
@@ -176,6 +252,34 @@ export const createOrderController = async (req, res) => {
     orderReq.menuPrice = menuResponse.data.menu.menu_price;
     orderReq.menuImage = menuResponse.data.menu.menu_image;
     orderReq.menuCategory = menuResponse.data.menu.menu_category;
+
+    const tax = Number.isFinite(Number(orderReq.tax))
+      ? Number(orderReq.tax)
+      : DEFAULT_TAX;
+    const addOnsTotal = Object.values(addsOnData || {}).reduce(
+      (sum, value) => {
+        if (Array.isArray(value)) {
+          return (
+            sum +
+            value.reduce(
+              (itemSum, item) => itemSum + Number(item?.item_price || 0),
+              0
+            )
+          );
+        }
+        if (value && typeof value === "object") {
+          return sum + Number(value.item_price || 0);
+        }
+        return sum;
+      },
+      0
+    );
+    const fallbackItemPrice =
+      Number(orderReq.menuPrice || 0) * Number(orderReq.quantity || 0) +
+      addOnsTotal;
+    const itemPrice = Number(
+      orderReq.itemPrice ?? orderReq.item_price ?? fallbackItemPrice
+    );
 
     try {
       await client.query("BEGIN");
@@ -307,20 +411,55 @@ export const createOrderController = async (req, res) => {
         }
       }
 
+      let paymentJob = null;
+      if (hasShipping) {
+        paymentJob = await createPaymentCreateOrderJobService(
+          client,
+          order.order_id,
+          buildPaymentPayload({ userId, shipping, itemPrice, tax })
+        );
+      } else {
+        logger.warn(
+          `Order ${order.order_id} created without shipping data; payment.create job not queued`
+        );
+      }
+
       await client.query("COMMIT");
       logger.info("Order and order item created successfully", {
         orderId: order.order_id,
         userId,
+        paymentJobId: paymentJob?.id ?? null,
       });
 
       client.release();
-      return responseSuccess(res, 201, "Order created successfully", "order", {
-        ...order,
-        items: orderItem ? [orderItem] : [],
-      });
+      return responseSuccess(
+        res,
+        paymentJob ? 202 : 201,
+        paymentJob
+          ? "Order accepted for payment processing"
+          : "Order created successfully",
+        "order",
+        {
+          ...order,
+          items: orderItem ? [orderItem] : [],
+        }
+      );
     } catch (error) {
       await client.query("ROLLBACK");
       client.release();
+
+      if (error.code === "23505" && idempotencyKey) {
+        const existingOrder = await getOrderByIdempotencyKeyService(
+          idempotencyKey
+        );
+        if (existingOrder) {
+          logger.info(
+            `♻️ Idempotency conflict resolved to order ${existingOrder.order_id}`
+          );
+          return respondWithExistingOrder(res, existingOrder);
+        }
+      }
+
       logger.error("Database error while creating order", {
         error: error.message,
       });
@@ -2447,6 +2586,7 @@ export const checkoutCartController = async (req, res) => {
   const { cart_id } = req.params;
   const authHeader = req.headers.authorization;
   const token = authHeader.split(" ")[1];
+  const idempotencyKey = getIdempotencyKey(req);
 
   if (role !== "user") {
     logger.warn("Unauthorized access attempt by user");
@@ -2459,6 +2599,19 @@ export const checkoutCartController = async (req, res) => {
   }
 
   try {
+    if (idempotencyKey) {
+      const existingOrder = await getOrderByIdempotencyKeyService(
+        idempotencyKey
+      );
+      if (existingOrder) {
+        logger.info(
+          `♻️ Returning existing order ${existingOrder.order_id} for Idempotency-Key`
+        );
+        return respondWithExistingOrder(res, existingOrder);
+      }
+    }
+
+    const { shipping, isComplete: hasShipping } = getShippingFromBody(req.body);
     const cart = await getCartService(cart_id, userId);
     if (!cart) {
       logger.warn("Cart not found");
@@ -2575,10 +2728,34 @@ export const checkoutCartController = async (req, res) => {
 
     logger.info("Creating order from cart id:", cart_id);
     let order;
+    let paymentJob = null;
 
     const totalQuantity = finalCartItems.reduce(
       (acc, item) => acc + item.total_quantity,
       0
+    );
+
+    const tax = Number.isFinite(Number(req.body?.tax))
+      ? Number(req.body.tax)
+      : DEFAULT_TAX;
+    const fallbackItemPrice = finalCartItems.reduce((acc, item) => {
+      const menuInfo = menuData.get(item.menu_id);
+      const menuPrice = Number(menuInfo?.menu_price || 0);
+      const addOnsPrice = (item.addsOn || []).reduce(
+        (categorySum, category) =>
+          categorySum +
+          (category.items || []).reduce(
+            (addOnSum, addOn) => addOnSum + Number(addOn.adds_on_price || 0),
+            0
+          ),
+        0
+      );
+      return (
+        acc + menuPrice * Number(item.total_quantity || 0) + addOnsPrice
+      );
+    }, 0);
+    const itemPrice = Number(
+      req.body?.itemPrice ?? req.body?.item_price ?? fallbackItemPrice
     );
 
     const client = await pool.connect();
@@ -2598,6 +2775,7 @@ export const checkoutCartController = async (req, res) => {
         restaurantImage: restaurantResponse.restaurant_image,
         quantity: totalQuantity,
         sellerId: restaurantResponse.owner_id,
+        idempotencyKey,
       });
 
       if (!order || !order.order_id) {
@@ -2669,6 +2847,19 @@ export const checkoutCartController = async (req, res) => {
       }
 
       logger.info("Order items created successfully");
+
+      if (hasShipping) {
+        paymentJob = await createPaymentCreateOrderJobService(
+          client,
+          order.order_id,
+          buildPaymentPayload({ userId, shipping, itemPrice, tax })
+        );
+      } else {
+        logger.warn(
+          `Order ${order.order_id} created without shipping data; payment.create job not queued`
+        );
+      }
+
       logger.info("Resetting cart");
       await deleteUserCartService(userId);
       await client.query("COMMIT");
@@ -2676,6 +2867,19 @@ export const checkoutCartController = async (req, res) => {
     } catch (err) {
       await client.query("ROLLBACK");
       client.release();
+
+      if (err.code === "23505" && idempotencyKey) {
+        const existingOrder = await getOrderByIdempotencyKeyService(
+          idempotencyKey
+        );
+        if (existingOrder) {
+          logger.info(
+            `♻️ Idempotency conflict resolved to order ${existingOrder.order_id}`
+          );
+          return respondWithExistingOrder(res, existingOrder);
+        }
+      }
+
       logger.error("Transaction failed, rolled back:", {
         error: err.message,
         stack: err.stack,
@@ -2687,8 +2891,10 @@ export const checkoutCartController = async (req, res) => {
     logger.info("Order created successfully:", order);
     return responseSuccess(
       res,
-      200,
-      "Order created successfully",
+      paymentJob ? 202 : 200,
+      paymentJob
+        ? "Order accepted for payment processing"
+        : "Order created successfully",
       "order",
       order
     );

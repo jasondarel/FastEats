@@ -1,13 +1,14 @@
 import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,
+  PAYMENT_CREATE_ROUTING_KEY,
   PREPARING_ORDER_ROUTING_KEY,
 } from "../config/rabbitMQInit.js";
 
 export const createOrderService = async (paramPool=pool, order) => {
   console.log("Creating order with data:", order);
   const result = await paramPool.query(
-    "INSERT INTO orders (user_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+    "INSERT INTO orders (user_id, restaurant_id, item_quantity, order_type, restaurant_name, restaurant_province, restaurant_city, restaurant_district, restaurant_village, restaurant_address, seller_id, restaurant_image, idempotency_key) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
     [
       order.userId,
       order.restaurantId,
@@ -21,6 +22,7 @@ export const createOrderService = async (paramPool=pool, order) => {
       order.restaurantAddress,
       order.sellerId,
       order.restaurantImage,
+      order.idempotencyKey ?? null,
     ]
   );
   return result.rows[0];
@@ -139,6 +141,14 @@ export const getOrderByIdService = async (orderId) => {
   return result.rows[0];
 };
 
+export const getOrderByIdempotencyKeyService = async (idempotencyKey) => {
+  const result = await pool.query(
+    "SELECT * FROM orders WHERE idempotency_key = $1",
+    [idempotencyKey]
+  );
+  return result.rows[0];
+};
+
 export const getOrdersByRestaurantIdService = async (restaurantId) => {
   const result = await pool.query(
     "SELECT * FROM orders WHERE restaurant_id = $1 AND (status = 'Preparing' OR status = 'Completed' OR status = 'Delivering')",
@@ -237,6 +247,19 @@ export const createCompletedOrderJobService = async (payload) => {
     `INSERT INTO order_jobs (payload, routing_key)
     VALUES ($1, $2) RETURNING *`,
     [payload, COMPLETED_ORDER_ROUTING_KEY]
+  );
+  return result.rows[0];
+};
+
+export const createPaymentCreateOrderJobService = async (
+  paramPool,
+  orderId,
+  payload
+) => {
+  const result = await paramPool.query(
+    `INSERT INTO order_jobs (order_id, payload, routing_key)
+    VALUES ($1, $2, $3) RETURNING *`,
+    [orderId, payload, PAYMENT_CREATE_ROUTING_KEY]
   );
   return result.rows[0];
 };
