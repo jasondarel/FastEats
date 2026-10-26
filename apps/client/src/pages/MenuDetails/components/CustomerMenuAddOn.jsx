@@ -109,7 +109,7 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
   };
 
   const isSelectionValid = (category) => {
-    const selections = selectedAddOns[category.category_id];
+    const selections = selectedAddOns[category.category_name];
     const selectionCount = Array.isArray(selections)
       ? selections.length
       : selections
@@ -132,7 +132,7 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
   };
 
   const getSelectionStatus = (category) => {
-    const selections = selectedAddOns[category.category_id];
+    const selections = selectedAddOns[category.category_name];
     const selectionCount = Array.isArray(selections)
       ? selections.length
       : selections
@@ -176,7 +176,7 @@ const CustomerMenuAddOns = ({ menu, onAddOnsChange }) => {
       <div className="space-y-6 mt-6">
         {menu.addsOnCategories.map((category) => {
           const status = getSelectionStatus(category);
-          const selections = selectedAddOns[category.category_id];
+          const selections = selectedAddOns[category.category_name];
           const selectionCount = Array.isArray(selections)
             ? selections.length
             : selections

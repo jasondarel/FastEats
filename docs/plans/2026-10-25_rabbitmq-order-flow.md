@@ -1,6 +1,6 @@
 # Hybrid Event-Driven Order Pipeline with RabbitMQ Workers and PostgreSQL Outbox
 **Date:** 2026-10-25  
-**Status:** In Progress — Phase 1 (server-side order creation done; runtime verification pending)  
+**Status:** In Progress — Phase 1 runtime verified; Phase 2 pending
 **Revision:** v3 — PostgreSQL Transactional Outbox + RabbitMQ Consumer Pipeline
 
 ### Progress Log
@@ -15,6 +15,11 @@
 | 1 | `snaps` migration: `redirect_url` + unique `order_id` (upsert) | ✅ Done | `44970b5` |
 | 1 | Order creation accepts shipping + queues `payment.create` outbox job (both checkout endpoints) | ✅ Done | — |
 | 1 | `Idempotency-Key` lookup + unique conflict handling on order creation | ✅ Done | — |
+| 1 | Client: shared checkout shipping modal sends shipping with order creation | ✅ Done | — |
+| 1 | Client: consumes `payment.ready` + polls `GET /snap/:order_id` fallback | ✅ Done | — |
+| 1 | `payOrderConfirmationController` reuses an existing Snap token (safe fallback) | ✅ Done | — |
+| 1 | Fix outbox race: consumer claims `pending`/`published` jobs (message can arrive before the publisher commits `published`) | ✅ Done | — |
+| 1 | Runtime verification: real sandbox Snap token created for a test order via the async pipeline | ✅ Done | — |
 
 ### Environment & Migration Notes
 
@@ -27,10 +32,18 @@
 **Worker environment** (add to each deployed `workers` environment):
 - `RABBITMQ_URL`
 - `SOCKET_EVENTS_CHANNEL` (default `fasteats:order:events`)
-- `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL`, `IS_PRODUCTION`
+- `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL` (server-side API endpoint, e.g. `https://app.sandbox.midtrans.com/snap/v1/transactions` — not `snap.js`), `IS_PRODUCTION`
+- Client only: `VITE_MIDTRANS_CLIENT_KEY` and `VITE_MIDTRANS_SNAP_URL` (the `snap.js` script URL).
 - Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`.
 
-**Client**: no migration required yet. The client already emits `joinOrder`, and the synchronous `pay-order-confirmation` flow still works. Consuming `payment.ready` happens alongside the order-creation/client migration.
+**Client**: shipping is now collected before order creation via a shared `CheckoutShippingModal` (Cart and MenuDetails) and sent with `POST /checkout-cart` / `POST /order`. `OrderDetails` consumes `payment.ready` from the Socket.IO bridge and polls `GET /snap/:order_id` as a fallback. The synchronous `pay-order-confirmation` flow remains for older orders and now reuses an existing Snap token.
+
+**Verification**: `node --check` passes for the touched server files and the client `npm run build` succeeds with only pre-existing ESLint warnings. Runtime verification against the Midtrans sandbox passes for the async pipeline through the gateway: `POST /order/order` returned 202, the outbox publisher delivered `payment.create`, the worker created a Snap token and a `snaps` row with a `redirect_url`, the job finished as `completed`, and Redis published `payment.ready` to `order:<id>`. Replaying the same `Idempotency-Key` returned the original order with `idempotent: true`.
+
+**Runtime notes**:
+- The outbox publisher publishes while its job-status update is still uncommitted. Consumers must claim jobs with status `pending` **or** `published`; claiming only `published` lets the consumer see `pending`, skip/ack the message, and leave the job stuck. This is fixed in `claimJob`.
+- Midtrans retains Snap `order_id`s across database resets. Reusing low sequential IDs fails with `transaction_details.order_id sudah digunakan`; advance `orders_order_id_seq` (or use a fresh sandbox account) when re-testing against a reset local database.
+- `.env.dev` files are gitignored (they hold local sandbox credentials), so no secrets enter the commit.
 
 ---
 
@@ -373,8 +386,11 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
    - Insert `payment.create` pending job within order creation transaction.
    - Return 202 with order information.
    - Read `Idempotency-Key`, return the existing order on replay, and resolve unique conflicts.
-- [ ] **Verification:** Test duplicate order creation with `Idempotency-Key` and verify fallback `GET /snap/:order_id`.
-   - Client still gathers shipping in `OrderDetails`; migrating the shipping form upstream and consuming `payment.ready` remains part of the client migration.
+- [x] **Client Migration:**
+   - Collect shipping before order creation through a shared checkout shipping modal.
+   - Consume `payment.ready` on `OrderDetails` and poll `GET /snap/:order_id` as a fallback.
+   - Keep the synchronous `pay-order-confirmation` fallback for older orders.
+- [x] **Verification:** Test duplicate order creation with `Idempotency-Key` and verify fallback `GET /snap/:order_id`.
 
 ### Phase 2: State Transitions & Notification Decoupling
 - [ ] **Settlement Webhook & Worker:**

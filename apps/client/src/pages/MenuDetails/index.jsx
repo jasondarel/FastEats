@@ -13,6 +13,7 @@ import ErrorState from "./components/ErrorState";
 import NotFoundState from "./components/NotFoundState";
 import RestaurantRating from "./components/RestaurantRating";
 import insertOrderService from "../../service/restaurantService/menuDetailsService";
+import CheckoutShippingModal from "../../components/CheckoutShippingModal";
 import {
   createCartService,
   createCartItemService,
@@ -31,6 +32,8 @@ const MenuDetails = () => {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [cartId, setCartId] = useState(null);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [ordering, setOrdering] = useState(false);
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
 
@@ -101,7 +104,7 @@ const MenuDetails = () => {
       const validationErrors = [];
       menu.addsOnCategories.forEach((category) => {
         if (category.is_required) {
-          const selections = selectedAddOns[category.category_id];
+          const selections = selectedAddOns[category.category_name];
           const selectionCount = Array.isArray(selections)
             ? selections.length
             : selections
@@ -299,15 +302,12 @@ const MenuDetails = () => {
     }
   };
 
-  const handleOrderNow = async () => {
-    const token = localStorage.getItem("token");
-
-    console.log(menuId, quantity);
+  const handleOrderNow = () => {
     if (menu?.addsOnCategories) {
       const validationErrors = [];
       menu.addsOnCategories.forEach((category) => {
         if (category.is_required) {
-          const selections = selectedAddOns[category.category_id];
+          const selections = selectedAddOns[category.category_name];
           const selectionCount = Array.isArray(selections)
             ? selections.length
             : selections
@@ -333,45 +333,31 @@ const MenuDetails = () => {
       }
     }
 
-    console.log(menuId, quantity, "Add-ons:", selectedAddOns);
-    try {
-      Swal.fire({
-        title: "Processing order...",
-        text: "Please wait",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
+    setShowShippingModal(true);
+  };
 
+  const placeOrder = async (shipping) => {
+    const token = localStorage.getItem("token");
+    setOrdering(true);
+
+    try {
       const addOnsData = JSON.stringify(selectedAddOns);
+      const idempotencyKey =
+        crypto.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       const response = await insertOrderService(
         menuId,
         quantity,
         token,
-        addOnsData
+        addOnsData,
+        shipping,
+        idempotencyKey
       );
 
-      const totalOrderPrice =
-        (parseFloat(menu.menu_price) + addOnTotalPrice) * quantity;
-
-      Swal.fire({
-        title: "Success!",
-        text: `Order placed successfully! Total: Rp ${totalOrderPrice.toLocaleString(
-          "id-ID"
-        )}`,
-        icon: "success",
-        confirmButtonText: "View Orders",
-        confirmButtonColor: "#efb100",
-        showCancelButton: true,
-        cancelButtonText: "Continue Shopping",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate("/orders");
-        }
-      });
+      const orderId = response.data?.order?.order_id;
+      setShowShippingModal(false);
+      navigate(orderId ? `/order/${orderId}` : "/orders");
     } catch (error) {
-      Swal.close();
       let errorMessage = "Failed to place order";
 
       if (error.response) {
@@ -406,6 +392,8 @@ const MenuDetails = () => {
         confirmButtonText: "Ok",
         confirmButtonColor: "#efb100",
       });
+    } finally {
+      setOrdering(false);
     }
   };
 
@@ -464,6 +452,13 @@ const MenuDetails = () => {
           </div>
         </div>
       </div>
+
+      <CheckoutShippingModal
+        open={showShippingModal}
+        confirming={ordering}
+        onClose={() => !ordering && setShowShippingModal(false)}
+        onConfirm={placeOrder}
+      />
     </div>
   );
 };

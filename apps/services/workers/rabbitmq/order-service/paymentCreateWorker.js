@@ -30,7 +30,7 @@ const claimJob = async (eventId) => {
   const result = await pool.query(
     `UPDATE order_jobs
      SET status = 'processing', attempts = attempts + 1, updated_at = NOW()
-     WHERE event_id = $1 AND status = 'published'
+     WHERE event_id = $1 AND status IN ('pending', 'published')
      RETURNING *`,
     [eventId]
   );

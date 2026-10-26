@@ -29,6 +29,8 @@ const OrderShipping = ({
     district: "",
     village: "",
     address: "",
+    fullName: "",
+    phone: "",
   });
 
   const [provinces, setProvinces] = useState([]);
@@ -160,7 +162,9 @@ const OrderShipping = ({
         shippingData.city &&
         shippingData.district &&
         shippingData.village &&
-        shippingData.address.trim()
+        shippingData.address.trim() &&
+        shippingData.fullName.trim() &&
+        shippingData.phone.trim()
       );
     };
 
@@ -323,6 +327,8 @@ const OrderShipping = ({
         district: "",
         village: "",
         address: "",
+        fullName: "",
+        phone: "",
       });
       setCities([]);
       setDistricts([]);
@@ -334,6 +340,8 @@ const OrderShipping = ({
     if (useCurrentInfo) return null;
 
     const fieldMap = {
+      fullName: !shippingData.fullName.trim(),
+      phone: !shippingData.phone.trim(),
       province: !shippingData.province,
       city: !shippingData.city && shippingData.province,
       district: !shippingData.district && shippingData.city,
@@ -464,6 +472,56 @@ const OrderShipping = ({
         {/* Manual address input form */}
         {!useCurrentInfo && (
           <div className="space-y-4">
+            {/* Recipient name */}
+            <div>
+              <label className="block text-sm font-medium text-amber-700 mb-2">
+                Recipient Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={shippingData.fullName}
+                onChange={(e) =>
+                  handleShippingChange("fullName", e.target.value)
+                }
+                placeholder="Enter recipient name"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  getFieldError("fullName")
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
+                required={!useCurrentInfo}
+              />
+              {getFieldError("fullName") && (
+                <p className="text-red-500 text-xs mt-1">
+                  Recipient name is required
+                </p>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-medium text-amber-700 mb-2">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={shippingData.phone}
+                onChange={(e) => handleShippingChange("phone", e.target.value)}
+                placeholder="Enter phone number"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white ${
+                  getFieldError("phone")
+                    ? "border-red-300"
+                    : "border-amber-200"
+                }`}
+                required={!useCurrentInfo}
+              />
+              {getFieldError("phone") && (
+                <p className="text-red-500 text-xs mt-1">
+                  Phone number is required
+                </p>
+              )}
+            </div>
+
             {/* Province */}
             <div>
               <label className="block text-sm font-medium text-amber-700 mb-2">

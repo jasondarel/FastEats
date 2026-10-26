@@ -11,6 +11,7 @@ import {
   updateCartItemQuantityService,
 } from "../../service/orderServices/orderDetails";
 import { API_URL } from "../../config/api";
+import CheckoutShippingModal from "../../components/CheckoutShippingModal";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -19,6 +20,7 @@ const Cart = () => {
   const [error, setError] = useState(null);
   const [restaurantId, setRestaurantId] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
 
   const getToken = () => {
     return localStorage.getItem("token") || "";
@@ -236,45 +238,53 @@ const Cart = () => {
 
   const subtotal = calculateSubtotal();
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!cartId) {
       setError("No cart found for checkout");
       return;
     }
 
+    setShowShippingModal(true);
+  };
+
+  const checkoutWithShipping = async (shipping) => {
     setCheckoutLoading(true);
     setError(null);
 
     try {
       const token = getToken();
+      const idempotencyKey =
+        crypto.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
       const response = await fetch(`${API_URL}/order/checkout-cart/${cartId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
         },
-
         body: JSON.stringify({
           cartId: cartId,
           restaurantId: restaurantId,
+          ...shipping,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(
           data.message || `Checkout failed with status ${response.status}`
         );
       }
 
-      if (data.success) {
-        window.location.href = `/orders`;
-      } else {
-        setError(data.message || "Checkout process failed");
-      }
+      setShowShippingModal(false);
+      const orderId = data.order?.order_id;
+      window.location.href = orderId ? `/order/${orderId}` : "/orders";
     } catch (err) {
       console.error("Checkout error:", err);
+      setShowShippingModal(false);
       setError(`Checkout failed: ${err.message}`);
     } finally {
       setCheckoutLoading(false);
@@ -385,16 +395,23 @@ const Cart = () => {
                 Empty Cart
               </button>
               <button
-                className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition"
+                className="px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 onClick={handleCheckout}
-                disabled={loading}
+                disabled={loading || checkoutLoading}
               >
-                Checkout
+                {checkoutLoading ? "Processing..." : "Checkout"}
               </button>
             </div>
           </>
         )}
       </div>
+
+      <CheckoutShippingModal
+        open={showShippingModal}
+        confirming={checkoutLoading}
+        onClose={() => !checkoutLoading && setShowShippingModal(false)}
+        onConfirm={checkoutWithShipping}
+      />
     </YellowBackgroundLayout>
   );
 };

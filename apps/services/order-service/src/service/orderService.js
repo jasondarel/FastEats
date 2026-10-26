@@ -141,10 +141,13 @@ export const getOrderByIdService = async (orderId) => {
   return result.rows[0];
 };
 
-export const getOrderByIdempotencyKeyService = async (idempotencyKey) => {
+export const getOrderByIdempotencyKeyService = async (
+  idempotencyKey,
+  userId
+) => {
   const result = await pool.query(
-    "SELECT * FROM orders WHERE idempotency_key = $1",
-    [idempotencyKey]
+    "SELECT * FROM orders WHERE idempotency_key = $1 AND user_id = $2",
+    [idempotencyKey, userId]
   );
   return result.rows[0];
 };

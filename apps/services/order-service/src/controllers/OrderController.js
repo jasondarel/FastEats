@@ -142,7 +142,8 @@ export const createOrderController = async (req, res) => {
 
     if (idempotencyKey) {
       const existingOrder = await getOrderByIdempotencyKeyService(
-        idempotencyKey
+        idempotencyKey,
+        userId
       );
       if (existingOrder) {
         logger.info(
@@ -450,7 +451,8 @@ export const createOrderController = async (req, res) => {
 
       if (error.code === "23505" && idempotencyKey) {
         const existingOrder = await getOrderByIdempotencyKeyService(
-          idempotencyKey
+          idempotencyKey,
+          userId
         );
         if (existingOrder) {
           logger.info(
@@ -1584,6 +1586,21 @@ export const payOrderConfirmationController = async (req, res) => {
       return responseError(res, 400, "Order cannot be paid");
     }
 
+    const existingSnap = await getSnapTokenService(order_id);
+    if (existingSnap?.snap_token) {
+      logger.info(`♻️ Reusing existing Snap token for order ${order_id}`);
+      return responseSuccess(
+        res,
+        200,
+        "Payment token generated successfully",
+        "data",
+        {
+          token: existingSnap.snap_token,
+          redirect_url: existingSnap.redirect_url,
+        }
+      );
+    }
+
     const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
     const MIDTRANS_SNAP_URL = process.env.MIDTRANS_SNAP_URL;
 
@@ -2601,7 +2618,8 @@ export const checkoutCartController = async (req, res) => {
   try {
     if (idempotencyKey) {
       const existingOrder = await getOrderByIdempotencyKeyService(
-        idempotencyKey
+        idempotencyKey,
+        userId
       );
       if (existingOrder) {
         logger.info(
@@ -2870,7 +2888,8 @@ export const checkoutCartController = async (req, res) => {
 
       if (err.code === "23505" && idempotencyKey) {
         const existingOrder = await getOrderByIdempotencyKeyService(
-          idempotencyKey
+          idempotencyKey,
+          userId
         );
         if (existingOrder) {
           logger.info(

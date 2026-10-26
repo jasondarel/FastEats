@@ -44,9 +44,11 @@ const OrderDetails = () => {
   const [paymentDeadline, setPaymentDeadline] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [ttlFetched, setTtlFetched] = useState(false);
+  const [snapTokenToOpen, setSnapTokenToOpen] = useState(null);
   const token = localStorage.getItem("token");
   const socketRef = useRef(null);
   const countdownRef = useRef(null);
+  const openedSnapRef = useRef(null);
 
   const handleShippingValidationChange = useCallback((isValid) => {
     console.log("Shipping validation changed:", isValid);
@@ -262,6 +264,78 @@ const OrderDetails = () => {
       setLoading(false);
     }
   }, [orderId]);
+
+  useEffect(() => {
+    if (!snapTokenToOpen || openedSnapRef.current === snapTokenToOpen) return;
+
+    let interval = null;
+
+    const openSnap = () => {
+      if (!window.snap) return false;
+
+      clearInterval(interval);
+      openedSnapRef.current = snapTokenToOpen;
+      setPaymentLoading(true);
+      window.snap.pay(snapTokenToOpen, {
+        onSuccess: async () => {
+          try {
+            await fetchOrderDetails();
+          } finally {
+            setPaymentLoading(false);
+          }
+        },
+        onPending: () => setPaymentLoading(false),
+        onError: () => setPaymentLoading(false),
+        onClose: () => setPaymentLoading(false),
+      });
+      return true;
+    };
+
+    if (!openSnap()) {
+      interval = setInterval(openSnap, 500);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [snapTokenToOpen, fetchOrderDetails]);
+
+  useEffect(() => {
+    if (!order?.order_id || order.status !== "Waiting") return;
+
+    let attempts = 0;
+    let timer = null;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled || attempts >= 6) return;
+      attempts += 1;
+
+      try {
+        const response = await fetch(
+          `${API_URL}/order/snap/${order.order_id}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.snap_token) {
+            setSnapTokenToOpen(data.snap_token);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error polling snap token:", error);
+      }
+
+      timer = setTimeout(poll, 3000);
+    };
+
+    timer = setTimeout(poll, 1500);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [order?.order_id, order?.status]);
 
   const handleOrderUpdate = useCallback(
     (updatedOrder) => {
@@ -548,6 +622,16 @@ const OrderDetails = () => {
       }
     });
 
+    socketRef.current.on("payment.ready", (payload) => {
+      console.log("Payment ready event received:", payload);
+      if (
+        String(payload?.order_id) === String(orderId) &&
+        payload?.snap_token
+      ) {
+        setSnapTokenToOpen(payload.snap_token);
+      }
+    });
+
     return () => {
       console.log("Cleaning up socket connection...");
       if (socketRef.current) {
@@ -555,6 +639,7 @@ const OrderDetails = () => {
         socketRef.current.off("orderCompleted");
         socketRef.current.off("orderDelivering");
         socketRef.current.off("statusChanged");
+        socketRef.current.off("payment.ready");
         socketRef.current.disconnect();
       }
     };
