@@ -1,6 +1,6 @@
 # Hybrid Event-Driven Order Pipeline with RabbitMQ Workers and PostgreSQL Outbox
 **Date:** 2026-10-25  
-**Status:** In Progress — Phase 1 and Phase 2 state transitions verified; notification separation and cleanup pending
+**Status:** Complete — Phase 1 and Phase 2 implemented and verified
 **Revision:** v3 — PostgreSQL Transactional Outbox + RabbitMQ Consumer Pipeline
 
 ### Progress Log
@@ -25,9 +25,14 @@
 | 2 | Client consumes `order.status_changed` (keeps legacy `statusChanged`) | ✅ Done | `e4ba1a5` |
 | 2 | Runtime verification: simulated settlement webhook → worker transition → notification job → Socket.IO event; duplicate webhook is a no-op | ✅ Done | `e4ba1a5` |
 | 2 | `deliverOrderController` / `completeOrderController` queue `order.delivering` / `order.completed` jobs and return 202; direct status updates and `io.emit` removed | ✅ Done | `ee8026e` |
-| 2 | `orderDeliveringWorker` (guard `Preparing` → `Delivering`, Redis `order.status_changed` + legacy `orderDelivering`) | ✅ Done | — |
-| 2 | `orderCompletedWorker` (guard `Delivering` → `Completed`, `completed_order` job, Redis `order.status_changed` + legacy `orderCompleted`) | ✅ Done | — |
-| 2 | Runtime verification: deliver → complete through the gateway transitions `Preparing → Delivering → Completed`, queues both Redis events, and creates/publishes the completion notification job | ✅ Done | — |
+| 2 | `orderDeliveringWorker` (guard `Preparing` → `Delivering`, Redis `order.status_changed` + legacy `orderDelivering`) | ✅ Done | `dd61f00` |
+| 2 | `orderCompletedWorker` (guard `Delivering` → `Completed`, `completed_order` job, Redis `order.status_changed` + legacy `orderCompleted`) | ✅ Done | `dd61f00` |
+| 2 | Runtime verification: deliver → complete through the gateway transitions `Preparing → Delivering → Completed`, queues both Redis events, and creates/publishes the completion notification job | ✅ Done | `dd61f00` |
+| 2 | Notification queues split into `order_preparing_notification_queue` / `order_completed_notification_queue`; legacy `order_notification_queue` removed | ✅ Done | — |
+| 2 | Runtime verification: each notification routing key reaches only its dedicated queue/consumer | ✅ Done | — |
+| 2 | Notification jobs published by the workers outbox to `notification_exchange`; order-service notification crons/publishers removed | ✅ Done | — |
+| 2 | Removed synchronous `pay-order-confirmation` route/controller and client fallback; Waiting/default pay buttons use the async Snap flow | ✅ Done | — |
+| 2 | Runtime verification: workers outbox published pending `preparing_order` / `completed_order` jobs to their dedicated queues; client build passes | ✅ Done | — |
 
 ### Environment & Migration Notes
 
@@ -35,16 +40,17 @@
 - `orders.idempotency_key` — nullable + unique, no backfill required.
 - `order_jobs` — `event_id` (DB default `gen_random_uuid()`), `order_id`, `attempts`, `last_error`, plus `(status, created_at)` and `(order_id, routing_key)` indexes.
 - `snaps` — `redirect_url` added, `order_id` now unique; `saveSnapTokenService` upserts on conflict.
-- Existing rows are compatible. Legacy notification jobs (`preparing_order`, `completed_order`) are intentionally ignored by the outbox publisher.
+- Existing rows are compatible. The workers outbox publishes order jobs as enveloped messages to `order_exchange` and notification jobs (`preparing_order`, `completed_order`) as flat payloads to `notification_exchange`.
 
 **Worker environment** (add to each deployed `workers` environment):
 - `RABBITMQ_URL`
 - `SOCKET_EVENTS_CHANNEL` (default `fasteats:order:events`)
 - `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL` (server-side API endpoint, e.g. `https://app.sandbox.midtrans.com/snap/v1/transactions` — not `snap.js`), `IS_PRODUCTION`
 - Client only: `VITE_MIDTRANS_CLIENT_KEY` and `VITE_MIDTRANS_SNAP_URL` (the `snap.js` script URL).
-- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`, `PAYMENT_SETTLED_WORKER_MAX_ATTEMPTS`, `PAYMENT_SETTLED_WORKER_RETRY_DELAY_MS`, `ORDER_DELIVERING_WORKER_MAX_ATTEMPTS`, `ORDER_DELIVERING_WORKER_RETRY_DELAY_MS`, `ORDER_COMPLETED_WORKER_MAX_ATTEMPTS`, `ORDER_COMPLETED_WORKER_RETRY_DELAY_MS`, `EMAIL_PREPARING_ORDER_ROUTE` (default `preparing_order`).
+- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `NOTIFICATION_EXCHANGE_NAME` (default `notification_exchange`), `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`, `PAYMENT_SETTLED_WORKER_MAX_ATTEMPTS`, `PAYMENT_SETTLED_WORKER_RETRY_DELAY_MS`, `ORDER_DELIVERING_WORKER_MAX_ATTEMPTS`, `ORDER_DELIVERING_WORKER_RETRY_DELAY_MS`, `ORDER_COMPLETED_WORKER_MAX_ATTEMPTS`, `ORDER_COMPLETED_WORKER_RETRY_DELAY_MS`, `EMAIL_PREPARING_ORDER_ROUTE` (default `preparing_order`).
+- Notifications: order-service uses `PREPARING_ORDER_QUEUE` / `COMPLETED_ORDER_QUEUE`; notification-service uses `ORDER_PREPARING_QUEUE` / `ORDER_COMPLETED_QUEUE` (defaults `order_preparing_notification_queue` / `order_completed_notification_queue`). `QUEUE_NAME` and `ORDER_QUEUE` are no longer used for order notifications.
 
-**Client**: shipping is now collected before order creation via a shared `CheckoutShippingModal` (Cart and MenuDetails) and sent with `POST /checkout-cart` / `POST /order`. `OrderDetails` consumes `payment.ready` from the Socket.IO bridge and polls `GET /snap/:order_id` as a fallback. The synchronous `pay-order-confirmation` flow remains for older orders and now reuses an existing Snap token.
+**Client**: shipping is now collected before order creation via a shared `CheckoutShippingModal` (Cart and MenuDetails) and sent with `POST /checkout-cart` / `POST /order`. `OrderDetails` consumes `payment.ready` from the Socket.IO bridge and polls `GET /snap/:order_id` as a fallback. The synchronous `pay-order-confirmation` endpoint and client fallback were removed in Phase 2 cleanup; Waiting/default pay buttons now use the async Snap flow.
 
 **Verification**: `node --check` passes for the touched server files and the client `npm run build` succeeds with only pre-existing ESLint warnings. Runtime verification against the Midtrans sandbox passes for the async pipeline through the gateway: `POST /order/order` returned 202, the outbox publisher delivered `payment.create`, the worker created a Snap token and a `snaps` row with a `redirect_url`, the job finished as `completed`, and Redis published `payment.ready` to `order:<id>`. Replaying the same `Idempotency-Key` returned the original order with `idempotent: true`.
 
@@ -52,7 +58,11 @@ Phase 2 settlement runtime verification (sandbox signature, simulated Midtrans w
 
 Phase 2 delivering/completed controller verification (`ee8026e`): `PATCH /order/deliver-order/:id` and `PATCH /order/complete-order/:id` both returned 202 and published `order.delivering` / `order.completed`. Order status did **not** change and no Socket.IO event was emitted, because the corresponding workers were not implemented at that point; the messages remained in `order_delivering_queue` / `order_completed_queue`. Test jobs and messages were cleaned up afterwards.
 
-Phase 2 delivering/completed runtime verification (workers registered): `PATCH /order/deliver-order/1003` returned 202, the outbox publisher delivered `order.delivering`, and `orderDeliveringWorker` moved the order `Preparing → Delivering`, publishing `order.status_changed` and legacy `orderDelivering` to `order:1003`. `PATCH /order/complete-order/1003` returned 202 and `orderCompletedWorker` moved it `Delivering → Completed`, inserted a `completed_order` notification job (published by the existing order-service 5-second cron and consumed by notification-service), and published `order.status_changed` plus legacy `orderCompleted`. The test jobs were deleted, order `1003` was restored to `Preparing`, and both new queues drained to 0. Notification delivery still runs through the legacy cron and currently fails in dev because the SMTP credentials are placeholders.
+Phase 2 delivering/completed runtime verification (workers registered): `PATCH /order/deliver-order/1003` returned 202, the outbox publisher delivered `order.delivering`, and `orderDeliveringWorker` moved the order `Preparing → Delivering`, publishing `order.status_changed` and legacy `orderDelivering` to `order:1003`. `PATCH /order/complete-order/1003` returned 202 and `orderCompletedWorker` moved it `Delivering → Completed`, inserted a `completed_order` notification job (published by the workers outbox and consumed by notification-service), and published `order.status_changed` plus legacy `orderCompleted`. The test jobs were deleted, order `1003` was restored to `Preparing`, and both new queues drained to 0. Notification delivery itself still fails in dev because the SMTP credentials are placeholders.
+
+Phase 2 notification separation verification: `notification_exchange` now binds `order_preparing_notification_queue` only to `preparing_order` and `order_completed_notification_queue` only to `completed_order`; each queue has a single consumer and `email_verification_queue` remains bound only to `email.verification.user`. The old `order_notification_queue` was empty, had no consumers, and was deleted. Smoke messages published directly to the exchange for each routing key were consumed and acked by only the matching consumer, confirming the previous load-balanced/cross-routed behavior is gone.
+
+Phase 2 cleanup verification: the order-service 5-second notification crons and `publishPreparingOrderMessage` / `publishCompletedOrderMessage` were removed. The workers outbox now selects `preparing_order` / `completed_order` jobs, publishes their payloads to `notification_exchange`, and marks them `published`; a test run of both routing keys was consumed by the matching notification queue. The `/pay-order-confirmation` route/controller and client fallback were removed, and the client Waiting/default pay buttons now use `GET /snap/:order_id`. `node --check` passes for the touched server files and `npm run build` succeeds with only the pre-existing chunk-size/ESLint warnings.
 
 **Runtime notes**:
 - The outbox publisher publishes while its job-status update is still uncommitted. Consumers must claim jobs with status `pending` **or** `published`; claiming only `published` lets the consumer see `pending`, skip/ack the message, and leave the job stuck. This is fixed in `claimJob`.
@@ -353,27 +363,22 @@ Binding:  routing key 'order.dlq'
   3. If `attempts >= 3`: `channel.nack(msg, false, false)` → RabbitMQ routes the message directly to `order_dead_letter_exchange` -> `order_dlq`.
   4. **DO NOT** use unconstrained `nack(msg, false, true)` as it causes catastrophic poison-pill infinite retry loops.
 
-### 4. Notification Queues (Technical Debt Note)
-* In current code, `notification_exchange` binds `email_verification_queue` to multiple routing keys (`preparing_order`, `completed_order`).
-* **Planned Refactor (Phase 2):** Introduce separate dedicated queues:
+### 4. Notification Queues
+* Order notifications use dedicated queues on `notification_exchange`:
   * `order_preparing_notification_queue` bound to `preparing_order`
   * `order_completed_notification_queue` bound to `completed_order`
-  * Keep `email_verification_queue` solely for user registration verification.
+* `email_verification_queue` is used solely for user registration verification.
+* **Migration:** the legacy `order_notification_queue` is no longer asserted or bound by code. Drain it before deleting it in existing deployments; the local queue was empty and has been deleted.
 
 ---
 
 ## Shipping Data & Payment Controller Transition Strategy
 
-### The Problem
-In the original flow, shipping addresses and contact details are collected during the payment confirmation step (`payOrderConfirmationController`).
-If `payOrderConfirmationController` is deleted immediately, client checkout flows that submit shipping details at that point will break.
+### Migration Complete
+In the original flow, shipping addresses and contact details were collected during the payment confirmation step (`payOrderConfirmationController`). Shipping is now supplied during order creation (`POST /checkout-cart` / `POST /order`), and `OrderDetails` uses `payment.ready` plus `GET /snap/:order_id` instead of the confirmation endpoint.
 
-### Safe Transition Plan
-1. **Move Shipping Input Upstream:** Update checkout API / client form so shipping information (`shipping_province`, `shipping_city`, `shipping_district`, `shipping_village`, `shipping_address`, `shipping_phone`, `shipping_name`) is supplied during order creation (`POST /checkout-cart` or `POST /order`).
-2. **Preserve `payOrderConfirmationController` during Migration:**
-   * Keep `payOrderConfirmationController` operational as a fallback endpoint.
-   * If invoked, it checks if a Snap token already exists in `snaps`. If so, it returns the existing token.
-   * Only deprecate and remove `payOrderConfirmationController` after client migration and end-to-end integration tests are verified.
+1. **Move Shipping Input Upstream:** Done — shipping fields are collected by the shared checkout modal and sent with order creation.
+2. **Preserve `payOrderConfirmationController` during Migration:** Done — it remained available while the client migrated; it has now been removed along with the synchronous client fallback after runtime verification.
 
 ---
 
@@ -396,16 +401,16 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
   - Atomic `published → processing` guard, reuse existing Snap token on retry, 3 attempts → DLQ.
 - [x] **Outbox Publisher:** *(commit `44970b5`)*
   - Wire an outbox publisher (poller or recurring task) that reads `pending` jobs from `order_jobs`, publishes to RabbitMQ, and marks them `published`.
-  - Filters to order routing keys so legacy notification jobs stay with the `order-service` cron.
+  - Publishes order jobs to `order_exchange` and notification jobs to `notification_exchange`; the legacy order-service notification crons have been removed.
 - [x] **Update Order Creation:**
-   - Attach shipping data to order creation (optional; legacy requests without shipping still use `payOrderConfirmationController`).
+   - Attach shipping data to order creation.
    - Insert `payment.create` pending job within order creation transaction.
    - Return 202 with order information.
    - Read `Idempotency-Key`, return the existing order on replay, and resolve unique conflicts.
 - [x] **Client Migration:**
    - Collect shipping before order creation through a shared checkout shipping modal.
    - Consume `payment.ready` on `OrderDetails` and poll `GET /snap/:order_id` as a fallback.
-   - Keep the synchronous `pay-order-confirmation` fallback for older orders.
+   - The synchronous `pay-order-confirmation` fallback was removed in Phase 2 cleanup.
 - [x] **Verification:** Test duplicate order creation with `Idempotency-Key` and verify fallback `GET /snap/:order_id`.
 
 ### Phase 2: State Transitions & Notification Decoupling
@@ -413,15 +418,22 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
   - `payOrderController` now inserts an `order.payment.settled` pending job for `settlement` and accepted `capture` webhooks, then returns 200 without touching order state.
   - `paymentSettledWorker.js` claims the job, runs the conditional guard (`AND status IN ('Pending', 'Waiting')`), upserts the `transactions` row, inserts the `preparing_order` notification outbox job, and emits `order.status_changed` via the Redis bridge.
   - Duplicate webhooks are safe: a job that finds the order already past the guard completes without a notification; retries re-emit the status event when the transition already committed.
-- [x] **Delivering & Completed Workers:** *(controllers `ee8026e`; workers uncommitted)*
+- [x] **Delivering & Completed Workers:** *(controllers `ee8026e`; workers `dd61f00`)*
   - [x] `deliverOrderController` / `completeOrderController` queue `order.delivering` / `order.completed` jobs and return 202.
   - [x] Implement `orderDeliveringWorker.js` with guard `WHERE status = 'Preparing'`.
   - [x] Implement `orderCompletedWorker.js` with guard `WHERE status = 'Delivering'`; insert the `completed_order` notification job from `payload.order_details`.
   - [x] Register both consumers in `workers/server.js`.
   - [x] Emit status changes through the Redis bridge to client Socket.IO (`order.status_changed`, plus legacy `orderDelivering`/`orderCompleted`).
   - [x] Runtime verification: deliver/complete update order status in the DB and publish the socket events.
-- [ ] **Notification Queue Separation:**
-  - Split `notification_exchange` queue bindings into dedicated queues.
-- [ ] **Cleanup & Deprecation:**
-  - Safely deprecate old synchronous `payOrderConfirmationController`.
-  - Remove legacy synchronous publishing functions in `orderUtil.js`.
+- [x] **Notification Queue Separation:**
+  - Split `notification_exchange` bindings into `order_preparing_notification_queue` and `order_completed_notification_queue`.
+  - Updated both notification-service consumers to consume only their dedicated queue.
+  - Removed the legacy `order_notification_queue` binding/queue (empty in local dev).
+  - Verified each routing key reaches only its matching queue and consumer.
+- [x] **Cleanup & Deprecation:**
+  - Removed the synchronous `/pay-order-confirmation` route and `payOrderConfirmationController`.
+  - Removed the client `payConfirmationService` / legacy pay handler; Waiting/default pay buttons use the async Snap flow.
+  - Removed `publishPreparingOrderMessage` / `publishCompletedOrderMessage` and the order-service notification crons.
+  - Moved notification outbox publishing into the workers outbox (`notification_exchange`, flat payload).
+  - Removed now-unused `getOrderJobsByRoutingKeyService` / `updateOrderJobStatusService`.
+  - Verified notification jobs publish/consume through the dedicated queues and the client build passes.
