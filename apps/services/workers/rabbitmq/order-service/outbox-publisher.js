@@ -4,6 +4,8 @@ import pool from "../../config/dbInit.js";
 import logger from "../../config/loggerInit.js";
 import {
   getChannel,
+  NOTIFICATION_EXCHANGE,
+  NOTIFICATION_ROUTING_KEYS,
   ORDER_EXCHANGE,
   ORDER_ROUTING_KEYS,
 } from "../../config/rabbitMQInit.js";
@@ -19,6 +21,14 @@ const MAX_ATTEMPTS = process.env.OUTBOX_MAX_ATTEMPTS
   : 3;
 
 const ORDER_ROUTING_KEY_VALUES = Object.values(ORDER_ROUTING_KEYS);
+const NOTIFICATION_ROUTING_KEY_VALUES = Object.values(NOTIFICATION_ROUTING_KEYS);
+const ROUTING_KEY_VALUES = [
+  ...ORDER_ROUTING_KEY_VALUES,
+  ...NOTIFICATION_ROUTING_KEY_VALUES,
+];
+
+const isNotificationRoutingKey = (routingKey) =>
+  NOTIFICATION_ROUTING_KEY_VALUES.includes(routingKey);
 
 let isRunning = false;
 
@@ -44,18 +54,17 @@ const markFailedAttempt = async (client, job, error) => {
 
 const publishJob = async (client, channel, job) => {
   try {
-    const envelope = buildEnvelope(job);
+    const isNotification = isNotificationRoutingKey(job.routing_key);
+    const exchange = isNotification ? NOTIFICATION_EXCHANGE : ORDER_EXCHANGE;
+    const message = isNotification
+      ? JSON.stringify(job.payload ?? {})
+      : JSON.stringify(buildEnvelope(job));
 
-    channel.publish(
-      ORDER_EXCHANGE,
-      job.routing_key,
-      Buffer.from(JSON.stringify(envelope)),
-      {
-        persistent: true,
-        contentType: "application/json",
-        messageId: job.event_id,
-      }
-    );
+    channel.publish(exchange, job.routing_key, Buffer.from(message), {
+      persistent: true,
+      contentType: "application/json",
+      messageId: job.event_id,
+    });
 
     await channel.waitForConfirms();
 
@@ -67,7 +76,7 @@ const publishJob = async (client, channel, job) => {
     );
 
     logger.info(
-      `📤 Published job ${job.id} (${job.routing_key}) event ${job.event_id}`
+      `📤 Published job ${job.id} (${job.routing_key}) to ${exchange}`
     );
     return true;
   } catch (error) {
@@ -98,7 +107,7 @@ export const publishPendingJobs = async () => {
        ORDER BY created_at ASC
        LIMIT $2
        FOR UPDATE SKIP LOCKED`,
-      [ORDER_ROUTING_KEY_VALUES, BATCH_SIZE]
+      [ROUTING_KEY_VALUES, BATCH_SIZE]
     );
 
     for (const job of jobs) {

@@ -7,6 +7,8 @@ envInit();
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 
 export const ORDER_EXCHANGE = process.env.ORDER_EXCHANGE_NAME || "order_exchange";
+export const NOTIFICATION_EXCHANGE =
+  process.env.NOTIFICATION_EXCHANGE_NAME || "notification_exchange";
 export const ORDER_DEAD_LETTER_EXCHANGE = process.env.ORDER_DEAD_LETTER_EXCHANGE_NAME || "order_dead_letter_exchange";
 export const ORDER_DEAD_LETTER_QUEUE = process.env.ORDER_DEAD_LETTER_QUEUE || "order_dlq";
 export const ORDER_DEAD_LETTER_ROUTING_KEY = process.env.ORDER_DEAD_LETTER_ROUTING_KEY || "order.dlq";
@@ -45,6 +47,7 @@ const buildDeadLetterArguments = () => ({
 
 const setupTopology = async (amqpChannel) => {
   await amqpChannel.assertExchange(ORDER_EXCHANGE, EXCHANGE_TYPE, { durable: true });
+  await amqpChannel.assertExchange(NOTIFICATION_EXCHANGE, EXCHANGE_TYPE, { durable: true });
   await amqpChannel.assertExchange(ORDER_DEAD_LETTER_EXCHANGE, EXCHANGE_TYPE, { durable: true });
 
   await amqpChannel.assertQueue(ORDER_DEAD_LETTER_QUEUE, { durable: true });
@@ -79,6 +82,7 @@ const connect = async () => {
 
   logger.info(`✅ RabbitMQ Connected & Order Topology "${ORDER_EXCHANGE}" Initialized`);
   logger.info(`   Queues: ${ORDER_QUEUES.map((queue) => queue.name).join(", ")}`);
+  logger.info(`   Notification exchange: ${NOTIFICATION_EXCHANGE}`);
   logger.info(`   Dead Letter: ${ORDER_DEAD_LETTER_EXCHANGE} -> ${ORDER_DEAD_LETTER_QUEUE}`);
 };
 

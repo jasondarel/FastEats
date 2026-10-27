@@ -7,7 +7,10 @@ envInit();
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 export const EXCHANGE_NAME = process.env.EXCHANGE_NAME || "notification_exchange";
 const EXCHANGE_TYPE = process.env.EXCHANGE_TYPE || "direct";
-const QUEUE_NAME = process.env.QUEUE_NAME || "email_verification_queue";
+export const PREPARING_ORDER_QUEUE =
+  process.env.PREPARING_ORDER_QUEUE || "order_preparing_notification_queue";
+export const COMPLETED_ORDER_QUEUE =
+  process.env.COMPLETED_ORDER_QUEUE || "order_completed_notification_queue";
 
 export const PREPARING_ORDER_ROUTING_KEY = process.env.EMAIL_PREPARING_ORDER_ROUTE || "preparing_order";
 export const COMPLETED_ORDER_ROUTING_KEY = process.env.EMAIL_COMPLETED_ORDER_ROUTE || "completed_order";
@@ -25,12 +28,24 @@ export const rabbitMQInit = async () => {
     channel = await connection.createChannel();
 
     await channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, { durable: true });
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
+    await channel.assertQueue(PREPARING_ORDER_QUEUE, { durable: true });
+    await channel.assertQueue(COMPLETED_ORDER_QUEUE, { durable: true });
 
-    await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, PREPARING_ORDER_ROUTING_KEY);
-    await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, COMPLETED_ORDER_ROUTING_KEY);
+    await channel.bindQueue(
+      PREPARING_ORDER_QUEUE,
+      EXCHANGE_NAME,
+      PREPARING_ORDER_ROUTING_KEY
+    );
+    await channel.bindQueue(
+      COMPLETED_ORDER_QUEUE,
+      EXCHANGE_NAME,
+      COMPLETED_ORDER_ROUTING_KEY
+    );
 
     logger.info(`✅ RabbitMQ Connected & Exchange "${EXCHANGE_NAME}" Initialized`);
+    logger.info(
+      `   Notification queues: ${PREPARING_ORDER_QUEUE} (${PREPARING_ORDER_ROUTING_KEY}), ${COMPLETED_ORDER_QUEUE} (${COMPLETED_ORDER_ROUTING_KEY})`
+    );
   } catch (error) {
     logger.error("❌ RabbitMQ Connection Failed:", error);
     setTimeout(rabbitMQInit, 5000);
