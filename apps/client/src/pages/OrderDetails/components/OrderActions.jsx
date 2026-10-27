@@ -5,66 +5,11 @@ const OrderActions = ({
   paymentLoading,
   isShippingValid = true,
   onCancel,
-  onPayConfirmation,
   onPayment,
   onOrderAgain,
 }) => {
   console.log("OrderActions Rendered", order);
   if (!order) return null;
-
-  const calculateAddOnPrice = (addOns) => {
-    if (!addOns || !Array.isArray(addOns)) return 0;
-    
-    let total = 0;
-    addOns.forEach(category => {
-      if (category.items && Array.isArray(category.items)) {
-        category.items.forEach(item => {
-          if (item.adds_on_price && parseFloat(item.adds_on_price) > 0) {
-            total += parseFloat(item.adds_on_price) * (item.quantity || 1);
-          }
-        });
-      }
-    });
-    console.log("Add-On Price:", total);
-    return total;
-  };
-
-  const totalQuantity = () => {
-    let total = 0;
-    if (order.order_type === "CHECKOUT") {
-      total = order.item_quantity || 0;
-    } else {
-      if (order && order.items && Array.isArray(order.items)) {
-        order.items.forEach((item) => {
-          if (item && item.item_quantity) {
-            total += item.item_quantity;
-          }
-        });
-      }
-    }
-    return total;
-  };
-
-  const totalPrice = () => {
-    let total = 0;
-    if (order.order_type === "CHECKOUT") {
-      const menuPrice = order.menu_price * (order.item_quantity || 0);
-      const addOnPrice = calculateAddOnPrice(order.addsOn);
-      total = menuPrice + addOnPrice;
-    } else {
-      const addOnPrice = calculateAddOnPrice(order.addsOn);
-      if (order && order.items && Array.isArray(order.items)) {
-        order.items.forEach((item) => {
-          if (item && item.menu_price && item.item_quantity) {
-            const price = item.menu_price * item.item_quantity;
-            total += price;
-          }
-        });
-      }
-      total += addOnPrice || 0;
-    }
-    return total;
-  };
 
   const isPayDisabled = paymentLoading || !isShippingValid;
 
@@ -86,9 +31,7 @@ const OrderActions = ({
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-yellow-500 text-white hover:bg-yellow-600 cursor-pointer"
               }`}
-              onClick={() =>
-                onPayConfirmation(order.order_id, totalQuantity(), totalPrice())
-              }
+              onClick={onPayment}
               disabled={isPayDisabled}
               title={
                 !isShippingValid ? "Please complete shipping information" : ""
@@ -160,13 +103,7 @@ const OrderActions = ({
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-yellow-500 text-white hover:bg-yellow-600"
             }`}
-            onClick={() =>
-              onPayConfirmation(
-                order.order_id,
-                totalQuantity(),
-                totalPrice()
-              )
-            }
+            onClick={onPayment}
             disabled={isPayDisabled}
             title={
               !isShippingValid ? "Please complete shipping information" : ""

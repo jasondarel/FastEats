@@ -3,9 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   cancelOrderService,
-  payConfirmationService,
-  saveSnapService,
-  checkMidtransStatusService,
   getOrderDetailService,
 } from "../../service/orderServices/orderDetails";
 import {
@@ -405,90 +402,6 @@ const OrderDetails = () => {
     };
   }, []);
 
-  const handlePayConfirmation = async (orderId, itemQuantity, itemPrice) => {
-    try {
-      setPaymentLoading(true);
-
-      const response = await payConfirmationService(
-        orderId,
-        itemQuantity,
-        itemPrice,
-        shippingData.shippingData.province,
-        shippingData.shippingData.city,
-        shippingData.shippingData.district,
-        shippingData.shippingData.village,
-        shippingData.shippingData.address,
-        shippingData.shippingData.phone,
-        shippingData.shippingData.fullName,
-        token
-      );
-
-      if (response.data.success) {
-        const snapToken = response.data.data.token;
-        console.log("Snap Token:", snapToken);
-        window.snap.pay(snapToken, {
-          skipOrderSummary: true,
-          showOrderId: true,
-
-          onSuccess: async function (result) {
-            console.log("success", result);
-
-            try {
-              alert("Pembayaran berhasil!");
-              await fetchOrderDetails();
-            } catch (chatError) {
-              console.error("Failed to create chat:", chatError);
-              alert(
-                "Pembayaran berhasil! Namun terjadi masalah saat membuat chat."
-              );
-            }
-            setPaymentLoading(false);
-          },
-
-          onPending: async function (result) {
-            try {
-              const response = await saveSnapService(orderId, snapToken);
-              alert(
-                "Pembayaran sedang diproses. Silakan cek status pembayaran di halaman transaksi."
-              );
-              setPaymentLoading(false);
-            } catch (err) {
-              console.error("Error saving snap token:", err);
-              setPaymentLoading(false);
-            }
-          },
-
-          onError: function (result) {
-            console.log("error", result);
-            alert("Terjadi kesalahan dalam proses pembayaran.");
-            setPaymentLoading(false);
-          },
-
-          onClose: async function () {
-            try {
-              const statusResponse = await checkMidtransStatusService(orderId);
-
-              if (statusResponse.data.transaction_status === "pending") {
-                alert(
-                  "Anda sudah memilih metode pembayaran, silakan lanjutkan pembayaran di halaman transaksi."
-                );
-              } else {
-                alert("Pembayaran dibatalkan. Silakan coba lagi.");
-              }
-            } catch (error) {
-              console.error("Error checking transaction status:", error);
-            }
-            setPaymentLoading(false);
-          },
-        });
-      }
-    } catch (err) {
-      console.error("Error confirming payment:", err);
-      setError(err.message || "Failed to confirm payment");
-      setPaymentLoading(false);
-    }
-  };
-
   const handleOrderAgain = async () => {
     if (order && order.menu) {
       navigate(`/menu/${order.menu.menu_id}`);
@@ -502,18 +415,33 @@ const OrderDetails = () => {
 
     if (!orderId) return;
 
+    setPaymentLoading(true);
+
     try {
       const response = await fetch(`${API_URL}/order/snap/${orderId}`);
       const data = await response.json();
 
       if (data?.snap_token) {
-        window.snap.pay(data.snap_token);
+        window.snap.pay(data.snap_token, {
+          onSuccess: async () => {
+            try {
+              await fetchOrderDetails();
+            } finally {
+              setPaymentLoading(false);
+            }
+          },
+          onPending: () => setPaymentLoading(false),
+          onError: () => setPaymentLoading(false),
+          onClose: () => setPaymentLoading(false),
+        });
       } else {
         alert("Failed to get transaction token.");
+        setPaymentLoading(false);
       }
     } catch (error) {
       console.error("Error fetching transaction token:", error);
       alert("Error processing payment.");
+      setPaymentLoading(false);
     }
   };
 
@@ -897,7 +825,6 @@ const OrderDetails = () => {
                 paymentLoading={paymentLoading}
                 isShippingValid={isShippingValid}
                 onCancel={handleCancel}
-                onPayConfirmation={handlePayConfirmation}
                 onPayment={handlePayment}
                 onOrderAgain={handleOrderAgain}
               />

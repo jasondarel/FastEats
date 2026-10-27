@@ -15,58 +15,6 @@ const cancelOrderService = async (orderId, token) => {
   return response;
 };
 
-const payConfirmationService = async (
-  orderId,
-  itemQuantity,
-  itemPrice,
-  shippingProvince,
-  shippingCity,
-  shippingDistrict,
-  shippingVillage,
-  shippingAddress,
-  shippingPhone,
-  shippingName,
-  token
-) => {
-  const response = await axios.post(
-    `${API_URL}/order/pay-order-confirmation`,
-    {
-      order_id: orderId,
-      itemQuantity: itemQuantity,
-      itemPrice: itemPrice,
-      shipping_province: shippingProvince,
-      shipping_city: shippingCity,
-      shipping_district: shippingDistrict,
-      shipping_village: shippingVillage,
-      shipping_address: shippingAddress,
-      shipping_phone: shippingPhone,
-      shipping_name: shippingName,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  return response;
-};
-
-const saveSnapService = async (orderId, snapToken) => {
-  const response = await axios.post(`${API_URL}/order/save-snap-token`, {
-    order_id: orderId,
-    snap_token: snapToken,
-  });
-  return response;
-};
-
-const checkMidtransStatusService = async (orderId) => {
-  const statusResponse = await axios.get(
-    `${API_URL}/order/check-midtrans-status?order_id=${orderId}`
-  );
-  return statusResponse;
-};
-
 const getOrderDetailService = async (orderId, token) => {
   const response = await axios.get(`${API_URL}/order/order/${orderId}`, {
     headers: {
@@ -169,9 +117,6 @@ const updateCartItemQuantityService = async (menuId, quantity, token) => {
 
 export {
   cancelOrderService,
-  payConfirmationService,
-  saveSnapService,
-  checkMidtransStatusService,
   getOrderDetailService,
   getCartService,
   getCartItemsService,

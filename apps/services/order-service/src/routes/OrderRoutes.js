@@ -7,7 +7,6 @@ import {
   cancelOrderController,
   completeOrderController,
   payOrderController,
-  payOrderConfirmationController,
   thanksController,
   checkMidtransStatusController,
   saveSnapTokenController,
@@ -53,11 +52,6 @@ router.patch(
   "/deliver-order/:order_id",
   authMiddleware,
   deliverOrderController
-);
-router.post(
-  "/pay-order-confirmation",
-  authMiddleware,
-  payOrderConfirmationController
 );
 router.post("/pay-order", payOrderController);
 router.get("/thanks", thanksController);
