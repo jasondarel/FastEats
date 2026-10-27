@@ -13,6 +13,8 @@ export const PREPARING_ORDER_ROUTING_KEY = process.env.EMAIL_PREPARING_ORDER_ROU
 export const COMPLETED_ORDER_ROUTING_KEY = process.env.EMAIL_COMPLETED_ORDER_ROUTE || "completed_order";
 export const PAYMENT_CREATE_ROUTING_KEY = process.env.ORDER_PAYMENT_CREATE_ROUTE || "payment.create";
 export const PAYMENT_SETTLED_ROUTING_KEY = process.env.ORDER_PAYMENT_SETTLED_ROUTE || "order.payment.settled";
+export const ORDER_DELIVERING_ROUTING_KEY = process.env.ORDER_DELIVERING_ROUTE || "order.delivering";
+export const ORDER_COMPLETED_ROUTING_KEY = process.env.ORDER_COMPLETED_ROUTE || "order.completed";
 
 let channel;
 let connection;

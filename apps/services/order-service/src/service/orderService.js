@@ -1,6 +1,8 @@
 import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,
+  ORDER_COMPLETED_ROUTING_KEY,
+  ORDER_DELIVERING_ROUTING_KEY,
   PAYMENT_CREATE_ROUTING_KEY,
   PAYMENT_SETTLED_ROUTING_KEY,
   PREPARING_ORDER_ROUTING_KEY,
@@ -277,6 +279,32 @@ export const createPaymentSettledOrderJobService = async (
     `INSERT INTO order_jobs (order_id, payload, routing_key)
     VALUES ($1, $2, $3) RETURNING *`,
     [orderId, payload, PAYMENT_SETTLED_ROUTING_KEY]
+  );
+  return result.rows[0];
+};
+
+export const createOrderDeliveringJobService = async (
+  paramPool,
+  orderId,
+  payload
+) => {
+  const result = await paramPool.query(
+    `INSERT INTO order_jobs (order_id, payload, routing_key)
+    VALUES ($1, $2, $3) RETURNING *`,
+    [orderId, payload, ORDER_DELIVERING_ROUTING_KEY]
+  );
+  return result.rows[0];
+};
+
+export const createOrderCompletedJobService = async (
+  paramPool,
+  orderId,
+  payload
+) => {
+  const result = await paramPool.query(
+    `INSERT INTO order_jobs (order_id, payload, routing_key)
+    VALUES ($1, $2, $3) RETURNING *`,
+    [orderId, payload, ORDER_COMPLETED_ROUTING_KEY]
   );
   return result.rows[0];
 };

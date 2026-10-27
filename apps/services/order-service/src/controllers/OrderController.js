@@ -5,8 +5,8 @@ import camelize from "camelize";
 import pool from "../config/dbInit.js";
 import {
   cancelOrderService,
-  completeOrderService,
-  deliverOrderService,
+  createOrderDeliveringJobService,
+  createOrderCompletedJobService,
   createOrderService,
   deleteOrderService,
   getOrderByIdService,
@@ -29,7 +29,6 @@ import {
   getAllOrdersWithItemsService,
   getOrderItemsByOrderIdService,
   getAllOrderWithItemsByOrderIdService,
-  createCompletedOrderJobService,
   createPaymentCreateOrderJobService,
   createPaymentSettledOrderJobService,
   getOrderByIdempotencyKeyService,
@@ -1193,24 +1192,28 @@ export const deliverOrderController = async (req, res) => {
       );
     }
 
-    logger.info(`Setting order ${order_id} to delivering...`);
-    const result = await deliverOrderService(order_id);
-    if (!result) {
-      logger.error(`Failed to set order ${order_id} to delivering`);
+    const deliveringJob = await createOrderDeliveringJobService(
+      pool,
+      Number(order.order_id),
+      { order_id: order.order_id, requested_by: userId }
+    );
+
+    if (!deliveringJob) {
+      logger.error(`Failed to queue delivering job for order ${order_id}`);
       return responseError(res, 500, "Failed to set order to delivering");
     }
 
-    logger.info(`Order ${order_id} is now being delivered`);
-    const updatedOrder = await getAllOrderWithItemsByOrderIdService(order_id);
+    logger.info(
+      `Order ${order_id} delivering transition queued (job ${deliveringJob.id})`
+    );
 
-    const io = req.app.get("io");
-    io.emit("orderDelivering", {
-      order_id: updatedOrder.order_id,
-      status: updatedOrder.status,
-      delivering_at: new Date(),
-    });
-
-    return responseSuccess(res, 200, "Order is now being delivered");
+    return responseSuccess(
+      res,
+      202,
+      "Order delivering accepted",
+      "order_id",
+      order.order_id
+    );
   } catch (error) {
     logger.error("Internal server error:", error);
     return responseError(res, 500, "Internal server error");
@@ -1262,22 +1265,8 @@ export const completeOrderController = async (req, res) => {
       );
     }
 
-    logger.info(`Completing order ${order_id}...`);
-    const result = await completeOrderService(order_id);
-    if (!result) {
-      logger.error(`Failed to complete order ${order_id}`);
-      return responseError(res, 500, "Failed to complete order");
-    }
-
-    logger.info(`Order ${order_id} completed successfully`);
-    const updatedOrder = await getAllOrderWithItemsByOrderIdService(order_id);
-
-    const io = req.app.get("io");
-    io.emit("orderCompleted", {
-      order_id: updatedOrder.order_id,
-      status: updatedOrder.status,
-      completed_at: new Date(),
-    });
+    logger.info(`Queueing completion for order ${order_id}...`);
+    const completedAt = new Date();
 
     const restaurantResponse = await getRestaurantInformation(
       GLOBAL_SERVICE_URL,
@@ -1301,9 +1290,9 @@ export const completeOrderController = async (req, res) => {
       ),
       getUserInformation(
         GLOBAL_SERVICE_URL,
-        updatedOrder.user_id,
+        order.user_id,
         internalAPIKey,
-        `Customer with ID ${updatedOrder.user_id} not found`
+        `Customer with ID ${order.user_id} not found`
       ),
     ]);
 
@@ -1313,12 +1302,12 @@ export const completeOrderController = async (req, res) => {
     }
 
     if (!customerResult?.user) {
-      logger.warn(`Customer not found for user ${updatedOrder.user_id}`);
+      logger.warn(`Customer not found for user ${order.user_id}`);
       return responseError(res, 500, "Customer information not available");
     }
 
     const itemsWithMenuDetails = await Promise.all(
-      updatedOrder.items.map(async (item) => {
+      order.items.map(async (item) => {
         try {
           const menuResponse = await getMenuInformation(
             GLOBAL_SERVICE_URL,
@@ -1354,25 +1343,38 @@ export const completeOrderController = async (req, res) => {
     );
 
     const orderDetails = {
-      order_id: updatedOrder.order_id,
+      order_id: order.order_id,
       restaurant_name: restaurant.restaurant_name,
       customer_name: customerResult.user.name,
       owner_name: ownerResult.user.name,
       owner_email: ownerResult.user.email,
       customer_email: customerResult.user.email,
-      total_price: updatedOrder.total_price,
-      completed_at: new Date(),
-      order: { ...updatedOrder, items: itemsWithMenuDetails },
+      total_price: order.total_price,
+      completed_at: completedAt,
+      order: { ...order, status: "Completed", items: itemsWithMenuDetails },
     };
 
-    await createCompletedOrderJobService(orderDetails);
+    const completedJob = await createOrderCompletedJobService(
+      pool,
+      Number(order.order_id),
+      { completed_at: completedAt, order_details: orderDetails }
+    );
+
+    if (!completedJob) {
+      logger.error(`Failed to queue completion for order ${order_id}`);
+      return responseError(res, 500, "Failed to complete order");
+    }
+
+    logger.info(
+      `Order ${order_id} completion queued (job ${completedJob.id})`
+    );
 
     return responseSuccess(
       res,
-      200,
-      "Order completed successfully",
-      "order",
-      orderDetails
+      202,
+      "Order completion accepted",
+      "order_id",
+      order.order_id
     );
   } catch (error) {
     logger.error("Internal server error", error);
