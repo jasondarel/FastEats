@@ -12,6 +12,7 @@ const QUEUE_NAME = process.env.QUEUE_NAME || "email_verification_queue";
 export const PREPARING_ORDER_ROUTING_KEY = process.env.EMAIL_PREPARING_ORDER_ROUTE || "preparing_order";
 export const COMPLETED_ORDER_ROUTING_KEY = process.env.EMAIL_COMPLETED_ORDER_ROUTE || "completed_order";
 export const PAYMENT_CREATE_ROUTING_KEY = process.env.ORDER_PAYMENT_CREATE_ROUTE || "payment.create";
+export const PAYMENT_SETTLED_ROUTING_KEY = process.env.ORDER_PAYMENT_SETTLED_ROUTE || "order.payment.settled";
 
 let channel;
 let connection;

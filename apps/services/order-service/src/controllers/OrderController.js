@@ -13,7 +13,6 @@ import {
   getOrdersByRestaurantIdService,
   getSnapTokenService,
   getUserOrdersService,
-  payOrderService,
   pendingOrderService,
   saveSnapTokenService,
   updateOrderStatusService,
@@ -30,9 +29,9 @@ import {
   getAllOrdersWithItemsService,
   getOrderItemsByOrderIdService,
   getAllOrderWithItemsByOrderIdService,
-  createPreparingOrderJobService,
   createCompletedOrderJobService,
   createPaymentCreateOrderJobService,
+  createPaymentSettledOrderJobService,
   getOrderByIdempotencyKeyService,
   updateCartItemQuantityServiceByMenuId,
   getCartItemServiceByMenuId,
@@ -1826,38 +1825,74 @@ export const payOrderController = async (req, res) => {
       );
     }
 
-    if (transaction_status === "settlement") {
-      try {
-        const response = await payOrderService(order_id);
+    const isAcceptedCapture =
+      transaction_status === "capture" &&
+      (!req.body.fraud_status || req.body.fraud_status === "accept");
 
+    if (transaction_status === "settlement" || isAcceptedCapture) {
+      const resolvedOrderId = Number.parseInt(order_id, 10);
+
+      if (!Number.isInteger(resolvedOrderId)) {
+        logger.error(`Invalid order_id in settlement webhook: ${order_id}`);
+        return responseError(res, 400, "Invalid order id");
+      }
+
+      try {
         const orderDetailData = await getOrderDetailsInformation(
-          order_id,
+          resolvedOrderId,
           internalAPIKey
         );
 
-        const insertPreparingJobsResponse =
-          await createPreparingOrderJobService(orderDetailData);
+        const vaNumber = req.body.va_numbers?.[0]?.va_number ?? null;
+        const bank = req.body.va_numbers?.[0]?.bank ?? req.body.bank ?? null;
 
-        if (!insertPreparingJobsResponse) {
-          logger.error("Failed to create preparing order jobs");
-          return responseError(
-            res,
-            500,
-            "Failed to create preparing order jobs"
+        const settlementJob = await createPaymentSettledOrderJobService(
+          pool,
+          resolvedOrderId,
+          {
+            transaction_status,
+            transaction: {
+              order_id: resolvedOrderId,
+              currency,
+              transaction_time,
+              expiry_time,
+              gross_amount,
+              bank,
+              va_number: vaNumber,
+              payment_type,
+              shipping_province: shippingProvince,
+              shipping_city: shippingCity,
+              shipping_district: shippingDistrict,
+              shipping_village: shippingVillage,
+              shipping_address: shippingAddress,
+              shipping_phone: shippingPhone,
+              shipping_name: shippingName,
+              transaction_net: transactionNet,
+              tax,
+            },
+            order_details: orderDetailData,
+          }
+        );
+
+        if (!settlementJob) {
+          logger.error(
+            `Failed to queue settlement job for order ${resolvedOrderId}`
           );
+          return responseError(res, 500, "Failed to queue settlement job");
         }
 
-        // Payment successful - order status updated, cron job will skip this order
-        logger.info("Order paid successfully");
+        logger.info(
+          `Transaction ${resolvedOrderId} queued for settlement processing (job ${settlementJob.id})`
+        );
         return responseSuccess(
           res,
           200,
-          "Order paid successfully",
-          "order",
-          response
+          "Order payment accepted",
+          "order_id",
+          resolvedOrderId
         );
       } catch (error) {
-        logger.error("Error processing payment:", error);
+        logger.error("Error queueing payment settlement:", error);
         return responseError(res, 500, "Error processing payment");
       }
     } else if (

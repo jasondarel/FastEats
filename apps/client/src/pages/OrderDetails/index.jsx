@@ -611,7 +611,7 @@ const OrderDetails = () => {
       }
     });
 
-    socketRef.current.on("statusChanged", (statusUpdate) => {
+    const handleStatusChanged = (statusUpdate) => {
       console.log("Status change event received:", statusUpdate);
       if (String(statusUpdate.order_id) === String(orderId)) {
         setOrder((prevOrder) => ({
@@ -620,7 +620,10 @@ const OrderDetails = () => {
           updated_at: statusUpdate.updated_at || new Date().toISOString(),
         }));
       }
-    });
+    };
+
+    socketRef.current.on("statusChanged", handleStatusChanged);
+    socketRef.current.on("order.status_changed", handleStatusChanged);
 
     socketRef.current.on("payment.ready", (payload) => {
       console.log("Payment ready event received:", payload);
@@ -638,7 +641,8 @@ const OrderDetails = () => {
         socketRef.current.off("orderUpdated", handleOrderUpdate);
         socketRef.current.off("orderCompleted");
         socketRef.current.off("orderDelivering");
-        socketRef.current.off("statusChanged");
+        socketRef.current.off("statusChanged", handleStatusChanged);
+        socketRef.current.off("order.status_changed", handleStatusChanged);
         socketRef.current.off("payment.ready");
         socketRef.current.disconnect();
       }

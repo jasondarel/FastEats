@@ -2,6 +2,7 @@ import pool from "../config/dbInit.js";
 import {
   COMPLETED_ORDER_ROUTING_KEY,
   PAYMENT_CREATE_ROUTING_KEY,
+  PAYMENT_SETTLED_ROUTING_KEY,
   PREPARING_ORDER_ROUTING_KEY,
 } from "../config/rabbitMQInit.js";
 
@@ -263,6 +264,19 @@ export const createPaymentCreateOrderJobService = async (
     `INSERT INTO order_jobs (order_id, payload, routing_key)
     VALUES ($1, $2, $3) RETURNING *`,
     [orderId, payload, PAYMENT_CREATE_ROUTING_KEY]
+  );
+  return result.rows[0];
+};
+
+export const createPaymentSettledOrderJobService = async (
+  paramPool,
+  orderId,
+  payload
+) => {
+  const result = await paramPool.query(
+    `INSERT INTO order_jobs (order_id, payload, routing_key)
+    VALUES ($1, $2, $3) RETURNING *`,
+    [orderId, payload, PAYMENT_SETTLED_ROUTING_KEY]
   );
   return result.rows[0];
 };

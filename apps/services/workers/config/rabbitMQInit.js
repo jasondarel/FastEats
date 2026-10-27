@@ -18,6 +18,11 @@ export const ORDER_ROUTING_KEYS = {
   COMPLETED: process.env.ORDER_COMPLETED_ROUTE || "order.completed",
 };
 
+export const NOTIFICATION_ROUTING_KEYS = {
+  PREPARING: process.env.EMAIL_PREPARING_ORDER_ROUTE || "preparing_order",
+  COMPLETED: process.env.EMAIL_COMPLETED_ORDER_ROUTE || "completed_order",
+};
+
 export const ORDER_QUEUES = [
   { name: process.env.ORDER_PAYMENT_CREATE_QUEUE || "order_payment_create_queue", routingKey: ORDER_ROUTING_KEYS.PAYMENT_CREATE },
   { name: process.env.ORDER_PAYMENT_SETTLED_QUEUE || "order_payment_settled_queue", routingKey: ORDER_ROUTING_KEYS.PAYMENT_SETTLED },
