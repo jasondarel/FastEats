@@ -1,6 +1,6 @@
 # Hybrid Event-Driven Order Pipeline with RabbitMQ Workers and PostgreSQL Outbox
 **Date:** 2026-10-25  
-**Status:** In Progress — Phase 1 runtime verified; Phase 2 pending
+**Status:** In Progress — Phase 1 and Phase 2 settlement pipeline runtime verified
 **Revision:** v3 — PostgreSQL Transactional Outbox + RabbitMQ Consumer Pipeline
 
 ### Progress Log
@@ -20,6 +20,10 @@
 | 1 | `payOrderConfirmationController` reuses an existing Snap token (safe fallback) | ✅ Done | — |
 | 1 | Fix outbox race: consumer claims `pending`/`published` jobs (message can arrive before the publisher commits `published`) | ✅ Done | — |
 | 1 | Runtime verification: real sandbox Snap token created for a test order via the async pipeline | ✅ Done | — |
+| 2 | Settlement webhook queues `order.payment.settled` outbox job (settlement + accepted `capture`) | ✅ Done | `e4ba1a5` |
+| 2 | `paymentSettledWorker` (claim, conditional `Pending`/`Waiting` → `Preparing`, transaction upsert, `preparing_order` job, Redis `order.status_changed`, retry/DLQ) | ✅ Done | `e4ba1a5` |
+| 2 | Client consumes `order.status_changed` (keeps legacy `statusChanged`) | ✅ Done | `e4ba1a5` |
+| 2 | Runtime verification: simulated settlement webhook → worker transition → notification job → Socket.IO event; duplicate webhook is a no-op | ✅ Done | `e4ba1a5` |
 
 ### Environment & Migration Notes
 
@@ -34,15 +38,19 @@
 - `SOCKET_EVENTS_CHANNEL` (default `fasteats:order:events`)
 - `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL` (server-side API endpoint, e.g. `https://app.sandbox.midtrans.com/snap/v1/transactions` — not `snap.js`), `IS_PRODUCTION`
 - Client only: `VITE_MIDTRANS_CLIENT_KEY` and `VITE_MIDTRANS_SNAP_URL` (the `snap.js` script URL).
-- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`.
+- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`, `PAYMENT_SETTLED_WORKER_MAX_ATTEMPTS`, `PAYMENT_SETTLED_WORKER_RETRY_DELAY_MS`, `EMAIL_PREPARING_ORDER_ROUTE` (default `preparing_order`).
 
 **Client**: shipping is now collected before order creation via a shared `CheckoutShippingModal` (Cart and MenuDetails) and sent with `POST /checkout-cart` / `POST /order`. `OrderDetails` consumes `payment.ready` from the Socket.IO bridge and polls `GET /snap/:order_id` as a fallback. The synchronous `pay-order-confirmation` flow remains for older orders and now reuses an existing Snap token.
 
 **Verification**: `node --check` passes for the touched server files and the client `npm run build` succeeds with only pre-existing ESLint warnings. Runtime verification against the Midtrans sandbox passes for the async pipeline through the gateway: `POST /order/order` returned 202, the outbox publisher delivered `payment.create`, the worker created a Snap token and a `snaps` row with a `redirect_url`, the job finished as `completed`, and Redis published `payment.ready` to `order:<id>`. Replaying the same `Idempotency-Key` returned the original order with `idempotent: true`.
 
+Phase 2 settlement runtime verification (sandbox signature, simulated Midtrans webhook through the gateway): `POST /order/pay-order` returned 200 with the order accepted; the outbox publisher delivered `order.payment.settled`; the worker moved a `Waiting` order to `Preparing`, inserted the `transactions` row, created and published the `preparing_order` notification job, and emitted `order.status_changed` to `order:<id>` through Redis. Replaying the same settlement webhook inserted a second settlement job that completed without creating a duplicate notification or changing the order again.
+
 **Runtime notes**:
 - The outbox publisher publishes while its job-status update is still uncommitted. Consumers must claim jobs with status `pending` **or** `published`; claiming only `published` lets the consumer see `pending`, skip/ack the message, and leave the job stuck. This is fixed in `claimJob`.
 - Midtrans retains Snap `order_id`s across database resets. Reusing low sequential IDs fails with `transaction_details.order_id sudah digunakan`; advance `orders_order_id_seq` (or use a fresh sandbox account) when re-testing against a reset local database.
+- `paymentSettledWorker` accepts `Waiting` as well as `Pending` because settlement can arrive before the pending webhook. Duplicate settlement jobs are harmless: only the first conditional update returns a row, and later jobs complete without inserting another `preparing_order` job.
+- Startup ordering caveat: if `workers` or `order-service` start before RabbitMQ/Redis is reachable, worker consumers are not attached and the Socket.IO bridge may remain unsubscribed until the process restarts. Start infrastructure first (or restart the apps after Docker). Automatic reconnect/re-subscription is a follow-up.
 - `.env.dev` files are gitignored (they hold local sandbox credentials), so no secrets enter the commit.
 
 ---
@@ -393,11 +401,10 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
 - [x] **Verification:** Test duplicate order creation with `Idempotency-Key` and verify fallback `GET /snap/:order_id`.
 
 ### Phase 2: State Transitions & Notification Decoupling
-- [ ] **Settlement Webhook & Worker:**
-  - Update `payOrderController` to insert `order.payment.settled` pending job.
-  - Implement `paymentSettledWorker.js` with conditional guard:
-    `UPDATE orders SET status = 'Preparing' WHERE order_id = $1 AND status = 'Pending'`
-  - Insert `preparing_order` notification outbox job.
+- [x] **Settlement Webhook & Worker:** *(commit `e4ba1a5`)*
+  - `payOrderController` now inserts an `order.payment.settled` pending job for `settlement` and accepted `capture` webhooks, then returns 200 without touching order state.
+  - `paymentSettledWorker.js` claims the job, runs the conditional guard (`AND status IN ('Pending', 'Waiting')`), upserts the `transactions` row, inserts the `preparing_order` notification outbox job, and emits `order.status_changed` via the Redis bridge.
+  - Duplicate webhooks are safe: a job that finds the order already past the guard completes without a notification; retries re-emit the status event when the transition already committed.
 - [ ] **Delivering & Completed Workers:**
   - Implement `orderDeliveringWorker.js` with guard `WHERE status = 'Preparing'`.
   - Implement `orderCompletedWorker.js` with guard `WHERE status = 'Delivering'`.
