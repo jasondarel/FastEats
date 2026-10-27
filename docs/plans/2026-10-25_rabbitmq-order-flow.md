@@ -1,6 +1,6 @@
 # Hybrid Event-Driven Order Pipeline with RabbitMQ Workers and PostgreSQL Outbox
 **Date:** 2026-10-25  
-**Status:** In Progress — Phase 1 and Phase 2 settlement pipeline runtime verified
+**Status:** In Progress — Phase 1 and Phase 2 state transitions verified; notification separation and cleanup pending
 **Revision:** v3 — PostgreSQL Transactional Outbox + RabbitMQ Consumer Pipeline
 
 ### Progress Log
@@ -24,6 +24,10 @@
 | 2 | `paymentSettledWorker` (claim, conditional `Pending`/`Waiting` → `Preparing`, transaction upsert, `preparing_order` job, Redis `order.status_changed`, retry/DLQ) | ✅ Done | `e4ba1a5` |
 | 2 | Client consumes `order.status_changed` (keeps legacy `statusChanged`) | ✅ Done | `e4ba1a5` |
 | 2 | Runtime verification: simulated settlement webhook → worker transition → notification job → Socket.IO event; duplicate webhook is a no-op | ✅ Done | `e4ba1a5` |
+| 2 | `deliverOrderController` / `completeOrderController` queue `order.delivering` / `order.completed` jobs and return 202; direct status updates and `io.emit` removed | ✅ Done | `ee8026e` |
+| 2 | `orderDeliveringWorker` (guard `Preparing` → `Delivering`, Redis `order.status_changed` + legacy `orderDelivering`) | ✅ Done | — |
+| 2 | `orderCompletedWorker` (guard `Delivering` → `Completed`, `completed_order` job, Redis `order.status_changed` + legacy `orderCompleted`) | ✅ Done | — |
+| 2 | Runtime verification: deliver → complete through the gateway transitions `Preparing → Delivering → Completed`, queues both Redis events, and creates/publishes the completion notification job | ✅ Done | — |
 
 ### Environment & Migration Notes
 
@@ -38,13 +42,17 @@
 - `SOCKET_EVENTS_CHANNEL` (default `fasteats:order:events`)
 - `MIDTRANS_SERVER_KEY`, `MIDTRANS_SNAP_URL` (server-side API endpoint, e.g. `https://app.sandbox.midtrans.com/snap/v1/transactions` — not `snap.js`), `IS_PRODUCTION`
 - Client only: `VITE_MIDTRANS_CLIENT_KEY` and `VITE_MIDTRANS_SNAP_URL` (the `snap.js` script URL).
-- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`, `PAYMENT_SETTLED_WORKER_MAX_ATTEMPTS`, `PAYMENT_SETTLED_WORKER_RETRY_DELAY_MS`, `EMAIL_PREPARING_ORDER_ROUTE` (default `preparing_order`).
+- Optional: `ORDER_*_QUEUE` / `ORDER_*_ROUTE`, `OUTBOX_POLL_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `PAYMENT_WORKER_MAX_ATTEMPTS`, `PAYMENT_WORKER_RETRY_DELAY_MS`, `PAYMENT_SETTLED_WORKER_MAX_ATTEMPTS`, `PAYMENT_SETTLED_WORKER_RETRY_DELAY_MS`, `ORDER_DELIVERING_WORKER_MAX_ATTEMPTS`, `ORDER_DELIVERING_WORKER_RETRY_DELAY_MS`, `ORDER_COMPLETED_WORKER_MAX_ATTEMPTS`, `ORDER_COMPLETED_WORKER_RETRY_DELAY_MS`, `EMAIL_PREPARING_ORDER_ROUTE` (default `preparing_order`).
 
 **Client**: shipping is now collected before order creation via a shared `CheckoutShippingModal` (Cart and MenuDetails) and sent with `POST /checkout-cart` / `POST /order`. `OrderDetails` consumes `payment.ready` from the Socket.IO bridge and polls `GET /snap/:order_id` as a fallback. The synchronous `pay-order-confirmation` flow remains for older orders and now reuses an existing Snap token.
 
 **Verification**: `node --check` passes for the touched server files and the client `npm run build` succeeds with only pre-existing ESLint warnings. Runtime verification against the Midtrans sandbox passes for the async pipeline through the gateway: `POST /order/order` returned 202, the outbox publisher delivered `payment.create`, the worker created a Snap token and a `snaps` row with a `redirect_url`, the job finished as `completed`, and Redis published `payment.ready` to `order:<id>`. Replaying the same `Idempotency-Key` returned the original order with `idempotent: true`.
 
 Phase 2 settlement runtime verification (sandbox signature, simulated Midtrans webhook through the gateway): `POST /order/pay-order` returned 200 with the order accepted; the outbox publisher delivered `order.payment.settled`; the worker moved a `Waiting` order to `Preparing`, inserted the `transactions` row, created and published the `preparing_order` notification job, and emitted `order.status_changed` to `order:<id>` through Redis. Replaying the same settlement webhook inserted a second settlement job that completed without creating a duplicate notification or changing the order again.
+
+Phase 2 delivering/completed controller verification (`ee8026e`): `PATCH /order/deliver-order/:id` and `PATCH /order/complete-order/:id` both returned 202 and published `order.delivering` / `order.completed`. Order status did **not** change and no Socket.IO event was emitted, because the corresponding workers were not implemented at that point; the messages remained in `order_delivering_queue` / `order_completed_queue`. Test jobs and messages were cleaned up afterwards.
+
+Phase 2 delivering/completed runtime verification (workers registered): `PATCH /order/deliver-order/1003` returned 202, the outbox publisher delivered `order.delivering`, and `orderDeliveringWorker` moved the order `Preparing → Delivering`, publishing `order.status_changed` and legacy `orderDelivering` to `order:1003`. `PATCH /order/complete-order/1003` returned 202 and `orderCompletedWorker` moved it `Delivering → Completed`, inserted a `completed_order` notification job (published by the existing order-service 5-second cron and consumed by notification-service), and published `order.status_changed` plus legacy `orderCompleted`. The test jobs were deleted, order `1003` was restored to `Preparing`, and both new queues drained to 0. Notification delivery still runs through the legacy cron and currently fails in dev because the SMTP credentials are placeholders.
 
 **Runtime notes**:
 - The outbox publisher publishes while its job-status update is still uncommitted. Consumers must claim jobs with status `pending` **or** `published`; claiming only `published` lets the consumer see `pending`, skip/ack the message, and leave the job stuck. This is fixed in `claimJob`.
@@ -405,10 +413,13 @@ If `payOrderConfirmationController` is deleted immediately, client checkout flow
   - `payOrderController` now inserts an `order.payment.settled` pending job for `settlement` and accepted `capture` webhooks, then returns 200 without touching order state.
   - `paymentSettledWorker.js` claims the job, runs the conditional guard (`AND status IN ('Pending', 'Waiting')`), upserts the `transactions` row, inserts the `preparing_order` notification outbox job, and emits `order.status_changed` via the Redis bridge.
   - Duplicate webhooks are safe: a job that finds the order already past the guard completes without a notification; retries re-emit the status event when the transition already committed.
-- [ ] **Delivering & Completed Workers:**
-  - Implement `orderDeliveringWorker.js` with guard `WHERE status = 'Preparing'`.
-  - Implement `orderCompletedWorker.js` with guard `WHERE status = 'Delivering'`.
-  - Emit status changes through Redis bridge to client Socket.IO.
+- [x] **Delivering & Completed Workers:** *(controllers `ee8026e`; workers uncommitted)*
+  - [x] `deliverOrderController` / `completeOrderController` queue `order.delivering` / `order.completed` jobs and return 202.
+  - [x] Implement `orderDeliveringWorker.js` with guard `WHERE status = 'Preparing'`.
+  - [x] Implement `orderCompletedWorker.js` with guard `WHERE status = 'Delivering'`; insert the `completed_order` notification job from `payload.order_details`.
+  - [x] Register both consumers in `workers/server.js`.
+  - [x] Emit status changes through the Redis bridge to client Socket.IO (`order.status_changed`, plus legacy `orderDelivering`/`orderCompleted`).
+  - [x] Runtime verification: deliver/complete update order status in the DB and publish the socket events.
 - [ ] **Notification Queue Separation:**
   - Split `notification_exchange` queue bindings into dedicated queues.
 - [ ] **Cleanup & Deprecation:**
