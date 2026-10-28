@@ -317,13 +317,20 @@ export const handlePaymentSettledMessage = async (channel, msg) => {
   }
 };
 
-export const startPaymentSettledWorker = async () => {
-  const channel = await getChannel();
+let activeChannel = null;
+let activeConsumerTag = null;
+
+export const startPaymentSettledWorker = async (existingChannel) => {
+  const channel = existingChannel ?? (await getChannel());
   if (!channel) {
     logger.warn(
       "⚠️ RabbitMQ channel unavailable; order.payment.settled worker not started"
     );
     return null;
+  }
+
+  if (activeChannel === channel && activeConsumerTag) {
+    return activeConsumerTag;
   }
 
   await channel.prefetch(1);
@@ -341,20 +348,27 @@ export const startPaymentSettledWorker = async () => {
     });
   });
 
+  activeChannel = channel;
+  activeConsumerTag = consumerTag;
+
   logger.info(`✅ paymentSettledWorker consuming "${QUEUE_NAME}"`);
   return consumerTag;
 };
 
-export const stopPaymentSettledWorker = async (consumerTag) => {
+export const stopPaymentSettledWorker = async (consumerTag = activeConsumerTag) => {
   if (!consumerTag) return;
 
   try {
-    const channel = await getChannel();
-    if (channel) {
-      await channel.cancel(consumerTag);
+    if (activeChannel) {
+      await activeChannel.cancel(consumerTag);
       logger.info(`🛑 paymentSettledWorker stopped (${consumerTag})`);
     }
   } catch (error) {
     logger.error("❌ Failed to stop paymentSettledWorker:", error);
+  } finally {
+    if (activeConsumerTag === consumerTag) {
+      activeConsumerTag = null;
+      activeChannel = null;
+    }
   }
 };

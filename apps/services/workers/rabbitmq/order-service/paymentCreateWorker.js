@@ -240,11 +240,18 @@ export const handlePaymentCreateMessage = async (channel, msg) => {
   }
 };
 
-export const startPaymentCreateWorker = async () => {
-  const channel = await getChannel();
+let activeChannel = null;
+let activeConsumerTag = null;
+
+export const startPaymentCreateWorker = async (existingChannel) => {
+  const channel = existingChannel ?? (await getChannel());
   if (!channel) {
     logger.warn("⚠️ RabbitMQ channel unavailable; payment.create worker not started");
     return null;
+  }
+
+  if (activeChannel === channel && activeConsumerTag) {
+    return activeConsumerTag;
   }
 
   await channel.prefetch(1);
@@ -262,20 +269,27 @@ export const startPaymentCreateWorker = async () => {
     });
   });
 
+  activeChannel = channel;
+  activeConsumerTag = consumerTag;
+
   logger.info(`✅ paymentCreateWorker consuming "${QUEUE_NAME}"`);
   return consumerTag;
 };
 
-export const stopPaymentCreateWorker = async (consumerTag) => {
+export const stopPaymentCreateWorker = async (consumerTag = activeConsumerTag) => {
   if (!consumerTag) return;
 
   try {
-    const channel = await getChannel();
-    if (channel) {
-      await channel.cancel(consumerTag);
+    if (activeChannel) {
+      await activeChannel.cancel(consumerTag);
       logger.info(`🛑 paymentCreateWorker stopped (${consumerTag})`);
     }
   } catch (error) {
     logger.error("❌ Failed to stop paymentCreateWorker:", error);
+  } finally {
+    if (activeConsumerTag === consumerTag) {
+      activeConsumerTag = null;
+      activeChannel = null;
+    }
   }
 };

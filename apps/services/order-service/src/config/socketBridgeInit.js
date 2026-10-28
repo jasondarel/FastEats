@@ -45,9 +45,9 @@ const handleMessage = (rawMessage) => {
 };
 
 export const initSocketBridge = (io) => {
-  if (subscriber) return subscriber;
-
   ioServer = io;
+
+  if (subscriber) return subscriber;
 
   subscriber = new Redis({
     host: REDIS_HOST,
@@ -72,18 +72,20 @@ export const initSocketBridge = (io) => {
     handleMessage(rawMessage);
   });
 
-  subscriber.subscribe(SOCKET_EVENTS_CHANNEL, (error) => {
-    if (error) {
-      logger.error(
-        `❌ Failed to subscribe to Redis channel "${SOCKET_EVENTS_CHANNEL}":`,
-        error
-      );
-      return;
-    }
+  subscriber.on("ready", () => {
+    subscriber.subscribe(SOCKET_EVENTS_CHANNEL, (error) => {
+      if (error) {
+        logger.error(
+          `❌ Failed to subscribe to Redis channel "${SOCKET_EVENTS_CHANNEL}":`,
+          error
+        );
+        return;
+      }
 
-    logger.info(
-      `✅ Socket.IO bridge subscribed to Redis channel "${SOCKET_EVENTS_CHANNEL}"`
-    );
+      logger.info(
+        `✅ Socket.IO bridge subscribed to Redis channel "${SOCKET_EVENTS_CHANNEL}"`
+      );
+    });
   });
 
   return subscriber;

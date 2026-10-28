@@ -79,8 +79,8 @@ app.use(OrderRoutes);
   try {
     await createDatabase();
     await testDatabase();
-    await rabbitMQInit();
     initSocketBridge(io);
+    await rabbitMQInit();
 
     logger.info("✅ Database, Redis, and RabbitMQ initialized successfully");
     server.listen(PORT, () => {

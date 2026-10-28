@@ -39,6 +39,32 @@ let connection;
 let channel;
 let connecting = null;
 let closing = false;
+let readyChannel = null;
+
+const readyHandlers = new Set();
+
+const runReadyHandler = (handler, amqpChannel) => {
+  Promise.resolve()
+    .then(() => handler(amqpChannel))
+    .catch((error) => logger.error("❌ RabbitMQ ready handler failed:", error));
+};
+
+const dispatchReady = (amqpChannel) => {
+  readyChannel = amqpChannel;
+  for (const handler of readyHandlers) {
+    runReadyHandler(handler, amqpChannel);
+  }
+};
+
+export const onRabbitMQReady = (handler) => {
+  readyHandlers.add(handler);
+
+  if (channel && readyChannel === channel) {
+    runReadyHandler(handler, channel);
+  }
+
+  return () => readyHandlers.delete(handler);
+};
 
 const buildDeadLetterArguments = () => ({
   "x-dead-letter-exchange": ORDER_DEAD_LETTER_EXCHANGE,
@@ -63,7 +89,24 @@ const setupTopology = async (amqpChannel) => {
 };
 
 const connect = async () => {
-  connection = await amqp.connect(RABBITMQ_URL);
+  const newConnection = await amqp.connect(RABBITMQ_URL);
+
+  let newChannel;
+
+  try {
+    newChannel = await newConnection.createConfirmChannel();
+    await setupTopology(newChannel);
+  } catch (error) {
+    try {
+      await newConnection.close();
+    } catch (closeError) {
+      logger.error("❌ Failed to close RabbitMQ connection after setup error:", closeError);
+    }
+    throw error;
+  }
+
+  connection = newConnection;
+  channel = newChannel;
 
   connection.on("error", (error) => {
     logger.error("❌ RabbitMQ connection error:", error);
@@ -72,18 +115,18 @@ const connect = async () => {
   connection.on("close", () => {
     channel = null;
     connection = null;
+    readyChannel = null;
     if (closing) return;
     logger.warn("⚠️ RabbitMQ connection closed. Reconnecting...");
     setTimeout(rabbitMQInit, RETRY_DELAY_MS);
   });
 
-  channel = await connection.createConfirmChannel();
-  await setupTopology(channel);
-
   logger.info(`✅ RabbitMQ Connected & Order Topology "${ORDER_EXCHANGE}" Initialized`);
   logger.info(`   Queues: ${ORDER_QUEUES.map((queue) => queue.name).join(", ")}`);
   logger.info(`   Notification exchange: ${NOTIFICATION_EXCHANGE}`);
   logger.info(`   Dead Letter: ${ORDER_DEAD_LETTER_EXCHANGE} -> ${ORDER_DEAD_LETTER_QUEUE}`);
+
+  dispatchReady(channel);
 };
 
 export const rabbitMQInit = async () => {
@@ -126,6 +169,7 @@ export const closeRabbitMQ = async () => {
   } finally {
     channel = null;
     connection = null;
+    readyChannel = null;
     closing = false;
   }
 };

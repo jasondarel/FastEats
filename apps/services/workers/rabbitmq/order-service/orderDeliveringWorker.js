@@ -204,13 +204,20 @@ export const handleOrderDeliveringMessage = async (channel, msg) => {
   }
 };
 
-export const startOrderDeliveringWorker = async () => {
-  const channel = await getChannel();
+let activeChannel = null;
+let activeConsumerTag = null;
+
+export const startOrderDeliveringWorker = async (existingChannel) => {
+  const channel = existingChannel ?? (await getChannel());
   if (!channel) {
     logger.warn(
       "⚠️ RabbitMQ channel unavailable; order.delivering worker not started"
     );
     return null;
+  }
+
+  if (activeChannel === channel && activeConsumerTag) {
+    return activeConsumerTag;
   }
 
   await channel.prefetch(1);
@@ -228,20 +235,27 @@ export const startOrderDeliveringWorker = async () => {
     });
   });
 
+  activeChannel = channel;
+  activeConsumerTag = consumerTag;
+
   logger.info(`✅ orderDeliveringWorker consuming "${QUEUE_NAME}"`);
   return consumerTag;
 };
 
-export const stopOrderDeliveringWorker = async (consumerTag) => {
+export const stopOrderDeliveringWorker = async (consumerTag = activeConsumerTag) => {
   if (!consumerTag) return;
 
   try {
-    const channel = await getChannel();
-    if (channel) {
-      await channel.cancel(consumerTag);
+    if (activeChannel) {
+      await activeChannel.cancel(consumerTag);
       logger.info(`🛑 orderDeliveringWorker stopped (${consumerTag})`);
     }
   } catch (error) {
     logger.error("❌ Failed to stop orderDeliveringWorker:", error);
+  } finally {
+    if (activeConsumerTag === consumerTag) {
+      activeConsumerTag = null;
+      activeChannel = null;
+    }
   }
 };

@@ -251,13 +251,20 @@ export const handleOrderCompletedMessage = async (channel, msg) => {
   }
 };
 
-export const startOrderCompletedWorker = async () => {
-  const channel = await getChannel();
+let activeChannel = null;
+let activeConsumerTag = null;
+
+export const startOrderCompletedWorker = async (existingChannel) => {
+  const channel = existingChannel ?? (await getChannel());
   if (!channel) {
     logger.warn(
       "⚠️ RabbitMQ channel unavailable; order.completed worker not started"
     );
     return null;
+  }
+
+  if (activeChannel === channel && activeConsumerTag) {
+    return activeConsumerTag;
   }
 
   await channel.prefetch(1);
@@ -275,20 +282,27 @@ export const startOrderCompletedWorker = async () => {
     });
   });
 
+  activeChannel = channel;
+  activeConsumerTag = consumerTag;
+
   logger.info(`✅ orderCompletedWorker consuming "${QUEUE_NAME}"`);
   return consumerTag;
 };
 
-export const stopOrderCompletedWorker = async (consumerTag) => {
+export const stopOrderCompletedWorker = async (consumerTag = activeConsumerTag) => {
   if (!consumerTag) return;
 
   try {
-    const channel = await getChannel();
-    if (channel) {
-      await channel.cancel(consumerTag);
+    if (activeChannel) {
+      await activeChannel.cancel(consumerTag);
       logger.info(`🛑 orderCompletedWorker stopped (${consumerTag})`);
     }
   } catch (error) {
     logger.error("❌ Failed to stop orderCompletedWorker:", error);
+  } finally {
+    if (activeConsumerTag === consumerTag) {
+      activeConsumerTag = null;
+      activeChannel = null;
+    }
   }
 };

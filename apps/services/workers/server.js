@@ -4,18 +4,26 @@ import { startPaymentCreateWorker } from "./rabbitmq/order-service/paymentCreate
 import { startPaymentSettledWorker } from "./rabbitmq/order-service/paymentSettledWorker.js";
 import { startOrderDeliveringWorker } from "./rabbitmq/order-service/orderDeliveringWorker.js";
 import { startOrderCompletedWorker } from "./rabbitmq/order-service/orderCompletedWorker.js";
-import { rabbitMQInit } from "./config/rabbitMQInit.js";
+import { rabbitMQInit, onRabbitMQReady } from "./config/rabbitMQInit.js";
 import { redisInit } from "./config/redisInit.js";
 import logger from "./config/loggerInit.js";
+
+const ORDER_CONSUMERS = [
+  startPaymentCreateWorker,
+  startPaymentSettledWorker,
+  startOrderDeliveringWorker,
+  startOrderCompletedWorker,
+];
 
 (async () => {
   setupOrderExpiryCron();
   redisInit();
-  await rabbitMQInit();
   setupOutboxPublisher();
-  await startPaymentCreateWorker();
-  await startPaymentSettledWorker();
-  await startOrderDeliveringWorker();
-  await startOrderCompletedWorker();
+
+  for (const startConsumer of ORDER_CONSUMERS) {
+    onRabbitMQReady((channel) => startConsumer(channel));
+  }
+
+  await rabbitMQInit();
   logger.info("✅ Workers service initialized");
 })();
