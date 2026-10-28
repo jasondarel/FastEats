@@ -1,6 +1,6 @@
 # Chat List Realtime via Per-User Rooms
 **Date:** 2026-10-28
-**Status:** In Progress — verification pending
+**Status:** In Progress — browser UI smoke pending
 **Revision:** v2 — server and client realtime wiring implemented
 
 ### Progress Log
@@ -19,7 +19,8 @@
 | 3 | Role-correct unread mapping; refetch unknown chats | ✅ Done | — |
 | 4 | Mark chat read from ChatRoom on load and on new messages | ✅ Done | — |
 | 5 | Automated checks: node syntax, client build, service integration | ✅ Done | — |
-| 5 | Manual multi-session verification | Pending | — |
+| 5 | Live multi-session socket/HTTP verification | ✅ Done | — |
+| 5 | Browser UI smoke check | Pending | — |
 
 ## Problem
 
@@ -193,10 +194,15 @@ Manual, with separate browser sessions:
 - Integration test against the local MongoDB passes: unread counters increment
   per role, mark-read clears them, `update_chat` targets both participant rooms,
   and legacy `sellerId` backfill updates exactly one chat.
+- Live chat-service socket/HTTP test passes with one customer, one seller, and a
+  third non-participant: both participants receive `update_chat` and
+  `new_message`, the non-participant receives nothing, seller unread increments
+  and clears through `POST /chat/:chat_id/read`, and the seller room is rejoined
+  after reconnect.
 - Client lint is still red with 259 pre-existing repo-wide errors (unused vars,
   prop-types, hook dependencies); the chat files report the same pre-existing
   issues.
-- Multi-session browser checks above remain pending.
+- Browser UI smoke checks (visual list/badge behavior) remain on the user.
 
 ## Risks and Mitigations
 
