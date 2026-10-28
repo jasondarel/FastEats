@@ -25,6 +25,23 @@ export const getChatsServiceByRestaurantId = async (restaurantId) => {
   }
 };
 
+export const backfillChatSellerIdService = async (restaurantId, sellerId) => {
+  try {
+    const result = await Chat.updateMany(
+      {
+        restaurantId: Number(restaurantId),
+        $or: [{ sellerId: { $exists: false } }, { sellerId: null }],
+      },
+      { $set: { sellerId: Number(sellerId) } }
+    );
+
+    return { success: true, modifiedCount: result.modifiedCount };
+  } catch (error) {
+    logger.error("Error backfilling chat seller ID:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 export const getChatByIdService = async (chatId) => {
   try {
     const chat = await Chat.findById(chatId);
@@ -43,6 +60,7 @@ export const createChatService = async (chatData) => {
     if (chatData.restaurantId)
       chatData.restaurantId = Number(chatData.restaurantId);
     if (chatData.userId) chatData.userId = Number(chatData.userId);
+    if (chatData.sellerId) chatData.sellerId = Number(chatData.sellerId);
     if (chatData.orderId) chatData.orderId = Number(chatData.orderId);
 
     const chatWithDefaults = {

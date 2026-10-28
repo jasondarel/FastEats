@@ -4,6 +4,7 @@ import {
   createMessageService,
   getMessageService,
   updateLastMessageChatService,
+  backfillChatSellerIdService,
 } from "../service/chatService.js";
 import axios from "axios";
 import envInit from "../config/envInit.js";
@@ -92,6 +93,8 @@ export const getChatByIdController = async (req, res) => {
         logger.warn("Unauthorized access to chat");
         return responseError(res, 403, "Unauthorized access to chat");
       }
+
+      await backfillChatSellerIdService(chatData.restaurantId, userId);
     }
 
     if (!credentialId) {
@@ -177,6 +180,7 @@ export const createChatController = async (req, res) => {
       orderId: order.data.order.order_id,
       restaurantId: order.data.order.restaurant_id,
       userId: order.data.order.user_id,
+      sellerId: order.data.order.seller_id,
     });
     if (!chat.success) {
       logger.warn("Chat creation failed");

@@ -12,6 +12,11 @@ const chatSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    sellerId: {
+      type: Number,
+      ref: "User",
+      required: false,
+    },
     orderId: {
       type: Number,
       ref: "Order",
@@ -173,6 +178,7 @@ const messageSchema = new mongoose.Schema(
 
 chatSchema.index({ restaurantId: 1, updatedAt: -1 });
 chatSchema.index({ userId: 1, updatedAt: -1 });
+chatSchema.index({ sellerId: 1, updatedAt: -1 });
 chatSchema.index({ orderId: 1 }, { unique: true });
 chatSchema.index({ status: 1, updatedAt: -1 });
 

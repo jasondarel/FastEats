@@ -3,7 +3,7 @@ import logger from "../config/loggerInit.js";
 import { responseError } from "./responseUtil.js";
 import envInit from "../config/envInit.js";
 envInit();
-import { getChatsServiceByRestaurantId, getChatsServiceByUserId } from "../service/chatService.js";
+import { getChatsServiceByRestaurantId, getChatsServiceByUserId, backfillChatSellerIdService } from "../service/chatService.js";
 
 const GLOBAL_SERVICE_URL = process.env.GLOBAL_SERVICE_URL;
 
@@ -24,6 +24,7 @@ export const getSellerChatsUtil = async (res, {userId, role, token}) => {
         }
 
         const restaurantId = restaurant.data.restaurant.restaurant_id;
+        await backfillChatSellerIdService(restaurantId, userId);
         const chats = await getChatsServiceByRestaurantId(restaurantId);
 
         const finalInformation = await Promise.all(
