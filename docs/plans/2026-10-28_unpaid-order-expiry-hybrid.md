@@ -13,7 +13,7 @@
 | 2 | order-service Redis init + TTL key on checkout/pending | ✅ Done | `c86d487` |
 | 2 | Socket `order.status_changed` on manual cancel | ✅ Done | `c86d487` |
 | 2 | Verification: TTL, cron fallback, paid-order no-op, manual cancel | ✅ Done | — |
-| 3 | Redis fail-fast hardening: `enableOfflineQueue: false` + `commandTimeout: 1000` | ✅ Done | uncommitted |
+| 3 | Redis fail-fast hardening: `enableOfflineQueue: false` + `commandTimeout: 1000` | ✅ Done | `99385b0` |
 
 ## Problem
 
@@ -188,6 +188,10 @@ Only one caller can win; the other gets zero rows and emits no event. Paid order
   unchanged and emitted no `order.status_changed` event.
 - The cron canceled stale `Waiting`/`Pending` rows and published per-order events.
 - `PATCH /cancel-order/:id` emitted exactly one `order.status_changed`.
+- Redis resilience: with Redis stopped, the cron still canceled a stale order while
+  the publish failed fast (`enableOfflineQueue: false`). After restarting Redis, the
+  listener re-subscribed on `ready`, and both a TTL expiry and a cron run emitted
+  exactly one `order.status_changed` each.
 - `node --check` passed for every touched file. Test orders/transactions were removed
   and the user cart was restored afterward.
 
@@ -205,3 +209,11 @@ Only one caller can win; the other gets zero rows and emits no event. Paid order
 
 Deploy workers first (cron + listener are backward-compatible), then order-service
 (TTL writes and manual-cancel event). No migration or downtime required.
+
+### Production prerequisite
+
+Redis must emit expired-key events in every environment. `notify-keyspace-events`
+must include `E` and `x` (for example `--notify-keyspace-events Ex`). The dev
+`infra/docker-compose.yml` already sets this; verify the production Redis
+configuration. Without it, the TTL listener never fires and expiry falls back to
+the cron only.
