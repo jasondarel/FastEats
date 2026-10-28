@@ -352,18 +352,46 @@ const sendOrderNotifications = async (payload) => {
   await Promise.all(tasks);
 };
 
+let connection = null;
+let reconnectTimer = null;
+let isShuttingDown = false;
+
+const scheduleReconnect = () => {
+  if (isShuttingDown || reconnectTimer) return;
+  logger.info("🔄 Retrying connection in 5 seconds...");
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    startOrderCompletedConsumer();
+  }, 5000);
+};
+
 const startOrderCompletedConsumer = async () => {
+  if (isShuttingDown) return;
+
   try {
     logger.info("⏳ Connecting to RabbitMQ...");
     logger.info(`🔗 RabbitMQ URL: ${RABBITMQ_URL}`);
-    const connection = await amqp.connect(RABBITMQ_URL);
-    const channel = await connection.createChannel();
+    const newConnection = await amqp.connect(RABBITMQ_URL);
+    let channel;
 
-    logger.info("✅ Connected to RabbitMQ");
+    try {
+      channel = await newConnection.createChannel();
 
-    await channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, { durable: true });
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
-    await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
+      logger.info("✅ Connected to RabbitMQ");
+
+      await channel.assertExchange(EXCHANGE_NAME, EXCHANGE_TYPE, { durable: true });
+      await channel.assertQueue(QUEUE_NAME, { durable: true });
+      await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
+    } catch (error) {
+      try {
+        await newConnection.close();
+      } catch (closeError) {
+        logger.error("❌ Failed to close RabbitMQ connection after setup error:", closeError);
+      }
+      throw error;
+    }
+
+    connection = newConnection;
 
     logger.info(`📩 Waiting for messages in "${QUEUE_NAME}" with routing key "${ROUTING_KEY}"`);
 
@@ -380,32 +408,53 @@ const startOrderCompletedConsumer = async () => {
         } catch (error) {
           logger.error(`❌ Error processing message: ${error.message}`);
           logger.error(`📋 Payload: ${msg.content.toString()}`);
-          channel.nack(msg, false, false);
+          try {
+            channel.nack(msg, false, false);
+          } catch (nackError) {
+            logger.error("❌ Failed to nack message:", nackError);
+          }
         }
       }
     });
 
-    process.on("SIGINT", async () => {
-      logger.info("\n🔌 Closing RabbitMQ connection gracefully...");
-      await channel.close();
-      await connection.close();
-      logger.info("✅ RabbitMQ connection closed");
-      process.exit(0);
+    connection.on("error", (error) => {
+      logger.error("❌ RabbitMQ connection error:", error);
     });
 
-    process.on("SIGTERM", async () => {
-      logger.info("\n🔌 Received SIGTERM, closing RabbitMQ connection gracefully...");
-      await channel.close();
-      await connection.close();
-      logger.info("✅ RabbitMQ connection closed");
-      process.exit(0);
+    connection.on("close", () => {
+      connection = null;
+      if (isShuttingDown) return;
+      logger.warn("⚠️ RabbitMQ connection closed. Reconnecting...");
+      scheduleReconnect();
     });
 
   } catch (error) {
     logger.error("❌ RabbitMQ Connection Failed:", error);
-    logger.info("🔄 Retrying connection in 5 seconds...");
-    setTimeout(startOrderCompletedConsumer, 5000);
+    scheduleReconnect();
   }
 };
+
+const shutdown = async (signal) => {
+  isShuttingDown = true;
+
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+
+  logger.info(`\n🔌 Received ${signal}, closing RabbitMQ connection gracefully...`);
+
+  try {
+    if (connection) await connection.close();
+    logger.info("✅ RabbitMQ connection closed");
+  } catch (error) {
+    logger.error("❌ Failed to close RabbitMQ connection:", error);
+  }
+
+  process.exit(0);
+};
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 export default startOrderCompletedConsumer;

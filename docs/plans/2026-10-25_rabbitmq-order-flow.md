@@ -33,7 +33,7 @@
 | 2 | Notification jobs published by the workers outbox to `notification_exchange`; order-service notification crons/publishers removed | ✅ Done | — |
 | 2 | Removed synchronous `pay-order-confirmation` route/controller and client fallback; Waiting/default pay buttons use the async Snap flow | ✅ Done | — |
 | 2 | Runtime verification: workers outbox published pending `preparing_order` / `completed_order` jobs to their dedicated queues; client build passes | ✅ Done | — |
-| 2 | Startup resilience: RabbitMQ consumers re-register on every (re)connect via `onRabbitMQReady`; Redis bridge resubscribes on `ready` | ✅ Done | — |
+| 2 | Startup resilience: RabbitMQ consumers re-register on every (re)connect via `onRabbitMQReady` (workers) and close handlers (notification-service); Redis bridge resubscribes on `ready` | ✅ Done | — |
 
 ### Environment & Migration Notes
 
@@ -65,13 +65,13 @@ Phase 2 notification separation verification: `notification_exchange` now binds 
 
 Phase 2 cleanup verification: the order-service 5-second notification crons and `publishPreparingOrderMessage` / `publishCompletedOrderMessage` were removed. The workers outbox now selects `preparing_order` / `completed_order` jobs, publishes their payloads to `notification_exchange`, and marks them `published`; a test run of both routing keys was consumed by the matching notification queue. The `/pay-order-confirmation` route/controller and client fallback were removed, and the client Waiting/default pay buttons now use `GET /snap/:order_id`. `node --check` passes for the touched server files and `npm run build` succeeds with only the pre-existing chunk-size/ESLint warnings.
 
-Startup resilience verification (no broker available at test time): `node --check` passes for all touched files; a consumer harness confirmed `start*Worker` consumes once per channel, ignores duplicate starts on the same channel, re-consumes on a new channel, and can restart after `stop*Worker`; a boot smoke test with RabbitMQ/Redis unreachable confirmed `workers` starts, keeps retrying, and does not crash or mark consumers as failed. Full reconnect behavior should still be re-confirmed against a live broker when infrastructure is available.
+Startup resilience verification: `node --check` passes for all touched files; a consumer harness confirmed `start*Worker` consumes once per channel, ignores duplicate starts on the same channel, re-consumes on a new channel, and can restart after `stop*Worker`; a loader-mocked `amqplib` harness confirmed the notification order consumers reconnect and re-consume after connection closes; a boot smoke test with RabbitMQ/Redis unreachable confirmed `workers` starts and keeps retrying without crashing. Live-broker verification against the Docker `fasteats_rabbitmq` container passed: all six order consumers (2 notification + 4 workers) were registered, `docker restart fasteats_rabbitmq` was issued, and every queue recovered exactly one consumer after reconnect.
 
 **Runtime notes**:
 - The outbox publisher publishes while its job-status update is still uncommitted. Consumers must claim jobs with status `pending` **or** `published`; claiming only `published` lets the consumer see `pending`, skip/ack the message, and leave the job stuck. This is fixed in `claimJob`.
 - Midtrans retains Snap `order_id`s across database resets. Reusing low sequential IDs fails with `transaction_details.order_id sudah digunakan`; advance `orders_order_id_seq` (or use a fresh sandbox account) when re-testing against a reset local database.
 - `paymentSettledWorker` accepts `Waiting` as well as `Pending` because settlement can arrive before the pending webhook. Duplicate settlement jobs are harmless: only the first conditional update returns a row, and later jobs complete without inserting another `preparing_order` job.
-- Startup ordering is now handled automatically: worker consumers are registered through `onRabbitMQReady`, so they attach on the first successful connection and re-attach after every reconnect; the order-service Redis subscriber resubscribes on each `ready` event. Infrastructure can be started before or after the apps without a restart. `amqp.connect` failures still retry every 5s.
+- Startup ordering is now handled automatically: worker consumers are registered through `onRabbitMQReady`, so they attach on the first successful connection and re-attach after every reconnect; the order-service Redis subscriber resubscribes on each `ready` event. Notification-service order consumers (Preparing/Completed emails) also retry the initial connection and reconnect on `close`. Infrastructure can be started before or after the apps without a restart. `amqp.connect` failures still retry every 5s.
 - `.env.dev` files are gitignored (they hold local sandbox credentials), so no secrets enter the commit.
 
 ---
