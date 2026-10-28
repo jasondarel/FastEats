@@ -66,6 +66,60 @@ const CLIENT_URL = process.env.CLIENT_URL;
 const internalAPIKey = process.env.INTERNAL_API_KEY;
 
 const DEFAULT_TAX = 2000;
+const ORDER_EXPIRY_SECONDS = 30 * 60;
+const SOCKET_EVENTS_CHANNEL =
+  process.env.SOCKET_EVENTS_CHANNEL || "fasteats:order:events";
+
+const armOrderExpiry = async (orderId, status = "pending") => {
+  try {
+    const redisClient = getRedisClient();
+    if (!redisClient) {
+      logger.warn(
+        `⏳ Redis client unavailable; skipping expiry TTL for order ${orderId}`
+      );
+      return;
+    }
+
+    await redisClient.set(
+      `order:${orderId}`,
+      JSON.stringify({ order_id: orderId, status }),
+      "EX",
+      ORDER_EXPIRY_SECONDS
+    );
+  } catch (error) {
+    logger.error(`❌ Failed to set expiry TTL for order ${orderId}:`, error);
+  }
+};
+
+const publishOrderStatusChanged = async (order) => {
+  try {
+    const redisClient = getRedisClient();
+    if (!redisClient) {
+      logger.warn(
+        `⏳ Redis client unavailable; skipping status event for order ${order.order_id}`
+      );
+      return;
+    }
+
+    await redisClient.publish(
+      SOCKET_EVENTS_CHANNEL,
+      JSON.stringify({
+        room: `order:${order.order_id}`,
+        event: "order.status_changed",
+        data: {
+          order_id: order.order_id,
+          status: order.status,
+          updated_at: order.updated_at,
+        },
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `❌ Failed to publish status change for order ${order.order_id}:`,
+      error
+    );
+  }
+};
 
 const getIdempotencyKey = (req) => {
   const headerKey = req.headers["idempotency-key"];
@@ -1125,6 +1179,8 @@ export const cancelOrderController = async (req, res) => {
       return responseError(res, 500, "Failed to cancel order");
     }
 
+    await publishOrderStatusChanged(result);
+
     logger.info(`Order ${order_id} cancelled successfully`);
     return responseSuccess(res, 200, "Order cancelled successfully");
   } catch (error) {
@@ -1623,6 +1679,7 @@ export const payOrderController = async (req, res) => {
       }
 
       await pendingOrderService(order_id);
+      await armOrderExpiry(order_id);
 
       // Order will be automatically cancelled by cron job if not paid within 30 minutes
       logger.info(
@@ -2755,6 +2812,8 @@ export const checkoutCartController = async (req, res) => {
       });
       throw err;
     }
+
+    await armOrderExpiry(order.order_id);
 
     logger.info("Order created successfully:", order);
     return responseSuccess(

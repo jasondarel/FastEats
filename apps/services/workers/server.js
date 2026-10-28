@@ -1,4 +1,5 @@
 import setupOrderExpiryCron from "./redis/order-service/order-expiry-cron.js";
+import setupOrderExpiryListener from "./redis/order-service/order-expiry-listener.js";
 import setupOutboxPublisher from "./rabbitmq/order-service/outbox-publisher.js";
 import { startPaymentCreateWorker } from "./rabbitmq/order-service/paymentCreateWorker.js";
 import { startPaymentSettledWorker } from "./rabbitmq/order-service/paymentSettledWorker.js";
@@ -16,8 +17,9 @@ const ORDER_CONSUMERS = [
 ];
 
 (async () => {
-  setupOrderExpiryCron();
   redisInit();
+  setupOrderExpiryCron();
+  setupOrderExpiryListener();
   setupOutboxPublisher();
 
   for (const startConsumer of ORDER_CONSUMERS) {

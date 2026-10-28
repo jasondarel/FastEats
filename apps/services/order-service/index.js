@@ -6,6 +6,7 @@ import envInit from "./src/config/envInit.js";
 import { createDatabase, testDatabase } from "./src/config/dbInit.js";
 import { rabbitMQInit } from "./src/config/rabbitMQInit.js";
 import { initSocketBridge } from "./src/config/socketBridgeInit.js";
+import { redisInit } from "./src/config/redisInit.js";
 import { Server as SocketIOServer } from "socket.io";
 import http from "http";
 
@@ -79,6 +80,7 @@ app.use(OrderRoutes);
   try {
     await createDatabase();
     await testDatabase();
+    await redisInit();
     initSocketBridge(io);
     await rabbitMQInit();
 
