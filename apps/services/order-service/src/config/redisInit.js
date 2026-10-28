@@ -14,6 +14,8 @@ export const redisInit = async () => {
     redisClient = new Redis({
       host: REDIS_HOST,
       port: REDIS_PORT,
+      enableOfflineQueue: false,
+      commandTimeout: 1000,
       retryStrategy: (times) => {
         const delay = Math.min(times * 100, 3000);
         logger.warn(`🔄 Redis reconnecting in ${delay}ms (attempt: ${times})`);

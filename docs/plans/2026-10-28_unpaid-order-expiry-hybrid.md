@@ -1,18 +1,19 @@
 # Hybrid Unpaid Order Expiry with Redis TTL and Cron Fallback
 **Date:** 2026-10-28
-**Status:** Planned
-**Revision:** v1
+**Status:** Complete — implemented and verified
+**Revision:** v2 — implementation, E2E verification, Redis fail-fast hardening
 
 ### Progress Log
 
 | Phase | Step | Status | Commit |
 |---|---|---|---|
-| 1 | Shared worker helpers: `orderEvents.js` (`publishStatusChanged`) + `orderExpiry.js` (`cancelExpiredOrder`) | ⬜ Planned | — |
-| 1 | Cron: expire both `Waiting` and `Pending`, publish per-order events | ⬜ Planned | — |
-| 1 | Rewrite + wire `order-expiry-listener` (remove broken axios path) | ⬜ Planned | — |
-| 2 | order-service Redis init + TTL key on checkout/pending | ⬜ Planned | — |
-| 2 | Socket `order.status_changed` on manual cancel | ⬜ Planned | — |
-| 2 | Verification: TTL, cron fallback, paid-order no-op, manual cancel | ⬜ Planned | — |
+| 1 | Shared worker helpers: `orderEvents.js` (`publishStatusChanged`) + `orderExpiry.js` (`cancelExpiredOrder`) | ✅ Done | `c86d487` |
+| 1 | Cron: expire both `Waiting` and `Pending`, publish per-order events | ✅ Done | `c86d487` |
+| 1 | Rewrite + wire `order-expiry-listener` (remove broken axios path) | ✅ Done | `c86d487` |
+| 2 | order-service Redis init + TTL key on checkout/pending | ✅ Done | `c86d487` |
+| 2 | Socket `order.status_changed` on manual cancel | ✅ Done | `c86d487` |
+| 2 | Verification: TTL, cron fallback, paid-order no-op, manual cancel | ✅ Done | — |
+| 3 | Redis fail-fast hardening: `enableOfflineQueue: false` + `commandTimeout: 1000` | ✅ Done | uncommitted |
 
 ## Problem
 
@@ -160,6 +161,8 @@ Only one caller can win; the other gets zero rows and emits no event. Paid order
 | `apps/services/workers/server.js` | Register listener |
 | `apps/services/order-service/index.js` | Await `redisInit()` |
 | `apps/services/order-service/src/controllers/OrderController.js` | TTL writes + manual-cancel event |
+| `apps/services/order-service/src/config/redisInit.js` | Fail-fast Redis commands (`enableOfflineQueue: false`, `commandTimeout: 1000`) |
+| `apps/services/workers/config/redisInit.js` | Same fail-fast Redis settings |
 
 ## Verification
 
@@ -174,6 +177,19 @@ Only one caller can win; the other gets zero rows and emits no event. Paid order
 6. Restart Redis → worker listener re-subscribes on `ready`; cron still catches
    expirations while Redis is down.
 7. `node --check` on every touched `.js` file.
+
+### Verification Results (2026-10-28)
+
+- Checkout through the gateway created order `#1009` as `Waiting`; `GET /ttl-order/1009`
+  returned `1796` seconds (about 30 minutes).
+- A valid simulated Midtrans `pending` webhook set the order to `Pending` and reset
+  the TTL from 30 seconds to `1800`.
+- Setting the order to `Preparing` and then expiring the TTL left the status
+  unchanged and emitted no `order.status_changed` event.
+- The cron canceled stale `Waiting`/`Pending` rows and published per-order events.
+- `PATCH /cancel-order/:id` emitted exactly one `order.status_changed`.
+- `node --check` passed for every touched file. Test orders/transactions were removed
+  and the user cart was restored afterward.
 
 ## Risks and Mitigations
 
