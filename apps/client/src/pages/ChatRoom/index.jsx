@@ -8,7 +8,10 @@ import TypingIndicator from "./components/TypingIndicator";
 import ErrorAlert from "./components/ErrorAlert";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useChatSocket } from "./services/useChatSocket";
-import { getChatByIdService } from "../../service/chatServices/chatService";
+import {
+  getChatByIdService,
+  markChatReadService,
+} from "../../service/chatServices/chatService";
 import OrderDetailsCard from "./components/OrderDetailsCard";
 import { API_URL } from "../../config/api";
 import { useSelector } from "react-redux";
@@ -499,6 +502,12 @@ const ChatRoom = () => {
         );
         console.log("Transformed messages:", transformedMessages);
         setMessages(transformedMessages);
+
+        try {
+          await markChatReadService(chatId, token);
+        } catch (readError) {
+          console.warn("Failed to mark chat as read:", readError.message);
+        }
       } else {
         setError(`Failed to load messages: ${result.error}`);
       }
@@ -804,6 +813,13 @@ const ChatRoom = () => {
 
         return [...prevMessages, transformedMessage];
       });
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        markChatReadService(chatId, token).catch((readError) => {
+          console.warn("Failed to mark chat as read:", readError.message);
+        });
+      }
     };
 
     onNewMessage(handleNewMessage);
@@ -811,7 +827,7 @@ const ChatRoom = () => {
     return () => {
       offNewMessage(handleNewMessage);
     };
-  }, [currentUserId, currentUserRole, onNewMessage, offNewMessage]);
+  }, [chatId, currentUserId, currentUserRole, onNewMessage, offNewMessage]);
 
   useEffect(() => {
     if (chatId) {

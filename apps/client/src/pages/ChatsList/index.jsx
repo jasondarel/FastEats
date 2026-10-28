@@ -7,6 +7,7 @@ import { getChatsService } from "../../service/chatServices/chatsListService";
 import { API_URL } from "../../config/api";
 import { useSelector } from "react-redux";
 import io from "socket.io-client";
+import { jwtDecode } from "jwt-decode";
 
 // Component imports
 import ChatHeader from "./components/ChatHeader";
@@ -24,9 +25,15 @@ const ChatsList = () => {
   const socketRef = useRef(null);
   const chatRefs = useRef(new Map());
   const containerRef = useRef(null);
+  const chatsRef = useRef([]);
+  const refetchTimerRef = useRef(null);
 
-  const fetchChats = async () => {
-    setLoading(true);
+  useEffect(() => {
+    chatsRef.current = chats;
+  }, [chats]);
+
+  const fetchChats = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError(null);
 
     try {
@@ -47,6 +54,15 @@ const ChatsList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const scheduleRefetch = () => {
+    if (refetchTimerRef.current) return;
+
+    refetchTimerRef.current = setTimeout(() => {
+      refetchTimerRef.current = null;
+      fetchChats({ silent: true });
+    }, 250);
   };
 
   const capturePositions = (chatList) => {
@@ -126,28 +142,37 @@ const ChatsList = () => {
   };
 
   const handleChatUpdate = (updatedChat) => {
+    const matchField = updatedChat._id ? '_id' : 'orderId';
+    const matchValue = updatedChat._id || updatedChat.orderId;
+    const isKnownChat = chatsRef.current.some(
+      (chat) => chat[matchField] === matchValue
+    );
+
+    if (!isKnownChat) {
+      scheduleRefetch();
+      return;
+    }
+
     setChats((prevChats) => {
-      const matchField = updatedChat._id ? '_id' : 'orderId';
-      const matchValue = updatedChat._id || updatedChat.orderId;
-      
       const oldPositions = capturePositions(prevChats);
-      
-      const existingIndex = prevChats.findIndex((chat) => chat[matchField] === matchValue);
-      let newChats;
-      
-      if (existingIndex !== -1) {
-        const updatedChats = prevChats.map((chat, index) =>
-          index === existingIndex ? { ...chat, ...updatedChat } : chat
-        );
-        
-        newChats = updatedChats.sort((a, b) => {
-          const aTime = new Date(a.lastMessage?.timestamp || a.updatedAt);
-          const bTime = new Date(b.lastMessage?.timestamp || b.updatedAt);
-          return bTime - aTime;
-        });
-      } else {
-        newChats = [updatedChat, ...prevChats];
+
+      const existingIndex = prevChats.findIndex(
+        (chat) => chat[matchField] === matchValue
+      );
+
+      if (existingIndex === -1) {
+        return prevChats;
       }
+
+      const updatedChats = prevChats.map((chat, index) =>
+        index === existingIndex ? { ...chat, ...updatedChat } : chat
+      );
+
+      const newChats = updatedChats.sort((a, b) => {
+        const aTime = new Date(a.lastMessage?.timestamp || a.updatedAt);
+        const bTime = new Date(b.lastMessage?.timestamp || b.updatedAt);
+        return bTime - aTime;
+      });
 
       setTimeout(() => {
         animatePositionChanges(oldPositions, newChats);
@@ -158,6 +183,15 @@ const ChatsList = () => {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    let currentUserId = null;
+
+    try {
+      currentUserId = jwtDecode(token)?.userId;
+    } catch (error) {
+      console.error("Failed to decode user token:", error);
+    }
+
     socketRef.current = io(API_URL, {
       path: "/chat/socket.io",
       transports: ["websocket", "polling"],
@@ -166,13 +200,26 @@ const ChatsList = () => {
       timeout: 10000,
     });
 
-    socketRef.current.on("refresh_chat_list", ({updatedChat}) => {
-      handleChatUpdate(updatedChat);
+    socketRef.current.on("connect", () => {
+      if (currentUserId) {
+        socketRef.current.emit("join_room", `user_${currentUserId}`);
+      }
+    });
+
+    socketRef.current.on("update_chat", ({ updatedChat }) => {
+      if (updatedChat) {
+        handleChatUpdate(updatedChat);
+      }
     });
 
     fetchChats();
 
     return () => {
+      if (refetchTimerRef.current) {
+        clearTimeout(refetchTimerRef.current);
+        refetchTimerRef.current = null;
+      }
+
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
@@ -260,7 +307,10 @@ const ChatsList = () => {
       lastMessageTime: chat.lastMessage?.timestamp || chat.updatedAt,
       lastMessage: messageDisplay.text,
       lastMessageIcon: messageDisplay.icon,
-      unreadCount: chat.unreadCountUser || 0,
+      unreadCount:
+        user?.role === "seller"
+          ? chat.unreadCountRestaurant || 0
+          : chat.unreadCountUser || 0,
       isAnimating: animatingChats.has(chatId),
       restaurant: {
         restaurantId: chat.orderDetails?.restaurant_id,

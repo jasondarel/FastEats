@@ -3,9 +3,11 @@ import {
   getChatByIdService,
   createMessageService,
   getMessageService,
-  updateLastMessageChatService,
+  updateChatOnNewMessageService,
+  markChatReadService,
   backfillChatSellerIdService,
 } from "../service/chatService.js";
+import { emitChatUpdate } from "../util/chatRealtime.js";
 import axios from "axios";
 import envInit from "../config/envInit.js";
 import logger from "../config/loggerInit.js";
@@ -186,6 +188,12 @@ export const createChatController = async (req, res) => {
       logger.warn("Chat creation failed");
       return responseError(res, 400, "Chat creation failed");
     }
+
+    const io = req.app.get("io");
+    if (io) {
+      emitChatUpdate(io, chat.chat);
+    }
+
     logger.info("Create chat controller");
     return responseSuccess(res, 200, "Get order success", "dataChat", chat);
   } catch (err) {
@@ -265,49 +273,34 @@ export const createMessageController = async (req, res) => {
       return responseError(res, 400, "Message creation failed");
     }
 
-    await updateLastMessageChatService(chatId, {
-      text: textMessage,
-      sender: sender.type,
-      messageType: messageType || "text",
-      timestamp: new Date(),
-    });
+    const recipientType = sender.type === "user" ? "restaurant" : "user";
+    const updatedChat = await updateChatOnNewMessageService(
+      chatId,
+      {
+        text: textMessage,
+        sender,
+        messageType: messageType || "text",
+        timestamp: new Date(),
+      },
+      recipientType
+    );
 
-    console.log("messageType:", messageType);
+    if (!updatedChat.success || !updatedChat.chat) {
+      logger.warn(`Failed to update chat after message ${newMessage.message._id}`);
+    }
 
     if (io) {
-      const messageData = {
-        ...newMessage.message,
-        chatId,
-        sender,
-        createdAt: new Date().toISOString(),
-      };
-      const objectMessage = messageData.toObject
-        ? newMessage.message.toObject()
-        : newMessage.message;
-      
-      const updatedChat = await getChatByIdService(chatId);
-      if (!updatedChat) {
-        logger.warn("Chat not found for emitting new message");
-        return responseError(res, 404, "Chat not found");
-      }
+      const objectMessage =
+        typeof newMessage.message.toObject === "function"
+          ? newMessage.message.toObject()
+          : newMessage.message;
 
       io.to(`chat_${chatId}`).emit("new_message", objectMessage);
-      logger.info(`WebSocket: Emitted new_message event to all clients`);
-
-      io.emit("refresh_chat_list", {
-        updatedChat: updatedChat.chat,
-      })
-
-      io.to(`user_${sender.id}`).emit("update_chat", {
-        chatId,
-        lastMessage: {
-          text,
-          sender,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
       logger.info(`WebSocket: Emitted new_message event to chat_${chatId}`);
+
+      if (updatedChat.success && updatedChat.chat) {
+        emitChatUpdate(io, updatedChat.chat);
+      }
     } else {
       logger.warn("WebSocket: io instance not available");
     }
@@ -380,6 +373,86 @@ export const getMessageController = async (req, res) => {
   }
 };
 
+export const markChatReadController = async (req, res) => {
+  logger.info("MARK CHAT READ CONTROLLER");
+  const { userId, role } = req.user;
+  const { chat_id } = req.params;
+  try {
+    const chat = await getChatByIdService(chat_id);
+    if (!chat.success) {
+      logger.warn("Chat not found");
+      return responseError(res, 404, "Chat not found");
+    }
+
+    const chatData = chat.chat;
+
+    if (role === "user") {
+      if (chatData.userId !== userId) {
+        logger.warn("Unauthorized access to mark chat read");
+        return responseError(res, 403, "Unauthorized access to chat");
+      }
+    } else {
+      let isSeller = chatData.sellerId === userId;
+
+      if (!isSeller) {
+        const restaurant = await getRestaurantByOwnerIdInformation(
+          GLOBAL_SERVICE_URL,
+          userId,
+          req.headers.authorization
+        );
+        if (!restaurant) {
+          logger.warn("Restaurant not found");
+          return responseError(res, 404, "Restaurant not found");
+        }
+        isSeller =
+          chatData.restaurantId === restaurant.restaurant.restaurant_id;
+      }
+
+      if (!isSeller) {
+        logger.warn("Unauthorized access to mark chat read");
+        return responseError(res, 403, "Unauthorized access to chat");
+      }
+    }
+
+    const unreadField =
+      role === "user" ? "unreadCountUser" : "unreadCountRestaurant";
+
+    if (!chatData[unreadField]) {
+      logger.info("Chat is already marked as read");
+      return responseSuccess(
+        res,
+        200,
+        "Chat marked as read",
+        "dataChat",
+        chatData
+      );
+    }
+
+    const result = await markChatReadService(chat_id, role);
+    if (!result.success || !result.chat) {
+      logger.warn("Failed to mark chat as read");
+      return responseError(res, 500, "Failed to mark chat as read");
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      emitChatUpdate(io, result.chat);
+    }
+
+    logger.info("Mark chat read success");
+    return responseSuccess(
+      res,
+      200,
+      "Chat marked as read",
+      "dataChat",
+      result.chat
+    );
+  } catch (err) {
+    logger.error("Error marking chat as read", err);
+    return responseError(res, 500, "Internal Server Error");
+  }
+};
+
 export const uploadImageChatController = async (req, res) => {
   logger.info("UPLOAD IMAGE CHAT CONTROLLER");
   const { chatId } = req.body;
@@ -397,27 +470,9 @@ export const uploadImageChatController = async (req, res) => {
   }
 
   try {
-    const baseUrl = GLOBAL_SERVICE_URL.endsWith("/")
-      ? GLOBAL_SERVICE_URL.slice(0, -1)
-      : GLOBAL_SERVICE_URL;
     const imageUrl = `chat/uploads/chat/${req.file.filename}`;
 
     logger.info("Image uploaded successfully", imageUrl);
-
-    const io = req.app.get("io");
-    if (io) {
-      io.to(`chat_${chatId}`).emit("new_message", {
-        chatId,
-        imageUrl,
-        createdAt: new Date().toISOString(),
-        sender: { type: "user", id: req.user.userId },
-      });
-      logger.info(
-        `WebSocket: Emitted new_message event for image upload to chat_${chatId}`
-      );
-    } else {
-      logger.warn("WebSocket: io instance not available");
-    }
 
     return responseSuccess(
       res,

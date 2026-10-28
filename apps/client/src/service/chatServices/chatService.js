@@ -1,6 +1,20 @@
 import axios from "axios";
 import { API_URL } from "../../config/api";
 
+export const markChatReadService = async (chatId, token) => {
+  const response = await axios.post(
+    `${API_URL}/chat/chat/${chatId}/read`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response.data;
+};
+
 export const getChatByIdService = async (chatId, token) => {
   try {
     const response = await axios.get(`${API_URL}/chat/chat/${chatId}`, {

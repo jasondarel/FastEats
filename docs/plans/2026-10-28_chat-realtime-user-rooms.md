@@ -1,24 +1,25 @@
 # Chat List Realtime via Per-User Rooms
 **Date:** 2026-10-28
-**Status:** Planned
-**Revision:** v1
+**Status:** In Progress — verification pending
+**Revision:** v2 — server and client realtime wiring implemented
 
 ### Progress Log
 
 | Phase | Step | Status | Commit |
 |---|---|---|---|
-| 1 | Add `sellerId` to Chat model + populate on chat creation | Done | — |
-| 1 | Backfill `sellerId` for legacy chats on seller list/room access | Done | — |
-| 2 | Add `chatRealtime` room/emit helpers | Pending | — |
-| 2 | Target `update_chat` to both participant rooms; remove global broadcast | Pending | — |
-| 2 | Atomic last-message + recipient unread increment | Pending | — |
-| 2 | Emit `update_chat` on chat creation | Pending | — |
-| 2 | Remove premature image-upload socket emit | Pending | — |
-| 2 | Add mark-read endpoint + service | Pending | — |
-| 3 | Join `user_<userId>` from chat list; listen to `update_chat` | Pending | — |
-| 3 | Role-correct unread mapping; refetch unknown chats | Pending | — |
-| 4 | Mark chat read from ChatRoom on load and on new messages | Pending | — |
-| 5 | Manual multi-session verification + client lint | Pending | — |
+| 1 | Add `sellerId` to Chat model + populate on chat creation | ✅ Done | — |
+| 1 | Backfill `sellerId` for legacy chats on seller list/room access | ✅ Done | — |
+| 2 | Add `chatRealtime` room/emit helpers | ✅ Done | — |
+| 2 | Target `update_chat` to both participant rooms; remove global broadcast | ✅ Done | — |
+| 2 | Atomic last-message + recipient unread increment | ✅ Done | — |
+| 2 | Emit `update_chat` on chat creation | ✅ Done | — |
+| 2 | Remove premature image-upload socket emit | ✅ Done | — |
+| 2 | Add mark-read endpoint + service | ✅ Done | — |
+| 3 | Join `user_<userId>` from chat list; listen to `update_chat` | ✅ Done | — |
+| 3 | Role-correct unread mapping; refetch unknown chats | ✅ Done | — |
+| 4 | Mark chat read from ChatRoom on load and on new messages | ✅ Done | — |
+| 5 | Automated checks: node syntax, client build, service integration | ✅ Done | — |
+| 5 | Manual multi-session verification | Pending | — |
 
 ## Problem
 
@@ -114,53 +115,19 @@ because the raw document lacks the enriched `restaurant`, `user`, and
 The sender's own message never increments their own counter. The list maps the
 counter by the logged-in role.
 
-## File Changes
+## Files Touched
 
-### Backend (`apps/services/chat-service`)
-
-- `src/config/schema.js`
-  - Add optional indexed `sellerId: Number` to `chatSchema`.
-- `src/service/chatService.js`
-  - Replace/extend `updateLastMessageChatService` with
-    `updateChatOnNewMessageService(chatId, lastMessage, recipientType)`:
-    sets `lastMessage` and atomically `$inc`s the recipient unread counter.
-  - Add `markChatReadService(chatId, role)`.
-  - Add `backfillChatSellerIdService(restaurantId, sellerId)`.
-- `src/util/chatRealtime.js` (new)
-  - `getChatRooms(chat)`
-  - `emitChatUpdate(io, chat)`
-- `src/controller/chatControllers.js`
-  - `createChatController`: save `sellerId`, emit `update_chat`.
-  - `createMessageController`: use the atomic update service, emit
-    `new_message` to the chat room, emit `update_chat` to both user rooms,
-    remove `io.emit("refresh_chat_list")` and the sender-targeted event.
-  - `uploadImageChatController`: remove the premature `new_message` emit.
-  - Add `markChatReadController`.
-  - Backfill `sellerId` in seller `getChatsController` / `getChatByIdController`
-    paths.
-- `src/util/chatUtil.js`
-  - Backfill legacy chats in `getSellerChatsUtil` using the resolved
-    `restaurantId` and authenticated `userId`.
-- `src/route/chatRoutes.js`
-  - Add `POST /chat/:chat_id/read`.
-
-### Frontend (`apps/client`)
-
-- `src/pages/ChatsList/index.jsx`
-  - Decode the JWT with the existing `jwt-decode` dependency to get `userId`
-    and `role`.
-  - Join `user_<userId>` in the socket `connect` handler (rejoins on
-    reconnect).
-  - Listen to `update_chat` instead of `refresh_chat_list`.
-  - `handleChatUpdate`: update known chats; call `fetchChats()` for unknown
-    chats instead of inserting them.
-  - Map unread by role.
-- `src/pages/ChatRoom/services/useChatSocket.js`
-  - Keep the existing `user_<currentUserId>` join; it is now correct for both
-    roles.
-- `src/pages/ChatRoom/index.jsx`
-  - Call the mark-read endpoint after initial message load and after receiving
-    a new message while the room is open.
+| File | Change |
+|---|---|
+| `apps/services/chat-service/src/config/schema.js` | Add optional indexed `sellerId` to `chatSchema` |
+| `apps/services/chat-service/src/service/chatService.js` | Atomic last-message + recipient unread update; mark-read and seller backfill services |
+| `apps/services/chat-service/src/util/chatRealtime.js` | New room and `update_chat` emit helpers |
+| `apps/services/chat-service/src/controller/chatControllers.js` | Save `sellerId`; targeted emits; remove global broadcast and image emit; add mark-read controller |
+| `apps/services/chat-service/src/util/chatUtil.js` | Backfill `sellerId` from the seller chat list |
+| `apps/services/chat-service/src/route/chatRoutes.js` | Add `POST /chat/:chat_id/read` |
+| `apps/client/src/pages/ChatsList/index.jsx` | Join `user_<userId>`, listen to `update_chat`, role unread, refetch unknown chats |
+| `apps/client/src/pages/ChatRoom/index.jsx` | Mark chat read on load and on incoming messages |
+| `apps/client/src/service/chatServices/chatService.js` | Add client mark-read request |
 
 ## Phases
 
@@ -219,15 +186,31 @@ Manual, with separate browser sessions:
 8. **Legacy chat:** open an existing chat created before `sellerId` existed;
    seller updates still arrive after the lazy backfill.
 
+### Verification Results (partial, 2026-10-28)
+
+- `node --check` passes for every touched server file.
+- `npm run build` in `apps/client` passes (chunk-size warning only).
+- Integration test against the local MongoDB passes: unread counters increment
+  per role, mark-read clears them, `update_chat` targets both participant rooms,
+  and legacy `sellerId` backfill updates exactly one chat.
+- Client lint is still red with 259 pre-existing repo-wide errors (unused vars,
+  prop-types, hook dependencies); the chat files report the same pre-existing
+  issues.
+- Multi-session browser checks above remain pending.
+
 ## Risks and Mitigations
 
-- **Missing `sellerId` on old chats:** lazy backfill on seller access; new chats
-  always carry it. Add a server log when a chat is emitted without `sellerId`.
-- **Unknown-chat refetch loop:** only refetch when an unknown chat arrives and
-  debounce it; the server only emits to participants.
-- **Duplicate mark-read emits:** mark read on initial load and on incoming
-  messages only, not on every message render.
-- **Removing `refresh_chat_list`:** search for other listeners before deletion;
-  currently only `ChatsList` consumes it.
-- **Security remains open:** room joins are still client-driven. Track socket
-  auth and membership validation as a separate follow-up.
+| Risk | Mitigation |
+|---|---|
+| Missing `sellerId` on old chats | Lazy backfill on seller access; new chats always carry it; log emits that have no `sellerId` |
+| Unknown-chat refetch loop | Debounced single refetch; server emits only to participants |
+| Duplicate mark-read emits | Mark read on load and incoming messages only; server skips when the counter is already zero |
+| Removing `refresh_chat_list` | Searched all consumers; only `ChatsList` used it |
+| Security remains open | Room joins are still client-driven; socket auth and membership validation tracked separately |
+
+## Rollout
+
+Deploy chat-service and client together. The event contract changes from the
+global `refresh_chat_list` to targeted `update_chat`, so a one-sided deploy
+leaves the chat list stale. No database migration is required: `sellerId` is
+optional and legacy chats are backfilled lazily.

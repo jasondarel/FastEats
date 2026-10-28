@@ -102,19 +102,31 @@ export const createMessageService = async (messageData) => {
   }
 };
 
-export const updateLastMessageChatService = async (chatId, lastMessage) => {
+export const updateChatOnNewMessageService = async (
+  chatId,
+  lastMessage,
+  recipientType
+) => {
   try {
-    const payload = {
-      lastMessage: {
-        text: lastMessage.text || "",
-        sender: lastMessage.sender,
-        messageType: lastMessage.messageType || "text",
-        timestamp: lastMessage.timestamp || new Date(),
-      },
-    };
+    const unreadField =
+      recipientType === "restaurant"
+        ? "unreadCountRestaurant"
+        : "unreadCountUser";
 
-    console.log("lastMessage: ", lastMessage);
-    console.log("lastmessagetype: ", lastMessage.messageType);
+    const payload = {
+      $set: {
+        lastMessage: {
+          text: lastMessage.text || "",
+          sender: {
+            type: lastMessage.sender?.type || lastMessage.sender,
+            id: lastMessage.sender?.id,
+          },
+          messageType: lastMessage.messageType || "text",
+          timestamp: lastMessage.timestamp || new Date(),
+        },
+      },
+      $inc: { [unreadField]: 1 },
+    };
 
     const updatedChat = await Chat.findByIdAndUpdate(chatId, payload, {
       new: true,
@@ -122,7 +134,25 @@ export const updateLastMessageChatService = async (chatId, lastMessage) => {
 
     return { success: true, chat: updatedChat };
   } catch (err) {
-    logger.error("Error updating last message in chat:", err);
+    logger.error("Error updating chat after new message:", err);
+    return { success: false, error: err.message };
+  }
+};
+
+export const markChatReadService = async (chatId, role) => {
+  try {
+    const unreadField =
+      role === "user" ? "unreadCountUser" : "unreadCountRestaurant";
+
+    const updatedChat = await Chat.findByIdAndUpdate(
+      chatId,
+      { $set: { [unreadField]: 0 } },
+      { new: true }
+    );
+
+    return { success: true, chat: updatedChat };
+  } catch (err) {
+    logger.error("Error marking chat as read:", err);
     return { success: false, error: err.message };
   }
 };

@@ -6,6 +6,7 @@ import {
     getChatByIdController,
     createMessageController,
     getMessageController,
+    markChatReadController,
     uploadImageChatController
 } from '../controller/chatControllers.js';
 import multerMiddleware from '../middleware/multerMiddleware.js';
@@ -21,5 +22,6 @@ router.post("/upload-image", authMiddleware, multerMiddleware("image"), uploadIm
 router.get("/chat/:chat_id", authMiddleware, getChatByIdController);
 router.post("/message", authMiddleware, createMessageController);
 router.get("/message", authMiddleware, getMessageController);
+router.post("/chat/:chat_id/read", authMiddleware, markChatReadController);
 
 export {router as chatRoutes};
