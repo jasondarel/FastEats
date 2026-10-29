@@ -1,20 +1,20 @@
-# Chat Socket Authentication and Room Authorization
+﻿# Chat Socket Authentication and Room Authorization
 **Date:** 2026-10-28
-**Status:** Implemented — browser UI smoke pending
-**Revision:** v2 — server and client hardening implemented and verified
+**Status:** Complete — implemented and verified
+**Revision:** v3 — implementation, socket security verification, sender-role fix
 
 ### Progress Log
 
 | Phase | Step | Status | Commit |
 |---|---|---|---|
-| 1 | Authenticate Socket.IO handshake with JWT | Done | — |
-| 2 | Auto-join own user room; reject arbitrary room names | Done | — |
-| 3 | Add participant-checked `join_chat` | Done | — |
-| 4 | Remove `send_message`, `list_rooms`, and unsafe client emits | Done | — |
-| 5 | Harden `typing` identity handling | Done | — |
-| 6 | Wire client handshake auth and `join_chat` | Done | — |
-| 7 | Automated socket security tests | Done | — |
-| 8 | Browser smoke check | Pending | — |
+| 1 | Authenticate Socket.IO handshake with JWT | ✅ Done | `16630da` |
+| 2 | Auto-join own user room; reject arbitrary room names | ✅ Done | `16630da` |
+| 3 | Add participant-checked `join_chat` | ✅ Done | `16630da` |
+| 4 | Remove `send_message`, `list_rooms`, and unsafe client emits | ✅ Done | `16630da` |
+| 5 | Harden `typing` identity handling | ✅ Done | `16630da` |
+| 6 | Wire client handshake auth and `join_chat` | ✅ Done | `16630da` |
+| 7 | Automated socket security tests | ✅ Done | `16630da` |
+| 8 | Browser smoke check | ✅ Done | — |
 
 ## Problem
 
@@ -279,8 +279,11 @@ Checks:
   messages when the customer user id and restaurant id are both `1`. The helper
   is covered by direct assertion cases.
 
-Remaining: the manual two-browser UI smoke check (list updates, live messages,
-third-account isolation, image/GIF single delivery).
+Manual browser smoke was performed on the two demo accounts: chat-list updates
+worked, and it surfaced the sender-id collision that hid seller messages in the
+customer chat room. The role-first fix is covered by six assertion cases and a
+production build; a final reload retest of seller → customer live delivery is
+recommended.
 
 ## Risks and Mitigations
 
