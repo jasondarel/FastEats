@@ -10,6 +10,10 @@ import envInit from "./config/envInit.js";
 import { Server as SocketIOServer } from "socket.io";
 import http from "http";
 import path from "path";
+import mongoose from "mongoose";
+import socketAuthMiddleware from "./middleware/socketAuthMiddleware.js";
+import { authorizeChatParticipantService } from "./service/chatService.js";
+import { getUserRoom } from "./util/chatRealtime.js";
 
 envInit();
 logger.info(`Using ${process.env.NODE_ENV} mode`);
@@ -37,91 +41,106 @@ const io = new SocketIOServer(server, {
 
 app.set("io", io);
 
+const getChatRoom = (chatId) => `chat_${chatId}`;
+
+const isValidChatId = (chatId) =>
+  typeof chatId === "string" && mongoose.isValidObjectId(chatId);
+
+io.use(socketAuthMiddleware);
+
 io.on("connection", (socket) => {
-  logger.info(`🟢 New client connected: ${socket.id}`);
-  
-  socket.on('join_room', (roomId) => {
-    const room = String(roomId);
-    logger.info(`Client ${socket.id} joining room: ${room}`);
-    
+  const { userId, role } = socket.data.user;
+  const userRoom = getUserRoom(userId);
+
+  socket.join(userRoom);
+  logger.info(
+    `🟢 Client connected: ${socket.id} (user ${userId}, role ${role}) joined ${userRoom}`
+  );
+
+  socket.on("join_chat", async (payload, ack) => {
+    const respond = typeof ack === "function" ? ack : () => {};
+    const chatId = payload?.chatId;
+
+    if (!isValidChatId(chatId)) {
+      socket.emit("chat_error", { message: "Unable to join chat" });
+      return respond({ success: false, error: "Unable to join chat" });
+    }
+
+    const authorization = await authorizeChatParticipantService({
+      chatId,
+      userId,
+      role,
+      token: socket.data.authToken,
+    });
+
+    if (!authorization.success) {
+      logger.warn(
+        `[SOCKET] Rejected join_chat for user ${userId} on chat ${chatId}`
+      );
+      socket.emit("chat_error", { message: "Unable to join chat" });
+      return respond({ success: false, error: "Unable to join chat" });
+    }
+
+    const room = getChatRoom(chatId);
     socket.join(room);
+    logger.info(`[SOCKET] User ${userId} joined ${room}`);
 
-    logger.info(`Client ${socket.id} is now in rooms: ${Array.from(socket.rooms).join(', ')}`);
-    
-    socket.emit('room_joined', { room, success: true });
-    
-    socket.to(room).emit('user_joined', { userId: socket.id });
-  });
-  
-  socket.on('send_message', (messageData) => {
-    try {
-      const { chatId } = messageData;
-      const roomId = `chat_${chatId}`;
-      
-      const plainMessage = typeof messageData.toJSON === 'function' 
-        ? messageData.toJSON() 
-        : messageData;
-      
-      logger.info(`Broadcasting message to room ${roomId}`);
-
-      io.to(roomId).emit('new_message', plainMessage);
-      
-      logger.info(`Message broadcasted to room ${roomId}`);
-    } catch (error) {
-      logger.error('Error sending message:', error);
-      socket.emit('message_error', { error: error.message });
-    }
-  });
-  
-  socket.on('list_rooms', async (callback) => {
-    try {
-      const rooms = {};
-      
-      for (const [roomId, socketSet] of io.of('/').adapter.rooms.entries()) {
-        if (roomId === socket.id) continue;
-        
-        rooms[roomId] = Array.from(socketSet).length;
-      }
-      
-      if (typeof callback === 'function') {
-        callback({ rooms });
-      } else {
-        socket.emit('rooms_list', { rooms });
-      }
-    } catch (error) {
-      logger.error('Error listing rooms:', error);
-      if (typeof callback === 'function') {
-        callback({ error: error.message });
-      } else {
-        socket.emit('rooms_list', { error: error.message });
-      }
-    }
+    respond({ success: true, room });
+    socket.emit("chat_joined", { room });
   });
 
-  socket.on('typing', (data) => {
-    if (data.isTyping) {
-      logger.info(`User ${data.userId} (${data.username}) started typing in chat ${data.chatId}`);
-    } else {
-      logger.info(`User ${data.userId} (${data.username}) stopped typing in chat ${data.chatId}`);
+  socket.on("leave_chat", (payload, ack) => {
+    const respond = typeof ack === "function" ? ack : () => {};
+    const chatId = payload?.chatId;
+
+    if (!isValidChatId(chatId)) {
+      return respond({ success: false, error: "Unable to leave chat" });
     }
-    
-    const roomId = `chat_${data.chatId}`;
-    socket.to(roomId).emit('user_typing', {
-      userId: data.userId,
-      username: data.username,
-      isTyping: data.isTyping,
-      timestamp: new Date().toISOString()
+
+    const room = getChatRoom(chatId);
+    socket.leave(room);
+    logger.info(`[SOCKET] User ${userId} left ${room}`);
+
+    return respond({ success: true, room });
+  });
+
+  socket.on("typing", (data) => {
+    const chatId = data?.chatId;
+
+    if (!isValidChatId(chatId)) {
+      return;
+    }
+
+    const room = getChatRoom(chatId);
+    if (!socket.rooms.has(room)) {
+      logger.warn(
+        `[SOCKET] Ignored typing from user ${userId} outside chat ${chatId}`
+      );
+      return;
+    }
+
+    const isTyping = Boolean(data.isTyping);
+    const username =
+      typeof data.username === "string" && data.username.trim()
+        ? data.username.trim().slice(0, 100)
+        : "User";
+
+    logger.info(
+      `User ${userId} (${username}) ${isTyping ? "started" : "stopped"} typing in chat ${chatId}`
+    );
+
+    socket.to(room).emit("user_typing", {
+      userId,
+      username,
+      isTyping,
+      timestamp: new Date().toISOString(),
     });
   });
-  
-  socket.on('leave_room', (roomId) => {
-    socket.leave(roomId);
-    logger.info(`Client ${socket.id} left room ${roomId}`);
-    socket.emit('room_left', { room: roomId });
-  });
-  
+
   socket.on("disconnect", (reason) => {
-    logger.info(`🔴 Client disconnected: ${socket.id}, reason: ${reason}`);
+    logger.info(
+      `🔴 Client disconnected: ${socket.id} (user ${userId}), reason: ${reason}`
+    );
   });
 });
 

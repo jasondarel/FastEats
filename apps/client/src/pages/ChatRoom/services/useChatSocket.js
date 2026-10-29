@@ -28,6 +28,8 @@ export const useChatSocket = (
 
       socketRef.current = io(API_URL, {
         path: "/chat/socket.io",
+        auth: (callback) =>
+          callback({ token: localStorage.getItem("token") }),
         transports: ["websocket", "polling"],
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
@@ -38,13 +40,20 @@ export const useChatSocket = (
         console.log("✅ Socket connected:", socketRef.current.id);
         setIsSocketConnected(true);
 
-        console.log(`Joining chat room: chat_${chatId}`);
-        socketRef.current.emit("join_room", `chat_${chatId}`);
+        socketRef.current.emit("join_chat", { chatId }, (response) => {
+          if (response?.success) {
+            console.log(`Joined chat room: ${response.room}`);
+          } else {
+            console.error(
+              "Failed to join chat room:",
+              response?.error || "Unknown error"
+            );
+          }
+        });
+      });
 
-        if (currentUserId) {
-          console.log(`Joining user room: user_${currentUserId}`);
-          socketRef.current.emit("join_room", `user_${currentUserId}`);
-        }
+      socketRef.current.on("chat_error", ({ message }) => {
+        console.error("Chat socket error:", message);
       });
 
       socketRef.current.on("connect_error", (error) => {
@@ -109,7 +118,6 @@ export const useChatSocket = (
       if (socketRef.current && socketRef.current.connected) {
         socketRef.current.emit("typing", {
           chatId,
-          userId: currentUserId,
           username:
             user.role === "user" ?
               user.name || "User" :
@@ -134,7 +142,6 @@ export const useChatSocket = (
       if (socketRef.current && socketRef.current.connected) {
         socketRef.current.emit("typing", {
           chatId,
-          userId: currentUserId,
           username:
             currentUserRole === "seller"
               ? orderDetails?.customerName || "Customer"
@@ -147,12 +154,6 @@ export const useChatSocket = (
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
-    }
-  };
-
-  const emitMessage = (messageData) => {
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit("send_message", messageData);
     }
   };
 
@@ -173,10 +174,13 @@ export const useChatSocket = (
       if (isTyping) {
         socketRef.current.emit("typing", {
           chatId,
-          userId: currentUserId,
           username: currentUserRole === "seller" ? "Restaurant" : "Customer",
           isTyping: false,
         });
+      }
+
+      if (socketRef.current.connected) {
+        socketRef.current.emit("leave_chat", { chatId });
       }
 
       if (typingTimeoutRef.current) {
@@ -202,7 +206,6 @@ export const useChatSocket = (
     typingUsers,
     handleTypingStart,
     handleTypingStop,
-    emitMessage,
     onNewMessage,
     offNewMessage,
     disconnect,

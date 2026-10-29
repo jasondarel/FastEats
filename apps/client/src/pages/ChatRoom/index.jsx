@@ -8,6 +8,7 @@ import TypingIndicator from "./components/TypingIndicator";
 import ErrorAlert from "./components/ErrorAlert";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useChatSocket } from "./services/useChatSocket";
+import { resolveMessageSender } from "./services/messageSender";
 import {
   getChatByIdService,
   markChatReadService,
@@ -69,7 +70,6 @@ const ChatRoom = () => {
     typingUsers,
     handleTypingStart,
     handleTypingStop,
-    emitMessage,
     onNewMessage,
     offNewMessage,
   } = useChatSocket(chatId, currentUserId, currentUserRole, orderDetails);
@@ -141,17 +141,6 @@ const ChatRoom = () => {
           originalOrderDetails: orderDetailsToAttach,
         },
       };
-
-      if (isSocketConnected) {
-        emitMessage({
-          ...messageData,
-          sender: {
-            type: payload.role,
-            id: payload.userId,
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
 
       const result = await createMessageService(messageData, token);
 
@@ -291,40 +280,8 @@ const ChatRoom = () => {
     }
   };
 
-  const determineMessageSender = (sender) => {
-    if (!sender || !currentUserRole || !currentUserId) return "otherUser";
-
-    if (typeof sender === "object") {
-      const senderRole = sender.type || sender.role;
-      const senderId = sender.id || sender.userId;
-
-      if (currentUserRole === "seller") {
-        if (["seller", "restaurant"].includes(senderRole?.toLowerCase())) {
-          return "currentUser";
-        }
-      } else if (currentUserRole === "user" || currentUserRole === "customer") {
-        if (["user", "customer"].includes(senderRole?.toLowerCase())) {
-          return "currentUser";
-        }
-      }
-
-      if (senderId === currentUserId) {
-        return "currentUser";
-      }
-    } else if (typeof sender === "string") {
-      if (currentUserRole === "seller") {
-        if (["seller", "restaurant"].includes(sender.toLowerCase())) {
-          return "currentUser";
-        }
-      } else if (currentUserRole === "user" || currentUserRole === "customer") {
-        if (["user", "customer"].includes(sender.toLowerCase())) {
-          return "currentUser";
-        }
-      }
-    }
-
-    return "otherUser";
-  };
+  const determineMessageSender = (sender) =>
+    resolveMessageSender(sender, currentUserRole, currentUserId);
 
   const transformMessages = (apiMessages, currentRole, currentUserId) => {
     apiMessages.forEach((msg, index) => {});
@@ -642,30 +599,6 @@ const ChatRoom = () => {
         messageData.gifTitle = gifData.title;
       }
 
-      if (isSocketConnected) {
-        const socketMessage = {
-          ...messageData,
-          sender: {
-            type: payload.role,
-            id: payload.userId,
-          },
-          timestamp: new Date().toISOString(),
-        };
-
-        if (imageUrl) {
-          socketMessage.imageUrl = imageUrl;
-          socketMessage.attachments = { url: imageUrl };
-        }
-
-        if (gifData) {
-          socketMessage.gifData = gifData;
-          socketMessage.gifUrl = gifData.url;
-          socketMessage.gifTitle = gifData.title;
-        }
-
-        emitMessage(socketMessage);
-      }
-
       const result = await createMessageService(messageData, token);
     } catch (err) {
       setMessages((prev) => prev.filter((msg) => !msg.clientTempId));
@@ -727,29 +660,8 @@ const ChatRoom = () => {
     const handleNewMessage = (messageData) => {
       console.log("Received new message from socket:", messageData);
 
-      const senderInfo = messageData.sender;
-      let isFromCurrentUser = false;
-
-      if (senderInfo && currentUserId && currentUserRole) {
-        if (typeof senderInfo === "object") {
-          const senderRole = senderInfo.type || senderInfo.role;
-          const senderId = senderInfo.id || senderInfo.userId;
-
-          if (senderId === currentUserId) {
-            isFromCurrentUser = true;
-          } else if (
-            currentUserRole === "seller" &&
-            ["seller", "restaurant"].includes(senderRole?.toLowerCase())
-          ) {
-            isFromCurrentUser = true;
-          } else if (
-            (currentUserRole === "user" || currentUserRole === "customer") &&
-            ["user", "customer"].includes(senderRole?.toLowerCase())
-          ) {
-            isFromCurrentUser = true;
-          }
-        }
-      }
+      const isFromCurrentUser =
+        determineMessageSender(messageData.sender) === "currentUser";
 
       if (isFromCurrentUser) {
         console.log("Skipping own message from socket to prevent duplicate");

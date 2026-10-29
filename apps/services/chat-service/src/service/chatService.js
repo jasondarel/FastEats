@@ -1,5 +1,74 @@
+import mongoose from "mongoose";
 import { Chat, Message } from "../config/schema.js";
 import logger from "../config/loggerInit.js";
+import { getRestaurantByOwnerIdInformation } from "../../../packages/shared/apiService.js";
+
+export const authorizeChatParticipantService = async ({
+  chatId,
+  userId,
+  role,
+  token,
+}) => {
+  try {
+    if (!mongoose.isValidObjectId(chatId)) {
+      return { success: false, error: "Invalid chat" };
+    }
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return { success: false, error: "Chat not found" };
+    }
+
+    const numericUserId = Number(userId);
+    if (!Number.isFinite(numericUserId) || numericUserId <= 0) {
+      return { success: false, error: "Invalid user" };
+    }
+
+    if (role === "user") {
+      if (Number(chat.userId) === numericUserId) {
+        return { success: true, chat };
+      }
+      return { success: false, error: "Not a participant" };
+    }
+
+    if (role === "seller") {
+      if (Number(chat.sellerId) === numericUserId) {
+        return { success: true, chat };
+      }
+
+      if (chat.sellerId !== null && chat.sellerId !== undefined) {
+        return { success: false, error: "Not a participant" };
+      }
+
+      const restaurant = await getRestaurantByOwnerIdInformation(
+        process.env.GLOBAL_SERVICE_URL,
+        numericUserId,
+        token
+      );
+      const restaurantId = restaurant?.restaurant?.restaurant_id;
+
+      if (
+        !restaurantId ||
+        Number(restaurantId) !== Number(chat.restaurantId)
+      ) {
+        return { success: false, error: "Not a participant" };
+      }
+
+      await Chat.updateOne(
+        { _id: chat._id, sellerId: null },
+        { $set: { sellerId: numericUserId } }
+      );
+      chat.sellerId = numericUserId;
+
+      return { success: true, chat };
+    }
+
+    return { success: false, error: "Unsupported role" };
+  } catch (error) {
+    logger.error("Error authorizing chat participant:", error);
+    return { success: false, error: error.message };
+  }
+};
 
 export const getChatsServiceByUserId = async (userId) => {
   try {

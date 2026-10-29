@@ -7,7 +7,6 @@ import { getChatsService } from "../../service/chatServices/chatsListService";
 import { API_URL } from "../../config/api";
 import { useSelector } from "react-redux";
 import io from "socket.io-client";
-import { jwtDecode } from "jwt-decode";
 
 // Component imports
 import ChatHeader from "./components/ChatHeader";
@@ -183,27 +182,18 @@ const ChatsList = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    let currentUserId = null;
-
-    try {
-      currentUserId = jwtDecode(token)?.userId;
-    } catch (error) {
-      console.error("Failed to decode user token:", error);
-    }
-
     socketRef.current = io(API_URL, {
       path: "/chat/socket.io",
+      auth: (callback) =>
+        callback({ token: localStorage.getItem("token") }),
       transports: ["websocket", "polling"],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 10000,
     });
 
-    socketRef.current.on("connect", () => {
-      if (currentUserId) {
-        socketRef.current.emit("join_room", `user_${currentUserId}`);
-      }
+    socketRef.current.on("connect_error", (error) => {
+      console.error("❌ Chat list socket connection error:", error.message);
     });
 
     socketRef.current.on("update_chat", ({ updatedChat }) => {

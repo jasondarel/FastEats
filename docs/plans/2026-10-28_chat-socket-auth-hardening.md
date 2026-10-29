@@ -1,19 +1,19 @@
 # Chat Socket Authentication and Room Authorization
 **Date:** 2026-10-28
-**Status:** Planned
-**Revision:** v1 — security plan, not implemented
+**Status:** Implemented — browser UI smoke pending
+**Revision:** v2 — server and client hardening implemented and verified
 
 ### Progress Log
 
 | Phase | Step | Status | Commit |
 |---|---|---|---|
-| 1 | Authenticate Socket.IO handshake with JWT | Pending | — |
-| 2 | Auto-join own user room; reject arbitrary room names | Pending | — |
-| 3 | Add participant-checked `join_chat` | Pending | — |
-| 4 | Remove `send_message`, `list_rooms`, and unsafe client emits | Pending | — |
-| 5 | Harden `typing` identity handling | Pending | — |
-| 6 | Wire client handshake auth and `join_chat` | Pending | — |
-| 7 | Automated socket security tests | Pending | — |
+| 1 | Authenticate Socket.IO handshake with JWT | Done | — |
+| 2 | Auto-join own user room; reject arbitrary room names | Done | — |
+| 3 | Add participant-checked `join_chat` | Done | — |
+| 4 | Remove `send_message`, `list_rooms`, and unsafe client emits | Done | — |
+| 5 | Harden `typing` identity handling | Done | — |
+| 6 | Wire client handshake auth and `join_chat` | Done | — |
+| 7 | Automated socket security tests | Done | — |
 | 8 | Browser smoke check | Pending | — |
 
 ## Problem
@@ -241,6 +241,47 @@ npm run build
 Client lint is currently red with 259 pre-existing repo-wide errors, so it is not
 a clean gate for this change.
 
+### Verification Results (2026-10-29)
+
+Implemented:
+
+- `io.use(socketAuthMiddleware)` verifies the handshake JWT, stores
+  `{ userId, role }` on `socket.data.user`, and rejects missing, malformed,
+  expired, wrongly signed, non-numeric-user, or invalid-role tokens.
+- The server auto-joins `user_<userId>` and exposes only `join_chat`,
+  `leave_chat`, and `typing`. `join_room`, `send_message`, `list_rooms`, and
+  `leave_room` were removed.
+- `join_chat` validates the ObjectId, loads the chat, checks customer/seller
+  participation, and resolves plus backfills a legacy null `sellerId` through the
+  restaurant owner lookup. Unauthorized callers receive a generic error.
+- `typing` requires membership of `chat_<chatId>` and always emits the user id
+  from the authenticated socket; the client `userId` field is gone.
+- Both client sockets pass the JWT through Socket.IO's `auth` callback.
+  `ChatRoom` emits `join_chat` on connect and `leave_chat` on unmount. The socket
+  message-write path was removed from `ChatRoom` and `useChatSocket`; message
+  persistence remains HTTP-only.
+
+Checks:
+
+- `node --check` passes for `server.js`, `socketAuthMiddleware.js`, and
+  `chatService.js`.
+- `npm run build` in `apps/client` passes (chunk-size warning only).
+- Live socket harness against local MongoDB and the running chat-service passed
+  all 11 checks: handshake rejection cases, user-room auto-join, non-participant
+  isolation, `join_chat` ownership, removed `send_message`/`join_room`/
+  `list_rooms`, spoofed typing identity, participant `new_message` delivery,
+  reconnect re-authentication, and legacy `sellerId` backfill.
+- Handshake through the API gateway with path `/chat/socket.io` also connects
+  with a valid token, confirming the existing upgrade proxy needs no change.
+- Test fixtures were deleted after the harness run.
+- Post-implementation fix: socket message classification now decides ownership by
+  sender role before sender id. This fixes the live chat room hiding restaurant
+  messages when the customer user id and restaurant id are both `1`. The helper
+  is covered by direct assertion cases.
+
+Remaining: the manual two-browser UI smoke check (list updates, live messages,
+third-account isolation, image/GIF single delivery).
+
 ## Risks and Mitigations
 
 | Risk | Mitigation |
@@ -264,12 +305,11 @@ a clean gate for this change.
 - Rollback by reverting both server and client changes together; a server-only
   rollback would restore the vulnerability.
 
-## Open Decisions
+## Resolved Decisions
 
-1. **Strict vs minimal:** recommended strict version (remove `join_room` and
-   `send_message`, use `join_chat`). A minimal version could only add JWT auth and
-   validate `join_room`, but it leaves the spoofed-message event in place.
-2. **Legacy seller fallback:** recommended resolve the restaurant owner and
-   backfill during the first socket join, then cache the result on the chat.
-3. **Backward compatibility:** recommended no compatibility shim for the old
-   unauthenticated protocol; require the updated client.
+1. **Strict vs minimal:** implemented the strict version. `join_room` and
+   `send_message` were removed and replaced by participant-checked `join_chat`.
+2. **Legacy seller fallback:** implemented restaurant-owner resolution with
+   backfill during the first authorized socket join.
+3. **Backward compatibility:** no compatibility shim. The server and client must
+   be deployed together; old unauthenticated clients receive `connect_error`.
